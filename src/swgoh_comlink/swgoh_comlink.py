@@ -87,8 +87,9 @@ class SwgohComlink:
             hmac_obj.update(f'/{endpoint}'.encode())
             # json dumps separators needed for compact string formatting required for compatibility with
             # comlink since it is written with javascript as the primary object model
+            # sorted keys are also required for proper MD5 hash calculation
             if not payload:
-                payload_string = dumps(payload, separators=(',', ':'))
+                payload_string = dumps(payload, separators=(',', ':'), sort_keys=True)
             else:
                 payload_string = ''
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
@@ -141,7 +142,7 @@ class SwgohComlink:
         """
         payload = {}
         payload['unzip'] = unzip
-        payload['enums'] = enums
+        # payload['enums'] = enums
         payload['payload'] = {}
         payload['payload']['id'] = id
         return self._post('localization', payload)
