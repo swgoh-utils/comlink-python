@@ -1,9 +1,5 @@
-import os
 from unittest import TestCase, main
 import swgoh_comlink
-
-if os.environ.get('ACCESS_KEY'):
-    print(f'ACCESS_KEY environment variable found: {os.environ.get("ACCESS_KEY")}')
 
 
 class TestGetEnums(TestCase):
