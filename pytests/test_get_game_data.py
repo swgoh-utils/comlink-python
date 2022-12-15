@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase, main
 import swgoh_comlink
 
@@ -7,7 +8,16 @@ class TestGetGameData(TestCase):
         """
         Test that game data can be retrieved from game server correctly
         """
-        comlink = swgoh_comlink.SwgohComlink()
+        access_key = None
+        secret_key = None
+        if os.environ.get('ACCESS_KEY'):
+            access_key = os.environ.get('ACCESS_KEY')
+        if os.environ.get('SECRET_KEY'):
+            secret_key = os.environ.get('SECRET_KEY')
+        if access_key and secret_key:
+            comlink = swgoh_comlink.SwgohComlink(access_key=access_key, secret_key=secret_key)
+        else:
+            comlink = swgoh_comlink.SwgohComlink()
         game_metadata = comlink.get_game_metadata()
         game_version = game_metadata['latestGamedataVersion']
         game_data = comlink.get_game_data(version=game_version, include_pve_units=False, request_segment=4)
