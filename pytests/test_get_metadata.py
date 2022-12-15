@@ -9,7 +9,6 @@ class TestGetMetadata(TestCase):
         """
         comlink = swgoh_comlink.SwgohComlink()
         md = comlink.get_game_metadata()
-        print(md['message'])
         self.assertTrue('serverVersion' in md.keys())
 
 
