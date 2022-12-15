@@ -1,6 +1,5 @@
 from unittest import TestCase, main
-
-from ..src import swgoh_comlink
+import swgoh_comlink
 
 
 class TestGetPlayerArena(TestCase):
