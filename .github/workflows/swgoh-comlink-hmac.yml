@@ -9,6 +9,7 @@ on:
 
 jobs:
   build:
+    environment: stage
     runs-on: ubuntu-latest
     services:
       comlink:
@@ -16,14 +17,14 @@ jobs:
         env:
           APP_NAME: Python_Wrapper_Test
           PORT: 3030
-          ACCESS_KEY: ${{ secrets.stage.COMLINK_ACCESS_KEY }}
-          SECRET_KEY: ${{ secrets.stage.COMLINK_SECRET_KEY }}
+          ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
+          SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
         ports:
           - 3000:3030
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.10"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -46,6 +47,6 @@ jobs:
       run: |
         pytest pytests/
           env:
-            ACCESS_KEY: ${{ secrets.stage.COMLINK_ACCESS_KEY }}
-            SECRET_KEY: ${{ secrets.stage.COMLINK_SECRET_KEY }}
+            ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
+            SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
 
