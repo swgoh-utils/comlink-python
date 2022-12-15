@@ -15,7 +15,7 @@ jobs:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
           APP_NAME: Python_Wrapper_Test
-          APP_PORT: 3030
+          PORT: 3030
         ports:
           - 3000:3030
     strategy:
