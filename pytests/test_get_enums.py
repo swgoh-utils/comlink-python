@@ -1,5 +1,6 @@
 from unittest import TestCase, main
-import swgoh_comlink
+
+from ..src import swgoh_comlink
 
 
 class TestGetEnums(TestCase):

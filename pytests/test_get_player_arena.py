@@ -1,5 +1,7 @@
-from unittest import TestCase, main, mock
-import swgoh_comlink
+from unittest import TestCase, main
+
+from ..src import swgoh_comlink
+
 
 class TestGetPlayerArena(TestCase):
     def test_get_player_arena(self):
