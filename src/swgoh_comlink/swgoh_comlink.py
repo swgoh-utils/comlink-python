@@ -79,6 +79,8 @@ class SwgohComlink:
         req_headers = {}
         # If access_key and secret_key are set, perform HMAC security
         if self.hmac:
+            if not payload:
+                payload = ''
             req_time = str(int(time.time() * 1000))
             req_headers = {"X-Date": f'{req_time}'}
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
