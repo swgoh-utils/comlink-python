@@ -5,11 +5,10 @@ name: Python package
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "pytest" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     services:
       comlink:
