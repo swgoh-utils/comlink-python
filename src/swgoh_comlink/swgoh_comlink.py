@@ -139,12 +139,11 @@ class SwgohComlink:
         :param enums: boolean [Defaults to False]
         :return: json
         """
-        payload = {
-            "unzip": unzip,
-            "payload": {
-                "id": f'{id}'
-            },
-            "enums": enums}
+        payload = {}
+        payload['unzip'] = unzip
+        payload['enums'] = enums
+        payload['payload'] = {}
+        payload['payload']['id'] = id
         return self._post('localization', payload)
 
     def get_game_metadata(self):
