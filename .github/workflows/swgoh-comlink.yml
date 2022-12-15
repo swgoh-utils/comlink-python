@@ -1,29 +1,27 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Python package
+name: swgoh-comlink test workflow
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "pytest" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     services:
       comlink:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
           APP_NAME: Python_Wrapper_Test
-          APP_PORT: 3030
+          PORT: 3030
         ports:
           - 3000:3030
-        
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -33,7 +31,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest
+        python -m pip install flake8 pytest requests
+        pip install -e .
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
@@ -43,4 +42,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest
+        pytest pytests/

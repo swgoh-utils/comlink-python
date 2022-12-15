@@ -2,7 +2,7 @@
 Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
 
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 
 from json import loads, dumps
 import requests
@@ -75,6 +75,7 @@ class SwgohComlink:
         :param payload: POST payload json data
         :return: json
         """
+        # print(f'   ### [POST DEBUG] ### Received payload: {payload}, type: {type(payload)}')
         post_url = self.url_base + f'/{endpoint}'
         req_headers = {}
         # If access_key and secret_key are set, perform HMAC security
@@ -87,14 +88,20 @@ class SwgohComlink:
             hmac_obj.update(f'/{endpoint}'.encode())
             # json dumps separators needed for compact string formatting required for compatibility with
             # comlink since it is written with javascript as the primary object model
-            payload_string = dumps(payload, separators=(',', ':'))
-
+            # ordered dicts are also required with the 'payload' key listed first for proper MD5 hash calculation
+            if payload:
+                # print('   ### [PAYLOAD DEBUG] ### dumping JSON string')
+                payload_string = dumps(payload, separators=(',', ':'))
+            else:
+                # print('   ### [PAYLOAD DEBUG] ### dumping regular string')
+                payload_string = dumps({})
+            # print(f'   ### [DEBUG] ### payload_string: {payload_string}')
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
-
+            # print(f'   ### [DEBUG] ### payload MD5: {payload_hash_digest}')
             hmac_obj.update(payload_hash_digest.encode())
             hmac_digest = hmac_obj.hexdigest()
-
             req_headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
+            # print(f'   ### [DEBUG] ### Auth Header: HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}')
         try:
             r = requests.request('POST', post_url, json=payload, headers=req_headers)
             return loads(r.content.decode('utf-8'))
@@ -128,7 +135,9 @@ class SwgohComlink:
                 "includePveUnits": include_pve_units,
                 "requestSegment": request_segment
             },
-            "enums": enums}
+            "enums": enums
+        }
+        # print(f'   ### [GAME DATA DEBUG] ### Sending payload: {payload}')
         return self._post('data', payload)
 
     def get_localization(self, id=None, unzip=False, enums=False):
@@ -139,12 +148,11 @@ class SwgohComlink:
         :param enums: boolean [Defaults to False]
         :return: json
         """
-        payload = {
-            "unzip": unzip,
-            "payload": {
-                "id": f'{id}'
-            },
-            "enums": enums}
+        payload = {}
+        payload['unzip'] = unzip
+        payload['enums'] = enums
+        payload['payload'] = {}
+        payload['payload']['id'] = id
         return self._post('localization', payload)
 
     def get_game_metadata(self):

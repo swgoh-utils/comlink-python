@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0", "requests"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swgoh_comlink"
+dynamic = ["version"]
+authors = [
+  { name="Mar Trepodi", email="martrepodi@gmail.com" },
+]
+description = "Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)"
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/swgoh-utils/swgoh-comlink"
+"Bug Tracker" = "https://github.com/swgoh-utils/swgoh-comlink"
+
+[tool.setuptools.dynamic]
+version = {attr = "swgoh_comlink.__version__"}
+
