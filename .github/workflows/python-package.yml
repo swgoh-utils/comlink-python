@@ -19,7 +19,6 @@ jobs:
           APP_PORT: 3030
         ports:
           - 3000:3030
-        
     strategy:
       fail-fast: false
       matrix:
