@@ -79,8 +79,6 @@ class SwgohComlink:
         req_headers = {}
         # If access_key and secret_key are set, perform HMAC security
         if self.hmac:
-            if not payload:
-                payload = ''
             req_time = str(int(time.time() * 1000))
             req_headers = {"X-Date": f'{req_time}'}
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
@@ -89,13 +87,13 @@ class SwgohComlink:
             hmac_obj.update(f'/{endpoint}'.encode())
             # json dumps separators needed for compact string formatting required for compatibility with
             # comlink since it is written with javascript as the primary object model
-            payload_string = dumps(payload, separators=(',', ':'))
-
+            if not payload:
+                payload_string = dumps(payload, separators=(',', ':'))
+            else:
+                payload_string = ''
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
-
             hmac_obj.update(payload_hash_digest.encode())
             hmac_digest = hmac_obj.hexdigest()
-
             req_headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
         try:
             r = requests.request('POST', post_url, json=payload, headers=req_headers)
