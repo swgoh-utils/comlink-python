@@ -1,0 +1,9 @@
+LICENSE
+README.md
+pyproject.toml
+src/swgoh_comlink/__init__.py
+src/swgoh_comlink/swgoh_comlink.py
+src/swgoh_comlink.egg-info/PKG-INFO
+src/swgoh_comlink.egg-info/SOURCES.txt
+src/swgoh_comlink.egg-info/dependency_links.txt
+src/swgoh_comlink.egg-info/top_level.txt
