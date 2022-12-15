@@ -2,7 +2,7 @@
 Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
 
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 
 from json import loads, dumps
 import requests
