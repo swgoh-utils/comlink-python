@@ -131,11 +131,11 @@ class SwgohComlink:
         """
         payload = {
             "payload": {
-                "version": f"{version}"
-                # "includePveUnits": include_pve_units,
-                # "requestSegment": request_segment
-            }
-            # "enums": enums
+                "version": f"{version}",
+                "includePveUnits": include_pve_units,
+                "requestSegment": request_segment
+            },
+            "enums": enums
         }
         # print(f'   ### [GAME DATA DEBUG] ### Sending payload: {payload}')
         return self._post('data', payload)
