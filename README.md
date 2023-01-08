@@ -27,9 +27,9 @@ Usage example with MHAC enabled:
 import swgoh_comlink
 
 comlink = swgoh_comlink.SwgohComlink(
-    host='http://localhost', 
-    port='3000', 
-    access_key='public_key', 
+    host='http://localhost',
+    port='3000',
+    access_key='public_key',
     secret_key='this_string_should_be_secret'
 )
 player_data = comlink.get_player(allycode=245866537)
@@ -45,6 +45,6 @@ player_name = player_data['name']
 
 ## Support
 
-Issues can be reported in [GitLab](https://gitlab.com/swgoh-tools/comlink-python/-/issues).
+Issues can be reported in [Github](https://github.com/swgoh-utils/comlink-python/issues).
 
 Join the [discord server](https://discord.gg/6PBfG5MzR3)

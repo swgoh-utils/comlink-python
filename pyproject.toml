@@ -18,8 +18,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/swgoh-utils/swgoh-comlink"
-"Bug Tracker" = "https://github.com/swgoh-utils/swgoh-comlink"
+"Homepage" = "https://github.com/swgoh-utils/comlink-python"
+"Bug Tracker" = "https://github.com/swgoh-utils/comlink-python/issues"
 
 [tool.setuptools.dynamic]
 version = {attr = "swgoh_comlink.__version__"}
