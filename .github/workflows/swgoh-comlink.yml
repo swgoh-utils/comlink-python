@@ -5,7 +5,7 @@ name: swgoh-comlink test workflow
 
 on:
   push:
-    branches: [ "main", "pytest" ]
+    branches: [ "main" ]
 
 jobs:
   build:
