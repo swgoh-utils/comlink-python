@@ -27,9 +27,9 @@ guild_name = guild['profile']['name']
 Usage example with MHAC enabled:
 
 ```python
-import swgoh_comlink
+from swgoh_comlink import SwgohComlink
 
-comlink = swgoh_comlink.SwgohComlink(
+comlink = SwgohComlink(
     url='http://localhost:3000', 
     access_key='public_key', 
     secret_key='this_string_should_be_secret'
