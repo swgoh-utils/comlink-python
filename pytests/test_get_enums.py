@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-import swgoh_comlink
+from swgoh_comlink import SwgohComlink
 
 
 class TestGetEnums(TestCase):
@@ -7,7 +7,7 @@ class TestGetEnums(TestCase):
         """
         Test that game enums can be retrieved from game server correctly
         """
-        comlink = swgoh_comlink.SwgohComlink()
+        comlink = SwgohComlink()
         en = comlink.get_enums()
         self.assertTrue('CombatType' in en.keys())
 

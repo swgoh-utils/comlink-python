@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-import swgoh_comlink
+from swgoh_comlink import SwgohComlink
 
 
 class TestGetMetadata(TestCase):
