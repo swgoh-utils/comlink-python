@@ -14,11 +14,14 @@ pip install swgoh_comlink
 Usage example:
 
 ```python
-import swgoh_comlink
+from swgoh_comlink import SwgohComlink
 
-comlink = swgoh_comlink.SwgohComlink(host='http://localhost:3000')
-player_data = comlink.get_player(allycode=245866537)
+comlink = SwgohComlink()
+player_data = comlink.get_player(245866537)
 player_name = player_data['name']
+guild_id = player_data['guildId']
+guild = comlink.get_guild(guild_id)
+guild_name = guild['profile']['name']
 ```
 
 Usage example with MHAC enabled:
