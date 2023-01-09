@@ -7,7 +7,7 @@ class TestGetMetadata(TestCase):
         """
         Test that game metadata can be retrieved from game server correctly
         """
-        comlink = swgoh_comlink.SwgohComlink()
+        comlink = SwgohComlink()
         md = comlink.get_game_metadata()
         self.assertTrue('serverVersion' in md.keys())
 
