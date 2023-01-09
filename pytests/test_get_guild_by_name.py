@@ -7,7 +7,7 @@ class TestGetGuildByName(TestCase):
         """
         Test that guild data can be retrieved from game server correctly
         """
-        comlink = swgoh_comlink.SwgohComlink()
+        comlink = SwgohComlink()
         p = comlink.get_guilds_by_name("dead")
         self.assertTrue('guild' in p.keys())
 
