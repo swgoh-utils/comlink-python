@@ -16,7 +16,7 @@ class TestGetPlayerArena(TestCase):
         """
         Test that player data can be retrieved from game server correctly
         """
-        comlink = swgoh_comlink.SwgohComlink()
+        comlink = SwgohComlink()
         allyCode = 245866537
         p = comlink.get_arena(allycode=allyCode)
         self.assertTrue('name' in p.keys())
