@@ -82,7 +82,7 @@ class SwgohComlink:
         if 'latestLocalizationBundleVersion' in meta_data:
             self.localization_version = meta_data['latestLocalizationBundleVersion']
 
-    async def _post(self,
+    def _post(self,
                     endpoint: str,
                     payload: dict
                     ):
@@ -125,7 +125,7 @@ class SwgohComlink:
         except Exception as e:
             raise e
 
-    async def get_enums(self):
+    def get_enums(self):
         """
         Get an object containing the game data enums
         :return: dict
@@ -137,7 +137,7 @@ class SwgohComlink:
         except Exception as e:
             raise e
 
-    async def get_game_data(self,
+    def get_game_data(self,
                             version: str = "",
                             include_pve_units=True,
                             request_segment: int = 0,
@@ -163,9 +163,9 @@ class SwgohComlink:
             "enums": enums
         }
         # print(f'   ### [GAME DATA DEBUG] ### Sending payload: {payload}')
-        return await self._post('data', payload)
+        return self._post('data', payload)
 
-    async def get_localization(self,
+    def get_localization(self,
                                id: str,
                                unzip=False,
                                enums=False
@@ -184,11 +184,11 @@ class SwgohComlink:
                 'id': id
             }
         }
-        return await self._post('localization', payload)
+        return self._post('localization', payload)
 
     get_localization_bundle = get_localization
 
-    async def get_game_metadata(self, client_specs = None, enums = False):
+    def get_game_metadata(self, client_specs = None, enums = False):
         """
         Get the game metadata. Game metadata contains the current game and localization versions.
         :param client_specs:  Optional dictionary containing
@@ -212,11 +212,11 @@ class SwgohComlink:
             payload = { "payload": { "client_specs": client_specs}, "enums": enums }
         else:
             payload = {}
-        return await self._post('metadata', payload)
+        return self._post('metadata', payload)
 
     get_metadata = get_game_metadata
 
-    async def get_player(self,
+    def get_player(self,
                          allycode: str or int = None,
                          player_id: str = None,
                          enums=False
@@ -229,9 +229,9 @@ class SwgohComlink:
         :return: dict
         """
         payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
-        return await self._post('player', payload)
+        return self._post('player', payload)
 
-    async def get_player_arena(self,
+    def get_player_arena(self,
                                allycode: int = None,
                                player_id: str = None,
                                enums=False
@@ -244,12 +244,12 @@ class SwgohComlink:
         :return: dict
         """
         payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
-        return await self._post('playerArena', payload)
+        return self._post('playerArena', payload)
 
     # alias to allow for get_arena() calls as a shortcut for get_player_arena()
     get_arena = get_player_arena
 
-    async def get_guild(self,
+    def get_guild(self,
                         guild_id: str,
                         include_recent_guild_activity_info=False,
                         enums=False
@@ -268,12 +268,12 @@ class SwgohComlink:
             },
             "enums": enums
         }
-        guild = await self._post('guild', payload)
+        guild = self._post('guild', payload)
         if 'guild' in guild.keys():
             guild = guild['guild']
         return guild
 
-    async def get_guilds_by_name(self,
+    def get_guilds_by_name(self,
                                  name: str,
                                  start_index: int = 0,
                                  count: int = 10,
@@ -296,9 +296,9 @@ class SwgohComlink:
             },
             "enums": enums
         }
-        return await self._post('getGuilds', payload)
+        return self._post('getGuilds', payload)
 
-    async def get_guilds_by_criteria(self,
+    def get_guilds_by_criteria(self,
                                      search_criteria: dict,
                                      start_index: int = 0,
                                      count: int = 10,
@@ -330,4 +330,4 @@ class SwgohComlink:
             },
             "enums": enums
         }
-        return await self._post('getGuilds', payload)
+        return self._post('getGuilds', payload)
