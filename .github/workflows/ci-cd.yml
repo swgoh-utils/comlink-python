@@ -1,0 +1,103 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: swgoh-comlink CI/CD workflow
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      comlink:
+        image: ghcr.io/swgoh-utils/swgoh-comlink:latest
+        env:
+          APP_NAME: Python_Wrapper_Test
+          PORT: 3030
+        ports:
+          - 3000:3030
+      comlink-hmac:
+        image: ghcr.io/swgoh-utils/swgoh-comlink:latest
+        env:
+          APP_NAME: Python_Wrapper_HMAC_Test
+          PORT: 3033
+          ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
+          SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
+        ports:
+          - 3003:3033
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest requests
+        pip install -e .
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      run: |
+        pytest pytests/
+    - name: Test HMAC with pytest
+      run: pytest pytests/
+      env:
+        ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
+        SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
+        PORT: 3003
+  cd:
+    # Only run this job if CI passes
+    needs: ci
+    # Only run this job if new work is pushed to the "main" branch
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.11
+      - name: Check-out repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install python-semantic-release
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -e .
+      - name: Use Python Semantic Release to prepare release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          semantic-release publish
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+      - name: Test install from TestPyPI
+        run: |
+          pip install \
+          --index-url https://test.pypi.org/simple/ \
+          --extra-index-url https://pypi.org/simple \
+          swgoh_comlink
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
