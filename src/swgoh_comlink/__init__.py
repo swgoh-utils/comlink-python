@@ -2,14 +2,16 @@
 Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
 
-from json import loads, dumps
-import requests
-import hmac
 import hashlib
+import hmac
 import os
 import time
+from json import loads, dumps
+
+import requests
 
 from .version import __version__
+
 
 def _get_player_payload(allycode=None, player_id=None, enums=False):
     """
@@ -38,11 +40,12 @@ class SwgohComlink:
     game servers for exposed endpoints via the swgoh-comlink proxy library
     running on the same host.
     """
+
     def __init__(self,
-                 url : str = "http://localhost:3000",
-                 access_key : str = None,
-                 secret_key : str = None,
-                 stats_url : str = "http://localhost:3223"
+                 url: str = "http://localhost:3000",
+                 access_key: str = None,
+                 secret_key: str = None,
+                 stats_url: str = "http://localhost:3223"
                  ):
         """
         Set initial values when new class instance is created
@@ -74,15 +77,15 @@ class SwgohComlink:
             self.hmac = True
 
         meta_data = self.get_game_metadata()
-        if 'latestGamedataVersion' in meta_data.keys():
+        if 'latestGamedataVersion' in meta_data:
             self.game_version = meta_data['latestGamedataVersion']
-        if 'latestLocalizationBundleVersion' in meta_data.keys():
+        if 'latestLocalizationBundleVersion' in meta_data:
             self.localization_version = meta_data['latestLocalizationBundleVersion']
 
     def _post(self,
-              endpoint: str,
-              payload : dict
-              ):
+                    endpoint: str,
+                    payload: dict
+                    ):
         """
         Execute HTTP POST operation against swgoh-comlink
         :param endpoint: which game endpoint to call
@@ -135,11 +138,11 @@ class SwgohComlink:
             raise e
 
     def get_game_data(self,
-                      version : str = "",
-                      include_pve_units = True,
-                      request_segment : int = 0,
-                      enums = False
-                      ):
+                            version: str = "",
+                            include_pve_units=True,
+                            request_segment: int = 0,
+                            enums=False
+                            ):
         """
         Get game data
         :param version: string (found in metadata key value 'latestGamedataVersion')
@@ -148,11 +151,12 @@ class SwgohComlink:
         :param enums: boolean [Defaults to False]
         :return: dict
         """
-        if version == "":
-            version = self.game_version
+        game_version = self.game_version
+        if version != "":
+            game_version = version
         payload = {
             "payload": {
-                "version": f"{version}",
+                "version": f"{game_version}",
                 "includePveUnits": include_pve_units,
                 "requestSegment": request_segment
             },
@@ -162,42 +166,65 @@ class SwgohComlink:
         return self._post('data', payload)
 
     def get_localization(self,
-                         id : str,
-                         unzip = False,
-                         enums = False
-                         ):
+                               id: str,
+                               unzip=False,
+                               enums=False
+                               ):
         """
         Get localization data from game
-        :param str id: required latestLocalizationBundleVersion found in game metadata
+        :param id: latestLocalizationBundleVersion found in game metadata. (Required)
         :param unzip: boolean [Defaults to False]
         :param enums: boolean [Defaults to False]
         :return: dict
         """
-        payload = {}
-        payload['unzip'] = unzip
-        payload['enums'] = enums
-        payload['payload'] = {}
-        payload['payload']['id'] = id
+        payload = {
+            'unzip': unzip,
+            'enums': enums,
+            'payload': {
+                'id': id
+            }
+        }
         return self._post('localization', payload)
 
-    def get_game_metadata(self):
+    get_localization_bundle = get_localization
+
+    def get_game_metadata(self, client_specs = None, enums = False):
         """
         Get the game metadata. Game metadata contains the current game and localization versions.
-        :return: json
+        :param client_specs:  Optional dictionary containing
+        :param enums: Boolean signifying whether enums in response should be translated to text. [Default: False]
+        :return: dict
+
+        {
+          "payload": {
+            "clientSpecs": {
+              "platform": "string",
+              "bundleId": "string",
+              "externalVersion": "string",
+              "internalVersion": "string",
+              "region": "string"
+            }
+          },
+          "enums": false
+        }
         """
-        return self._post('metadata', {})
+        if client_specs:
+            payload = { "payload": { "client_specs": client_specs}, "enums": enums }
+        else:
+            payload = {}
+        return self._post('metadata', payload)
 
     get_metadata = get_game_metadata
 
     def get_player(self,
-                   allycode : int = None,
-                   player_id : str = None,
-                   enums = False
-                   ):
+                         allycode: str or int = None,
+                         player_id: str = None,
+                         enums=False
+                         ):
         """
         Get player information from game
         :param allycode: integer or string representing player allycode
-        :param player_id: string reprenting player game ID
+        :param player_id: string representing player game ID
         :param enums: boolean [Defaults to False]
         :return: dict
         """
@@ -205,14 +232,14 @@ class SwgohComlink:
         return self._post('player', payload)
 
     def get_player_arena(self,
-                         allycode : int = None,
-                         player_id: str = None,
-                         enums = False
-                         ):
+                               allycode: int = None,
+                               player_id: str = None,
+                               enums=False
+                               ):
         """
         Get player arena information from game
         :param allycode: integer or string representing player allycode
-        :param player_id: string reprenting player game ID
+        :param player_id: string representing player game ID
         :param enums: boolean [Defaults to False]
         :return: dict
         """
@@ -223,31 +250,40 @@ class SwgohComlink:
     get_arena = get_player_arena
 
     def get_guild(self,
-                  guild_id: str,
-                  include_recent_guild_activity_info=False
-                  ):
+                        guild_id: str,
+                        include_recent_guild_activity_info=False,
+                        enums=False
+                        ):
         """
         Get guild information for a specific Guild ID.
-        :param guild_id (required): ID of guild to retrieve. Guild ID can be found in the output of the get_player() call.
-        :param include_recent_guild_activity_info (optional): boolean [Default: False]
+        :param guild_id: ID of guild to retrieve. Guild ID can be found in the output of the get_player() call. (Required)
+        :param include_recent_guild_activity_info: boolean [Default: False] (Optional)
+        :param enums: Should enums in response be translated to text. [Default: False] (Optional)
         :return: dict
         """
-        guild = self._post('guild', {"payload": {"guildId": guild_id}})
+        payload = {
+            "payload": {
+                "guildId": guild_id,
+                "include_recent_guild_activity_info": include_recent_guild_activity_info
+            },
+            "enums": enums
+        }
+        guild = self._post('guild', payload)
         if 'guild' in guild.keys():
             guild = guild['guild']
         return guild
 
     def get_guilds_by_name(self,
-                           name: str,
-                           start_index: int = 0,
-                           count: int = 10,
-                           enums=False
-                           ):
+                                 name: str,
+                                 start_index: int = 0,
+                                 count: int = 10,
+                                 enums=False
+                                 ):
         """
         Search for guild by name and return match.
         :param name: string for guild name search
         :param start_index: integer representing where in the resulting list of guild name matches the return object should begin
-        :param count: integer represnting the maximum number of matches to return, [Default: 10]
+        :param count: integer representing the maximum number of matches to return, [Default: 10]
         :param enums: Whether to translate enums in response to text, [Default: False]
         :return: dict
         """
@@ -262,18 +298,17 @@ class SwgohComlink:
         }
         return self._post('getGuilds', payload)
 
-
     def get_guilds_by_criteria(self,
-                           search_criteria: dict,
-                           start_index: int = 0,
-                           count: int = 10,
-                           enums=False
-                           ):
+                                     search_criteria: dict,
+                                     start_index: int = 0,
+                                     count: int = 10,
+                                     enums=False
+                                     ):
         """
         Search for guild by guild criteria and return matches.
         :param search_criteria: Dictionary
         :param start_index: integer representing where in the resulting list of guild name matches the return object should begin
-        :param count: integer represnting the maximum number of matches to return
+        :param count: integer representing the maximum number of matches to return
         :param enums: Whether to translate enum values to text [Default: False]
         :return: dict
 
@@ -286,7 +321,7 @@ class SwgohComlink:
             "recent_tb_participated_in": []
         }
         """
-        payload =  {
+        payload = {
             "payload": {
                 "searchCriteria": search_criteria,
                 "filterType": 5,
@@ -296,4 +331,3 @@ class SwgohComlink:
             "enums": enums
         }
         return self._post('getGuilds', payload)
-
