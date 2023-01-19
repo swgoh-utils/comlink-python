@@ -22,7 +22,7 @@ classifiers = [
 "Bug Tracker" = "https://github.com/swgoh-utils/comlink-python/issues"
 
 [tool.setuptools.dynamic]
-version = {attr = "src/swgoh_comlink.__version__"}
+version = {attr = "src/swgoh_comlink/version.__version__"}
 
 [tool.semantic_release]
 version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"   # source location of version string
