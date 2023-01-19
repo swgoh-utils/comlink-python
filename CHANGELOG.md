@@ -2,6 +2,9 @@
 
 <!--next-version-placeholder-->
 
+## v1.7.6 (2023-01-19)
+
+
 ## v1.7.5 (2023-01-19)
 ### Feature
 * Added CI/CD workflow ([`5519abb`](https://github.com/swgoh-utils/comlink-python/commit/5519abb63f56cc1e4ec438c2fbb37d90788a435c))

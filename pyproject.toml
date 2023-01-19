@@ -21,13 +21,16 @@ classifiers = [
 "Homepage" = "https://github.com/swgoh-utils/comlink-python"
 "Bug Tracker" = "https://github.com/swgoh-utils/comlink-python/issues"
 
+[tool.setuptools.dynamic]
+version = {attr = "src/swgoh_comlink.__version__"}
+
 [tool.semantic_release]
 version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"   # source location of version string
 version_source = "commit"                                                    # Set version source to "commit" so that
                                                                              #  __version__.py is updated,
 branch = "main"                                                              # branch to make releases of
 changelog_file = "CHANGELOG.md"                                              # changelog file
-# build_command = "python3 -m build"                                           # build dists
+build_command = "python3 -m build"                                           # build dists
 dist_path = "dist/"                                                          # where to put dists
 upload_to_release = true                                                     # auto-create GitHub release
 upload_to_pypi = false                                                       # don't auto-upload to PyPI
