@@ -264,7 +264,7 @@ class SwgohComlink:
         payload = {
             "payload": {
                 "guildId": guild_id,
-                "include_recent_guild_activity_info": include_recent_guild_activity_info
+                "includeRecentGuildActivityInfo": include_recent_guild_activity_info
             },
             "enums": enums
         }
