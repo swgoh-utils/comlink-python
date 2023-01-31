@@ -144,12 +144,7 @@ class SwgohComlink:
         Get an object containing the events game data
         :return: object
         """
-        url = self.url_base + '/enums'
-        try:
-            r = requests.request('GET', url)
-            return loads(r.content.decode('utf-8'))
-        except Exception as e:
-            raise e
+        return self._post('getEvents', {})
 
     # alias for non PEP usage of direct endpoint calls
     getEvents = get_events
