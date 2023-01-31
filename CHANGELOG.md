@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v1.9.0 (2023-01-31)
+### Feature
+* Add get_events(). update get_player_arena to include 'playerDetailsOnly' parameter. ([`49189ae`](https://github.com/swgoh-utils/comlink-python/commit/49189ae22d71d6923f8e3d21525551d9b3e1d679))
+* Add get_events(). update get_player_arena to include 'playerDetailsOnly' parameter. ([`18a143e`](https://github.com/swgoh-utils/comlink-python/commit/18a143e77b86b41193588dda23ce8d9ef6c47d7f))
+
 ## v1.8.0 (2023-01-31)
 ### Feature
 * Add get_unit_stats() ([`c1e46f8`](https://github.com/swgoh-utils/comlink-python/commit/c1e46f8af417dc620422040bbafe9c90a90f4cf1))
