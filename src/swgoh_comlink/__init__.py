@@ -118,7 +118,7 @@ class SwgohComlink:
             hmac_digest = hmac_obj.hexdigest()
             req_headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
         try:
-            r = requests.request('POST', post_url, json=payload, headers=req_headers)
+            r = requests.post(post_url, json=payload, headers=req_headers)
             return loads(r.content.decode('utf-8'))
         except Exception as e:
             raise e
