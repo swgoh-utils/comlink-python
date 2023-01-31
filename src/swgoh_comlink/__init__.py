@@ -83,17 +83,20 @@ class SwgohComlink:
             self.localization_version = meta_data['latestLocalizationBundleVersion']
 
     def _post(self,
-                    endpoint: str,
-                    payload: dict
+                    url_base: str = None,
+                    endpoint: str = None,
+                    payload: dict = None
                     ):
         """
         Execute HTTP POST operation against swgoh-comlink
+        :param url_base: Base URL for the request method
         :param endpoint: which game endpoint to call
         :param payload: POST payload json data
         :return: dict
         """
-        # print(f'   ### [POST DEBUG] ### Received payload: {payload}, type: {type(payload)}')
-        post_url = self.url_base + f'/{endpoint}'
+        if not url_base:
+            url_base = self.url_base
+        post_url = url_base + f'/{endpoint}'
         req_headers = {}
         # If access_key and secret_key are set, perform HMAC security
         if self.hmac:
@@ -107,23 +110,42 @@ class SwgohComlink:
             # comlink since it is written with javascript as the primary object model
             # ordered dicts are also required with the 'payload' key listed first for proper MD5 hash calculation
             if payload:
-                # print('   ### [PAYLOAD DEBUG] ### dumping JSON string')
                 payload_string = dumps(payload, separators=(',', ':'))
             else:
-                # print('   ### [PAYLOAD DEBUG] ### dumping regular string')
                 payload_string = dumps({})
-            # print(f'   ### [DEBUG] ### payload_string: {payload_string}')
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
-            # print(f'   ### [DEBUG] ### payload MD5: {payload_hash_digest}')
             hmac_obj.update(payload_hash_digest.encode())
             hmac_digest = hmac_obj.hexdigest()
             req_headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
-            # print(f'   ### [DEBUG] ### Auth Header: HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}')
         try:
-            r = requests.request('POST', post_url, json=payload, headers=req_headers)
+            r = requests.post(post_url, json=payload, headers=req_headers)
             return loads(r.content.decode('utf-8'))
         except Exception as e:
             raise e
+
+
+    def get_unit_stats(self, request_payload, flags = None, language = None):
+        """
+        Calculate unit stats using swgoh-stats service interface to swgoh-comlink
+
+        :param request_payload:
+        :param flags: List of flags to include in the request URI
+        :param language: String indicating the desired localized language
+        :return: object
+        """
+        query_string = None
+
+        if flags:
+            if isinstance(flags, list):
+                flags = 'flags=' + ','.join(flags)
+            else:
+                raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
+        if language:
+            language = f'language={language}'
+        if flags or language:
+            query_string = f'?' + '&'.join(filter(None, [flags, language]))
+        endpoint_string = f'api' + query_string if query_string else 'api'
+        return self._post(url_base=self.stats_url_base, endpoint=endpoint_string, payload=request_payload)
 
     def get_enums(self):
         """
@@ -179,8 +201,7 @@ class SwgohComlink:
             },
             "enums": enums
         }
-        # print(f'   ### [GAME DATA DEBUG] ### Sending payload: {payload}')
-        return self._post('data', payload)
+        return self._post(endpoint='data', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGameData = get_game_data
@@ -203,7 +224,7 @@ class SwgohComlink:
                 'id': id
             }
         }
-        return self._post('localization', payload)
+        return self._post(endpoint='localization', payload=payload)
 
     # aliases for non PEP usage of direct endpoint calls
     getLocalization = get_localization
@@ -234,7 +255,7 @@ class SwgohComlink:
             payload = { "payload": { "client_specs": client_specs}, "enums": enums }
         else:
             payload = {}
-        return self._post('metadata', payload)
+        return self._post(endpoint='metadata', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGameMetaData = get_game_metadata
@@ -254,7 +275,7 @@ class SwgohComlink:
         :return: dict
         """
         payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
-        return self._post('player', payload)
+        return self._post(endpoint='player', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getPlayer = get_player
@@ -275,7 +296,7 @@ class SwgohComlink:
         """
         payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         payload['payload']['playerDetailsOnly'] = playerDetailsOnly
-        return self._post('playerArena', payload)
+        return self._post(endpoint='playerArena', payload=payload)
 
     # alias to allow for get_arena() calls as a shortcut for get_player_arena() and non PEP variations
     get_arena = get_player_arena
@@ -302,7 +323,7 @@ class SwgohComlink:
             },
             "enums": enums
         }
-        guild = self._post('guild', payload)
+        guild = self._post(endpoint='guild', payload=payload)
         if 'guild' in guild.keys():
             guild = guild['guild']
         return guild
@@ -333,7 +354,7 @@ class SwgohComlink:
             },
             "enums": enums
         }
-        return self._post('getGuilds', payload)
+        return self._post(endpoint='getGuilds', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGuildByName = get_guilds_by_name
@@ -370,7 +391,7 @@ class SwgohComlink:
             },
             "enums": enums
         }
-        return self._post('getGuilds', payload)
+        return self._post(endpoint='getGuilds', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGuildByCriteria = get_guilds_by_criteria

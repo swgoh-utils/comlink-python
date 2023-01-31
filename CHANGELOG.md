@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v1.8.0 (2023-01-31)
+### Feature
+* Add get_unit_stats() ([`c1e46f8`](https://github.com/swgoh-utils/comlink-python/commit/c1e46f8af417dc620422040bbafe9c90a90f4cf1))
+* Initial get_unit_stat() implementation. ([`59cba96`](https://github.com/swgoh-utils/comlink-python/commit/59cba96f290de3f12e5e807a50a15044eb53fceb))
+
 ## v1.7.7 (2023-01-20)
 ### Fix
 * Replace getGuild() JSON parameter element include_recent_guild_activity_info with includeRecentGuildActivityInfo ([`4d58e04`](https://github.com/swgoh-utils/comlink-python/commit/4d58e04fb3c3824ffd99b04080a03d178030e61e))
