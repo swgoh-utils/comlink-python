@@ -10,14 +10,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    networks:
+      - comlink-net
     services:
       comlink:
+        container_name: swgoh-comlink
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
           APP_NAME: Python_Wrapper_Test
           PORT: 3030
         ports:
           - 3000:3030
+        networks:
+          - comlink-net
       comlink-hmac:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
@@ -27,6 +32,20 @@ jobs:
           SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
         ports:
           - 3003:3033
+      comlink-stats:
+        container_name: swgoh-stats
+        image: ghcr.io/swgoh-utils/swgoh-stats:latest
+        depends_on:
+          - swgoh-comlink
+        environment:
+          - PORT=4223
+          - USE_SEGMENTS=true
+          - ZIP_GAME_DATA=true
+          - CLIENT_URL=http:swgoh-comlink:3030
+        ports:
+          - 3223:4223
+        networks:
+          - comlink-net
     strategy:
       fail-fast: false
       matrix:
