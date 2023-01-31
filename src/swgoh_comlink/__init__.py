@@ -150,7 +150,7 @@ class SwgohComlink:
     def get_enums(self):
         """
         Get an object containing the game data enums
-        :return: dict
+        :return: object
         """
         url = self.url_base + '/enums'
         try:
@@ -158,6 +158,18 @@ class SwgohComlink:
             return loads(r.content.decode('utf-8'))
         except Exception as e:
             raise e
+
+    # alias for non PEP usage of direct endpoint calls
+    getEnums = get_enums
+    def get_events(self):
+        """
+        Get an object containing the events game data
+        :return: object
+        """
+        return self._post('getEvents', {})
+
+    # alias for non PEP usage of direct endpoint calls
+    getEvents = get_events
 
     def get_game_data(self,
                             version: str = "",
@@ -186,6 +198,8 @@ class SwgohComlink:
         }
         return self._post(endpoint='data', payload=payload)
 
+    # alias for non PEP usage of direct endpoint calls
+    getGameData = get_game_data
     def get_localization(self,
                                id: str,
                                unzip=False,
@@ -207,6 +221,9 @@ class SwgohComlink:
         }
         return self._post(endpoint='localization', payload=payload)
 
+    # aliases for non PEP usage of direct endpoint calls
+    getLocalization = get_localization
+    getLocalizationBundle = get_localization
     get_localization_bundle = get_localization
 
     def get_game_metadata(self, client_specs = None, enums = False):
@@ -235,6 +252,9 @@ class SwgohComlink:
             payload = {}
         return self._post(endpoint='metadata', payload=payload)
 
+    # alias for non PEP usage of direct endpoint calls
+    getGameMetaData = get_game_metadata
+    getMetaData = get_game_metadata
     get_metadata = get_game_metadata
 
     def get_player(self,
@@ -252,23 +272,32 @@ class SwgohComlink:
         payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         return self._post(endpoint='player', payload=payload)
 
+    # alias for non PEP usage of direct endpoint calls
+    getPlayer = get_player
+
     def get_player_arena(self,
                                allycode: int = None,
                                player_id: str = None,
+                               playerDetailsOnly = False,
                                enums=False
                                ):
         """
         Get player arena information from game
         :param allycode: integer or string representing player allycode
         :param player_id: string representing player game ID
+        :param playerDetailsOnly: filter results to only player details [Defaults to False]
         :param enums: boolean [Defaults to False]
         :return: dict
         """
         payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload['payload']['playerDetailsOnly'] = playerDetailsOnly
         return self._post(endpoint='playerArena', payload=payload)
 
-    # alias to allow for get_arena() calls as a shortcut for get_player_arena()
+    # alias to allow for get_arena() calls as a shortcut for get_player_arena() and non PEP variations
     get_arena = get_player_arena
+    get_player_arena_profile = get_player_arena
+    getPlayerArena = get_player_arena
+    getPlayerArenaProfile = get_player_arena
 
     def get_guild(self,
                         guild_id: str,
@@ -294,6 +323,9 @@ class SwgohComlink:
             guild = guild['guild']
         return guild
 
+    # alias for non PEP usage of direct endpoint calls
+    getGuild = get_guild
+
     def get_guilds_by_name(self,
                                  name: str,
                                  start_index: int = 0,
@@ -318,6 +350,9 @@ class SwgohComlink:
             "enums": enums
         }
         return self._post(endpoint='getGuilds', payload=payload)
+
+    # alias for non PEP usage of direct endpoint calls
+    getGuildByName = get_guilds_by_name
 
     def get_guilds_by_criteria(self,
                                      search_criteria: dict,
@@ -352,3 +387,6 @@ class SwgohComlink:
             "enums": enums
         }
         return self._post(endpoint='getGuilds', payload=payload)
+
+    # alias for non PEP usage of direct endpoint calls
+    getGuildByCriteria = get_guilds_by_criteria
