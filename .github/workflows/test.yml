@@ -29,8 +29,7 @@ jobs:
           - 3003:3033
       comlink-stats:
         image: ghcr.io/swgoh-utils/swgoh-stats:latest
-        depends_on:
-          - comlink
+        needs: comlink
         env:
           - PORT=4223
           - USE_SEGMENTS=true
