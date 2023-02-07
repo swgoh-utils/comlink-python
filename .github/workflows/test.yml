@@ -10,19 +10,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    networks:
-      - comlink-net
     services:
       comlink:
-        container_name: swgoh-comlink
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
           APP_NAME: Python_Wrapper_Test
           PORT: 3030
         ports:
           - 3000:3030
-        networks:
-          - comlink-net
       comlink-hmac:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
@@ -33,19 +28,15 @@ jobs:
         ports:
           - 3003:3033
       comlink-stats:
-        container_name: swgoh-stats
         image: ghcr.io/swgoh-utils/swgoh-stats:latest
-        depends_on:
-          - swgoh-comlink
-        environment:
+        needs: comlink
+        env:
           - PORT=4223
           - USE_SEGMENTS=true
           - ZIP_GAME_DATA=true
           - CLIENT_URL=http:swgoh-comlink:3030
         ports:
           - 3223:4223
-        networks:
-          - comlink-net
     strategy:
       fail-fast: false
       matrix:
@@ -59,7 +50,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest requests
+        python -m pip install flake8 pytest requests parameterized
         pip install -e .
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
