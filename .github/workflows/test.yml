@@ -30,8 +30,8 @@ jobs:
       comlink-stats:
         image: ghcr.io/swgoh-utils/swgoh-stats:latest
         depends_on:
-          - swgoh-comlink
-        environment:
+          - comlink
+        env:
           - PORT=4223
           - USE_SEGMENTS=true
           - ZIP_GAME_DATA=true
