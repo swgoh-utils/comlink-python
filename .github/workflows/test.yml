@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     services:
       comlink:
-        container_name: swgoh-comlink
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
           APP_NAME: Python_Wrapper_Test
@@ -29,7 +28,6 @@ jobs:
         ports:
           - 3003:3033
       comlink-stats:
-        container_name: swgoh-stats
         image: ghcr.io/swgoh-utils/swgoh-stats:latest
         depends_on:
           - swgoh-comlink
