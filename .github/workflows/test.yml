@@ -10,8 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    networks:
-      - comlink-net
     services:
       comlink:
         container_name: swgoh-comlink
@@ -21,8 +19,6 @@ jobs:
           PORT: 3030
         ports:
           - 3000:3030
-        networks:
-          - comlink-net
       comlink-hmac:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
@@ -44,8 +40,6 @@ jobs:
           - CLIENT_URL=http:swgoh-comlink:3030
         ports:
           - 3223:4223
-        networks:
-          - comlink-net
     strategy:
       fail-fast: false
       matrix:
@@ -59,7 +53,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest requests
+        python -m pip install flake8 pytest requests parameterized
         pip install -e .
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
