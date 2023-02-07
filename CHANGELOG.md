@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.10.0 (2023-02-07)
+### Feature
+* Add get_leaderboard(). update README.md. add requests package to install_dependencies iin pyproject.toml. ([`84f1982`](https://github.com/swgoh-utils/comlink-python/commit/84f1982cad26a274cb354f3219f54d2d42b218c9))
+
 ## v1.9.0 (2023-01-31)
 ### Feature
 * Add get_events(). update get_player_arena to include 'playerDetailsOnly' parameter. ([`49189ae`](https://github.com/swgoh-utils/comlink-python/commit/49189ae22d71d6923f8e3d21525551d9b3e1d679))
