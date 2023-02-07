@@ -1,6 +1,7 @@
 """
 Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
+from __future__ import annotations
 
 import hashlib
 import hmac
@@ -45,7 +46,10 @@ class SwgohComlink:
                  url: str = "http://localhost:3000",
                  access_key: str = None,
                  secret_key: str = None,
-                 stats_url: str = "http://localhost:3223"
+                 stats_url: str = "http://localhost:3223",
+                 host: str = None,
+                 port: int = 3000,
+                 stats_port: int = 3223
                  ):
         """
         Set initial values when new class instance is created
@@ -53,13 +57,20 @@ class SwgohComlink:
         :param access_key: The HMAC public key. Default to None which indicates HMAC is not used.
         :param secret_key: The HMAC private key. Default to None which indicates HMAC is not used.
         :param stats_url: The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
+        :param host: IP address or DNS name of server where the swgoh-comlink service is running
+        :param port: TCP port number where the swgoh-comlink service is running [Default: 3000]
+        :param stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
         """
         self.__version__ = __version__
         self.url_base = url
         self.stats_url_base = stats_url
         self.hmac = False  # HMAC use disabled by default
-        self.game_version = None
-        self.localization_version = None
+
+        # host and port parameters override defaults
+        if host:
+            self.url_base = f'http://{host}:{port}'
+            self.stats_url_base = f'http://{host}:{stats_port}'
+
         # Use values passed from client first, otherwise check for environment variables
         if access_key:
             self.access_key = access_key
@@ -76,17 +87,16 @@ class SwgohComlink:
         if self.access_key and self.secret_key:
             self.hmac = True
 
-        meta_data = self.get_game_metadata()
-        if 'latestGamedataVersion' in meta_data:
-            self.game_version = meta_data['latestGamedataVersion']
-        if 'latestLocalizationBundleVersion' in meta_data:
-            self.localization_version = meta_data['latestLocalizationBundleVersion']
+    def _get_game_version(self):
+        """ Get the current game version """
+        md = self.get_game_metadata()
+        return md['latestGamedataVersion']
 
     def _post(self,
-                    url_base: str = None,
-                    endpoint: str = None,
-                    payload: dict = None
-                    ):
+              url_base: str = None,
+              endpoint: str = None,
+              payload: dict = None
+              ):
         """
         Execute HTTP POST operation against swgoh-comlink
         :param url_base: Base URL for the request method
@@ -123,8 +133,7 @@ class SwgohComlink:
         except Exception as e:
             raise e
 
-
-    def get_unit_stats(self, request_payload, flags = None, language = None):
+    def get_unit_stats(self, request_payload, flags=None, language=None):
         """
         Calculate unit stats using swgoh-stats service interface to swgoh-comlink
 
@@ -161,22 +170,27 @@ class SwgohComlink:
 
     # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums
-    def get_events(self):
+
+    def get_events(self, enums=False):
         """
         Get an object containing the events game data
         :return: object
         """
-        return self._post('getEvents', {})
+        payload = {
+            'payload': {},
+            'enums': enums
+        }
+        return self._post(endpoint='getEvents', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getEvents = get_events
 
     def get_game_data(self,
-                            version: str = "",
-                            include_pve_units=True,
-                            request_segment: int = 0,
-                            enums=False
-                            ):
+                      version: str = "",
+                      include_pve_units=True,
+                      request_segment: int = 0,
+                      enums=False
+                      ):
         """
         Get game data
         :param version: string (found in metadata key value 'latestGamedataVersion')
@@ -185,8 +199,9 @@ class SwgohComlink:
         :param enums: boolean [Defaults to False]
         :return: dict
         """
-        game_version = self.game_version
-        if version != "":
+        if version == "":
+            game_version = self._get_game_version()
+        else:
             game_version = version
         payload = {
             "payload": {
@@ -200,11 +215,12 @@ class SwgohComlink:
 
     # alias for non PEP usage of direct endpoint calls
     getGameData = get_game_data
+
     def get_localization(self,
-                               id: str,
-                               unzip=False,
-                               enums=False
-                               ):
+                         id: str,
+                         unzip=False,
+                         enums=False
+                         ):
         """
         Get localization data from game
         :param id: latestLocalizationBundleVersion found in game metadata. (Required)
@@ -226,7 +242,7 @@ class SwgohComlink:
     getLocalizationBundle = get_localization
     get_localization_bundle = get_localization
 
-    def get_game_metadata(self, client_specs = None, enums = False):
+    def get_game_metadata(self, client_specs=None, enums=False):
         """
         Get the game metadata. Game metadata contains the current game and localization versions.
         :param client_specs:  Optional dictionary containing
@@ -247,7 +263,7 @@ class SwgohComlink:
         }
         """
         if client_specs:
-            payload = { "payload": { "client_specs": client_specs}, "enums": enums }
+            payload = {"payload": {"client_specs": client_specs}, "enums": enums}
         else:
             payload = {}
         return self._post(endpoint='metadata', payload=payload)
@@ -258,10 +274,10 @@ class SwgohComlink:
     get_metadata = get_game_metadata
 
     def get_player(self,
-                         allycode: str or int = None,
-                         player_id: str = None,
-                         enums=False
-                         ):
+                   allycode: str or int = None,
+                   player_id: str = None,
+                   enums=False
+                   ):
         """
         Get player information from game
         :param allycode: integer or string representing player allycode
@@ -276,11 +292,11 @@ class SwgohComlink:
     getPlayer = get_player
 
     def get_player_arena(self,
-                               allycode: int = None,
-                               player_id: str = None,
-                               playerDetailsOnly = False,
-                               enums=False
-                               ):
+                         allycode: int = None,
+                         player_id: str = None,
+                         playerDetailsOnly=False,
+                         enums=False
+                         ):
         """
         Get player arena information from game
         :param allycode: integer or string representing player allycode
@@ -300,10 +316,10 @@ class SwgohComlink:
     getPlayerArenaProfile = get_player_arena
 
     def get_guild(self,
-                        guild_id: str,
-                        include_recent_guild_activity_info=False,
-                        enums=False
-                        ):
+                  guild_id: str,
+                  include_recent_guild_activity_info=False,
+                  enums=False
+                  ):
         """
         Get guild information for a specific Guild ID.
         :param guild_id: ID of guild to retrieve. Guild ID can be found in the output of the get_player() call. (Required)
@@ -327,11 +343,11 @@ class SwgohComlink:
     getGuild = get_guild
 
     def get_guilds_by_name(self,
-                                 name: str,
-                                 start_index: int = 0,
-                                 count: int = 10,
-                                 enums=False
-                                 ):
+                           name: str,
+                           start_index: int = 0,
+                           count: int = 10,
+                           enums=False
+                           ):
         """
         Search for guild by name and return match.
         :param name: string for guild name search
@@ -355,11 +371,11 @@ class SwgohComlink:
     getGuildByName = get_guilds_by_name
 
     def get_guilds_by_criteria(self,
-                                     search_criteria: dict,
-                                     start_index: int = 0,
-                                     count: int = 10,
-                                     enums=False
-                                     ):
+                               search_criteria: dict,
+                               start_index: int = 0,
+                               count: int = 10,
+                               enums=False
+                               ):
         """
         Search for guild by guild criteria and return matches.
         :param search_criteria: Dictionary
@@ -390,3 +406,70 @@ class SwgohComlink:
 
     # alias for non PEP usage of direct endpoint calls
     getGuildByCriteria = get_guilds_by_criteria
+
+    def get_leaderboard(self,
+                        leaderboard_type: int,
+                        league: int | str = None,
+                        division: int | str = None,
+                        event_instance_id: str = None,
+                        group_id: str = None,
+                        enums=False
+                        ):
+        """
+        Retrieve Grand Arena Championship leaderboard information.
+        :param leaderboard_type: Type 4 is for scanning gac brackets, and only returns results while an event is active.
+                                    When type 4 is indicated, the "league" and "division" arguments must also be provided.
+                                 Type 6 is for the global leaderboards for the league + divisions.
+                                    When type 6 is indicated, the "event_instance_id" and "group_id" must also be provided.
+        :param league: Enum values 20, 40, 60, 80, and 100 correspond to carbonite, bronzium, chromium, aurodium,
+                       and kyber respectively. Also accepts string values for each league.
+        :param division: Enum values 5, 10, 15, 20, and 25 correspond to divisions 5 through 1 respectively.
+                         Also accepts string or int values for each division.
+        :param event_instance_id: When leaderboard_type 4 is indicated, a combination of the event Id and the instance
+                                ID separated by ':'
+                                Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000
+        :param group_id: When leaderboard_type 4 is indicated, must start with the same eventInstanceId, followed
+                         by the league and bracketId, separated by :. The number at the end is the bracketId, and
+                         goes from 0 to N, where N is the last group of 8 players.
+                            Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000:CARBONITE:10431
+        :param enums: Whether to translate enum values to text [Default: False]
+        :return: object
+        """
+        leagues = {
+            'kyber': 100,
+            'aurodium': 80,
+            'chromium': 60,
+            'bronzium': 40,
+            'carbonite': 20
+        }
+        divisions = {
+            '1': 25,
+            '2': 20,
+            '3': 15,
+            '4': 10,
+            '5': 5
+        }
+        # Translate parameters if needed
+        if isinstance(league, str):
+            league = leagues[league.lower()]
+        if isinstance(division, int) and len(str(division)) == 1:
+            division = divisions[str(division).lower()]
+        if isinstance(division, str):
+            division = divisions[division.lower()]
+        payload = {
+            "payload": {
+                "leaderboardType": leaderboard_type,
+            },
+            "enums": enums
+        }
+        if leaderboard_type == 4:
+            payload['payload']['eventInstanceId'] = event_instance_id
+            payload['payload']['groupId'] = group_id
+        elif leaderboard_type == 6:
+            payload['payload']['league'] = league
+            payload['payload']['division'] = division
+        leaderboard = self._post(endpoint='getLeaderboard', payload=payload)
+        return leaderboard
+
+    # alias for non PEP usage of direct endpoint calls
+    getLeaderboard = get_leaderboard

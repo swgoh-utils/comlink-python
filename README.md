@@ -13,7 +13,7 @@ pip install swgoh_comlink
 
 ## Usage
 
-Usage example:
+Basic default usage example:
 
 ```python
 from swgoh_comlink import SwgohComlink
@@ -24,6 +24,30 @@ player_name = player_data['name']
 guild_id = player_data['guildId']
 guild = comlink.get_guild(guild_id)
 guild_name = guild['profile']['name']
+```
+
+Usage example with non-default settings for a swgoh-comlink service running on the local machine at TCP port 3500:
+
+```python
+from swgoh_comlink import SwgohComlink
+
+comlink = SwgohComlink(url='http://localhost:3500')
+player_data = comlink.get_player(245866537)
+player_name = player_data['name']
+guild_id = player_data['guildId']
+guild = comlink.get_guild(guild_id)
+guild_name = guild['profile']['name']
+```
+
+Usage example with non-default settings for a swgoh-comlink service running on the local machine at TCP port 3500 and swgoh-stats service running on the local machine at TCP port 3550:
+
+```python
+from swgoh_comlink import SwgohComlink
+
+comlink = SwgohComlink(url='http://localhost:3500', stats_url='http://localhost:3550')
+player_data = comlink.get_player(245866537)
+player_roster = player_data['rosterUnit']
+roster_with_stats = comlink.get_unit_stats(player_roster)
 ```
 
 Usage example with MHAC enabled:
