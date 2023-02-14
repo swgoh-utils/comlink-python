@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.11.0 (2023-02-14)
+### Feature
+* Add get_guild_leaderboard() ([`402943c`](https://github.com/swgoh-utils/comlink-python/commit/402943cb9441154d36537a27f189e987cbe48cd1))
+
 ## v1.10.0 (2023-02-07)
 ### Feature
 * Add get_leaderboard(). update README.md. add requests package to install_dependencies iin pyproject.toml. ([`84f1982`](https://github.com/swgoh-utils/comlink-python/commit/84f1982cad26a274cb354f3219f54d2d42b218c9))
