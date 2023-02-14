@@ -473,3 +473,24 @@ class SwgohComlink:
 
     # alias for non PEP usage of direct endpoint calls
     getLeaderboard = get_leaderboard
+
+    def get_guild_leaderboard(self, leaderboard_id: list, count: int = 200, enums: bool = False):
+        """
+        Retrieve leaderboard information from SWGOH game servers.
+        :param leaderboard_id: List of objects indicating leaderboard type, month offset, and depending on the
+                                leaderboard type, a defId. For example, leaderboard type 2 would also require a
+                                defId of one of "sith_raid", "rancor", "rancor_challenge", or "aat".
+        :param count: Number of entries to retrieve [Default: 200]
+        :param enums: Convert enums to strings [Default: False]
+        :return: object
+        """
+        if not isinstance(leaderboard_id, list):
+            raise ValueError(f"leaderboard_id argument should be type list not {type(leaderboard_id)}.")
+        payload = dict(payload={
+            'leaderboardId': leaderboard_id,
+            'count': count
+        }, enums=enums)
+        return self._post(endpoint='getGuildLeaderboard', payload=payload)
+
+    # alias for non PEP usage of direct endpoint calls
+    getGuildLeaderboard = get_guild_leaderboard
