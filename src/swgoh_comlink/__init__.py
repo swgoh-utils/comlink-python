@@ -385,12 +385,12 @@ class SwgohComlink:
         :return: dict
 
         search_criteria_template = {
-            "min_member_count": 1,
-            "max_member_count": 50,
-            "include_invite_only": True,
-            "min_guild_galactic_power": 1,
-            "max_guild_galactic_power": 500000000,
-            "recent_tb_participated_in": []
+            "minMemberCount": 1,
+            "maxMemberCount": 50,
+            "includeInviteOnly": True,
+            "minGuildGalacticPower": 1,
+            "maxGuildGalacticPower": 500000000,
+            "recentTbParticipatedIn": []
         }
         """
         payload = {
