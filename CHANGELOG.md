@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.11.1 (2023-02-19)
+### Documentation
+* Changed get_guilds_by_criteria() -> search_criteria_template example elements to snake case for compliance with comlink expected input. ([`87cfbe0`](https://github.com/swgoh-utils/comlink-python/commit/87cfbe05d030e86cccd95924755ef6d9092077a3))
+
 ## v1.11.0 (2023-02-14)
 ### Feature
 * Add get_guild_leaderboard() ([`402943c`](https://github.com/swgoh-utils/comlink-python/commit/402943cb9441154d36537a27f189e987cbe48cd1))
