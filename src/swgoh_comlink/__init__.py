@@ -8,6 +8,8 @@ import hmac
 import os
 import time
 from json import loads, dumps
+from typing import Callable
+import functools
 
 import requests
 
@@ -32,6 +34,26 @@ def _get_player_payload(allycode=None, player_id=None, enums=False):
     else:
         payload['payload']['allyCode'] = f'{allycode}'
     return payload
+
+def alias_param(param_name: str, param_alias: str) -> Callable:
+    """
+    Decorator for aliasing a param in a function
+
+    Args:
+        param_name: name of param in function to alias
+        param_alias: alias that can be used for this param
+    Returns:
+    """
+    def decorator(func: Callable):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            alias_param_value = kwargs.get(param_alias)
+            if alias_param_value:
+                kwargs[param_name] = alias_param_value
+                del kwargs[param_alias]
+            result = func(*args, **kwargs)
+            return result
+        return wrapper
 
 
 class SwgohComlink:
@@ -291,22 +313,23 @@ class SwgohComlink:
     # alias for non PEP usage of direct endpoint calls
     getPlayer = get_player
 
+    @alias_param("player_details_only", alias='playerDetailsOnly')
     def get_player_arena(self,
                          allycode: int = None,
                          player_id: str = None,
-                         playerDetailsOnly=False,
-                         enums=False
+                         player_details_only: bool = False,
+                         enums: bool = False
                          ):
         """
         Get player arena information from game
         :param allycode: integer or string representing player allycode
         :param player_id: string representing player game ID
-        :param playerDetailsOnly: filter results to only player details [Defaults to False]
+        :param player_details_only: filter results to only player details [Defaults to False]
         :param enums: boolean [Defaults to False]
         :return: dict
         """
         payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
-        payload['payload']['playerDetailsOnly'] = playerDetailsOnly
+        payload['payload']['playerDetailsOnly'] = player_details_only
         return self._post(endpoint='playerArena', payload=payload)
 
     # alias to allow for get_arena() calls as a shortcut for get_player_arena() and non PEP variations
