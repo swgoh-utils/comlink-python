@@ -35,26 +35,17 @@ def _get_player_payload(allycode=None, player_id=None, enums=False):
         payload['payload']['allyCode'] = f'{allycode}'
     return payload
 
-def alias_param(param_name: str, param_alias: str) -> Callable:
-    """
-    Decorator for aliasing a param in a function
-
-    Args:
-        param_name: name of param in function to alias
-        param_alias: alias that can be used for this param
-    Returns:
-    """
-    def decorator(func: Callable):
+def param_alias(param: str, alias: str) -> Callable:
+    def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            alias_param_value = kwargs.get(param_alias)
+            alias_param_value = kwargs.get(alias)
             if alias_param_value:
-                kwargs[param_name] = alias_param_value
-                del kwargs[param_alias]
-            result = func(*args, **kwargs)
-            return result
+                kwargs[param] = alias_param_value
+                del kwargs[alias]
+            return func(*args, **kwargs)
         return wrapper
-
+    return decorator
 
 class SwgohComlink:
     """
@@ -313,13 +304,16 @@ class SwgohComlink:
     # alias for non PEP usage of direct endpoint calls
     getPlayer = get_player
 
-    @alias_param("player_details_only", alias='playerDetailsOnly')
+    # Introduced in 1.12.0
+    # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
+    # while fixing the original naming format mistake.
+    @param_alias(param="player_details_only", alias='playerDetailsOnly')
     def get_player_arena(self,
                          allycode: int = None,
                          player_id: str = None,
                          player_details_only: bool = False,
                          enums: bool = False
-                         ):
+                         ) -> object:
         """
         Get player arena information from game
         :param allycode: integer or string representing player allycode
