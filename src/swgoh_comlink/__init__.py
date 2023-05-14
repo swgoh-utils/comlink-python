@@ -16,7 +16,7 @@ import requests
 from .version import __version__
 
 
-def _get_player_payload(allycode=None, player_id=None, enums=False):
+def _get_player_payload(allycode: str | int = None, player_id: str = None, enums: bool = False) -> dict:
     """
     Helper function to build payload for get_player functions
     :param allycode: player allyCode
@@ -100,7 +100,7 @@ class SwgohComlink:
         if self.access_key and self.secret_key:
             self.hmac = True
 
-    def _get_game_version(self):
+    def _get_game_version(self) -> str:
         """ Get the current game version """
         md = self.get_game_metadata()
         return md['latestGamedataVersion']
@@ -109,7 +109,7 @@ class SwgohComlink:
               url_base: str = None,
               endpoint: str = None,
               payload: dict = None
-              ):
+              ) -> dict:
         """
         Execute HTTP POST operation against swgoh-comlink
         :param url_base: Base URL for the request method
@@ -146,14 +146,14 @@ class SwgohComlink:
         except Exception as e:
             raise e
 
-    def get_unit_stats(self, request_payload, flags=None, language=None):
+    def get_unit_stats(self, request_payload: dict, flags: list = None, language: str = None) -> dict:
         """
         Calculate unit stats using swgoh-stats service interface to swgoh-comlink
 
-        :param request_payload:
+        :param request_payload: Dictionary containing units for which to calculate stats
         :param flags: List of flags to include in the request URI
         :param language: String indicating the desired localized language
-        :return: object
+        :return: dict
         """
         query_string = None
 
@@ -169,10 +169,10 @@ class SwgohComlink:
         endpoint_string = f'api' + query_string if query_string else 'api'
         return self._post(url_base=self.stats_url_base, endpoint=endpoint_string, payload=request_payload)
 
-    def get_enums(self):
+    def get_enums(self) -> dict:
         """
         Get an object containing the game data enums
-        :return: object
+        :return: dict
         """
         url = self.url_base + '/enums'
         try:
@@ -184,10 +184,11 @@ class SwgohComlink:
     # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums
 
-    def get_events(self, enums=False):
+    def get_events(self, enums: bool = False):
         """
         Get an object containing the events game data
-        :return: object
+        :param enums: Boolean flag to indicate whether enum value should be converted in response. [Default is False]
+        :return: dict
         """
         payload = {
             'payload': {},
@@ -200,10 +201,10 @@ class SwgohComlink:
 
     def get_game_data(self,
                       version: str = "",
-                      include_pve_units=True,
+                      include_pve_units: bool = True,
                       request_segment: int = 0,
-                      enums=False
-                      ):
+                      enums: bool = False
+                      ) -> dict:
         """
         Get game data
         :param version: string (found in metadata key value 'latestGamedataVersion')
@@ -231,9 +232,9 @@ class SwgohComlink:
 
     def get_localization(self,
                          id: str,
-                         unzip=False,
-                         enums=False
-                         ):
+                         unzip: bool = False,
+                         enums: bool = False
+                         ) -> dict:
         """
         Get localization data from game
         :param id: latestLocalizationBundleVersion found in game metadata. (Required)
@@ -255,7 +256,7 @@ class SwgohComlink:
     getLocalizationBundle = get_localization
     get_localization_bundle = get_localization
 
-    def get_game_metadata(self, client_specs=None, enums=False):
+    def get_game_metadata(self, client_specs: dict = None, enums: bool = False) -> dict:
         """
         Get the game metadata. Game metadata contains the current game and localization versions.
         :param client_specs:  Optional dictionary containing
@@ -287,10 +288,10 @@ class SwgohComlink:
     get_metadata = get_game_metadata
 
     def get_player(self,
-                   allycode: str or int = None,
+                   allycode: str | int = None,
                    player_id: str = None,
-                   enums=False
-                   ):
+                   enums: bool = False
+                   ) -> dict:
         """
         Get player information from game
         :param allycode: integer or string representing player allycode
@@ -309,11 +310,11 @@ class SwgohComlink:
     # while fixing the original naming format mistake.
     @param_alias(param="player_details_only", alias='playerDetailsOnly')
     def get_player_arena(self,
-                         allycode: int = None,
+                         allycode: str | int = None,
                          player_id: str = None,
                          player_details_only: bool = False,
                          enums: bool = False
-                         ) -> object:
+                         ) -> dict:
         """
         Get player arena information from game
         :param allycode: integer or string representing player allycode
@@ -334,12 +335,13 @@ class SwgohComlink:
 
     def get_guild(self,
                   guild_id: str,
-                  include_recent_guild_activity_info=False,
-                  enums=False
-                  ):
+                  include_recent_guild_activity_info: bool = False,
+                  enums: bool = False
+                  ) -> dict:
         """
         Get guild information for a specific Guild ID.
-        :param guild_id: ID of guild to retrieve. Guild ID can be found in the output of the get_player() call. (Required)
+        :param guild_id: String ID of guild to retrieve. Guild ID can be found in the output
+                            of the get_player() call. (Required)
         :param include_recent_guild_activity_info: boolean [Default: False] (Optional)
         :param enums: Should enums in response be translated to text. [Default: False] (Optional)
         :return: dict
@@ -363,12 +365,13 @@ class SwgohComlink:
                            name: str,
                            start_index: int = 0,
                            count: int = 10,
-                           enums=False
-                           ):
+                           enums: bool = False
+                           ) -> dict:
         """
         Search for guild by name and return match.
         :param name: string for guild name search
-        :param start_index: integer representing where in the resulting list of guild name matches the return object should begin
+        :param start_index: integer representing where in the resulting list of guild name matches
+                            the return object should begin
         :param count: integer representing the maximum number of matches to return, [Default: 10]
         :param enums: Whether to translate enums in response to text, [Default: False]
         :return: dict
@@ -391,8 +394,8 @@ class SwgohComlink:
                                search_criteria: dict,
                                start_index: int = 0,
                                count: int = 10,
-                               enums=False
-                               ):
+                               enums: bool = False
+                               ) -> dict:
         """
         Search for guild by guild criteria and return matches.
         :param search_criteria: Dictionary
@@ -430,8 +433,8 @@ class SwgohComlink:
                         division: int | str = None,
                         event_instance_id: str = None,
                         group_id: str = None,
-                        enums=False
-                        ):
+                        enums: bool = False
+                        ) -> dict:
         """
         Retrieve Grand Arena Championship leaderboard information.
         :param leaderboard_type: Type 4 is for scanning gac brackets, and only returns results while an event is active.
@@ -450,7 +453,7 @@ class SwgohComlink:
                          goes from 0 to N, where N is the last group of 8 players.
                             Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000:CARBONITE:10431
         :param enums: Whether to translate enum values to text [Default: False]
-        :return: object
+        :return: dict
         """
         leagues = {
             'kyber': 100,
@@ -491,7 +494,7 @@ class SwgohComlink:
     # alias for non PEP usage of direct endpoint calls
     getLeaderboard = get_leaderboard
 
-    def get_guild_leaderboard(self, leaderboard_id: list, count: int = 200, enums: bool = False):
+    def get_guild_leaderboard(self, leaderboard_id: list, count: int = 200, enums: bool = False) -> dict:
         """
         Retrieve leaderboard information from SWGOH game servers.
         :param leaderboard_id: List of objects indicating leaderboard type, month offset, and depending on the
@@ -499,7 +502,7 @@ class SwgohComlink:
                                 defId of one of "sith_raid", "rancor", "rancor_challenge", or "aat".
         :param count: Number of entries to retrieve [Default: 200]
         :param enums: Convert enums to strings [Default: False]
-        :return: object
+        :return: dict
         """
         if not isinstance(leaderboard_id, list):
             raise ValueError(f"leaderboard_id argument should be type list not {type(leaderboard_id)}.")
