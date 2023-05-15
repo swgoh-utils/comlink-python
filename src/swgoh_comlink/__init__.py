@@ -338,6 +338,7 @@ class SwgohComlink:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
+    @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(self,
                   guild_id: str,
                   include_recent_guild_activity_info: bool = False,
@@ -498,6 +499,8 @@ class SwgohComlink:
 
     # alias for non PEP usage of direct endpoint calls
     getLeaderboard = get_leaderboard
+    get_gac_leaderboard = get_leaderboard
+    getGacLeaderboard = get_leaderboard
 
     def get_guild_leaderboard(self, leaderboard_id: list, count: int = 200, enums: bool = False) -> dict:
         """
