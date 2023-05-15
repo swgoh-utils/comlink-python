@@ -237,11 +237,16 @@ class SwgohComlink:
                          ) -> dict:
         """
         Get localization data from game
-        :param id: latestLocalizationBundleVersion found in game metadata. (Required)
+        :param id: latestLocalizationBundleVersion found in game metadata. This method will collect the latest language
+                    version if the 'id' argument is not provided.
         :param unzip: boolean [Defaults to False]
         :param enums: boolean [Defaults to False]
         :return: dict
         """
+        if id == "":
+            current_game_version = self.get_latest_game_data_version()
+            id = current_game_version['language']
+
         payload = {
             'unzip': unzip,
             'enums': enums,
