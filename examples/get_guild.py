@@ -1,6 +1,6 @@
 """
 get_guild.py
-Sample script to get events from Comlink
+Sample script to get guild information from Comlink
 """
 
 from swgoh_comlink import SwgohComlink
