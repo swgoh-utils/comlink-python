@@ -514,3 +514,20 @@ class SwgohComlink:
 
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
+
+    """
+    Helper methods are below
+    """
+
+    # Get the latest game data and language bundle versions
+    def get_latest_game_data_version(self) -> dict:
+        """
+        Get the latest game data and language bundle versions
+        :return: dict
+        """
+        current_metadata = self.get_metadata()
+        return {'game': current_metadata['latestGamedataVersion'],
+                'language': current_metadata['latestLocalizationBundleVersion']}
+
+    # alias for shorthand call
+    getVersion = get_latest_game_data_version
