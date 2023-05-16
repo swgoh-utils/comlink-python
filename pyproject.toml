@@ -24,6 +24,11 @@ dependencies = [
 "Homepage" = "https://github.com/swgoh-utils/comlink-python"
 "Bug Tracker" = "https://github.com/swgoh-utils/comlink-python/issues"
 
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+
 [tool.setuptools.dynamic]
 version = {attr = "swgoh_comlink.__version__"}
 
