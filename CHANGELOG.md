@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.12.0 (2023-05-16)
+### Feature
+* Added get_latest_game_data_version() method for simplified access to game data and language bundle version information ([`dce650f`](https://github.com/swgoh-utils/comlink-python/commit/dce650f29e88758009211039f64689f3ee197e55))
+
 ## v1.11.1 (2023-02-19)
 ### Documentation
 * Changed get_guilds_by_criteria() -> search_criteria_template example elements to snake case for compliance with comlink expected input. ([`87cfbe0`](https://github.com/swgoh-utils/comlink-python/commit/87cfbe05d030e86cccd95924755ef6d9092077a3))
