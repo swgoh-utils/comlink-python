@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# GitHub Test Workflows
+.github/test.yml
+
 # Distribution / packaging
 .Python
 build/
