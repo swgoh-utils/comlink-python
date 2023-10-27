@@ -1,8 +1,15 @@
-# comlink-python
+# swgoh_comlink
 
 ## Description
 
 A python wrapper for the [swgoh-comlink](https://github.com/swgoh-utils/swgoh-comlink) tool.
+
+There are two modules within the `swgoh_comlink` package. They are:
+
+| Module Name       | Purpose                                                       |
+|-------------------|---------------------------------------------------------------|
+| SwgohComlink      | Used for traditional HTTP requests to the `comlink` instance  |
+| SwgohComlinkAsync | Used for asynchronous HTTP requests to the `comlink` instance |
 
 ## Installation
 Install from [PyPi package repository](https://pypi.org/project/swgoh-comlink/) using the following shell command.
@@ -62,6 +69,26 @@ comlink = SwgohComlink(
 )
 player_data = comlink.get_player(allycode=245866537)
 player_name = player_data['name']
+```
+
+Basic default usage example for **asyncio**:
+
+```python
+import asyncio
+from swgoh_comlink import SwgohComlinkAsync
+
+async def async_main():
+    comlink = SwgohComlinkAsync()
+    player_data = await comlink.get_player(245866537)
+    player_name = player_data['name']
+    guild_id = player_data['guildId']
+    
+    guild = await comlink.get_guild(guild_id)
+    guild_name = guild['profile']['name']
+
+if __name__ == '__main__':
+    asyncio.run(async_main())
+
 ```
 
 # Parameters
