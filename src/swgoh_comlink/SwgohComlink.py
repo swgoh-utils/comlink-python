@@ -35,6 +35,7 @@ def _get_player_payload(allycode: str | int = None, player_id: str = None, enums
         payload['payload']['allyCode'] = f'{allycode}'
     return payload
 
+
 def param_alias(param: str, alias: str) -> Callable:
     def decorator(func):
         @functools.wraps(func)
@@ -44,8 +45,11 @@ def param_alias(param: str, alias: str) -> Callable:
                 kwargs[param] = alias_param_value
                 del kwargs[alias]
             return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
+
 
 class SwgohComlink:
     """

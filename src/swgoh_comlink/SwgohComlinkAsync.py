@@ -189,8 +189,8 @@ class SwgohComlinkAsync:
         return await self._post(endpoint='metadata', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetGameMetaData = get_game_metadata
-    asyncGetMetaData = get_game_metadata
+    getGameMetaData = get_game_metadata
+    getMetaData = get_game_metadata
     get_metadata = get_game_metadata
 
     async def _get_game_version(self) -> str:
@@ -212,7 +212,7 @@ class SwgohComlinkAsync:
             raise e
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetEnums = get_enums
+    getEnums = get_enums
 
     # Get the latest game data and language bundle versions
     async def get_latest_game_data_version(self) -> dict:
@@ -227,7 +227,7 @@ class SwgohComlinkAsync:
                 'language': current_metadata['latestLocalizationBundleVersion']}
 
     # alias for shorthand call
-    asyncGetVersion = get_latest_game_data_version
+    getVersion = get_latest_game_data_version
 
     async def get_events(self, enums: bool = False) -> dict:
         """Get an object containing the events game data
@@ -242,10 +242,10 @@ class SwgohComlinkAsync:
             'payload': {},
             'enums': enums
         }
-        return await self._post(endpoint='asyncGetEvents', payload=payload)
+        return await self._post(endpoint='getEvents', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetEvents = get_events
+    getEvents = get_events
 
     async def get_game_data(self,
                             version: str = "",
@@ -282,7 +282,7 @@ class SwgohComlinkAsync:
         return await self._post(endpoint='data', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetGameData = get_game_data
+    getGameData = get_game_data
 
     async def get_localization(self,
                                id: str,
@@ -316,8 +316,8 @@ class SwgohComlinkAsync:
         return await self._post(endpoint='localization', payload=payload)
 
     # aliases for non PEP usage of direct endpoint calls
-    asyncGetLocalization = get_localization
-    asyncGetLocalizationBundle = get_localization
+    getLocalization = get_localization
+    getLocalizationBundle = get_localization
     get_localization_bundle = get_localization
 
     async def get_unit_stats(self, request_payload: dict, flags: list = None, language: str = None) -> dict:
@@ -370,7 +370,7 @@ class SwgohComlinkAsync:
         return await self._post(endpoint='player', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetPlayer = get_player
+    getPlayer = get_player
 
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
@@ -403,8 +403,8 @@ class SwgohComlinkAsync:
     # alias to allow for get_arena() calls as a shortcut for get_player_arena() and non PEP variations
     get_arena = get_player_arena
     get_player_arena_profile = get_player_arena
-    asyncGetPlayerArena = get_player_arena
-    asyncGetPlayerArenaProfile = get_player_arena
+    getPlayerArena = get_player_arena
+    getPlayerArenaProfile = get_player_arena
 
     @_param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     async def get_guild(self,
@@ -437,7 +437,7 @@ class SwgohComlinkAsync:
         return guild
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetGuild = get_guild
+    getGuild = get_guild
 
     async def get_guilds_by_name(self,
                                  name: str,
@@ -471,7 +471,7 @@ class SwgohComlinkAsync:
         return await self._post(endpoint='getGuilds', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetGuildByName = get_guilds_by_name
+    getGuildByName = get_guilds_by_name
 
     async def get_guilds_by_criteria(self,
                                      search_criteria: dict,
@@ -505,7 +505,7 @@ class SwgohComlinkAsync:
         return await self._post(endpoint='getGuilds', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetGuildByCriteria = get_guilds_by_criteria
+    getGuildByCriteria = get_guilds_by_criteria
 
     async def get_leaderboard(self,
                               leaderboard_type: int,
@@ -572,9 +572,9 @@ class SwgohComlinkAsync:
         return leaderboard
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetLeaderboard = get_leaderboard
+    getLeaderboard = get_leaderboard
     get_gac_leaderboard = get_leaderboard
-    asyncGetGacLeaderboard = get_leaderboard
+    getGacLeaderboard = get_leaderboard
 
     async def get_guild_leaderboard(self, leaderboard_id: list, count: int = 200, enums: bool = False) -> dict:
         """Retrieve leaderboard information from SWGOH game servers.
@@ -600,4 +600,4 @@ class SwgohComlinkAsync:
         return await self._post(endpoint='getGuildLeaderboard', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
-    asyncGetGuildLeaderboard = get_guild_leaderboard
+    getGuildLeaderboard = get_guild_leaderboard
