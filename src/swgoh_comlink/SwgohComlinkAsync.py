@@ -8,7 +8,7 @@ import hmac
 import os
 import time
 from json import dumps
-from typing import Callable
+from typing import Callable, NewType
 import functools
 
 import aiohttp
@@ -40,6 +40,8 @@ def _get_player_payload(allycode: str | int = None, player_id: str = None, enums
         payload['payload']['playerId'] = f'{player_id}'
     # Otherwise use allyCode to lookup player data
     elif allycode is not None:
+        if '-' in allycode:
+            allycode = allycode.replace('-', '')
         payload['payload']['allyCode'] = f'{allycode}'
     else:
         raise RuntimeError("Either an allyCode or playerId is required.")
@@ -61,7 +63,7 @@ def _param_alias(param: str, alias: str) -> Callable:
     return _decorator
 
 
-class SwgohComlinkAsync:
+class SwgohComlinkAsync(object):
     """Class definition for swgoh-comlink interface and supported async methods.
 
     Instances of this class are used to query the Star Wars Galaxy of Heroes
@@ -128,6 +130,16 @@ class SwgohComlinkAsync:
             self.hmac = True
 
         self.client_session = aiohttp.ClientSession(self.url_base)
+
+    def __del__(self):
+        self.client_session.close()
+
+    def __str__(self):
+        if self.access_key is None:
+            access_str = ''
+        else:
+            access_str = self.access_key
+        return f'{self.url_base=!r} {access_str=!r} {self.stats_url_base=!r} {self.logging_level=!r}'
 
     def _create_auth_header_value(self, endpoint, payload):
         """Craft the HTTP X-Date and Authorization header values needed when HMAC access restriction is required"""
@@ -268,7 +280,7 @@ class SwgohComlinkAsync:
 
         """
         if version == "":
-            game_version = self._get_game_version()
+            game_version = await self._get_game_version()
         else:
             game_version = version
         payload = {

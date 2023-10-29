@@ -32,6 +32,8 @@ def _get_player_payload(allycode: str | int = None, player_id: str = None, enums
         payload['payload']['playerId'] = f'{player_id}'
     # Otherwise use allyCode to lookup player data
     else:
+        if '-' in allycode:
+            allycode = allycode.replace('-', '')
         payload['payload']['allyCode'] = f'{allycode}'
     return payload
 
@@ -543,3 +545,4 @@ class SwgohComlink:
 
     # alias for shorthand call
     getVersion = get_latest_game_data_version
+
