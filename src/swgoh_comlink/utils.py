@@ -1,9 +1,12 @@
 """
 Helper utilities for the swgoh-python-async package and related modules
 """
-import os
 import logging
+import os
+from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
+
+logger_name = 'swgoh_comlink'
 
 
 def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = False) -> logging.Logger:
@@ -19,13 +22,18 @@ def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = F
     :rtype: Logger
     """
     if name is None:
-        name = __name__
+        name = logger_name
     logger = logging.getLogger(name)
     logger.setLevel(logging.getLevelName(logging_level.upper()))
     # Create message formatting to include module and function naming for easier debugging
     formatter = logging.Formatter('{asctime} [ {levelname:^9}] {module:25} : {funcName:20}({lineno}) - {message}',
                                   style='{')
-    log_base_name = os.path.join(os.getcwd(),  'swgoh-comlink-async.log')
+    log_base = os.path.join(os.getcwd(), 'logs')
+    try:
+        os.mkdir(log_base)
+    except FileExistsError:
+        pass
+    log_base_name = os.path.join(log_base, f'{logger_name}.log')
     # Create a log file handler to write logs to disk
     log_file_handler = RotatingFileHandler(
         log_base_name,
@@ -39,6 +47,18 @@ def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = F
         log_console_handler = logging.StreamHandler()
         log_console_handler.setFormatter(formatter)
         logger.addHandler(log_console_handler)
-    if logging_level == 'DEBUG':
-        logger.debug("Logger created with 'DEBUG' level set.")
+    logger.info(f"Logger created with level set to {logging_level.upper()!r}.")
     return logger
+
+
+def human_time(time: int or float) -> str:
+    """Convert unix time to human readable string"""
+    if isinstance(time, float):
+        time = int(time)
+    if isinstance(time, str):
+        try:
+            time = int(time)
+        except Exception as exc:
+            logging.getLogger(logger_name).exception(f"Exception caught: [{exc}]")
+            raise
+    return datetime.fromtimestamp(time, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%s')
