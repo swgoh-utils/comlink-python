@@ -11,9 +11,15 @@ import re
 import time
 import zipfile
 
-from swgoh_comlink import SwgohComlink, utils
+from swgoh_comlink import SwgohComlink, Utils
 
-logger = utils.get_logger()
+logger = Utils.get_logger()
+
+_COMMENT_START = '#'
+_FIELD_SEPARATOR = '|'
+_NEWLINE_CHARACTER = '\n'
+_PRE_PATTERN = re.compile(r'^\[[0-9A-F]*?]')
+_POST_PATTERN = re.compile(r'\s+\(([A-Z]+)\)\[-]$')
 
 
 def _verify_data_path(data_path: str) -> bool:
@@ -73,37 +79,31 @@ def _write_json_file(data_path: str, file_name: str, json_data: dict) -> None:
 def _read_json_file(data_path: str, file_name: str) -> dict:
     """Retrieve JSON data from file and return dictionary"""
 
-    contents = {}
     if not file_name.endswith('.json'):
         file_name = file_name + '.json'
     logger.info(f"Reading contents of {file_name}")
+    full_path = os.path.join(data_path, file_name)
     try:
-        with open(file_name, 'r') as fn:
+        with open(full_path) as fn:
             contents = json.load(fn)
     except FileNotFoundError:
-        logger.error(f'File {file_name} was not found. Please check that it exists.')
-        raise f'File {file_name} was not found. Please check that it exists.'
+        logger.error(f'File {full_path} was not found. Please check that it exists.')
+        raise f'File {full_path} was not found. Please check that it exists.'
     except Exception as e_str:
-        logger.error(f'Encountered {e_str} while attempting to read contents of {file_name}')
+        logger.error(f'Encountered {e_str} while attempting to read contents of {full_path}')
         raise e_str
     else:
-        logger.info(f'Returning contents of {file_name} ({len(contents)} bytes).')
+        logger.info(f'Returning contents of {full_path} ({len(contents)} bytes).')
         return contents
 
 
-def _load_stat_enums_map_file(stats_enum_map_file, data_path) -> tuple:
+def _load_stat_enums_map_dict() -> tuple[dict, dict]:
     """Load statsEnum mapping data from JSON file"""
 
-    logger.info(f"Creating 'stats_enum' and 'localization_map' objects from '{stats_enum_map_file}' file.")
+    logger.info(f"Creating 'stats_enum' and 'localization_map' objects")
     stat_enums = {}
     localization_map = {}
-    if not stats_enum_map_file.endswith('.json'):
-        stats_enum_map_file = stats_enum_map_file + '.json'
-    full_file_path = os.path.join(data_path, stats_enum_map_file)
-    logger.debug(f"Full path to file: {full_file_path}")
-    with open(full_file_path, 'r') as stats_fs:
-        stats_obj = json.load(stats_fs)
-    for key, value in stats_obj.items():
+    for key, value in Utils.UNIT_STAT_ENUMS_MAP.items():
         if 'tableKey' in value.keys():
             stat_enums[value['tableKey']] = key
         if 'nameKey' in value.keys():
@@ -133,8 +133,6 @@ class DataBuilder:
     _USE_SEGMENTS = False
     _USE_UNZIP = False
     _LOCALIZATION_MAP = {}
-    _STAT_ENUM_MAP_FILE = 'statEnumMap'
-    _STATS_ENUM_FILE = 'statEnum'
     _DATA_VERSION_FILE = 'dataVersion'
     _GAME_DATA_FILE = 'gameData'
     _STATS_ENUM_MAP_LOADED = False
@@ -142,39 +140,35 @@ class DataBuilder:
     _COMLINK = SwgohComlink()
 
     @classmethod
-    def _create_stat_enum_map_file(cls):
-        """Create the statEnumMap.json file from game data"""
-        stat_enum_map_dict = {}
-        enums = cls._COMLINK.get_enums()
-        unit_stat_enums = enums['UnitStat']
-        for unit_stat_enum in unit_stat_enums.keys():
-            if str(unit_stat_enums[unit_stat_enum]) not in stat_enum_map_dict.keys():
-                stat_enum_map_dict[str(unit_stat_enums[unit_stat_enum])] = {}
-            stat_enum_map_dict[str(unit_stat_enums[unit_stat_enum])]['enum'] = unit_stat_enum
-
-    @classmethod
     def _process_localization_line(cls, loc_line: str):
-        """Process 'loc_line' and match against localization_map"""
-        if loc_line.startswith('#'):
+        if cls._is_comment_or_invalid(loc_line):
             return
-        if '|' not in loc_line:
-            return
-        loc_line = loc_line.rstrip('\n')
+
+        loc_line = loc_line.rstrip(_NEWLINE_CHARACTER)
         logger.debug(f"Location line to be split {loc_line=}")
-        key, value = loc_line.split('|')
+        key, value = loc_line.split(_FIELD_SEPARATOR)
         logger.debug(f"{key=} {value=}")
+
         if not key or not value:
             return
 
-        if key in cls._LOCALIZATION_MAP.keys():
-            pre_pattern = re.compile('^\[[0-9A-F]*?\]')
-            post_pattern = re.compile('\s+\(([A-Z]+)\)\[-\]$')
-            value = pre_pattern.sub('', value)
-            value = post_pattern.sub('', value)
-            if value is None:
-                value = ''
-            logger.debug(f"Returning {key=} {value=}")
-            return key, value
+        if key not in cls._LOCALIZATION_MAP.keys():
+            return
+
+        value = cls._apply_value_patterns(value)
+
+        logger.debug(f"Returning {key=} {value=}")
+        return key, value
+
+    @classmethod
+    def _is_comment_or_invalid(cls, loc_line: str) -> bool:
+        return loc_line.startswith(_COMMENT_START) or _FIELD_SEPARATOR not in loc_line
+
+    @classmethod
+    def _apply_value_patterns(cls, value: str) -> str:
+        value = _PRE_PATTERN.sub('', value)
+        value = _POST_PATTERN.sub('', value)
+        return '' if value is None else value
 
     @classmethod
     def _process_file_contents_by_line(cls, content: list) -> dict:
@@ -185,7 +179,7 @@ class DataBuilder:
             if isinstance(line, bytes):
                 logger.debug("Decoding byte string...")
                 line = line.decode()
-            line = line.rstrip('\n')
+            line = line.rstrip(_NEWLINE_CHARACTER)
             result = cls._process_localization_line(line)
             if result is not None:
                 key, value = result
@@ -213,13 +207,9 @@ class DataBuilder:
             logger.info(f"{file_name} written successfully.")
 
     @classmethod
-    def load_stats_enums_map(cls, file_name: str = None, data_path: str = None, force_reload: bool = False) -> bool:
-        """Load data from statEnumMap file into statsEnum and localizationMap objects
+    def load_stats_enums_map(cls, force_reload: bool = False) -> bool:
+        """Load data from statEnumMap object into statsEnum and localizationMap objects
 
-        :param file_name: Name of the file containing the statEnumMap data. Defaults to statEnumMap.json
-        :type file_name: str | path like object
-        :param data_path: Directory where data file is located. Defaults to ./data/
-        :type data_path: str | path like object
         :param force_reload: Force reload of data from file. Defaults to False
         :type force_reload: bool
         :return: True or False depending on success or failure of data import operation
@@ -227,21 +217,15 @@ class DataBuilder:
         """
 
         logger.info("Loading stats_enum_map...")
-        if data_path is None:
-            data_path = cls._DATA_PATH
-
-        if file_name is None:
-            file_name = cls._STAT_ENUM_MAP_FILE
-
         if cls._STATS_ENUM_MAP_LOADED is True and force_reload is False:
             logger.info(
                 "'stats_enum_map' object is already populated. Won't load again. Use 'force_reload' to override.")
             return True
         try:
-            cls._STATS_ENUM, cls._LOCALIZATION_MAP = _load_stat_enums_map_file(file_name, data_path)
+            cls._STATS_ENUM, cls._LOCALIZATION_MAP = _load_stat_enums_map_dict()
             cls.STATS_ENUMS_MAP_LOADED = True
         except DataBuilderException as e_str:
-            logger.error(f"Exception caught while loading statEnumMap ({file_name}): {e_str}")
+            logger.error(f"Exception caught while loading statEnumMap object: {e_str}")
             cls.STATS_ENUMS_MAP_LOADED = False
             return False
         return True
@@ -508,7 +492,7 @@ class DataBuilder:
         unit_gm_tables = {}
 
         for unit in units_list:
-            if unit['obtainable'] == True and unit['obtainableTime'] == '0':
+            if unit['obtainable'] == 'True' and unit['obtainableTime'] == '0':
                 unit_gm_tables[unit['baseId']] = unit_gm_tables.setdefault(unit['baseId'], {})
                 unit_gm_tables[unit['baseId']][unit['rarity']] = stat_tables[unit['statProgressionId']]
 
@@ -685,7 +669,7 @@ class DataBuilder:
             'use_segments',
             'use_unzip',
         ]
-        GAME_DATA_FILES = [cls._GAME_DATA_FILE, cls._DATA_VERSION_FILE, cls._STATS_ENUM_FILE]
+        GAME_DATA_FILES = [cls._GAME_DATA_FILE, cls._DATA_VERSION_FILE]
         logger.info("Initializing DataBuilder for first time use.")
         class_vars = vars(cls)
         logger.debug(f"Class vars: {class_vars.keys()}")
@@ -708,7 +692,7 @@ class DataBuilder:
             raise DataBuilderRuntimeError(
                 f"Data path {cls._DATA_PATH} does not exist. Please verify the value provided.")
         logger.info("Loading stat_enums_map.")
-        if cls.load_stats_enums_map(cls._STAT_ENUM_MAP_FILE, cls._DATA_PATH):
+        if cls.load_stats_enums_map():
             logger.info("stat_enums_map loaded successfully.")
         else:
             logger.error("stat_enums_map failed to load. Exiting.")
@@ -724,7 +708,7 @@ class DataBuilder:
                 DATA_FILES_EXIST = False
         if DATA_FILES_EXIST is True:
             logger.info("Reading game data from files")
-            cls._GAME_DATA, cls._VERSION, cls._STATS_ENUM = cls._read_game_data(cls._DATA_PATH, *GAME_DATA_FILES)
+            cls._GAME_DATA, cls._VERSION = cls._read_game_data(cls._DATA_PATH, *GAME_DATA_FILES)
         else:
             logger.info("Updating game data from servers.")
             cls.update_game_data()
