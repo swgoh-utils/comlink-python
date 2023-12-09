@@ -15,7 +15,7 @@ from swgoh_comlink import Utils
 from .version import __version__
 
 
-class SwgohComlink:
+class SwgohComlinkAsync:
     """
     Class definition for swgoh-comlink interface and supported methods.
     Instances of this class are used to query the Star Wars Galaxy of Heroes
