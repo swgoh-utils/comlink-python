@@ -8,64 +8,16 @@ import hmac
 import os
 import time
 from json import dumps
-from typing import Callable, NewType
-import functools
 
 import aiohttp
 
+from swgoh_comlink import Utils
 from .version import __version__
-from swgoh_comlink import utils
 
 
-def _get_player_payload(allycode: str | int = None, player_id: str = None, enums: bool = False) -> dict:
+class SwgohComlink:
     """
-    Helper function to build payload for get_player functions
-
-    :param allycode: player allyCode [Default: None]
-    :type allycode: str
-    :param player_id: player game ID [Default: None]
-    :type player_id: str
-    :param enums: Flag to indicate whether ENUMs should be converted to string values. [Default: False]
-    :type enums: bool
-    :return: Dictionary of Player payload information
-    :rtype: dict
-
-    """
-    payload = {
-        "payload": {},
-        "enums": enums
-    }
-    # If player ID is provided use that instead of allyCode
-    if player_id is not None:
-        payload['payload']['playerId'] = f'{player_id}'
-    # Otherwise use allyCode to lookup player data
-    elif allycode is not None:
-        if '-' in allycode:
-            allycode = allycode.replace('-', '')
-        payload['payload']['allyCode'] = f'{allycode}'
-    else:
-        raise RuntimeError("Either an allyCode or playerId is required.")
-    return payload
-
-
-def _param_alias(param: str, alias: str) -> Callable:
-    def _decorator(func):
-        @functools.wraps(func)
-        def _wrapper(*args, **kwargs):
-            alias_param_value = kwargs.get(alias)
-            if alias_param_value:
-                kwargs[param] = alias_param_value
-                del kwargs[alias]
-            return func(*args, **kwargs)
-
-        return _wrapper
-
-    return _decorator
-
-
-class SwgohComlinkAsync(object):
-    """Class definition for swgoh-comlink interface and supported async methods.
-
+    Class definition for swgoh-comlink interface and supported methods.
     Instances of this class are used to query the Star Wars Galaxy of Heroes
     game servers for exposed endpoints via the swgoh-comlink proxy library
     running on the same host.
@@ -77,6 +29,7 @@ class SwgohComlinkAsync(object):
                  access_key: str = None,
                  secret_key: str = None,
                  stats_url: str = "http://localhost:3223",
+                 protocol: str = "http",
                  host: str = None,
                  port: int = 3000,
                  stats_port: int = 3223,
@@ -101,7 +54,7 @@ class SwgohComlinkAsync(object):
         :type stats_port: int
 
         """
-        self.logger = utils.get_logger(__name__, logging_level, logging_terminal)
+        self.logger = Utils.get_logger(__name__, logging_level, logging_terminal)
         self.logging_level = logging_level.upper()
         self.__version__ = __version__
         self.url_base = url
@@ -110,8 +63,8 @@ class SwgohComlinkAsync(object):
 
         # host and port parameters override defaults
         if host:
-            self.url_base = f'http://{host}:{port}'
-            self.stats_url_base = f'http://{host}:{stats_port}'
+            self.url_base = Utils.construct_url_base(protocol, host, port)
+            self.stats_url_base = Utils.construct_url_base(protocol, host, stats_port)
 
         # Use values passed from client first, otherwise check for environment variables
         if access_key:
@@ -141,38 +94,14 @@ class SwgohComlinkAsync(object):
             access_str = self.access_key
         return f'{self.url_base=!r} {access_str=!r} {self.stats_url_base=!r} {self.logging_level=!r}'
 
-    def _create_auth_header_value(self, endpoint, payload):
-        """Craft the HTTP X-Date and Authorization header values needed when HMAC access restriction is required"""
-        req_time = str(int(time.time() * 1000))
-        hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
-        hmac_obj.update(req_time.encode())
-        hmac_obj.update(b'POST')
-        hmac_obj.update(f'/{endpoint}'.encode())
-        # json dumps separators needed for compact string formatting required for compatibility with
-        # comlink since it is written with javascript as the primary object model
-        # ordered dicts are also required with the 'payload' key listed first for proper MD5 hash calculation
-        if payload:
-            payload_string = dumps(payload, separators=(',', ':'))
-        else:
-            payload_string = dumps({})
-        payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
-        hmac_obj.update(payload_hash_digest.encode())
-        hmac_digest = hmac_obj.hexdigest()
-        if self.logging_level == 'DEBUG':
-            self.logger.debug(
-                f"HTTP Authorization header = HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}")
-        return f'{req_time}', f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
-
     async def _post(self,
                     endpoint: str = None,
                     payload: dict = None
                     ) -> dict:
         if self.logging_level == 'DEBUG':
             self.logger.debug("Executing _post() requesst...")
-        req_headers = {}
+        req_headers = self._construct_request_headers(endpoint, payload)
         # If access_key and secret_key are set, perform HMAC security
-        if self.hmac:
-            req_headers['X-Date'], req_headers['Authorization'] = self._create_auth_header_value(endpoint, payload)
         try:
             if self.logging_level == 'DEBUG':
                 self.logger.debug(f"Attempting Async HTTP POST on /{endpoint}")
@@ -182,6 +111,23 @@ class SwgohComlinkAsync(object):
                 return await resp.json()
         except Exception as e:
             raise e
+
+    def _construct_request_headers(self, endpoint: str, payload: dict) -> dict:
+        headers = {}
+        # If access_key and secret_key are set, perform HMAC security
+        if self.hmac:
+            req_time = str(int(time.time() * 1000))
+            headers = {"X-Date": req_time}
+
+            payload_string = dumps(payload or {}, separators=(',', ':'))
+            payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
+
+            hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
+            Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
+
+            hmac_digest = hmac_obj.hexdigest()
+            headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
+        return headers
 
     async def get_game_metadata(self, client_specs: dict = None, enums: bool = False) -> dict:
         """Get the game metadata. Game metadata contains the current game and localization versions.
@@ -265,17 +211,21 @@ class SwgohComlinkAsync(object):
                             request_segment: int = 0,
                             enums: bool = False
                             ) -> dict:
-        """Get game data
+        """
 
-        :param version: Version of game data to retrieve. (found in metadata key value 'latestGamedataVersion')
-        :type version: str
-        :param include_pve_units: Flag to indicate whether PVE unit data should be included in the response.  [Default: True]
-        :type include_pve_units: bool
-        :param request_segment: Integer indicating the game data segment to return. [Default: 0] See https://github.com/swgoh-utils/swgoh-comlink/wiki/Game-Data
+        :param version: The version of the game data to retrieve. If left blank, the method will automatically
+        retrieve the game version using the _get_game_version function. :type version: str
+
+        :param include_pve_units: Flag indicating whether to include PVE (Player vs. Environment) units in the
+        retrieved game data. Defaults to True. :type include_pve_units: bool
+
+        :param request_segment: The segment of the game data to request. Defaults to 0.
         :type request_segment: int
-        :param enums: Boolean flag to indicate whether ENUM values should be converted in response. [Default: False]
-        :type enums: bool
-        :return: Dictionary containing all data segments requested.
+
+        :param enums: Flag indicating whether to include enumerated values in the retrieved game data. Defaults to
+        False. :type enums: bool
+
+        :return: A dictionary containing the requested game data.
         :rtype: dict
 
         """
@@ -303,13 +253,16 @@ class SwgohComlinkAsync(object):
                                ) -> dict:
         """Get localization data from game
 
-        :param id: latestLocalizationBundleVersion found in game metadata. This method will collect the latest language version if the 'id' argument is not provided.
+        :param id: latestLocalizationBundleVersion found in game metadata. This method will collect the latest
+        language version if the 'id' argument is not provided.
         :type id: str
         :param unzip: Specify whether to deliver data uncompressed. [Default: False]
         :type unzip: bool
-        :param enums: Specify whether to translate ENUM values to strings [Default: False]
+        :param enums: Specify whether to translate ENUM values
+        to strings [Default: False]
         :type enums: bool
-        :return: A dictionary containing elements that represent either a Base64 encoded string of the compressed data, or the raw uncompressed data.
+        :return: A dictionary containing elements that represent either
+        a Base64 encoded string of the compressed data, or the raw uncompressed data.
         :rtype: dict
 
         """
@@ -345,17 +298,10 @@ class SwgohComlinkAsync(object):
         :rtype: dict
 
         """
-        query_string = None
+        if flags and not isinstance(flags, list):
+            raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
 
-        if flags:
-            if isinstance(flags, list):
-                flags = 'flags=' + ','.join(flags)
-            else:
-                raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
-        if language:
-            language = f'language={language}'
-        if flags or language:
-            query_string = f'?' + '&'.join(filter(None, [flags, language]))
+        query_string = Utils.construct_unit_stats_query_string(flags, language)
         endpoint_string = f'api' + query_string if query_string else 'api'
         return await self._post(endpoint=endpoint_string, payload=request_payload)
 
@@ -378,7 +324,7 @@ class SwgohComlinkAsync(object):
         """
         if self.logging_level == 'DEBUG':
             self.logger.debug(f"Executing get_player(allycode={allycode}, player_id={player_id}, enums={enums})")
-        payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         return await self._post(endpoint='player', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
@@ -387,7 +333,7 @@ class SwgohComlinkAsync(object):
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @_param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
     async def get_player_arena(self,
                                allycode: str | int = None,
                                player_id: str = None,
@@ -400,7 +346,8 @@ class SwgohComlinkAsync(object):
         :type allycode: str
         :param player_id: Player ID from game. [Default: None]
         :type player_id: str
-        :param player_details_only: filter results to only player details [Default: False] [Parameter name can also be specified as 'playerDetailOnly']
+        :param player_details_only: filter results to only player details [Default: False] [Parameter name can also be
+        specified as 'playerDetailOnly']
         :type player_details_only: bool
         :param enums: Flag to indicate whether ENUMs should be translated to strings. [Default: False]
         :type enums: bool
@@ -408,7 +355,7 @@ class SwgohComlinkAsync(object):
         :rtype: dict
 
         """
-        payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         payload['payload']['playerDetailsOnly'] = player_details_only
         return await self._post(endpoint='playerArena', payload=payload)
 
@@ -418,7 +365,7 @@ class SwgohComlinkAsync(object):
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @_param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     async def get_guild(self,
                         guild_id: str,
                         include_recent_guild_activity_info: bool = False,
@@ -426,9 +373,10 @@ class SwgohComlinkAsync(object):
                         ) -> dict:
         """Get guild information for a specific Guild ID.
 
-        :param guild_id: String ID of guild to retrieve. Guild ID can be found in the output of the get_player() call. (Required)
+        :param guild_id: String ID of guild to retrieve. Guild ID can be found in the output of the get_player() call.
         :type guild_id: str
-        :param include_recent_guild_activity_info: boolean [Default: False] (Optional) [Parameter name can also be specified as 'includeRecent']
+        :param include_recent_guild_activity_info: boolean [Default: False] (Optional) [Parameter name can also be
+        specified as 'includeRecent']
         :type include_recent_guild_activity_info: bool
         :param enums: Flag to indicate whether ENUMs should be translated to strings. [Default: False]
         :type enums: bool
@@ -461,7 +409,8 @@ class SwgohComlinkAsync(object):
 
         :param name: string for guild name search
         :type name: str
-        :param start_index: integer representing where in the resulting list of guild name matches the return object should begin. [Default: 0]
+        :param start_index: integer representing where in the resulting list of guild name matches the return object
+        should begin. [Default: 0]
         :type start_index: int
         :param count: integer representing the maximum number of matches to return, [Default: 10]
         :type count: int
@@ -495,7 +444,8 @@ class SwgohComlinkAsync(object):
 
         :param search_criteria: Dictionary
         :type search_criteria: dict
-        :param start_index: integer representing where in the resulting list of guild name matches the return object should begin
+        :param start_index: integer representing where in the resulting list of guild name matches the return object
+        should begin
         :type start_index: int
         :param count: integer representing the maximum number of matches to return
         :type count: int
@@ -529,45 +479,18 @@ class SwgohComlinkAsync(object):
                               ) -> dict:
         """Retrieve Grand Arena Championship leaderboard information.
 
-        See https://github.com/swgoh-utils/swgoh-comlink/wiki/Getting-Started#getLeaderboard for details
-
-        :param leaderboard_type: Type 4 is for scanning gac brackets, and only returns results while an event is active. When type 4 is indicated, the "league" and "division" arguments must also be provided. Type 6 is for the global leaderboards for the league + divisions. When type 6 is indicated, the "event_instance_id" and "group_id" must also be provided.
-        :type leaderboard_type: int
-        :param league: Enum values 20, 40, 60, 80, and 100 correspond to carbonite, bronzium, chromium, aurodium, and kyber respectively. Also accepts string values for each league.
-        :type league: str
-        :param division: Enum values 5, 10, 15, 20, and 25 correspond to divisions 5 through 1 respectively. Also accepts string or int values for each division.
-        :type division: str
-        :param event_instance_id: When leaderboard_type 4 is indicated, a combination of the event Id and the instance ID separated by ':' Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000
-        :type event_instance_id: str
-        :param group_id: When leaderboard_type 4 is indicated, must start with the same eventInstanceId, followed by the league and bracketId, separated by :. The number at the end is the bracketId, and goes from 0 to N, where N is the last group of 8 players. Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000:CARBONITE:10431
-        :type group_id: str
-        :param enums: Whether to translate enum values to text [Default: False]
-        :type enums: bool
-        :return: Dictionary containing current leaderboard information
-        :rtype: dict
-
+        :param leaderboard_type: ...
+        :param league: ...
+        :param division: ...
+        :param event_instance_id: ...
+        :param group_id: ...
+        :param enums: ...
+        :return: dict
         """
-        leagues = {
-            'kyber': 100,
-            'aurodium': 80,
-            'chromium': 60,
-            'bronzium': 40,
-            'carbonite': 20
-        }
-        divisions = {
-            '1': 25,
-            '2': 20,
-            '3': 15,
-            '4': 10,
-            '5': 5
-        }
-        # Translate parameters if needed
-        if isinstance(league, str):
-            league = leagues[league.lower()]
-        if isinstance(division, int) and len(str(division)) == 1:
-            division = divisions[str(division).lower()]
-        if isinstance(division, str):
-            division = divisions[division.lower()]
+
+        league = Utils.convert_league_to_int(league)
+        division = Utils.convert_divisions_to_int(division)
+
         payload = {
             "payload": {
                 "leaderboardType": leaderboard_type,
@@ -593,7 +516,9 @@ class SwgohComlinkAsync(object):
 
         See https://github.com/swgoh-utils/swgoh-comlink/wiki/Getting-Started#getGuildLeaderboard for details.
 
-        :param leaderboard_id: List of objects indicating leaderboard type, month offset, and depending on the leaderboard type, a defId. For example, leaderboard type 2 would also require a defId of one of "sith_raid", "rancor", "rancor_challenge", or "aat".
+        :param leaderboard_id: List of objects indicating leaderboard type, month offset, and depending on the
+        leaderboard type, a defId. For example, leaderboard type 2 would also require a defId of one of "sith_raid",
+        "rancor", "rancor_challenge", or "aat".
         :type leaderboard_id: list
         :param count: Number of entries to retrieve [Default: 200]
         :type count: int

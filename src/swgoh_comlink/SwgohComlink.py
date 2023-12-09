@@ -1,117 +1,18 @@
 """
 Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
-from __future__ import annotations
+from __future__ import annotations, print_function
 
-import functools
 import hashlib
 import hmac
 import os
 import time
 from json import loads, dumps
-from typing import Callable
 
 import requests
 
+from swgoh_comlink import Utils
 from .version import __version__
-
-LEAGUES = {
-    'kyber': 100,
-    'aurodium': 80,
-    'chromium': 60,
-    'bronzium': 40,
-    'carbonite': 20
-}
-
-DIVISIONS = {
-    '1': 25,
-    '2': 20,
-    '3': 15,
-    '4': 10,
-    '5': 5
-}
-
-
-def _get_player_payload(allycode: str | int = None, player_id: str = None, enums: bool = False) -> dict:
-    """
-    Helper function to build payload for get_player functions
-    :param allycode: player allyCode
-    :param player_id: player game ID
-    :param enums: boolean
-    :return: dict
-    """
-    payload = {
-        "payload": {},
-        "enums": enums}
-    # If player ID is provided use that instead of allyCode
-    if not allycode and player_id:
-        payload['payload']['playerId'] = f'{player_id}'
-    # Otherwise use allyCode to lookup player data
-    else:
-        if '-' in allycode:
-            allycode = allycode.replace('-', '')
-        payload['payload']['allyCode'] = f'{allycode}'
-    return payload
-
-
-def param_alias(param: str, alias: str) -> Callable:
-    """
-    Decorator to provide method parameter aliasing for those parameters that are intentionally
-    log to conform to PEP naming conventions, but are a bit too verbose
-
-    :param param: The name of the parameter that should be used in the decorated function.
-    :type param: str
-    :param alias: The alias of the parameter that will be replaced with the parameter specified by `param`.
-    :type alias: str
-    :return: The decorated function.
-    :rtype: Callable
-    """
-
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            alias_param_value = kwargs.get(alias)
-            if alias_param_value:
-                kwargs[param] = alias_param_value
-                del kwargs[alias]
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def construct_unit_stats_query_string(flags: list, language: str) -> str:
-    """
-    Constructs query string from provided flags and language to be used with the get_unit_stats function
-    """
-    flag_string = f'flags={",".join(flags)}' if flags else None
-    language_string = f'language={language}' if language else None
-    constructed_string = '&'.join(filter(None, [flag_string, language_string]))
-    return f'?{constructed_string}' if constructed_string else None
-
-
-def _update_hmac_obj(hmac_obj, values: list):
-    for value in values:
-        hmac_obj.update(value.encode())
-
-
-def _convert_league_to_int(league: int | str) -> int:
-    if isinstance(league, str):
-        return LEAGUES[league.lower()]
-    return league
-
-
-def _convert_divisions_to_int(division: int | str) -> int:
-    if isinstance(division, str):
-        return DIVISIONS[division.lower()]
-    if isinstance(division, int) and len(str(division)) == 1:
-        return DIVISIONS[str(division)]
-    return division
-
-
-def _construct_url_base(protocol: str, host: str, port: int) -> str:
-    return f"{protocol}://{host}:{port}"
 
 
 class SwgohComlink:
@@ -151,8 +52,8 @@ class SwgohComlink:
 
         # host and port parameters override defaults
         if host:
-            self.url_base = _construct_url_base(protocol, host, port)
-            self.stats_url_base = _construct_url_base(protocol, host, stats_port)
+            self.url_base = Utils.construct_url_base(protocol, host, port)
+            self.stats_url_base = Utils.construct_url_base(protocol, host, stats_port)
 
         # Use values passed from client first, otherwise check for environment variables
         if access_key:
@@ -206,7 +107,7 @@ class SwgohComlink:
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
 
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
-            _update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
+            Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
 
             hmac_digest = hmac_obj.hexdigest()
             headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
@@ -224,7 +125,7 @@ class SwgohComlink:
         if flags and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
 
-        query_string = construct_unit_stats_query_string(flags, language)
+        query_string = Utils.construct_unit_stats_query_string(flags, language)
         endpoint_string = f'api' + query_string if query_string else 'api'
         return self._post(url_base=self.stats_url_base, endpoint=endpoint_string, payload=request_payload)
 
@@ -363,7 +264,7 @@ class SwgohComlink:
         :param enums: boolean [Defaults to False]
         :return: dict
         """
-        payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         return self._post(endpoint='player', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
@@ -372,7 +273,7 @@ class SwgohComlink:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
     def get_player_arena(self,
                          allycode: str | int = None,
                          player_id: str = None,
@@ -387,7 +288,7 @@ class SwgohComlink:
         :param enums: boolean [Defaults to False]
         :return: dict
         """
-        payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         payload['payload']['playerDetailsOnly'] = player_details_only
         return self._post(endpoint='playerArena', payload=payload)
 
@@ -397,7 +298,7 @@ class SwgohComlink:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(self,
                   guild_id: str,
                   include_recent_guild_activity_info: bool = False,
@@ -513,8 +414,8 @@ class SwgohComlink:
         :return: dict
         """
 
-        league = _convert_league_to_int(league)
-        division = _convert_divisions_to_int(division)
+        league = Utils.convert_league_to_int(league)
+        division = Utils.convert_divisions_to_int(division)
 
         payload = {
             "payload": {
