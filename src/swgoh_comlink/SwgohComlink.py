@@ -3,17 +3,33 @@ Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swg
 """
 from __future__ import annotations
 
+import functools
 import hashlib
 import hmac
 import os
 import time
 from json import loads, dumps
 from typing import Callable
-import functools
 
 import requests
 
 from .version import __version__
+
+LEAGUES = {
+    'kyber': 100,
+    'aurodium': 80,
+    'chromium': 60,
+    'bronzium': 40,
+    'carbonite': 20
+}
+
+DIVISIONS = {
+    '1': 25,
+    '2': 20,
+    '3': 15,
+    '4': 10,
+    '5': 5
+}
 
 
 def _get_player_payload(allycode: str | int = None, player_id: str = None, enums: bool = False) -> dict:
@@ -39,6 +55,18 @@ def _get_player_payload(allycode: str | int = None, player_id: str = None, enums
 
 
 def param_alias(param: str, alias: str) -> Callable:
+    """
+    Decorator to provide method parameter aliasing for those parameters that are intentionally
+    log to conform to PEP naming conventions, but are a bit too verbose
+
+    :param param: The name of the parameter that should be used in the decorated function.
+    :type param: str
+    :param alias: The alias of the parameter that will be replaced with the parameter specified by `param`.
+    :type alias: str
+    :return: The decorated function.
+    :rtype: Callable
+    """
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -51,6 +79,39 @@ def param_alias(param: str, alias: str) -> Callable:
         return wrapper
 
     return decorator
+
+
+def construct_unit_stats_query_string(flags: list, language: str) -> str:
+    """
+    Constructs query string from provided flags and language to be used with the get_unit_stats function
+    """
+    flag_string = f'flags={",".join(flags)}' if flags else None
+    language_string = f'language={language}' if language else None
+    constructed_string = '&'.join(filter(None, [flag_string, language_string]))
+    return f'?{constructed_string}' if constructed_string else None
+
+
+def _update_hmac_obj(hmac_obj, values: list):
+    for value in values:
+        hmac_obj.update(value.encode())
+
+
+def _convert_league_to_int(league: int | str) -> int:
+    if isinstance(league, str):
+        return LEAGUES[league.lower()]
+    return league
+
+
+def _convert_divisions_to_int(division: int | str) -> int:
+    if isinstance(division, str):
+        return DIVISIONS[division.lower()]
+    if isinstance(division, int) and len(str(division)) == 1:
+        return DIVISIONS[str(division)]
+    return division
+
+
+def _construct_url_base(protocol: str, host: str, port: int) -> str:
+    return f"{protocol}://{host}:{port}"
 
 
 class SwgohComlink:
@@ -66,12 +127,14 @@ class SwgohComlink:
                  access_key: str = None,
                  secret_key: str = None,
                  stats_url: str = "http://localhost:3223",
+                 protocol: str = "http",
                  host: str = None,
                  port: int = 3000,
                  stats_port: int = 3223
                  ):
         """
         Set initial values when new class instance is created
+
         :param url: The URL where swgoh-comlink is running. Defaults to 'http://localhost:3000'
         :param access_key: The HMAC public key. Default to None which indicates HMAC is not used.
         :param secret_key: The HMAC private key. Default to None which indicates HMAC is not used.
@@ -80,6 +143,7 @@ class SwgohComlink:
         :param port: TCP port number where the swgoh-comlink service is running [Default: 3000]
         :param stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
         """
+
         self.__version__ = __version__
         self.url_base = url
         self.stats_url_base = stats_url
@@ -87,8 +151,8 @@ class SwgohComlink:
 
         # host and port parameters override defaults
         if host:
-            self.url_base = f'http://{host}:{port}'
-            self.stats_url_base = f'http://{host}:{stats_port}'
+            self.url_base = _construct_url_base(protocol, host, port)
+            self.stats_url_base = _construct_url_base(protocol, host, stats_port)
 
         # Use values passed from client first, otherwise check for environment variables
         if access_key:
@@ -111,11 +175,8 @@ class SwgohComlink:
         md = self.get_game_metadata()
         return md['latestGamedataVersion']
 
-    def _post(self,
-              url_base: str = None,
-              endpoint: str = None,
-              payload: dict = None
-              ) -> dict:
+    def _post(self, url_base: str = None, endpoint: str = None, payload: dict = None) -> dict:
+
         """
         Execute HTTP POST operation against swgoh-comlink
         :param url_base: Base URL for the request method
@@ -123,34 +184,33 @@ class SwgohComlink:
         :param payload: POST payload json data
         :return: dict
         """
-        if not url_base:
-            url_base = self.url_base
+
+        url_base = url_base or self.url_base
         post_url = url_base + f'/{endpoint}'
-        req_headers = {}
+        req_headers = self._construct_request_headers(endpoint, payload)
+
+        try:
+            r = requests.post(post_url, json=payload, headers=req_headers)
+            return loads(r.content.decode())
+        except Exception as e:
+            raise e
+
+    def _construct_request_headers(self, endpoint: str, payload: dict) -> dict:
+        headers = {}
         # If access_key and secret_key are set, perform HMAC security
         if self.hmac:
             req_time = str(int(time.time() * 1000))
-            req_headers = {"X-Date": f'{req_time}'}
-            hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
-            hmac_obj.update(req_time.encode())
-            hmac_obj.update(b'POST')
-            hmac_obj.update(f'/{endpoint}'.encode())
-            # json dumps separators needed for compact string formatting required for compatibility with
-            # comlink since it is written with javascript as the primary object model
-            # ordered dicts are also required with the 'payload' key listed first for proper MD5 hash calculation
-            if payload:
-                payload_string = dumps(payload, separators=(',', ':'))
-            else:
-                payload_string = dumps({})
+            headers = {"X-Date": req_time}
+
+            payload_string = dumps(payload or {}, separators=(',', ':'))
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
-            hmac_obj.update(payload_hash_digest.encode())
+
+            hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
+            _update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
+
             hmac_digest = hmac_obj.hexdigest()
-            req_headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
-        try:
-            r = requests.post(post_url, json=payload, headers=req_headers)
-            return loads(r.content.decode('utf-8'))
-        except Exception as e:
-            raise e
+            headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
+        return headers
 
     def get_unit_stats(self, request_payload: dict, flags: list = None, language: str = None) -> dict:
         """
@@ -161,17 +221,10 @@ class SwgohComlink:
         :param language: String indicating the desired localized language
         :return: dict
         """
-        query_string = None
+        if flags and not isinstance(flags, list):
+            raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
 
-        if flags:
-            if isinstance(flags, list):
-                flags = 'flags=' + ','.join(flags)
-            else:
-                raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
-        if language:
-            language = f'language={language}'
-        if flags or language:
-            query_string = f'?' + '&'.join(filter(None, [flags, language]))
+        query_string = construct_unit_stats_query_string(flags, language)
         endpoint_string = f'api' + query_string if query_string else 'api'
         return self._post(url_base=self.stats_url_base, endpoint=endpoint_string, payload=request_payload)
 
@@ -183,7 +236,7 @@ class SwgohComlink:
         url = self.url_base + '/enums'
         try:
             r = requests.request('GET', url)
-            return loads(r.content.decode('utf-8'))
+            return loads(r.content.decode())
         except Exception as e:
             raise e
 
@@ -410,8 +463,9 @@ class SwgohComlink:
                                ) -> dict:
         """
         Search for guild by guild criteria and return matches.
-        :param search_criteria: Dictionary
-        :param start_index: integer representing where in the resulting list of guild name matches the return object should begin
+        :param search_criteria: Dictionary of search criteria
+        :type search_criteria: dict
+        :param start_index: integer representing where in the result list of matches the return object should begin
         :param count: integer representing the maximum number of matches to return
         :param enums: Whether to translate enum values to text [Default: False]
         :return: dict
@@ -449,45 +503,19 @@ class SwgohComlink:
                         ) -> dict:
         """
         Retrieve Grand Arena Championship leaderboard information.
-        :param leaderboard_type: Type 4 is for scanning gac brackets, and only returns results while an event is active.
-                                    When type 4 is indicated, the "league" and "division" arguments must also be provided.
-                                 Type 6 is for the global leaderboards for the league + divisions.
-                                    When type 6 is indicated, the "event_instance_id" and "group_id" must also be provided.
-        :param league: Enum values 20, 40, 60, 80, and 100 correspond to carbonite, bronzium, chromium, aurodium,
-                       and kyber respectively. Also accepts string values for each league.
-        :param division: Enum values 5, 10, 15, 20, and 25 correspond to divisions 5 through 1 respectively.
-                         Also accepts string or int values for each division.
-        :param event_instance_id: When leaderboard_type 4 is indicated, a combination of the event Id and the instance
-                                ID separated by ':'
-                                Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000
-        :param group_id: When leaderboard_type 4 is indicated, must start with the same eventInstanceId, followed
-                         by the league and bracketId, separated by :. The number at the end is the bracketId, and
-                         goes from 0 to N, where N is the last group of 8 players.
-                            Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000:CARBONITE:10431
-        :param enums: Whether to translate enum values to text [Default: False]
+
+        :param leaderboard_type: ...
+        :param league: ...
+        :param division: ...
+        :param event_instance_id: ...
+        :param group_id: ...
+        :param enums: ...
         :return: dict
         """
-        leagues = {
-            'kyber': 100,
-            'aurodium': 80,
-            'chromium': 60,
-            'bronzium': 40,
-            'carbonite': 20
-        }
-        divisions = {
-            '1': 25,
-            '2': 20,
-            '3': 15,
-            '4': 10,
-            '5': 5
-        }
-        # Translate parameters if needed
-        if isinstance(league, str):
-            league = leagues[league.lower()]
-        if isinstance(division, int) and len(str(division)) == 1:
-            division = divisions[str(division).lower()]
-        if isinstance(division, str):
-            division = divisions[division.lower()]
+
+        league = _convert_league_to_int(league)
+        division = _convert_divisions_to_int(division)
+
         payload = {
             "payload": {
                 "leaderboardType": leaderboard_type,
@@ -545,4 +573,3 @@ class SwgohComlink:
 
     # alias for shorthand call
     getVersion = get_latest_game_data_version
-
