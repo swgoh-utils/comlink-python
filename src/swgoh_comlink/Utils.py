@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 from typing import Callable
 
-from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
+from .version import __version__
 
 logger_name = 'swgoh_comlink'
 
@@ -445,6 +445,10 @@ def param_alias(param: str, alias: str) -> Callable:
     return decorator
 
 
+def get_version() -> str:
+    return __version__
+
+
 def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = False) -> logging.Logger:
     """Create logger instance for writing messages to log files.
 
@@ -533,14 +537,10 @@ def construct_url_base(protocol: str, host: str, port: int) -> str:
     return f"{protocol}://{host}:{port}"
 
 
-def get_guild_members(comlink: SwgohComlink or SwgohComlinkAsync, **kwargs) -> list:
+def get_guild_members(comlink, **kwargs) -> list:
     """Return list of guild member player allycodes based upon provided player ID or allycode"""
     guild_members = []
     if 'player_id' or 'allycode' not in kwargs:
         raise f'player_id or allycode must be provided.'
     # TODO: check if player_id or allycode provided
-    if isinstance(comlink, SwgohComlink):
-        # player = comlink.get_player_arena(allycode=)
-        # guild = comlink
-        pass
     return guild_members

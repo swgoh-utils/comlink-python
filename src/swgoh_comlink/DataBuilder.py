@@ -650,8 +650,6 @@ class DataBuilder:
         """Prepare DataBuilder environment for first use. Providing keyword arguments can override default settings.
 
         data_path: str Defaults to './data'
-        stat_enums_map_file: str Defaults to 'statEnumsMap.json',
-        stat_enum_file: str Defaults to 'statEnum.json',
         data_version_file: str Defaults to 'dataVersion.json',
         game_data_file: str Defaults to 'gameData.json',
         zip_game_data: bool Defaults to False,
@@ -661,8 +659,6 @@ class DataBuilder:
         """
         allowed_parameters = [
             'data_path',
-            'stat_enums_map_file',
-            'stat_enum_file',
             'data_version_file',
             'game_data_file',
             'zip_game_data',

@@ -12,6 +12,7 @@ from json import dumps
 import aiohttp
 
 from swgoh_comlink import Utils
+from swgoh_comlink.Utils import param_alias
 from .version import __version__
 
 
@@ -333,7 +334,7 @@ class SwgohComlinkAsync:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @param_alias(param="player_details_only", alias='playerDetailsOnly')
     async def get_player_arena(self,
                                allycode: str | int = None,
                                player_id: str = None,
@@ -365,7 +366,7 @@ class SwgohComlinkAsync:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     async def get_guild(self,
                         guild_id: str,
                         include_recent_guild_activity_info: bool = False,

@@ -12,7 +12,6 @@ from json import loads, dumps
 import requests
 
 from swgoh_comlink import Utils
-from .version import __version__
 
 
 class SwgohComlink:
@@ -45,7 +44,7 @@ class SwgohComlink:
         :param stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
         """
 
-        self.__version__ = __version__
+        self.__version__ = Utils.get_version()
         self.url_base = url
         self.stats_url_base = stats_url
         self.hmac = False  # HMAC use disabled by default
