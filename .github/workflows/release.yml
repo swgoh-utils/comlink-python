@@ -11,13 +11,16 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: 3.7
       - name: Check-out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Install dependencies
@@ -33,9 +36,6 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          semantic-release publish -v DEBUG
+          semantic-release publish
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
