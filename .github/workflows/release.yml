@@ -11,6 +11,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - name: Setup Python
         uses: actions/setup-python@v3
