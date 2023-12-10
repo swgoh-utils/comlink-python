@@ -33,7 +33,7 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          semantic-release publish -v DEBUG
+          semantic-release publish
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
