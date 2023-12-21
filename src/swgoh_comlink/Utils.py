@@ -8,9 +8,10 @@ import logging
 import os
 from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Callable
 
-from .version import __version__
+from swgoh_comlink import version
 
 logger_name = 'swgoh_comlink'
 
@@ -446,7 +447,7 @@ def param_alias(param: str, alias: str) -> Callable:
 
 
 def get_version() -> str:
-    return __version__
+    return version
 
 
 def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = False) -> logging.Logger:
@@ -463,6 +464,8 @@ def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = F
     """
     if name is None:
         name = logger_name
+    else:
+        name = f"{logger_name}.{name}"
     logger = logging.getLogger(name)
     logger.setLevel(logging.getLevelName(logging_level.upper()))
     # Create message formatting to include module and function naming for easier debugging
@@ -473,10 +476,14 @@ def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = F
         os.mkdir(log_base)
     except FileExistsError:
         pass
-    log_base_name = os.path.join(log_base, f'{logger_name}.log')
+    working_dir = Path(os.getcwd())
+    path_parts = list(working_dir.parts)
+    path_parts.append('logs')
+    path_parts.append(logger_name + '.log')
+    log_path = Path(*path_parts)
     # Create a log file handler to write logs to disk
     log_file_handler = RotatingFileHandler(
-        log_base_name,
+        filename=log_path,
         maxBytes=25000000,
         backupCount=5
     )
@@ -487,7 +494,8 @@ def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = F
         log_console_handler = logging.StreamHandler()
         log_console_handler.setFormatter(formatter)
         logger.addHandler(log_console_handler)
-    logger.info(f"Logger created with level set to {logging_level.upper()!r}.")
+    # logger.info(f"Logger created with level set to {logging_level.upper()!r}.")
+    logger.propagate = False
     return logger
 
 

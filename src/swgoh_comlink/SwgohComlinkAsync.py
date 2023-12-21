@@ -10,9 +10,9 @@ import time
 from json import dumps
 
 import aiohttp
-
 from swgoh_comlink import Utils
 from swgoh_comlink.Utils import param_alias
+
 from .version import __version__
 
 
@@ -84,16 +84,6 @@ class SwgohComlinkAsync:
             self.hmac = True
 
         self.client_session = aiohttp.ClientSession(self.url_base)
-
-    def __del__(self):
-        self.client_session.close()
-
-    def __str__(self):
-        if self.access_key is None:
-            access_str = ''
-        else:
-            access_str = self.access_key
-        return f'{self.url_base=!r} {access_str=!r} {self.stats_url_base=!r} {self.logging_level=!r}'
 
     async def _post(self,
                     endpoint: str = None,

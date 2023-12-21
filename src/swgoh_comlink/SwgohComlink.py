@@ -10,7 +10,6 @@ import time
 from json import loads, dumps
 
 import requests
-
 from swgoh_comlink import Utils
 
 
@@ -45,6 +44,7 @@ class SwgohComlink:
         """
 
         self.__version__ = Utils.get_version()
+        self._logger = Utils.get_logger()
         self.url_base = url
         self.stats_url_base = stats_url
         self.hmac = False  # HMAC use disabled by default
