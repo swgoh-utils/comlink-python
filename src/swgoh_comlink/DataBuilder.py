@@ -16,8 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from swgoh_comlink import Utils
 from swgoh_comlink.SwgohComlink import SwgohComlink
+from swgoh_comlink.Utils import get_logger, STAT_ENUMS, UNIT_STAT_ENUMS_MAP
 
 _COMMENT_START = '#'
 _FIELD_SEPARATOR = '|'
@@ -25,7 +25,7 @@ _NEWLINE_CHARACTER = '\n'
 _PRE_PATTERN = re.compile(r'^\[[0-9A-F]*?]')
 _POST_PATTERN = re.compile(r'\s+\(([A-Z]+)\)\[-]$')
 
-logger = Utils.get_logger(name='DataBuilder')
+logger = get_logger(name='DataBuilder')
 
 
 class DataBuilderException(Exception):
@@ -112,7 +112,7 @@ def _load_stat_enums_map_dict() -> tuple[dict, dict]:
     logger.info(f"Creating 'stats_enum' and 'localization_map' objects")
     stat_enums = {}
     localization_map = {}
-    for key, value in Utils.UNIT_STAT_ENUMS_MAP.items():
+    for key, value in UNIT_STAT_ENUMS_MAP.items():
         if 'tableKey' in value.keys():
             stat_enums[value['tableKey']] = key
         if 'nameKey' in value.keys():
@@ -151,7 +151,7 @@ class DataBuilder:
         "languages": []
     }
 
-    _STATS_ENUM = Utils.STAT_ENUMS
+    _STATS_ENUM = STAT_ENUMS
     _GAME_DATA = {}
     _ZIP_GAME_DATA = False
     _USE_SEGMENTS = False

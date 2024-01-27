@@ -564,17 +564,17 @@ def get_log_file_path(logger_instance_name: str) -> str:
     return logging_instances[logger_instance_name]['file']
 
 
-def human_time(time: int or float) -> str:
+def human_time(unix_time: int or float) -> str:
     """Convert unix time to human readable string"""
-    if isinstance(time, float):
-        time = int(time)
-    if isinstance(time, str):
+    if isinstance(unix_time, float):
+        unix_time = int(unix_time)
+    if isinstance(unix_time, str):
         try:
-            time = int(time)
+            unix_time = int(unix_time)
         except Exception as exc:
             logging.getLogger(logger_name).exception(f"Exception caught: [{exc}]")
             raise
-    return datetime.fromtimestamp(time, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%s')
+    return datetime.fromtimestamp(unix_time, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%s')
 
 
 def construct_unit_stats_query_string(flags: list, language: str) -> str:
@@ -640,10 +640,23 @@ def create_localized_unit_name_dictionary(locale: str or list) -> dict:
     return unit_name_map
 
 
-def get_guild_members(comlink, **kwargs) -> list:
-    """Return list of guild member player allycodes based upon provided player ID or allycode"""
-    guild_members = []
-    if 'player_id' or 'allycode' not in kwargs:
-        raise f'player_id or allycode must be provided.'
-    # TODO: check if player_id or allycode provided
-    return guild_members
+def get_guild_members(comlink, /, *, player_id: str = None, allycode: str or int = None) -> list:
+    """Return list of guild member player allycodes based upon provided player ID or allycode
+
+    :param comlink: Instance of SwgohComlink
+    :type comlink: SwgohComlink
+    :param player_id: Player's ID
+    :type player_id: str
+    :param allycode: Player's allycode
+    :type allycode: str or int
+    :return: list of guild members
+    :rtype: list
+    """
+    if 'player_id' is None and 'allycode' is None:
+        raise RuntimeError(f'player_id or allycode must be provided.')
+    if player_id is not None:
+        player = comlink.get_player(player_id=player_id)
+    else:
+        player = comlink.get_player(allycode=sanitize_allycode(allycode))
+    guild = comlink.get_guild(guild_id=player['guildId'])
+    return guild['member']
