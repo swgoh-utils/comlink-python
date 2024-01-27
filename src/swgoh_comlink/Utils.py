@@ -6,7 +6,9 @@ from __future__ import annotations, print_function
 import functools
 import logging
 import os
+import time
 from datetime import datetime, timezone
+from functools import wraps
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Callable
@@ -14,6 +16,7 @@ from typing import Callable
 from swgoh_comlink import version
 
 logger_name = 'swgoh_comlink'
+logging_instances = {}
 
 LEAGUES: dict[str, int] = {
     'kyber': 100,
@@ -408,6 +411,54 @@ UNIT_STAT_ENUMS_MAP: dict[str, dict[str, str]] = {
     }
 }
 
+MOD_SET_IDS = {
+    "1": "Health",
+    "2": "Offense",
+    "3": "Defense",
+    "4": "Speed",
+    "5": "Critical Chance",
+    "6": "Critical Damage",
+    "7": "Potency",
+    "8": "Tenacity"
+}
+
+MOD_SLOTS = {
+    "2": "Square",
+    "3": "Arrow",
+    "4": "Diamond",
+    "5": "Triangle",
+    "6": "Circle",
+    "7": "Plus/Cross"
+}
+
+
+def func_timer(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time.time()
+        result = f(*args, **kw)
+        te = time.time()
+        logging.getLogger(logger_name).debug(f'func:{f.__name__} took: {te - ts:.6f} sec')
+        return result
+
+    return wrap
+
+
+def func_debug_logger(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        logging.getLogger(logger_name).debug("  [ function %s ] called with args: %s and kwargs: %s",
+                                             f.__name__, args, kw)
+        result = f(*args, **kw)
+        return result
+
+    return wrap
+
+
+def validate_path(path: str) -> bool:
+    """Test whether provided path exists or not"""
+    return os.path.exists(path) and os.path.isfile(path)
+
 
 def sanitize_allycode(allycode: str | int) -> str:
     if isinstance(allycode, int):
@@ -423,20 +474,24 @@ def get_player_payload(allycode: str | int = None, player_id: str = None, enums:
         raise ValueError("Either allycode or player_id must be provided.")
     if allycode is not None and player_id is not None:
         raise ValueError("Only one of allycode or player_id can be provided.")
+    payload = {
+        "payload": {},
+        "enums": enums
+    }
     if allycode is not None:
         allycode = sanitize_allycode(allycode)
-        payload = {"allycodes": [allycode]}
+        payload['payload']['allyCode'] = f'{allycode}'
     else:
-        payload = {"playerIds": [player_id]}
+        payload['payload']['playerId'] = f'{player_id}'
     if enums:
-        payload["enums"] = 1
+        payload["enums"] = True
     return payload
 
 
 def param_alias(param: str, alias: str) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Callable:
             if param in kwargs:
                 kwargs[alias] = kwargs.pop(param)
             return func(*args, **kwargs)
@@ -462,15 +517,19 @@ def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = F
     :return: Logger instance
     :rtype: Logger
     """
-    if name is None:
+    if name is None or name == logger_name:
         name = logger_name
     else:
         name = f"{logger_name}.{name}"
+    if name in logging_instances:
+        return logging_instances[name]['instance']
     logger = logging.getLogger(name)
     logger.setLevel(logging.getLevelName(logging_level.upper()))
     # Create message formatting to include module and function naming for easier debugging
-    formatter = logging.Formatter('{asctime} [ {levelname:^9}] {module:25} : {funcName:20}({lineno}) - {message}',
-                                  style='{')
+    formatter = logging.Formatter(
+        '{asctime} | [{levelname:^9}] | {name:25} | pid:{process} | {threadName} | ' +
+        '{module:14} : {funcName:>20}()_{lineno:_^4}_ | {message}',
+        style='{')
     log_base = os.path.join(os.getcwd(), 'logs')
     try:
         os.mkdir(log_base)
@@ -496,7 +555,13 @@ def get_logger(name: str = None, logging_level: str = 'INFO', terminal: bool = F
         logger.addHandler(log_console_handler)
     # logger.info(f"Logger created with level set to {logging_level.upper()!r}.")
     logger.propagate = False
+    logging_instances[name] = {'file': log_path, 'instance': logger}
     return logger
+
+
+def get_log_file_path(logger_instance_name: str) -> str:
+    """Retrieve the requested log file path and return it as a string"""
+    return logging_instances[logger_instance_name]['file']
 
 
 def human_time(time: int or float) -> str:
@@ -543,6 +608,36 @@ def convert_divisions_to_int(division: int | str) -> int:
 
 def construct_url_base(protocol: str, host: str, port: int) -> str:
     return f"{protocol}://{host}:{port}"
+
+
+def create_localized_unit_name_dictionary(locale: str or list) -> dict:
+    """
+    Take a localization element from the SwgohComlink.get_localization() result dictionary and
+    extract the UNIT_NAME entries for building a conversion dictionary for translating BASEID values to in game
+    descriptive names
+
+    :param locale: The string element or List[bytes] from the SwgohComlink.get_localization() result key value
+    :type locale: str or List[bytes]
+    :return: A dictionary with the UNIT_NAME BASEID as keys and the UNIT_NAME description as values
+    :rtype: dict
+    """
+    unit_name_map = {}
+    lines = []
+    if isinstance(locale, str):
+        lines = locale.split('\n')
+    elif isinstance(locale, list):
+        lines = locale
+    for line in lines:
+        if isinstance(line, bytes):
+            line = line.decode()
+        line = line.rstrip('\n')
+        if line.startswith('#') or '|' not in line:
+            continue
+        if line.startswith('UNIT_'):
+            name_key, desc = line.split('|')
+            if name_key.endswith('_NAME'):
+                unit_name_map[name_key] = desc
+    return unit_name_map
 
 
 def get_guild_members(comlink, **kwargs) -> list:

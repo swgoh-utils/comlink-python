@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "swgoh_comlink"
 dynamic = ["version"]
 authors = [
-  { name="Mar Trepodi", email="martrepodi@gmail.com" },
+    { name = "Mar Trepodi", email = "martrepodi@gmail.com" },
 ]
 description = "Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)"
 readme = "README.md"
@@ -30,12 +30,12 @@ addopts = [
 ]
 
 [tool.setuptools.dynamic]
-version = {attr = "swgoh_comlink.__version__"}
+version = { attr = "swgoh_comlink.version.__version__" }
 
 [tool.semantic_release]
 version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"   # source location of version string
 version_source = "commit"                                                    # Set version source to "commit" so that
-                                                                             #  __version__.py is updated,
+#  __version__.py is updated,
 branch = "main"                                                              # branch to make releases of
 changelog_file = "CHANGELOG.md"                                              # changelog file
 build_command = "python3 -m build"                                           # build dists

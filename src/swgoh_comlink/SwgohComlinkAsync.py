@@ -10,10 +10,9 @@ import time
 from json import dumps
 
 import aiohttp
+
 from swgoh_comlink import Utils
 from swgoh_comlink.Utils import param_alias
-
-from .version import __version__
 
 
 class SwgohComlinkAsync:
@@ -26,10 +25,10 @@ class SwgohComlinkAsync:
     """
 
     def __init__(self,
-                 url: str = "http://localhost:3000",
+                 url: str = Utils.construct_url_base(host="localhost", port=3000, protocol="http"),
                  access_key: str = None,
                  secret_key: str = None,
-                 stats_url: str = "http://localhost:3223",
+                 stats_url: str = Utils.construct_url_base(host="localhost", port=3223, protocol="http"),
                  protocol: str = "http",
                  host: str = None,
                  port: int = 3000,
@@ -57,7 +56,7 @@ class SwgohComlinkAsync:
         """
         self.logger = Utils.get_logger(__name__, logging_level, logging_terminal)
         self.logging_level = logging_level.upper()
-        self.__version__ = __version__
+        self.__version__ = Utils.get_version()
         self.url_base = url
         self.stats_url_base = stats_url
         self.hmac = False  # HMAC use disabled by default
@@ -163,21 +162,6 @@ class SwgohComlinkAsync:
     # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums
 
-    # Get the latest game data and language bundle versions
-    async def get_latest_game_data_version(self) -> dict:
-        """Get the latest game data and language bundle versions
-
-        :return: Dictionary containing only the current 'game' and 'language' versions
-        :rtype: dict
-
-        """
-        current_metadata = await self.get_metadata()
-        return {'game': current_metadata['latestGamedataVersion'],
-                'language': current_metadata['latestLocalizationBundleVersion']}
-
-    # alias for shorthand call
-    getVersion = get_latest_game_data_version
-
     async def get_events(self, enums: bool = False) -> dict:
         """Get an object containing the events game data
 
@@ -276,12 +260,19 @@ class SwgohComlinkAsync:
     getLocalizationBundle = get_localization
     get_localization_bundle = get_localization
 
-    async def get_unit_stats(self, request_payload: dict, flags: list = None, language: str = None) -> dict:
+    # Introduced in 1.12.0
+    # Use decorator to alias the request_payload parameter to 'units_list' to maintain backward compatibility
+    # while fixing the original naming format mistake.
+    @param_alias(param="request_payload", alias='units_list')
+    async def get_unit_stats(self,
+                             request_payload: dict or list,
+                             flags: list[str] = None,
+                             language: str = "eng_us") -> dict:
         """Calculate unit stats using swgoh-stats service interface to swgoh-comlink
 
-        :param request_payload: Dictionary containing units for which to calculate stats
-        :type request_payload: dict
-        :param flags: List of flags to include in the request URI
+        :param request_payload: Dictionary of single character/ship or list containing units for which to calculate stats
+        :type request_payload: dict or list
+        :param flags: List of string flags to include in the request URI
         :type flags: list
         :param language: String indicating the desired localized language
         :type language: str
@@ -289,7 +280,7 @@ class SwgohComlinkAsync:
         :rtype: dict
 
         """
-        if flags and not isinstance(flags, list):
+        if flags is not None and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
 
         query_string = Utils.construct_unit_stats_query_string(flags, language)
@@ -461,9 +452,9 @@ class SwgohComlinkAsync:
     getGuildByCriteria = get_guilds_by_criteria
 
     async def get_leaderboard(self,
-                              leaderboard_type: int,
-                              league: int | str = None,
-                              division: int | str = None,
+                              leaderboard_type: int = 6,
+                              league: int | str = "carbonite",
+                              division: int | str = 5,
                               event_instance_id: str = None,
                               group_id: str = None,
                               enums: bool = False
@@ -529,3 +520,22 @@ class SwgohComlinkAsync:
 
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
+
+    """
+    Helper methods are below
+    """
+
+    # Get the latest game data and language bundle versions
+    async def get_latest_game_data_version(self) -> dict:
+        """Get the latest game data and language bundle versions
+
+        :return: Dictionary containing only the current 'game' and 'language' versions
+        :rtype: dict
+
+        """
+        current_metadata = await self.get_metadata()
+        return {'game': current_metadata['latestGamedataVersion'],
+                'language': current_metadata['latestLocalizationBundleVersion']}
+
+    # alias for shorthand call
+    getVersion = get_latest_game_data_version
