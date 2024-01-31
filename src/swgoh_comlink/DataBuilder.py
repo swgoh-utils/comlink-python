@@ -1,7 +1,6 @@
 """
 Python library module for building data files that can be used by the StatCalc module in the swgoh_comlink package.
 """
-
 import base64
 import io
 import json
@@ -9,6 +8,7 @@ import logging
 import os
 import re
 import shutil
+import sys
 import threading
 import time
 import zipfile
@@ -16,7 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from swgoh_comlink.SwgohComlink import SwgohComlink
+if 'swgoh_comlink.SwgohComlink' not in sys.modules:
+    from swgoh_comlink.SwgohComlink import SwgohComlink
 from swgoh_comlink.Utils import get_logger, STAT_ENUMS, UNIT_STAT_ENUMS_MAP
 
 _COMMENT_START = '#'

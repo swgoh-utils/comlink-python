@@ -11,7 +11,7 @@ from json import loads, dumps
 
 import requests
 
-from swgoh_comlink import Utils
+from swgoh_comlink import Utils, param_alias
 
 
 class SwgohComlink:
@@ -142,9 +142,9 @@ class SwgohComlink:
             headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
         return headers
 
-    @Utils.param_alias(param="roster_list", alias='request_payload')
+    @param_alias(param="request_payload", alias='roster_list')
     def get_unit_stats(self,
-                       request_payload: dict or list[dict],
+                       request_payload: dict or list[dict] = None,
                        flags: list[str] = None,
                        language: str = "eng_us") -> dict or list[dict]:
         """
@@ -152,17 +152,24 @@ class SwgohComlink:
 
         :param request_payload: Single character/ship dictionary or list containing units for which to calculate stats
         :type request_payload: dict or list
-        :param flags: List of flags to include in the request URI
+        :param flags: Flags to include in the request URI
         :type flags: list[str]
         :param language: String indicating the desired localized language. [Default "eng_us"]
         :type language: str
         :return: The input object with 'stats' element containing the results of the calculations added.
         :rtype: dict or list[dict]
+
+        :raises RuntimeError: if the request payload is not provided or flags is not a list object
+
         """
-        if flags and not isinstance(flags, list):
-            raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
+
+        if request_payload is None:
+            raise RuntimeError(f"Request payload is must be provided.")
+        # Convert a single character/ship object to a one item list of obj for StatCalc
         if isinstance(request_payload, dict):
             request_payload = [request_payload]
+        if flags and not isinstance(flags, list):
+            raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
         query_string = Utils.construct_unit_stats_query_string(flags, language)
         endpoint_string = f'api' + query_string if query_string else 'api'
         self.logger.info(f"{self.stats_url_base=}, {endpoint_string=}")
@@ -318,6 +325,9 @@ class SwgohComlink:
         :param player_id: string representing player game ID
         :param enums: boolean [Defaults to False]
         :return: dict
+
+        :raises ValueError: if neither an allycode nor player_id is provided
+
         """
         if allycode is None and player_id is None:
             raise ValueError("Either 'allycode' or 'player_id' must be provided.")
@@ -331,7 +341,7 @@ class SwgohComlink:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @Utils.param_alias(param="playerDetailsOnly", alias='player_details_only')
+    @param_alias(param="player_details_only", alias='playerDetailsOnly')
     def get_player_arena(self,
                          allycode: str or int = None,
                          player_id: str = None,
@@ -340,16 +350,21 @@ class SwgohComlink:
                          ) -> dict:
         """
         Get player arena information from game
+
         :param allycode: integer or string representing player allycode
         :type allycode: str or int
         :param player_id: string representing player game ID
         :type player_id: str
-        :param player_details_only: filter results to only player details [Defaults to False]
+        :param player_details_only: filter results to only player details. Can also be provided as 'playerDetailOnly'
+                                    alias. [Defaults to False]
         :type player_details_only: bool
         :param enums: Flag to enable ENUM translation [Defaults to False]
         :type enums: boolean
         :return: Current player arena information
         :rtype: dict
+
+        :raises ValueError: if neither a player_id nor allycode is provided
+
         """
 
         if allycode is None and player_id is None:
@@ -365,7 +380,7 @@ class SwgohComlink:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @Utils.param_alias(param="includeRecent", alias="include_recent_guild_activity_info")
+    @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(self,
                   guild_id: str = None,
                   include_recent_guild_activity_info: bool = False,
@@ -376,12 +391,15 @@ class SwgohComlink:
         :param guild_id: String ID of guild to retrieve. Guild ID can be found in the output
                             of the get_player() call. (Required)
         :type guild_id: str
-        :param include_recent_guild_activity_info: boolean [Default: False] (Optional)
+        :param include_recent_guild_activity_info: Can also be identified by the alias 'includeRecent' [Default: False]
         :type include_recent_guild_activity_info: bool
         :param enums: Should enums in response be translated to text. [Default: False] (Optional)
         :type enums: boolean
         :return: Current guild information
         :rtype: dict
+
+        :raises ValueError: if guild ID is not provided
+
         """
 
         if guild_id is None:
@@ -404,12 +422,15 @@ class SwgohComlink:
 
     def get_guilds_by_name(self,
                            name: str = None,
+                           /,
+                           *,
                            start_index: int = 0,
                            count: int = 10,
                            enums: bool = False
                            ) -> dict:
         """
         Search for guild by name and return match.
+
         :param name: string for guild name search
         :type name: str
         :param start_index: integer representing where in the resulting list of guild name matches
@@ -421,6 +442,8 @@ class SwgohComlink:
         :type enums: boolean
         :return: Guild information
         :rtype: dict
+
+        :raises ValueError: if the 'name' argument is not provided
         """
 
         if name is None:
@@ -442,6 +465,8 @@ class SwgohComlink:
 
     def get_guilds_by_criteria(self,
                                search_criteria: dict,
+                               /,
+                               *,
                                start_index: int = 0,
                                count: int = 10,
                                enums: bool = False
@@ -544,6 +569,7 @@ class SwgohComlink:
     def get_guild_leaderboard(self, leaderboard_id: list, count: int = 200, enums: bool = False) -> list[dict]:
         """
         Retrieve leaderboard information from SWGOH game servers.
+
         :param leaderboard_id: List of objects indicating leaderboard type, month offset, and depending on the
                                 leaderboard type, a defId. For example, leaderboard type 2 would also require a
                                 defId of one of "sith_raid", "rancor", "rancor_challenge", or "aat".
@@ -554,6 +580,9 @@ class SwgohComlink:
         :type enums: boolean
         :return: List of the leaderboard objects
         :rtype: list[dict]
+
+        :raises ValueError: If leaderboard_id is not a list object
+
         """
         if not isinstance(leaderboard_id, list):
             raise ValueError(f"leaderboard_id argument should be type list not {type(leaderboard_id)}.")

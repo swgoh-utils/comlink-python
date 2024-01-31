@@ -3,7 +3,6 @@ Helper utilities for the swgoh-python-async package and related modules
 """
 from __future__ import annotations, print_function
 
-import functools
 import logging
 import os
 import time
@@ -11,7 +10,6 @@ from datetime import datetime, timezone
 from functools import wraps
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Callable
 
 from swgoh_comlink import version
 
@@ -488,6 +486,7 @@ def get_player_payload(allycode: str | int = None, player_id: str = None, enums:
     return payload
 
 
+"""
 def param_alias(param: str, alias: str) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
@@ -499,6 +498,7 @@ def param_alias(param: str, alias: str) -> Callable:
         return wrapper
 
     return decorator
+"""
 
 
 def get_version() -> str:
