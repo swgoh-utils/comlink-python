@@ -13,9 +13,8 @@ from dataclasses import dataclass
 from math import floor as math_floor
 from typing import Callable
 
-from swgoh_comlink import Utils
+from swgoh_comlink import Utils, SwgohComlink
 from swgoh_comlink.DataBuilder import DataBuilder, DataBuilderException
-from swgoh_comlink.SwgohComlink import SwgohComlink
 
 logger_name = 'StatCalc'
 logger = Utils.get_logger(name=logger_name, logging_level='DEBUG')
@@ -46,7 +45,9 @@ def _format_stats(stats: dict = None, level: int = 85, options: dict = None) -> 
             if 'gear' in stats and stat_id_idx in stats['gear']:
                 logger.info("  ... converting gear values ...")
                 flat += stats['gear'][stat_id_idx]
-                stats['gear'][stat_id_idx] = (convert_func(flat, **kwargs)) - last
+                percent = convert_func(flat)
+                flat += stats['gear'][stat_id_idx]
+                stats['gear'][stat_id_idx] = percent - last
                 last = percent
             if 'mods' in stats and stat_id_idx in stats['mods']:
                 logger.info("  ... converting mod values ...")
@@ -70,22 +71,93 @@ def _format_stats(stats: dict = None, level: int = 85, options: dict = None) -> 
     if options['percentVals'] or options['gameStyle']:
         is_ship: bool = True if 'crew' in stats else False
         logger.info("Converting flat values to percentages")
+        conversion_dispatcher = {
+            "8": {
+                "func": _convert_flat_def_to_percent,
+                "args": {
+                    "scale": scale * 1e8,
+                    "level": level,
+                    "is_ship": is_ship
+                }
+            },
+            "9": {
+                "func": _convert_flat_def_to_percent,
+                "args": {
+                    "scale": scale * 1e8,
+                    "level": level,
+                    "is_ship": is_ship
+                }
+            },
+            "12": {
+                "func": _convert_flat_acc_to_percent,
+                "args": {
+                    "scale": scale * 1e8
+                }
+            },
+            "13": {
+                "func": _convert_flat_acc_to_percent,
+                "args": {
+                    "scale": scale * 1e8
+                }
+            },
+            "14": {
+                "func": _convert_flat_crit_to_percent,
+                "args": {
+                    "scale": scale * 1e8
+                }
+            },
+            "15": {
+                "func": _convert_flat_crit_to_percent,
+                "args": {
+                    "scale": scale * 1e8
+                }
+            },
+            "37": {
+                "func": _convert_flat_acc_to_percent,
+                "args": {
+                    "scale": scale * 1e8
+                }
+            },
+            "38": {
+                "func": _convert_flat_acc_to_percent,
+                "args": {
+                    "scale": scale * 1e8
+                }
+            },
+            "39": {
+                "func": _convert_flat_crit_avoid_to_percent,
+                "args": {
+                    "scale": scale * 1e8
+                }
+            },
+            "40": {
+                "func": _convert_flat_crit_avoid_to_percent,
+                "args": {
+                    "scale": scale * 1e8
+                }
+            }
+        }
+
+        for stat_category in list(stats.keys()):
+            for stat_idx in stats[stat_category]:
+                if stat_idx in conversion_dispatcher:
+                    stats[stat_category][stat_idx] = conversion_dispatcher[stat_idx]['func'](
+                        **conversion_dispatcher[stat_idx]['args'])
         # Convert Crit
-        _convert_percent("14", _convert_flat_crit_to_percent, scale=scale * 1e8)  # Ph.Crit Rating -> Chance
-        _convert_percent("15", _convert_flat_crit_to_percent, scale=scale * 1e8)  # Sp.Crit Rating -> Chance
+        # _convert_percent("14", _convert_flat_crit_to_percent, scale=scale * 1e8)  # Ph.Crit Rating -> Chance
+        # _convert_percent("15", _convert_flat_crit_to_percent, scale=scale * 1e8)  # Sp.Crit Rating -> Chance
         # convert Def
-        _convert_percent("8", _convert_flat_def_to_percent, level=level, scale=scale * 1e8, is_ship=is_ship)  # Armor
-        _convert_percent("9", _convert_flat_def_to_percent, level=level, scale=scale * 1e8,
-                         is_ship=is_ship)  # Resistance
+        # _convert_percent("8", _convert_flat_def_to_percent, level=level, scale=scale * 1e8, is_ship=is_ship)  # Armor
+        # _convert_percent("9", _convert_flat_def_to_percent, level=level, scale=scale * 1e8, is_ship=is_ship)  # Resistance
         # convert Acc
-        _convert_percent("37", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Physical Accuracy
-        _convert_percent("38", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Special Accuracy
+        # _convert_percent("37", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Physical Accuracy
+        # _convert_percent("38", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Special Accuracy
         # convert Evasion
-        _convert_percent("12", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Dodge
-        _convert_percent("13", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Deflection
+        # _convert_percent("12", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Dodge
+        # _convert_percent("13", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Deflection
         # convert Crit Avoidance
-        _convert_percent("39", _convert_flat_crit_avoid_to_percent, scale=scale * 1e8)  # Physical Crit Avoidance
-        _convert_percent("40", _convert_flat_crit_avoid_to_percent, scale=scale * 1e8)  # Special Crit Avoidance
+        # _convert_percent("39", _convert_flat_crit_avoid_to_percent, scale=scale * 1e8)  # Physical Crit Avoidance
+        # _convert_percent("40", _convert_flat_crit_avoid_to_percent, scale=scale * 1e8)  # Special Crit Avoidance
 
     if options['gameStyle'] is True:
         gs_stats = {"final": {}}
@@ -149,7 +221,7 @@ def _floor(value: float, digits: int = 0) -> float:
 def _convert_flat_def_to_percent(value: float, /, *, level: int = 85, scale: float = 1.0,
                                  is_ship: bool = False) -> float:
     val = value / scale
-    level_effect = 300 + level * 7.5
+    level_effect = level * 7.5
     if is_ship:
         level_effect = 300 + level * 5
     return (val / (level_effect + val)) * scale

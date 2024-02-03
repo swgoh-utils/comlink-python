@@ -1,7 +1,7 @@
 """
 Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
-from __future__ import annotations, print_function
+from __future__ import annotations, print_function, absolute_import
 
 import hashlib
 import hmac
@@ -11,7 +11,7 @@ from json import loads, dumps
 
 import requests
 
-from swgoh_comlink import Utils, param_alias
+import swgoh_comlink.Utils as Utils
 
 
 class SwgohComlink:
@@ -142,7 +142,7 @@ class SwgohComlink:
             headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
         return headers
 
-    @param_alias(param="request_payload", alias='roster_list')
+    @Utils.param_alias(param="request_payload", alias='roster_list')
     def get_unit_stats(self,
                        request_payload: dict or list[dict] = None,
                        flags: list[str] = None,
@@ -341,7 +341,7 @@ class SwgohComlink:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
     def get_player_arena(self,
                          allycode: str or int = None,
                          player_id: str = None,
@@ -380,7 +380,7 @@ class SwgohComlink:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(self,
                   guild_id: str = None,
                   include_recent_guild_activity_info: bool = False,
@@ -518,9 +518,9 @@ class SwgohComlink:
         """
         Retrieve Grand Arena Championship leaderboard information.
         :param leaderboard_type: Type 4 is for scanning gac brackets, and only returns results while an event is active.
-                                    When type 4 is indicated, the "league" and "division" arguments must also be provided.
+                                When type 4 is indicated, the "league" and "division" arguments must also be provided.
                                  Type 6 is for the global leaderboards for the league + divisions.
-                                    When type 6 is indicated, the "event_instance_id" and "group_id" must also be provided.
+                                When type 6 is indicated, the "event_instance_id" and "group_id" must also be provided.
         :type leaderboard_type: int
         :param league: Enum values 20, 40, 60, 80, and 100 correspond to carbonite, bronzium, chromium, aurodium,
                        and kyber respectively. Also accepts string values for each league.

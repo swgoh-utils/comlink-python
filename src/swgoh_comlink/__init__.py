@@ -1,34 +1,28 @@
-# from .DataBuilder import DataBuilder
-# from .StatCalc import StatCalc
-from functools import wraps
-from typing import Callable
+"""
+Wrapper for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
+"""
 
-from .SwgohComlink import SwgohComlink
-# from .SwgohComlinkAsync import SwgohComlinkAsync
-# from .Utils import *
+from __future__ import annotations, print_function, absolute_import
+
+from typing import NamedTuple, Literal
+
+__title__ = 'swgoh-comlink'
+__author__ = 'Mar Trepodi'
+__license__ = 'MIT'
+__copyright__ = 'Copyright 2023-present Mar Trepodi'
+
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+
 from .version import __version__
-
-version = __version__
-
-__all__ = [
-    'SwgohComlink',
-    'SwgohComlinkAsync',
-    'DataBuilder',
-    'StatCalc',
-    'Utils',
-    'version',
-    'param_alias',
-]
+from .SwgohComlink import *
 
 
-def param_alias(param: str, alias: str) -> Callable:
-    def decorator(func: Callable) -> Callable:
-        @wraps(func)
-        def wrapper(*args, **kwargs) -> Callable:
-            if alias in kwargs:
-                kwargs[param] = kwargs.pop(alias)
-            return func(*args, **kwargs)
+class VersionInfo(NamedTuple):
+    major: int
+    minor: int
+    micro: int
+    releaselevel: Literal["alpha", "beta", "candidate", "final"]
+    serial: int
 
-        return wrapper
 
-    return decorator
+version_info: VersionInfo = VersionInfo(major=1, minor=13, micro=0, releaselevel='alpha', serial=0)

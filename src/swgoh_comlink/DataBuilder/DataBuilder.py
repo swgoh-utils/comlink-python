@@ -8,7 +8,6 @@ import logging
 import os
 import re
 import shutil
-import sys
 import threading
 import time
 import zipfile
@@ -16,8 +15,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-if 'swgoh_comlink.SwgohComlink' not in sys.modules:
-    from swgoh_comlink.SwgohComlink import SwgohComlink
 from swgoh_comlink.Utils import get_logger, STAT_ENUMS, UNIT_STAT_ENUMS_MAP
 
 _COMMENT_START = '#'
@@ -170,7 +167,7 @@ class DataBuilder:
         os.path.join(_DATA_PATH, 'languages', 'backups')
     ]
     _DATA_VERSION_FILE = 'dataVersion'
-    _GAME_DATA_PATH_SUB_FOLDER = 'game'
+    _GAME_DATA_PATH_SUB_FOLDER = '../../../data/game'
     _GAME_DATA_FILE = 'gameData'
     _GAME_DATA_FILES = [
         'crTables',
@@ -183,7 +180,7 @@ class DataBuilder:
     _STATS_ENUM_MAP_LOADED = False
     _LOG_LEVEL = 'INFO'
     _LANGUAGE_FILE_SKIP_LIST = ['key_mapping']
-    _COMLINK = SwgohComlink()
+    _COMLINK = None
     _AUTO_UPDATE_GAME_DATA = False
     _AUTO_UPDATE_GAME_DATA_INTERVAL_DEFAULT = 60  # 5 minutes
     _AUTO_UPDATE_GAME_DATA_INTERVAL_MIN = 30  # 5 minutes
@@ -317,7 +314,7 @@ class DataBuilder:
         """Validate file exists and contains data"""
         for game_data_file in cls._GAME_DATA_FILES:
             if not game_data_file.endswith('.json'):
-                game_data_file = game_data_file + '.json'
+                game_data_file += '.json'
             full_path = os.path.join(cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER, game_data_file)
             logger.info(f"Verifying {full_path} ...")
             if os.path.isfile(full_path):
@@ -403,6 +400,10 @@ class DataBuilder:
     def set_attribute(cls, attr_name: str, attr_value: any) -> None:
         """Set class attribute"""
         setattr(cls, attr_name, attr_value)
+
+    @classmethod
+    def set_comlink(cls, comlink: Any) -> None:
+        cls._COMLINK = comlink
 
     @classmethod
     def set_log_level(cls, log_level):
