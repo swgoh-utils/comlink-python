@@ -31,8 +31,11 @@ class SwgohComlink:
                  host: str = None,
                  port: int = 3000,
                  stats_port: int = 3223,
-                 logging_level: str = 'INFO',
-                 logging_terminal: bool = False,
+                 log_level: str = 'INFO',
+                 log_to_console: bool = False,
+                 log_to_file: bool = False,
+                 logfile_name: str = None,
+                 log_message_format: str = None
                  ):
         """
         Set initial values when new class instance is created
@@ -51,14 +54,19 @@ class SwgohComlink:
         :type port: int
         :param stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
         :type stats_port: int
-        :param logging_level: The message severity level for logging to file. [Default: INFO]
-        :type logging_level: str
-        :param logging_terminal: Flag to enable logging to console. [Default: False]
-        :type logging_terminal: bool
+        :param log_level: The message severity level for logging to file. [Default: INFO]
+        :type log_level: str
+        :param log_to_console: Flag to enable logging to console. [Default: False]
+        :type log_to_console: bool
 
         """
-        self.logger = Utils.get_logger(name=__name__, logging_level=logging_level, terminal=logging_terminal)
-        self.logging_level = logging_level.upper()
+        self.logger = Utils.get_logger('SwgohComlink',
+                                       log_level=log_level,
+                                       log_to_console=log_to_console,
+                                       log_to_file=log_to_file,
+                                       logfile_name=logfile_name,
+                                       log_message_format=log_message_format
+                                       )
         self.__version__ = Utils.get_version()
         if url is None:
             self.url_base = Utils.construct_url_base(host="localhost", port=3000, protocol="http")

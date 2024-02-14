@@ -17,7 +17,7 @@ from swgoh_comlink import Utils, SwgohComlink
 from swgoh_comlink.DataBuilder import DataBuilder, DataBuilderException
 
 logger_name = 'StatCalc'
-logger = Utils.get_logger(name=logger_name, logging_level='DEBUG')
+logger = Utils.get_logger(logger_name, log_level='DEBUG')
 
 
 @Utils.func_debug_logger

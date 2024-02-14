@@ -23,7 +23,7 @@ _NEWLINE_CHARACTER = '\n'
 _PRE_PATTERN = re.compile(r'^\[[0-9A-F]*?]')
 _POST_PATTERN = re.compile(r'\s+\(([A-Z]+)\)\[-]$')
 
-logger = get_logger(name='DataBuilder')
+logger = get_logger('DataBuilder')
 
 
 class DataBuilderException(Exception):
@@ -167,7 +167,7 @@ class DataBuilder:
         os.path.join(_DATA_PATH, 'languages', 'backups')
     ]
     _DATA_VERSION_FILE = 'dataVersion'
-    _GAME_DATA_PATH_SUB_FOLDER = '../../../data/game'
+    _GAME_DATA_PATH_SUB_FOLDER = 'game'
     _GAME_DATA_FILE = 'gameData'
     _GAME_DATA_FILES = [
         'crTables',
@@ -923,9 +923,10 @@ class DataBuilder:
         return cls._INITIALIZED
 
     @classmethod
-    def initialize(cls, **kwargs) -> bool:
+    def initialize(cls, comlink=None, /, **kwargs) -> bool:
         """Prepare DataBuilder environment for first use. Providing keyword arguments can override default settings.
 
+        :param comlink: instance of swgoh_comlink.SwgohComlink
         data_path: str Defaults to './data'
         data_version_file: str Defaults to 'dataVersion.json',
         game_data_path_sub_folder: str Defaults to 'game',
@@ -935,6 +936,7 @@ class DataBuilder:
 
         """
         allowed_parameters = [
+            'comlink',
             'comlink_url',
             'comlink_stats_url,'
             'data_path',
@@ -945,6 +947,11 @@ class DataBuilder:
             'use_unzip',
         ]
         logger.info("Initializing DataBuilder for first time use.")
+        if comlink is None:
+            logger.error(f"DataBuilder must have an instance of swgoh_comlink.SwgohComlink to operate properly.")
+            return False
+        else:
+            cls._COMLINK = comlink
         class_vars = vars(cls)
         logger.debug(f"Class vars: {class_vars.keys()}")
         for param, value in kwargs.items():

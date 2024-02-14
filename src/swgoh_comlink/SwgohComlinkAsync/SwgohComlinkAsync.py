@@ -12,7 +12,6 @@ from json import dumps
 import aiohttp
 
 from swgoh_comlink import Utils
-from swgoh_comlink.Utils import param_alias
 
 
 class SwgohComlinkAsync:
@@ -33,8 +32,11 @@ class SwgohComlinkAsync:
                  host: str = None,
                  port: int = 3000,
                  stats_port: int = 3223,
-                 logging_level: str = 'INFO',
-                 logging_terminal: bool = False,
+                 log_level: str = 'INFO',
+                 log_to_console: bool = False,
+                 log_to_file: bool = False,
+                 logfile_name: str = None,
+                 log_message_format: str = None
                  ):
         """Set initial values for instances of SwgohComlinkAsync class
 
@@ -54,8 +56,14 @@ class SwgohComlinkAsync:
         :type stats_port: int
 
         """
-        self.logger = Utils.get_logger(__name__, logging_level, logging_terminal)
-        self.logging_level = logging_level.upper()
+        self.logger = Utils.get_logger(__name__,
+                                       log_level=log_level,
+                                       log_to_console=log_to_console,
+                                       log_to_file=log_to_file,
+                                       logfile_name=logfile_name,
+                                       log_message_format=log_message_format
+                                       )
+        self.logging_level = log_level.upper()
         self.__version__ = Utils.get_version()
         self.url_base = url
         self.stats_url_base = stats_url
@@ -263,7 +271,7 @@ class SwgohComlinkAsync:
     # Introduced in 1.12.0
     # Use decorator to alias the request_payload parameter to 'units_list' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @param_alias(param="request_payload", alias='units_list')
+    @Utils.param_alias(param="request_payload", alias='units_list')
     async def get_unit_stats(self,
                              request_payload: dict or list,
                              flags: list[str] = None,
@@ -315,7 +323,7 @@ class SwgohComlinkAsync:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
     async def get_player_arena(self,
                                allycode: str | int = None,
                                player_id: str = None,
@@ -347,7 +355,7 @@ class SwgohComlinkAsync:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     async def get_guild(self,
                         guild_id: str,
                         include_recent_guild_activity_info: bool = False,
