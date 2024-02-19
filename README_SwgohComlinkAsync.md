@@ -1,8 +1,9 @@
-# swgoh_comlink
+# comlink_python
 
 ## SwgohComlinkAsync
 
 ## Installation
+
 Install from [PyPi package repository](https://pypi.org/project/swgoh-comlink/) using the following shell command.
 
 ```buildoutcfg
@@ -22,7 +23,7 @@ Basic default usage example for **asyncio**:
 
 ```python
 import asyncio
-from swgoh_comlink import SwgohComlinkAsync
+from comlink_python import SwgohComlinkAsync
 
 async def async_main():
     comlink = SwgohComlinkAsync()
@@ -43,8 +44,10 @@ if __name__ == '__main__':
 # Parameters
 
 - **_url_**: the URL where the swgoh-comlink service is running. Defaults to `http://localhost:3000`
-- **_access_key_**: The "public" portion of the shared key used in HMAC request signing. Defaults to `None` which disables HMAC signing of requests. Can also be read from the ACCESS_KEY environment variable.
-- **_secret_key_**: The "private" portion of the key used in HMAC request signing. Defaults to `None` which disables HMAC signing of requests. Can also be read from the SECRET_KEY environment variable.
+- **_access_key_**: The "public" portion of the shared key used in HMAC request signing. Defaults to `None` which
+  disables HMAC signing of requests. Can also be read from the ACCESS_KEY environment variable.
+- **_secret_key_**: The "private" portion of the key used in HMAC request signing. Defaults to `None` which disables
+  HMAC signing of requests. Can also be read from the SECRET_KEY environment variable.
 
 See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for more information.
 

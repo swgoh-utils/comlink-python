@@ -3,9 +3,10 @@ get_guild_leaderboard.py
 Sample script to get the various guild level leaderboards using Comlink
 """
 
-# Place module imports below this line
-from swgoh_comlink import SwgohComlinkAsync
 import asyncio
+
+# Place module imports below this line
+from comlink_python import SwgohComlinkAsync
 
 
 async def main():

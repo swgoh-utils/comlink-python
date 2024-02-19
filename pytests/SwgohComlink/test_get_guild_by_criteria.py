@@ -1,5 +1,6 @@
 from unittest import TestCase, main
-from swgoh_comlink import SwgohComlink
+
+from comlink_python import SwgohComlink
 
 
 class TestGetGuildByCriteria(TestCase):

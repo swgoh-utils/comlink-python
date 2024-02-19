@@ -1,12 +1,13 @@
 """
-aync_get_events.py
+async_get_events.py
 Sample script to get events from Comlink
 """
 
-from swgoh_comlink import SwgohComlinkAsync
-from datetime import datetime
-from typing import Any
 import asyncio
+from datetime import datetime, UTC
+from typing import Any
+
+from comlink_python import SwgohComlinkAsync
 
 
 def convert_time(timestamp: Any) -> str:
@@ -21,7 +22,7 @@ def convert_time(timestamp: Any) -> str:
         # timestamp is in milliseconds
         timestamp = int(timestamp)
         timestamp /= 1000
-    return datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.fromtimestamp(int(timestamp), UTC).strftime('%Y-%m-%d %H:%M:%S')
 
 
 """

@@ -3,7 +3,7 @@ get_guild.py
 Sample script to get guild information from Comlink
 """
 
-from swgoh_comlink import SwgohComlink
+from comlink_python import SwgohComlink
 
 # Create instance of SwgohComlink
 comlink = SwgohComlink()

@@ -3,10 +3,10 @@ search_for_guilds.py
 Sample script to search for guilds by various criteria using Comlink
 """
 
-# Place module imports below this line
-from swgoh_comlink import SwgohComlinkAsync
 import asyncio
-from pprint import pp
+
+# Place module imports below this line
+from comlink_python import SwgohComlinkAsync
 
 
 async def main():

@@ -1,9 +1,9 @@
 """
 get_player.py
-Script to illustrate the basic usage of the swgoh_comlink wrapper library
+Script to illustrate the basic usage of the comlink_python wrapper library
 """
-# import the SwgohComlink class from the swgoh_comlink module
-from swgoh_comlink import SwgohComlink
+# import the SwgohComlink class from the comlink_python module
+from comlink_python import SwgohComlink
 
 # create an instance of a SwgohComlink object
 comlink = SwgohComlink()

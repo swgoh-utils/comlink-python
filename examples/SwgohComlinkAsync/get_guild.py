@@ -3,8 +3,9 @@ get_guild.py
 Sample script to get guild information from Comlink
 """
 
-from swgoh_comlink import SwgohComlinkAsync
 import asyncio
+
+from comlink_python import SwgohComlinkAsync
 
 
 def display_tw_data(tw_list: list) -> None:
@@ -25,11 +26,13 @@ async def main():
     """
     player = await comlink.get_player(314927874)
     guild = await comlink.get_guild(player['guildId'])
+    print(F"{guild['name']=}")
 
     """
-    The get_guild() method returns a dictionary containing information about the guild, its members and event participation.
-    By default, there is no actual statistic data returned. If the desire is to include information such as recent raid or
-    event result, then the 'include_recent_guild_activity_info' argument in the method should be set to True.
+    The get_guild() method returns a dictionary containing information about the guild, its members and event 
+    participation. By default, there is no actual statistic data returned. If the desire is to include information 
+    such as recent raid or event result, then the 'include_recent_guild_activity_info' argument in the method should 
+    be set to True.
     """
 
     guild_with_stats = await comlink.get_guild(player['guildId'], include_recent_guild_activity_info=True)

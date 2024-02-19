@@ -1,5 +1,5 @@
 """
-Python library module for building data files that can be used by the StatCalc module in the swgoh_comlink package.
+Python library module for building data files that can be used by the StatCalc module in the comlink_python package.
 """
 import base64
 import io
@@ -15,7 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from swgoh_comlink.Utils import get_logger, STAT_ENUMS, UNIT_STAT_ENUMS_MAP
+import comlink_python
+from comlink_python.Utils import STAT_ENUMS, UNIT_STAT_ENUMS_MAP
 
 _COMMENT_START = '#'
 _FIELD_SEPARATOR = '|'
@@ -23,7 +24,7 @@ _NEWLINE_CHARACTER = '\n'
 _PRE_PATTERN = re.compile(r'^\[[0-9A-F]*?]')
 _POST_PATTERN = re.compile(r'\s+\(([A-Z]+)\)\[-]$')
 
-logger = get_logger('DataBuilder')
+logger = comlink_python.Utils.get_logger('DataBuilder')
 
 
 class DataBuilderException(Exception):
@@ -138,8 +139,12 @@ def _compare_game_data_versions(current_version: dict, server_version: dict) -> 
 
 @dataclass
 class DataBuilder:
-    """Base container class representing a collection of methods for managing game data files populated with information
-    retrieved from the game servers directly. This class is not intended to be instantiated.
+    """DataBuilder is a base container class representing a collection of methods for managing game data files
+    populated with information retrieved from the game servers directly. This class is not intended to be instantiated.
+    Rather, the DataBuilder class provides methods for creating and updating game data files on the local filesystem
+    from information from the Capital Games server.
+
+    The initialize() method must be called before any other operations are performed.
 
     """
     _INITIALIZED = False
@@ -167,7 +172,7 @@ class DataBuilder:
         os.path.join(_DATA_PATH, 'languages', 'backups')
     ]
     _DATA_VERSION_FILE = 'dataVersion'
-    _GAME_DATA_PATH_SUB_FOLDER = 'game'
+    _GAME_DATA_PATH_SUB_FOLDER = '../data/game'
     _GAME_DATA_FILE = 'gameData'
     _GAME_DATA_FILES = [
         'crTables',
@@ -372,10 +377,8 @@ class DataBuilder:
     def load_stats_enums_map(cls, force_reload: bool = False) -> bool:
         """Load data from statEnumMap object into statsEnum and localizationMap objects
 
-        :param force_reload: Force reload of data from file. Defaults to False
-        :type force_reload: bool
-        :return: True or False depending on success or failure of data import operation
-        :rtype: bool
+        Parameters:
+            force_reload: Force reload of data from file. Defaults to False
         """
 
         logger.info("Loading stats_enum_map...")
@@ -417,10 +420,7 @@ class DataBuilder:
 
     @classmethod
     def get_languages(cls) -> list:
-        """Return list of current language localizations available
-        :return: list of languages
-        :rtype: list
-        """
+        """Return list of current language localizations available"""
         return cls._VERSION['languages']
 
     @classmethod
@@ -428,10 +428,8 @@ class DataBuilder:
         """
         Create a dictionary with unit['nameKey'] as the key and the in-game unit name as the value
 
-        :param language: Which language to use for creating the dictionary values [Default is "eng_us"]
-        :type language:str
-        :return: Dictionary with unit nameKeys mapped to the in-game equivalent in the language specified
-        :rtype: dict
+        Parameters:
+            language: Which language to use for creating the dictionary values [Default is "eng_us"]
         """
         languages_file_path = os.path.join(cls._DATA_PATH, "units")
         unit_file_name = language + "_unit_name_keys.json"
@@ -794,8 +792,8 @@ class DataBuilder:
     def update_localization_bundle(cls, force_update: bool = False):
         """Collect localization bundle from game servers.
 
-        :param force_update: Flag to indicate whether existing files should be overwritten. Defaults to False
-        :type force_update: bool
+        Parameters:
+            force_update: Flag to indicate whether existing files should be overwritten. Defaults to False
         """
         logger.info("Updating localization bundle...")
         server_versions = cls._COMLINK.get_latest_game_data_version()
@@ -863,10 +861,8 @@ class DataBuilder:
     def enable_auto_game_data_update(cls, interval: int = None) -> bool:
         """Turn the automatic data file update thread on
 
-        :param interval: Time in minutes to wait between polling cycles for new data
-        :type interval: int
-        :return: True if successful, False otherwise
-        :rtype: bool
+        Parameters:
+            interval: Time in minutes to wait between polling cycles for new data
         """
         if cls._AUTO_UPDATE_GAME_DATA is True:
             logger.info(f"Auto update is already enabled")
@@ -926,19 +922,18 @@ class DataBuilder:
     def initialize(cls, comlink=None, /, **kwargs) -> bool:
         """Prepare DataBuilder environment for first use. Providing keyword arguments can override default settings.
 
-        :param comlink: instance of swgoh_comlink.SwgohComlink
-        data_path: str Defaults to './data'
-        data_version_file: str Defaults to 'dataVersion.json',
-        game_data_path_sub_folder: str Defaults to 'game',
-        zip_game_data: bool Defaults to False,
-        use_segments: bool Defaults to False,
-        use_unzip: bool Defaults to False,
+        Parameters:
+            comlink: instance of comlink_python.SwgohComlink
+            data_path: str Defaults to './data'
+            data_version_file: str Defaults to 'dataVersion.json',
+            game_data_path_sub_folder: str Defaults to 'game',
+            zip_game_data: bool Defaults to False,
+            use_segments: bool Defaults to False,
+            use_unzip: bool Defaults to False,
 
         """
         allowed_parameters = [
             'comlink',
-            'comlink_url',
-            'comlink_stats_url,'
             'data_path',
             'data_version_file',
             'game_data_path_sub_folder',
@@ -948,7 +943,7 @@ class DataBuilder:
         ]
         logger.info("Initializing DataBuilder for first time use.")
         if comlink is None:
-            logger.error(f"DataBuilder must have an instance of swgoh_comlink.SwgohComlink to operate properly.")
+            logger.error(f"DataBuilder must have an instance of comlink_python.SwgohComlink to operate properly.")
             return False
         else:
             cls._COMLINK = comlink

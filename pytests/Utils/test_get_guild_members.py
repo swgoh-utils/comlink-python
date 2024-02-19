@@ -1,5 +1,5 @@
-from swgoh_comlink.SwgohComlink import SwgohComlink
-from swgoh_comlink.Utils import get_guild_members
+from comlink_python import SwgohComlink
+from comlink_python import get_guild_members
 
 
 class TestGetGuildMembers:

@@ -28,7 +28,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-src/swgoh_comlink/utils/
+comlink_python/utils/
 stash/
 
 # PyInstaller
@@ -76,7 +76,7 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
+docs_folder/_build/
 
 # PyBuilder
 .pybuilder/

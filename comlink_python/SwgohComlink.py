@@ -11,15 +11,28 @@ from json import loads, dumps
 
 import requests
 
-import swgoh_comlink.Utils as Utils
+import comlink_python
 
 
 class SwgohComlink:
     """
-    Class definition for swgoh-comlink interface and supported methods.
+    Class definition for comlink-python interface and supported methods.
     Instances of this class are used to query the Star Wars Galaxy of Heroes
     game servers for exposed endpoints via the swgoh-comlink proxy library
     running on the same host.
+
+    Parameters:
+        url: The URL where swgoh-comlink is running. Defaults to 'http://localhost:3000'
+        access_key: The HMAC public key. Default to None which indicates HMAC is not used.
+        secret_key: The HMAC private key. Default to None which indicates HMAC is not used.
+        stats_url: The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
+        protocol: The protocol to use for connecting to comlink. Typically, http or https.
+        host: IP address or DNS name of server where the swgoh-comlink service is running
+        port: TCP port number where the swgoh-comlink service is running [Default: 3000]
+        stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
+
+    Note: url and stat_url are mutually exclusive of the protocol/host/port/stats_port parameters.
+        Either of the options should be chosen but not both.
     """
 
     def __init__(self,
@@ -31,50 +44,27 @@ class SwgohComlink:
                  host: str = None,
                  port: int = 3000,
                  stats_port: int = 3223,
-                 log_level: str = 'INFO',
-                 log_to_console: bool = False,
-                 log_to_file: bool = False,
-                 logfile_name: str = None,
-                 log_message_format: str = None
                  ):
         """
         Set initial values when new class instance is created
 
         :param url: The URL where swgoh-comlink is running. Defaults to 'http://localhost:3000'
-        :type url: str
         :param access_key: The HMAC public key. Default to None which indicates HMAC is not used.
-        :type access_key: str
         :param secret_key: The HMAC private key. Default to None which indicates HMAC is not used.
-        :type secret_key: str
         :param stats_url: The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
-        :type stats_url: str
         :param host: IP address or DNS name of server where the swgoh-comlink service is running
-        :type host: str
         :param port: TCP port number where the swgoh-comlink service is running [Default: 3000]
-        :type port: int
         :param stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
-        :type stats_port: int
-        :param log_level: The message severity level for logging to file. [Default: INFO]
-        :type log_level: str
-        :param log_to_console: Flag to enable logging to console. [Default: False]
-        :type log_to_console: bool
 
         """
-        self.logger = Utils.get_logger('SwgohComlink',
-                                       log_level=log_level,
-                                       log_to_console=log_to_console,
-                                       log_to_file=log_to_file,
-                                       logfile_name=logfile_name,
-                                       log_message_format=log_message_format
-                                       )
-        self.__version__ = Utils.get_version()
+        self.logger = comlink_python.Utils.get_logger('SwgohComlink')
         if url is None:
-            self.url_base = Utils.construct_url_base(host="localhost", port=3000, protocol="http")
+            self.url_base = comlink_python.Utils.construct_url_base(host="localhost", port=3000, protocol="http")
             self.logger.info(f"No URL provided. Using {self.url_base}")
         else:
             self.url_base = url
         if stats_url is None:
-            self.stats_url_base = Utils.construct_url_base(host="localhost", port=3223, protocol="http")
+            self.stats_url_base = comlink_python.Utils.construct_url_base(host="localhost", port=3223, protocol="http")
             self.logger.info(f"No stats URL provided. Using {self.stats_url_base}")
         else:
             self.stats_url_base = stats_url
@@ -82,8 +72,8 @@ class SwgohComlink:
 
         # host and port parameters override defaults
         if host is not None:
-            self.url_base = Utils.construct_url_base(protocol, host, port)
-            self.stats_url_base = Utils.construct_url_base(protocol, host, stats_port)
+            self.url_base = comlink_python.Utils.construct_url_base(protocol, host, port)
+            self.stats_url_base = comlink_python.Utils.construct_url_base(protocol, host, stats_port)
 
         # Use values passed from client first, otherwise check for environment variables
         if access_key:
@@ -144,13 +134,13 @@ class SwgohComlink:
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
 
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
-            Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
+            comlink_python.Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
 
             hmac_digest = hmac_obj.hexdigest()
             headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
         return headers
 
-    @Utils.param_alias(param="request_payload", alias='roster_list')
+    @comlink_python.Utils.param_alias(param="request_payload", alias='roster_list')
     def get_unit_stats(self,
                        request_payload: dict or list[dict] = None,
                        flags: list[str] = None,
@@ -178,7 +168,7 @@ class SwgohComlink:
             request_payload = [request_payload]
         if flags and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
-        query_string = Utils.construct_unit_stats_query_string(flags, language)
+        query_string = comlink_python.Utils.construct_unit_stats_query_string(flags, language)
         endpoint_string = f'api' + query_string if query_string else 'api'
         self.logger.info(f"{self.stats_url_base=}, {endpoint_string=}")
         return self._post(url_base=self.stats_url_base, endpoint=endpoint_string, payload=request_payload)
@@ -340,7 +330,7 @@ class SwgohComlink:
         if allycode is None and player_id is None:
             raise ValueError("Either 'allycode' or 'player_id' must be provided.")
 
-        payload = Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = comlink_python.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         return self._post(endpoint='player', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
@@ -349,7 +339,7 @@ class SwgohComlink:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @comlink_python.Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
     def get_player_arena(self,
                          allycode: str or int = None,
                          player_id: str = None,
@@ -378,7 +368,7 @@ class SwgohComlink:
         if allycode is None and player_id is None:
             raise ValueError("Either 'allycode' or 'player_id' must be provided.")
 
-        payload = Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = comlink_python.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         payload['payload']['playerDetailsOnly'] = player_details_only
         return self._post(endpoint='playerArena', payload=payload)
 
@@ -388,7 +378,7 @@ class SwgohComlink:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @comlink_python.Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(self,
                   guild_id: str = None,
                   include_recent_guild_activity_info: bool = False,
@@ -551,8 +541,8 @@ class SwgohComlink:
         :rtype: dict
         """
 
-        league = Utils.convert_league_to_int(league)
-        division = Utils.convert_divisions_to_int(division)
+        league = comlink_python.Utils.convert_league_to_int(league)
+        division = comlink_python.Utils.convert_divisions_to_int(division)
 
         payload = {
             "payload": {

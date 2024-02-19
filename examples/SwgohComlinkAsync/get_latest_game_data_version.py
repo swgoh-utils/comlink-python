@@ -1,10 +1,12 @@
 """
 get_latest_game_data_version.py
-Script to illustrate the basic usage of the swgoh_comlink wrapper library
+Script to illustrate the basic usage of the comlink_python wrapper library
 """
-# import the SwgohComlink class from the swgoh_comlink module
-from swgoh_comlink import SwgohComlinkAsync
 import asyncio
+
+# import the SwgohComlink class from the comlink_python module
+from comlink_python import SwgohComlinkAsync
+
 
 async def main():
     """

@@ -11,7 +11,7 @@ from json import dumps
 
 import aiohttp
 
-from swgoh_comlink import Utils
+import comlink_python
 
 
 class SwgohComlinkAsync:
@@ -24,19 +24,14 @@ class SwgohComlinkAsync:
     """
 
     def __init__(self,
-                 url: str = Utils.construct_url_base(host="localhost", port=3000, protocol="http"),
+                 url: str = comlink_python.Utils.construct_url_base(host="localhost", port=3000, protocol="http"),
                  access_key: str = None,
                  secret_key: str = None,
-                 stats_url: str = Utils.construct_url_base(host="localhost", port=3223, protocol="http"),
+                 stats_url: str = comlink_python.Utils.construct_url_base(host="localhost", port=3223, protocol="http"),
                  protocol: str = "http",
                  host: str = None,
                  port: int = 3000,
                  stats_port: int = 3223,
-                 log_level: str = 'INFO',
-                 log_to_console: bool = False,
-                 log_to_file: bool = False,
-                 logfile_name: str = None,
-                 log_message_format: str = None
                  ):
         """Set initial values for instances of SwgohComlinkAsync class
 
@@ -56,23 +51,15 @@ class SwgohComlinkAsync:
         :type stats_port: int
 
         """
-        self.logger = Utils.get_logger(__name__,
-                                       log_level=log_level,
-                                       log_to_console=log_to_console,
-                                       log_to_file=log_to_file,
-                                       logfile_name=logfile_name,
-                                       log_message_format=log_message_format
-                                       )
-        self.logging_level = log_level.upper()
-        self.__version__ = Utils.get_version()
+        self.logger = comlink_python.Utils.get_logger('SwgohComlinkAsync')
         self.url_base = url
         self.stats_url_base = stats_url
         self.hmac = False  # HMAC use disabled by default
 
         # host and port parameters override defaults
         if host:
-            self.url_base = Utils.construct_url_base(protocol, host, port)
-            self.stats_url_base = Utils.construct_url_base(protocol, host, stats_port)
+            self.url_base = comlink_python.Utils.construct_url_base(protocol, host, port)
+            self.stats_url_base = comlink_python.Utils.construct_url_base(protocol, host, stats_port)
 
         # Use values passed from client first, otherwise check for environment variables
         if access_key:
@@ -96,15 +83,9 @@ class SwgohComlinkAsync:
                     endpoint: str = None,
                     payload: dict = None
                     ) -> dict:
-        if self.logging_level == 'DEBUG':
-            self.logger.debug("Executing _post() requesst...")
         req_headers = self._construct_request_headers(endpoint, payload)
         # If access_key and secret_key are set, perform HMAC security
         try:
-            if self.logging_level == 'DEBUG':
-                self.logger.debug(f"Attempting Async HTTP POST on /{endpoint}")
-                self.logger.debug(f"payload = {dumps(payload)}")
-                self.logger.debug(f"headers = {req_headers}")
             async with self.client_session.post(f'/{endpoint}', json=payload, headers=req_headers) as resp:
                 return await resp.json()
         except Exception as e:
@@ -121,7 +102,7 @@ class SwgohComlinkAsync:
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
 
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
-            Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
+            comlink_python.Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
 
             hmac_digest = hmac_obj.hexdigest()
             headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
@@ -271,7 +252,7 @@ class SwgohComlinkAsync:
     # Introduced in 1.12.0
     # Use decorator to alias the request_payload parameter to 'units_list' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @Utils.param_alias(param="request_payload", alias='units_list')
+    @comlink_python.Utils.param_alias(param="request_payload", alias='units_list')
     async def get_unit_stats(self,
                              request_payload: dict or list,
                              flags: list[str] = None,
@@ -291,7 +272,7 @@ class SwgohComlinkAsync:
         if flags is not None and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
 
-        query_string = Utils.construct_unit_stats_query_string(flags, language)
+        query_string = comlink_python.Utils.construct_unit_stats_query_string(flags, language)
         endpoint_string = f'api' + query_string if query_string else 'api'
         return await self._post(endpoint=endpoint_string, payload=request_payload)
 
@@ -312,9 +293,7 @@ class SwgohComlinkAsync:
         :rtype: dict
 
         """
-        if self.logging_level == 'DEBUG':
-            self.logger.debug(f"Executing get_player(allycode={allycode}, player_id={player_id}, enums={enums})")
-        payload = Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = comlink_python.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         return await self._post(endpoint='player', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
@@ -323,7 +302,7 @@ class SwgohComlinkAsync:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @comlink_python.Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
     async def get_player_arena(self,
                                allycode: str | int = None,
                                player_id: str = None,
@@ -345,7 +324,7 @@ class SwgohComlinkAsync:
         :rtype: dict
 
         """
-        payload = Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = comlink_python.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         payload['payload']['playerDetailsOnly'] = player_details_only
         return await self._post(endpoint='playerArena', payload=payload)
 
@@ -355,7 +334,7 @@ class SwgohComlinkAsync:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @comlink_python.Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     async def get_guild(self,
                         guild_id: str,
                         include_recent_guild_activity_info: bool = False,
@@ -478,8 +457,8 @@ class SwgohComlinkAsync:
         :return: dict
         """
 
-        league = Utils.convert_league_to_int(league)
-        division = Utils.convert_divisions_to_int(division)
+        league = comlink_python.Utils.convert_league_to_int(league)
+        division = comlink_python.Utils.convert_divisions_to_int(division)
 
         payload = {
             "payload": {

@@ -4,7 +4,7 @@ Sample script to get either the GAC bracket or league/division leaderboards usin
 """
 
 # Place module imports below this line
-from swgoh_comlink import SwgohComlink
+from comlink_python import SwgohComlink
 
 
 def format_output(lb_list: list):
@@ -61,8 +61,6 @@ gac_kyber_2_lb = comlink.get_gac_leaderboard(leaderboard_type=6, league=100, div
 # Output the GAC leaderboard information
 name_col_width, guild_col_width, lb_entries = format_output(gac_kyber_2_lb['player'])
 for player in lb_entries:
-    print("Player nane: {name:{name_width}} Guild: {g_name:{g_width}} Skill Rating: {rating}".format(name=player[0],
-                                                                                                     name_width=name_col_width,
-                                                                                                     g_name=player[1],
-                                                                                                     g_width=guild_col_width,
-                                                                                                     rating=player[2]))
+    out_str = (f"Player name: {player[0]:{name_col_width}} Guild: {player[1]:{guild_col_width}} "
+               + f"Skill Rating: {player[2]}")
+    print(out_str)

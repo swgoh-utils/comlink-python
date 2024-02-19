@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "requests>=2.30.0", "aiohttp>=3.8.5", "asyncio"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "swgoh_comlink"
+name = "comlink_python"
 dynamic = ["version"]
 authors = [
     { name = "Mar Trepodi", email = "martrepodi@gmail.com" },
@@ -29,11 +29,14 @@ addopts = [
     "--import-mode=importlib",
 ]
 
+[tool.setuptools]
+packages = ["comlink_python"]
+
 [tool.setuptools.dynamic]
-version = { attr = "swgoh_comlink.version.__version__" }
+version = { attr = "comlink_python.__version__" }
 
 [tool.semantic_release]
-version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"   # source location of version string
+version_pattern = "comlink_python/__init__.py:__version__ = '{version}'"   # source location of version string
 version_source = "commit"                                                    # Set version source to "commit" so that
 #  __version__.py is updated,
 branch = "main"                                                              # branch to make releases of

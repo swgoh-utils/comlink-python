@@ -1,11 +1,10 @@
 """
 get_player_arena_profile.py
-Script to illustrate the basic usage of the swgoh_comlink wrapper library
+Script to illustrate the basic usage of the comlink_python wrapper library
 """
 
 # Place module imports below this line
-from swgoh_comlink import SwgohComlink
-from pprint import pprint as pp
+from comlink_python import SwgohComlink
 
 # create an instance of a SwgohComlink object
 comlink = SwgohComlink()

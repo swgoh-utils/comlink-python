@@ -3,7 +3,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.split(os.getcwd())[0], 'src'))
 from unittest import TestCase, main, mock
-from swgoh_comlink import SwgohComlink
+from comlink_python import SwgohComlink
 
 
 def mocked_player_arena(*args, **kwargs):
@@ -24,7 +24,7 @@ def mocked_player_arena(*args, **kwargs):
 
 
 class TestGetPlayerArena(TestCase):
-    @mock.patch('swgoh_comlink.SwgohComlink.get_player_arena', side_effect=mocked_player_arena)
+    @mock.patch('comlink_python.SwgohComlink.get_player_arena', side_effect=mocked_player_arena)
     def test_get_player_arena(self, mock_post):
         """
         Test that player data can be retrieved from game server correctly
@@ -34,7 +34,7 @@ class TestGetPlayerArena(TestCase):
         p = comlink.get_player_arena(allycode=ally_code)
         self.assertTrue('name' in p.keys())
 
-    @mock.patch('swgoh_comlink.SwgohComlink.get_player_arena', side_effect=mocked_player_arena)
+    @mock.patch('comlink_python.SwgohComlink.get_player_arena', side_effect=mocked_player_arena)
     def test_get_player_arena_details_only(self, mock_post):
         """
         Test that player data can be retrieved from game server correctly
@@ -44,7 +44,7 @@ class TestGetPlayerArena(TestCase):
         p = comlink.get_player_arena(allycode=ally_code, player_details_only=True)
         self.assertTrue('name' in p.keys())
 
-    @mock.patch('swgoh_comlink.SwgohComlink.get_player_arena', side_effect=mocked_player_arena)
+    @mock.patch('comlink_python.SwgohComlink.get_player_arena', side_effect=mocked_player_arena)
     def test_get_player_arena_details_only_alias(self, mock_post):
         """
         Test that player data can be retrieved from game server correctly
@@ -54,7 +54,7 @@ class TestGetPlayerArena(TestCase):
         p = comlink.get_player_arena(allycode=ally_code, playerDetailsOnly=True)
         self.assertTrue('name' in p.keys())
 
-    @mock.patch('swgoh_comlink.SwgohComlink.get_player_arena', side_effect=mocked_player_arena)
+    @mock.patch('comlink_python.SwgohComlink.get_player_arena', side_effect=mocked_player_arena)
     def test_get_player_arena_details_only_alias_neg(self, mock_post):
         """
         Test that player data can be retrieved from game server correctly
@@ -64,7 +64,7 @@ class TestGetPlayerArena(TestCase):
         p = comlink.get_player_arena(allycode=ally_code, playerDetailsOnly=True)
         self.assertTrue('name' in p.keys())
 
-    @mock.patch('swgoh_comlink.SwgohComlink.get_arena', side_effect=mocked_player_arena)
+    @mock.patch('comlink_python.SwgohComlink.get_arena', side_effect=mocked_player_arena)
     def test_get_arena(self, mock_post):
         """
         Test that player data can be retrieved from game server correctly

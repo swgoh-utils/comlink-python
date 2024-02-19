@@ -13,14 +13,13 @@ from dataclasses import dataclass
 from math import floor as math_floor
 from typing import Callable
 
-from swgoh_comlink import Utils, SwgohComlink
-from swgoh_comlink.DataBuilder import DataBuilder, DataBuilderException
+import comlink_python
+from comlink_python.DataBuilder import DataBuilder, DataBuilderException
 
-logger_name = 'StatCalc'
-logger = Utils.get_logger(logger_name, log_level='DEBUG')
+logger = comlink_python.Utils.get_logger('StatCalc', log_level='DEBUG')
 
 
-@Utils.func_debug_logger
+@comlink_python.Utils.func_debug_logger
 def _format_stats(stats: dict = None, level: int = 85, options: dict = None) -> dict:
     logger.info("Formatting stats ... ")
     logger.debug(f"Stats: {stats} {level=} {options=}")
@@ -305,7 +304,7 @@ class StatCalc:
         }
     }
 
-    _COMLINK = SwgohComlink()
+    _COMLINK = comlink_python.SwgohComlink()
 
     @classmethod
     def is_initialized(cls) -> bool:
@@ -341,7 +340,7 @@ class StatCalc:
         lang_file_name = f'Loc_{cls._LANGUAGE.upper()}.txt'
         with zip_obj.open(lang_file_name) as lang_file:
             contents = lang_file.readlines()
-        cls._UNIT_NAME_MAP = Utils.create_localized_unit_name_dictionary(contents)
+        cls._UNIT_NAME_MAP = comlink_python.Utils.create_localized_unit_name_dictionary(contents)
         if len(cls._UNIT_NAME_MAP) > 0:
             return True
         else:
@@ -356,7 +355,7 @@ class StatCalc:
         except Exception as e_str:
             logger.error(f"An error occurred while attempting to load the stat names map. [{e_str}]")
             return False
-        if not Utils.validate_path(language_file):
+        if not comlink_python.Utils.validate_path(language_file):
             logger.error(f"Error while validating language file data path ({language_file})")
             return False
         try:
@@ -369,7 +368,7 @@ class StatCalc:
             return True
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def _rename_stats(cls, stats: dict, options: dict) -> dict:
         logger.info(f"Renaming stats ... ")
         rn_stats = {}
@@ -386,7 +385,7 @@ class StatCalc:
         return stats
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def _calculate_base_stats(cls, stats: dict, level: int, base_id: str) -> dict:
         """Calculate bonus primary stats from growth modifiers"""
         logger.info("Calculating base stats")
@@ -428,7 +427,7 @@ class StatCalc:
         return stats
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def _calculate_mod_stats(cls, base_stats: dict, char: dict = None) -> dict or None:
         logger.info("Calculating mod stats ... ")
         if 'mods' not in char or char is None or 'equippedStatMod' not in char:
@@ -460,7 +459,7 @@ class StatCalc:
             return {}
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def _get_char_raw_stats(cls, char: dict) -> dict:
         """Generate raw stats for character"""
         # Construction stats dictionary using game data for character based on specifics of character data provided
@@ -509,7 +508,7 @@ class StatCalc:
         return stats
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def calc_char_stats(cls,
                         char: dict,
                         /, *,
@@ -521,13 +520,13 @@ class StatCalc:
         Calculate stats for a single character based upon arguments provided.
         :param set_global_options:
         :type set_global_options:
-        :param char: Element from the swgoh_comlink.SwgohComLink.get_player() -> ['rosterUnit'] result list
+        :param char: Element from the comlink_python.SwgohComLink.get_player() -> ['rosterUnit'] result list
         :type char: dict
         :param options: List of flags to determine which calculations to perform and format of results
         :type options: list
         :param use_values: Dictionary containing the "char" key with a dictionary value specifying the parameters for
         the calculations. To be used for generic calculations of a specific character based upon the ['units'] value
-        in the swgoh_comlink.SwgohComLink.get_game_data() result.
+        in the comlink_python.SwgohComLink.get_game_data() result.
         :type use_values: dict
         :param language: Language to be used for the 'statIds' in the result. Defaults to "eng_us"
         :type language: str
@@ -621,7 +620,7 @@ class StatCalc:
         return {}
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def _set_skills(cls, unit_id: str, val: str) -> list:
         logger.info(f"Setting skills for {unit_id}")
         if val == 'max':
@@ -637,7 +636,7 @@ class StatCalc:
         pass
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def _use_values_char(cls, char: dict, use_values: dict = None):
         logger.info(f"Executing _use_values_char() ...")
 
@@ -729,7 +728,7 @@ class StatCalc:
             o_tag = cls._UNIT_DATA[id]['skills']
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def _process_language(cls, language: str = None) -> None:
         """Update localized language selection for statIds"""
         logger.info(f"Processing language: {language}")
@@ -740,7 +739,7 @@ class StatCalc:
             logger.warning(f"Unknown language: {language}, setting default language to {cls._LANGUAGE}")
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def _process_options(cls, options: list or dict, set_global: bool = False) -> dict:
         """Update class instance properties based on flags provided"""
         logger.info(f"Processing options: type({type(options)})")
@@ -771,7 +770,7 @@ class StatCalc:
         return new_options
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def _process_use_values_settings(cls, use_values: dict) -> None:
         """Break options object into parts and validate settings"""
         if not isinstance(use_values, dict):
@@ -783,7 +782,7 @@ class StatCalc:
         cls._USE_VALUES = copy.deepcopy(use_values)
 
     @classmethod
-    @Utils.func_debug_logger
+    @comlink_python.Utils.func_debug_logger
     def calc_roster_stats(cls,
                           units: list[dict],
                           options: list[str] = None,
@@ -890,8 +889,7 @@ class StatCalc:
             logger.info("Loading game data from DataBuilder.")
             if DataBuilder.is_initialized() is False:
                 if DataBuilder.initialize() is False:
-                    logger.error(f"An error occurred while initializing DataBuilder. There may be additional detail"
-                                 + f"about the error in the log file. [{Utils.get_log_file_path(logger_name)}]")
+                    logger.error(f"An error occurred while initializing DataBuilder.")
                     return False
             try:
                 cls._GAME_DATA = DataBuilder.get_game_data()

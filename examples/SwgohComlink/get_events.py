@@ -3,10 +3,10 @@ get_events.py
 Sample script to get events from Comlink
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any
 
-from swgoh_comlink import SwgohComlink
+from comlink_python import SwgohComlink
 
 
 def convert_time(timestamp: Any) -> str:
@@ -21,7 +21,7 @@ def convert_time(timestamp: Any) -> str:
         # timestamp is in milliseconds
         timestamp = int(timestamp)
         timestamp /= 1000
-    return datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.fromtimestamp(int(timestamp), UTC).strftime('%Y-%m-%d %H:%M:%S')
 
 
 # Create instance of SwgohComlink

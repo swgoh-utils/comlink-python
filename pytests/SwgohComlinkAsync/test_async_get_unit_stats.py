@@ -1,6 +1,3 @@
-import pytest
-from swgoh_comlink import SwgohComlinkAsync
-
 """
 @pytest.mark.asyncio
 async def test_async_get_unit_stats():
