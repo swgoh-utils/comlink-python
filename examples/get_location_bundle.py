@@ -47,7 +47,7 @@ eng_obj = zip_obj.read('Loc_ENG_US.txt')
 
 # Decode to string then split into individual lines
 eng_obj_decoded = eng_obj.decode('utf-8')
-eng_obj_lines = eng_obj_decoded.split()
+eng_obj_lines = eng_obj_decoded.splitlines()
 
 """
 Alternatively, if you elected to have Comlink send an unzipped response, the result is a dictionary containing keys 
