@@ -5,7 +5,7 @@ Sample script to get either the GAC bracket or league/division leaderboards usin
 import asyncio
 
 # Place module imports below this line
-from comlink_python import SwgohComlinkAsync
+from swgoh_comlink import SwgohComlinkAsync
 
 
 def format_output(lb_list: list) -> tuple[int, int, list]:

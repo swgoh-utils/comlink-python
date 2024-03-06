@@ -1,6 +1,6 @@
 import pytest
 
-from comlink_python import SwgohComlinkAsync
+from swgoh_comlink import SwgohComlinkAsync
 
 
 @pytest.mark.asyncio

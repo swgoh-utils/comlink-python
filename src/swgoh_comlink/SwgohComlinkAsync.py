@@ -5,16 +5,16 @@ from __future__ import annotations, print_function
 
 import hashlib
 import hmac
-import os
 import time
 from json import dumps
 
 import aiohttp
 
-import comlink_python
+import swgoh_comlink
+from Core import SwgohComlinkBase
 
 
-class SwgohComlinkAsync:
+class SwgohComlinkAsync(SwgohComlinkBase):
     """
     Class definition for swgoh-comlink interface and supported methods.
     Instances of this class are used to query the Star Wars Galaxy of Heroes
@@ -23,59 +23,14 @@ class SwgohComlinkAsync:
 
     """
 
-    def __init__(self,
-                 url: str = comlink_python.Utils.construct_url_base(host="localhost", port=3000, protocol="http"),
-                 access_key: str = None,
-                 secret_key: str = None,
-                 stats_url: str = comlink_python.Utils.construct_url_base(host="localhost", port=3223, protocol="http"),
+    def __init__(self, url: str = None,
+                 access_key: str = None, secret_key: str = None,
+                 stats_url: str = None,
                  protocol: str = "http",
                  host: str = None,
                  port: int = 3000,
-                 stats_port: int = 3223,
-                 ):
-        """Set initial values for instances of SwgohComlinkAsync class
-
-        :param url: The URL where swgoh-comlink is running. Defaults to 'http://localhost:3000'
-        :type url: str
-        :param access_key: The HMAC public key. Default to None which indicates HMAC is not used.
-        :type access_key: str
-        :param secret_key: The HMAC private key. Default to None which indicates HMAC is not used.
-        :type secret_key: str
-        :param stats_url: The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
-        :type stats_url: str
-        :param host: IP address or DNS name of server where the swgoh-comlink service is running
-        :type host: str
-        :param port: TCP port number where the swgoh-comlink service is running [Default: 3000]
-        :type port: int
-        :param stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
-        :type stats_port: int
-
-        """
-        self.logger = comlink_python.Utils.get_logger('SwgohComlinkAsync')
-        self.url_base = url
-        self.stats_url_base = stats_url
-        self.hmac = False  # HMAC use disabled by default
-
-        # host and port parameters override defaults
-        if host:
-            self.url_base = comlink_python.Utils.construct_url_base(protocol, host, port)
-            self.stats_url_base = comlink_python.Utils.construct_url_base(protocol, host, stats_port)
-
-        # Use values passed from client first, otherwise check for environment variables
-        if access_key:
-            self.access_key = access_key
-        elif os.environ.get('ACCESS_KEY'):
-            self.access_key = os.environ.get('ACCESS_KEY')
-        else:
-            self.access_key = None
-        if secret_key:
-            self.secret_key = secret_key
-        elif os.environ.get('SECRET_KEY'):
-            self.secret_key = os.environ.get('SECRET_KEY')
-        else:
-            self.secret_key = None
-        if self.access_key and self.secret_key:
-            self.hmac = True
+                 stats_port: int = 3223):
+        super().__init__(url, access_key, secret_key, stats_url, protocol, host, port, stats_port)
 
         self.client_session = aiohttp.ClientSession(self.url_base)
 
@@ -102,7 +57,7 @@ class SwgohComlinkAsync:
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
 
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
-            comlink_python.Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
+            swgoh_comlink.Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
 
             hmac_digest = hmac_obj.hexdigest()
             headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
@@ -252,7 +207,7 @@ class SwgohComlinkAsync:
     # Introduced in 1.12.0
     # Use decorator to alias the request_payload parameter to 'units_list' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @comlink_python.Utils.param_alias(param="request_payload", alias='units_list')
+    @swgoh_comlink.Utils.param_alias(param="request_payload", alias='units_list')
     async def get_unit_stats(self,
                              request_payload: dict or list,
                              flags: list[str] = None,
@@ -272,7 +227,7 @@ class SwgohComlinkAsync:
         if flags is not None and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
 
-        query_string = comlink_python.Utils.construct_unit_stats_query_string(flags, language)
+        query_string = swgoh_comlink.Utils.construct_unit_stats_query_string(flags, language)
         endpoint_string = f'api' + query_string if query_string else 'api'
         return await self._post(endpoint=endpoint_string, payload=request_payload)
 
@@ -293,7 +248,7 @@ class SwgohComlinkAsync:
         :rtype: dict
 
         """
-        payload = comlink_python.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = swgoh_comlink.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         return await self._post(endpoint='player', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
@@ -302,7 +257,7 @@ class SwgohComlinkAsync:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @comlink_python.Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @swgoh_comlink.Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
     async def get_player_arena(self,
                                allycode: str | int = None,
                                player_id: str = None,
@@ -324,7 +279,7 @@ class SwgohComlinkAsync:
         :rtype: dict
 
         """
-        payload = comlink_python.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = swgoh_comlink.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         payload['payload']['playerDetailsOnly'] = player_details_only
         return await self._post(endpoint='playerArena', payload=payload)
 
@@ -334,7 +289,7 @@ class SwgohComlinkAsync:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @comlink_python.Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @swgoh_comlink.Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     async def get_guild(self,
                         guild_id: str,
                         include_recent_guild_activity_info: bool = False,
@@ -457,8 +412,8 @@ class SwgohComlinkAsync:
         :return: dict
         """
 
-        league = comlink_python.Utils.convert_league_to_int(league)
-        division = comlink_python.Utils.convert_divisions_to_int(division)
+        league = swgoh_comlink.Utils.convert_league_to_int(league)
+        division = swgoh_comlink.Utils.convert_divisions_to_int(division)
 
         payload = {
             "payload": {
@@ -483,18 +438,15 @@ class SwgohComlinkAsync:
     async def get_guild_leaderboard(self, leaderboard_id: list, count: int = 200, enums: bool = False) -> dict:
         """Retrieve leaderboard information from SWGOH game servers.
 
-        See https://github.com/swgoh-utils/swgoh-comlink/wiki/Getting-Started#getGuildLeaderboard for details.
+        :param int leaderboard_id: List of objects indicating leaderboard type, month offset, and depending on the
+                                leaderboard type, a defId. For example, leaderboard type 2 would also require a
+                                defId of one of "sith_raid", "rancor", "rancor_challenge", or "aat".
+        :param int count: Number of entries to retrieve [Default: 200]
+        :param bool enums: Convert enums to strings [Default: False]
 
-        :param leaderboard_id: List of objects indicating leaderboard type, month offset, and depending on the
-        leaderboard type, a defId. For example, leaderboard type 2 would also require a defId of one of "sith_raid",
-        "rancor", "rancor_challenge", or "aat".
-        :type leaderboard_id: list
-        :param count: Number of entries to retrieve [Default: 200]
-        :type count: int
-        :param enums: Convert enums to strings [Default: False]
-        :type enums: bool
-        :return: Dictionary containing current guild leaderboard information
-        :rtype: dict
+        :return list[dict]: List of the leaderboard objects
+
+        :raises ValueError: If leaderboard_id is not a list object
 
         """
         if not isinstance(leaderboard_id, list):
@@ -508,16 +460,10 @@ class SwgohComlinkAsync:
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
 
-    """
-    Helper methods are below
-    """
-
-    # Get the latest game data and language bundle versions
     async def get_latest_game_data_version(self) -> dict:
         """Get the latest game data and language bundle versions
 
-        :return: Dictionary containing only the current 'game' and 'language' versions
-        :rtype: dict
+        :return dict: Dictionary containing only the current 'game' and 'language' versions
 
         """
         current_metadata = await self.get_metadata()

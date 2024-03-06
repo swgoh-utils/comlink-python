@@ -8,7 +8,7 @@ import io
 import zipfile
 
 # import the SwgohComlink class from the comlink_python module
-from comlink_python import SwgohComlinkAsync
+from swgoh_comlink import SwgohComlinkAsync
 
 
 async def main():

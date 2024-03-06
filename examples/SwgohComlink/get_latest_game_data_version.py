@@ -3,7 +3,7 @@ get_latest_game_data_version.py
 Script to illustrate the basic usage of the comlink_python wrapper library
 """
 # import the SwgohComlink class from the comlink_python module
-from comlink_python import SwgohComlink
+from swgoh_comlink import SwgohComlink
 
 # create an instance of a SwgohComlink object
 comlink = SwgohComlink()

@@ -12,7 +12,7 @@ __all__ = (
     'DEFAULT_LOGGER_NAME',
 )
 
-DEFAULT_LOGGER_NAME = 'comlink_python'
+DEFAULT_LOGGER_NAME = 'swgoh_comlink'
 
 LEAGUES: dict[str, int] = {
     'kyber': 100,

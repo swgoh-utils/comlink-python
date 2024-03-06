@@ -30,15 +30,14 @@ addopts = [
 ]
 
 [tool.setuptools]
-packages = ["comlink_python"]
+packages = ["swgoh_comlink"]
 
 [tool.setuptools.dynamic]
-version = { attr = "comlink_python.__version__" }
+version = { attr = "swgoh_comlink.__version__" }
 
 [tool.semantic_release]
-version_pattern = "comlink_python/__init__.py:__version__ = '{version}'"   # source location of version string
+version_pattern = "swgoh_comlink/__init__.py:__version__ = '{version}'"      # source location of version string
 version_source = "commit"                                                    # Set version source to "commit" so that
-#  __version__.py is updated,
 branch = "main"                                                              # branch to make releases of
 build_command = "python3 -m build"                                           # build dists
 dist_path = "dist/"                                                          # where to put dists

@@ -5,7 +5,7 @@ Script to illustrate the basic usage of the comlink_python wrapper library
 import asyncio
 
 # import the SwgohComlink class from the comlink_python module
-from comlink_python import SwgohComlinkAsync
+from swgoh_comlink import SwgohComlinkAsync
 
 
 async def main():

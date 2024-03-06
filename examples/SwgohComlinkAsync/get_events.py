@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime, UTC
 from typing import Any
 
-from comlink_python import SwgohComlinkAsync
+from swgoh_comlink import SwgohComlinkAsync
 
 
 def convert_time(timestamp: Any) -> str:

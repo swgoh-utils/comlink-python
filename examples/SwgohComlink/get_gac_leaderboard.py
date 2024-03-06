@@ -4,7 +4,7 @@ Sample script to get either the GAC bracket or league/division leaderboards usin
 """
 
 # Place module imports below this line
-from comlink_python import SwgohComlink
+from swgoh_comlink import SwgohComlink
 
 
 def format_output(lb_list: list):

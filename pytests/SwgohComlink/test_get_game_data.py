@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 
-from comlink_python import SwgohComlink
+from swgoh_comlink import SwgohComlink
 
 
 class TestGetGameData(TestCase):

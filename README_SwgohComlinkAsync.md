@@ -23,18 +23,20 @@ Basic default usage example for **asyncio**:
 
 ```python
 import asyncio
-from comlink_python import SwgohComlinkAsync
+from swgoh_comlink import SwgohComlinkAsync
+
 
 async def async_main():
     comlink = SwgohComlinkAsync()
     player_data = await comlink.get_player(245866537)
     player_name = player_data['name']
     guild_id = player_data['guildId']
-    
+
     guild = await comlink.get_guild(guild_id)
     guild_name = guild['profile']['name']
     print(f'{player_name=} {guild_name=}')
     await comlink.client_session.close()
+
 
 if __name__ == '__main__':
     asyncio.run(async_main())

@@ -6,7 +6,7 @@ Sample script to get events from Comlink
 from datetime import datetime, UTC
 from typing import Any
 
-from comlink_python import SwgohComlink
+from swgoh_comlink import SwgohComlink
 
 
 def convert_time(timestamp: Any) -> str:

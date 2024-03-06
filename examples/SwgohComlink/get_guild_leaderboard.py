@@ -4,7 +4,7 @@ Sample script to get the various guild level leaderboards using Comlink
 """
 
 # Place module imports below this line
-from comlink_python import SwgohComlink
+from swgoh_comlink import SwgohComlink
 
 # Create instance of SwgohComlink
 comlink = SwgohComlink()

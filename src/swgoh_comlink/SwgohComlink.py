@@ -5,94 +5,28 @@ from __future__ import annotations, print_function, absolute_import
 
 import hashlib
 import hmac
-import os
 import time
 from json import loads, dumps
 
 import requests
 
-import comlink_python
+import swgoh_comlink
+from Core import SwgohComlinkBase
 
 
-class SwgohComlink:
+class SwgohComlink(SwgohComlinkBase):
     """
     Class definition for comlink-python interface and supported methods.
     Instances of this class are used to query the Star Wars Galaxy of Heroes
     game servers for exposed endpoints via the swgoh-comlink proxy library
     running on the same host.
 
-    Parameters:
-        url: The URL where swgoh-comlink is running. Defaults to 'http://localhost:3000'
-        access_key: The HMAC public key. Default to None which indicates HMAC is not used.
-        secret_key: The HMAC private key. Default to None which indicates HMAC is not used.
-        stats_url: The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
-        protocol: The protocol to use for connecting to comlink. Typically, http or https.
-        host: IP address or DNS name of server where the swgoh-comlink service is running
-        port: TCP port number where the swgoh-comlink service is running [Default: 3000]
-        stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
-
-    Note: url and stat_url are mutually exclusive of the protocol/host/port/stats_port parameters.
-        Either of the options should be chosen but not both.
     """
 
-    def __init__(self,
-                 url: str = None,
-                 access_key: str = None,
-                 secret_key: str = None,
-                 stats_url: str = None,
-                 protocol: str = "http",
-                 host: str = None,
-                 port: int = 3000,
-                 stats_port: int = 3223,
-                 ):
-        """
-        Set initial values when new class instance is created
-
-        :param url: The URL where swgoh-comlink is running. Defaults to 'http://localhost:3000'
-        :param access_key: The HMAC public key. Default to None which indicates HMAC is not used.
-        :param secret_key: The HMAC private key. Default to None which indicates HMAC is not used.
-        :param stats_url: The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
-        :param host: IP address or DNS name of server where the swgoh-comlink service is running
-        :param port: TCP port number where the swgoh-comlink service is running [Default: 3000]
-        :param stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
-
-        """
-        self.logger = comlink_python.Utils.get_logger('SwgohComlink')
-        if url is None:
-            self.url_base = comlink_python.Utils.construct_url_base(host="localhost", port=3000, protocol="http")
-            self.logger.info(f"No URL provided. Using {self.url_base}")
-        else:
-            self.url_base = url
-        if stats_url is None:
-            self.stats_url_base = comlink_python.Utils.construct_url_base(host="localhost", port=3223, protocol="http")
-            self.logger.info(f"No stats URL provided. Using {self.stats_url_base}")
-        else:
-            self.stats_url_base = stats_url
-        self.hmac = False  # HMAC use disabled by default
-
-        # host and port parameters override defaults
-        if host is not None:
-            self.url_base = comlink_python.Utils.construct_url_base(protocol, host, port)
-            self.stats_url_base = comlink_python.Utils.construct_url_base(protocol, host, stats_port)
-
-        # Use values passed from client first, otherwise check for environment variables
-        if access_key:
-            self.access_key = access_key
-        elif os.environ.get('ACCESS_KEY'):
-            self.access_key = os.environ.get('ACCESS_KEY')
-        else:
-            self.access_key = None
-        if secret_key:
-            self.secret_key = secret_key
-        elif os.environ.get('SECRET_KEY'):
-            self.secret_key = os.environ.get('SECRET_KEY')
-        else:
-            self.secret_key = None
-        if self.access_key and self.secret_key:
-            self.hmac = True
-
-        self.logger.info(f"{self.url_base=}")
-        self.logger.info(f"{self.stats_url_base=}")
+    def __init__(self, url: str = None, access_key: str = None, secret_key: str = None, stats_url: str = None,
+                 protocol: str = "http", host: str = None, port: int = 3000, stats_port: int = 3223,
+                 default_logger: bool = False):
+        super().__init__(url, access_key, secret_key, stats_url, protocol, host, port, stats_port, default_logger)
 
     def _get_game_version(self) -> str:
         """ Get the current game version """
@@ -134,13 +68,13 @@ class SwgohComlink:
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
 
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
-            comlink_python.Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
+            swgoh_comlink.Utils.update_hmac_obj(hmac_obj, [req_time, 'POST', f'/{endpoint}', payload_hash_digest])
 
             hmac_digest = hmac_obj.hexdigest()
             headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
         return headers
 
-    @comlink_python.Utils.param_alias(param="request_payload", alias='roster_list')
+    @swgoh_comlink.Utils.param_alias(param="request_payload", alias='roster_list')
     def get_unit_stats(self,
                        request_payload: dict or list[dict] = None,
                        flags: list[str] = None,
@@ -168,7 +102,7 @@ class SwgohComlink:
             request_payload = [request_payload]
         if flags and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
-        query_string = comlink_python.Utils.construct_unit_stats_query_string(flags, language)
+        query_string = swgoh_comlink.Utils.construct_unit_stats_query_string(flags, language)
         endpoint_string = f'api' + query_string if query_string else 'api'
         self.logger.info(f"{self.stats_url_base=}, {endpoint_string=}")
         return self._post(url_base=self.stats_url_base, endpoint=endpoint_string, payload=request_payload)
@@ -330,7 +264,7 @@ class SwgohComlink:
         if allycode is None and player_id is None:
             raise ValueError("Either 'allycode' or 'player_id' must be provided.")
 
-        payload = comlink_python.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = swgoh_comlink.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         return self._post(endpoint='player', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
@@ -339,7 +273,7 @@ class SwgohComlink:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @comlink_python.Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @swgoh_comlink.Utils.param_alias(param="player_details_only", alias='playerDetailsOnly')
     def get_player_arena(self,
                          allycode: str or int = None,
                          player_id: str = None,
@@ -368,7 +302,7 @@ class SwgohComlink:
         if allycode is None and player_id is None:
             raise ValueError("Either 'allycode' or 'player_id' must be provided.")
 
-        payload = comlink_python.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
+        payload = swgoh_comlink.Utils.get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
         payload['payload']['playerDetailsOnly'] = player_details_only
         return self._post(endpoint='playerArena', payload=payload)
 
@@ -378,7 +312,7 @@ class SwgohComlink:
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @comlink_python.Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @swgoh_comlink.Utils.param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(self,
                   guild_id: str = None,
                   include_recent_guild_activity_info: bool = False,
@@ -471,6 +405,7 @@ class SwgohComlink:
                                ) -> list[dict]:
         """
         Search for guild by guild criteria and return matches.
+
         :param search_criteria: Dictionary of search criteria
         :type search_criteria: dict
         :param start_index: integer representing where in the result list of matches the return object should begin
@@ -479,6 +414,7 @@ class SwgohComlink:
         :type count: int
         :param enums: Whether to translate enum values to text [Default: False]
         :type enums: boolean
+
         :return: Search results
         :rtype: list[dict]
 
@@ -515,34 +451,35 @@ class SwgohComlink:
                         ) -> dict:
         """
         Retrieve Grand Arena Championship leaderboard information.
-        :param leaderboard_type: Type 4 is for scanning gac brackets, and only returns results while an event is active.
-                                When type 4 is indicated, the "league" and "division" arguments must also be provided.
-                                 Type 6 is for the global leaderboards for the league + divisions.
-                                When type 6 is indicated, the "event_instance_id" and "group_id" must also be provided.
-        :type leaderboard_type: int
-        :param league: Enum values 20, 40, 60, 80, and 100 correspond to carbonite, bronzium, chromium, aurodium,
+        :param int leaderboard_type:
+                    Type 4 is for scanning gac brackets, and only returns results while an event is active.
+                        When type 4 is indicated, the "league" and "division" arguments must also be provided.
+                    Type 6 is for the global leaderboards for the league + divisions.
+                        When type 6 is indicated, the "event_instance_id" and "group_id" must also be provided.
+        :param (str|int) league:
+                    Enum values 20, 40, 60, 80, and 100 correspond to carbonite, bronzium, chromium, aurodium,
                        and kyber respectively. Also accepts string values for each league.
-        :type league: int or str
-        :param division: Enum values 5, 10, 15, 20, and 25 correspond to divisions 5 through 1 respectively.
+        :param (str|int) division:
+                    Enum values 5, 10, 15, 20, and 25 correspond to divisions 5 through 1 respectively.
                          Also accepts string or int values for each division.
-        :type division: int or str
-        :param event_instance_id: When leaderboard_type 4 is indicated, a combination of the event Id and the instance
-                                ID separated by ':'
-                                Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000
-        :type event_instance_id: str
-        :param group_id: When leaderboard_type 4 is indicated, must start with the same eventInstanceId, followed
-                         by the league and bracketId, separated by :. The number at the end is the bracketId, and
-                         goes from 0 to N, where N is the last group of 8 players.
-                            Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000:CARBONITE:10431
-        :type group_id: str
-        :param enums: Whether to translate enum values to text [Default: False]
-        :type enums: bool
-        :return: Object containing 'player' and 'playerStatus' elements. The 'player' element is a list of the players
-        :rtype: dict
+        :param str event_instance_id:
+                    When leaderboard_type 4 is indicated, a combination of the event Id and the instance ID
+                    separated by ':'
+                        Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000
+        :param str group_id:
+                    When leaderboard_type 4 is indicated, must start with the same eventInstanceId, followed
+                    by the league and bracketId, separated by :. The number at the end is the bracketId, and
+                    goes from 0 to N, where N is the last group of 8 players.
+                        Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000:CARBONITE:10431
+        :param bool enums: Whether to translate enum values to text [Default: False]
+
+        :return dict:
+                    Object containing 'player' and 'playerStatus' elements. The 'player' element is a list of players
+
         """
 
-        league = comlink_python.Utils.convert_league_to_int(league)
-        division = comlink_python.Utils.convert_divisions_to_int(division)
+        league = swgoh_comlink.Utils.convert_league_to_int(league)
+        division = swgoh_comlink.Utils.convert_divisions_to_int(division)
 
         payload = {
             "payload": {
@@ -568,16 +505,13 @@ class SwgohComlink:
         """
         Retrieve leaderboard information from SWGOH game servers.
 
-        :param leaderboard_id: List of objects indicating leaderboard type, month offset, and depending on the
+        :param int leaderboard_id: List of objects indicating leaderboard type, month offset, and depending on the
                                 leaderboard type, a defId. For example, leaderboard type 2 would also require a
                                 defId of one of "sith_raid", "rancor", "rancor_challenge", or "aat".
-        :type leaderboard_id: list
-        :param count: Number of entries to retrieve [Default: 200]
-        :type count: int
-        :param enums: Convert enums to strings [Default: False]
-        :type enums: boolean
-        :return: List of the leaderboard objects
-        :rtype: list[dict]
+        :param int count: Number of entries to retrieve [Default: 200]
+        :param bool enums: Convert enums to strings [Default: False]
+
+        :return list[dict]: List of the leaderboard objects
 
         :raises ValueError: If leaderboard_id is not a list object
 
@@ -593,21 +527,13 @@ class SwgohComlink:
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
 
-    """
-    Helper methods are below
-    """
-
-    # Get the latest game data and language bundle versions
     def get_latest_game_data_version(self, game_version: str = None) -> dict:
         """
         Get the latest game data and language bundle versions
-        :param game_version: String of specific game data version to retrieve [Default: None]
-        :type game_version: str
-        :return: {
-                    'game': latestGamedataVersion',
-                    'language': 'latestLocalizationBundleVersion'
-                }
-        :rtype: dict
+
+        :param str game_version: String of specific game data version to retrieve
+        :return dict: Dictionary containing only the current 'game' and 'language' versions
+
         """
         if game_version is not None:
             client_specs = {"externalVersion": game_version}

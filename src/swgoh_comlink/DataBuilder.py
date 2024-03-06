@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import comlink_python
-from comlink_python.Utils import STAT_ENUMS, UNIT_STAT_ENUMS_MAP
+import swgoh_comlink
+from swgoh_comlink.const import STAT_ENUMS, UNIT_STAT_ENUMS_MAP
 
 _COMMENT_START = '#'
 _FIELD_SEPARATOR = '|'
@@ -24,7 +24,7 @@ _NEWLINE_CHARACTER = '\n'
 _PRE_PATTERN = re.compile(r'^\[[0-9A-F]*?]')
 _POST_PATTERN = re.compile(r'\s+\(([A-Z]+)\)\[-]$')
 
-logger = comlink_python.Utils.get_logger('DataBuilder')
+logger = swgoh_comlink.Utils.get_logger('DataBuilder')
 
 
 class DataBuilderException(Exception):
@@ -172,7 +172,7 @@ class DataBuilder:
         os.path.join(_DATA_PATH, 'languages', 'backups')
     ]
     _DATA_VERSION_FILE = 'dataVersion'
-    _GAME_DATA_PATH_SUB_FOLDER = '../data/game'
+    _GAME_DATA_PATH_SUB_FOLDER = '../../data/game'
     _GAME_DATA_FILE = 'gameData'
     _GAME_DATA_FILES = [
         'crTables',

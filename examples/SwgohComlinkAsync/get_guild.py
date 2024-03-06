@@ -5,7 +5,7 @@ Sample script to get guild information from Comlink
 
 import asyncio
 
-from comlink_python import SwgohComlinkAsync
+from swgoh_comlink import SwgohComlinkAsync
 
 
 def display_tw_data(tw_list: list) -> None:

@@ -7,7 +7,7 @@ import asyncio
 from pprint import pprint as pp
 
 # Place module imports below this line
-from comlink_python import SwgohComlinkAsync
+from swgoh_comlink import SwgohComlinkAsync
 
 
 async def main():
