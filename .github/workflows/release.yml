@@ -11,9 +11,10 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    concurrency: release
     strategy:
       matrix:
-        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
 
     permissions:
       id-token: write
@@ -35,8 +36,10 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install -e .
       - name: Python Semantic Release
+        id: release
         uses: python-semantic-release/python-semantic-release@master
         with:
           github_token: ${{ secrets.SEMANTIC_RELEASE }}
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        if: steps.release.outputs.released == 'true'
