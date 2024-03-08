@@ -11,7 +11,7 @@ from json import loads, dumps
 import requests
 
 import swgoh_comlink
-from Core import SwgohComlinkBase
+from swgoh_comlink.Core import SwgohComlinkBase
 
 
 class SwgohComlink(SwgohComlinkBase):

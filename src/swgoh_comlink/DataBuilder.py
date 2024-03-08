@@ -1,5 +1,5 @@
 """
-Python library module for building data files that can be used by the StatCalc module in the comlink_python package.
+Python library module for building data files that can be used by the StatCalc module in the swgoh_comlink package.
 """
 import base64
 import io
@@ -64,6 +64,8 @@ def _write_json_file(data_path: str, file_name: str, json_data: dict) -> None:
     """Method to write file contents to disk"""
 
     logger.info(f"File write args received: {data_path=}, {file_name=}")
+    logger.info(f"Verifying {data_path} exists ...")
+    _verify_data_path(data_path)
     if not file_name.endswith('.json'):
         file_name += '.json'
     full_path = os.path.join(data_path, file_name)
@@ -172,7 +174,7 @@ class DataBuilder:
         os.path.join(_DATA_PATH, 'languages', 'backups')
     ]
     _DATA_VERSION_FILE = 'dataVersion'
-    _GAME_DATA_PATH_SUB_FOLDER = '../../data/game'
+    _GAME_DATA_PATH_SUB_FOLDER = 'game'
     _GAME_DATA_FILE = 'gameData'
     _GAME_DATA_FILES = [
         'crTables',
@@ -265,6 +267,17 @@ class DataBuilder:
         return name_key, name_desc
 
     @classmethod
+    def _process_localization_line(cls, loc_line: str):
+        if _is_comment_or_invalid(loc_line):
+            return
+        loc_line = loc_line.rstrip(_NEWLINE_CHARACTER)
+        key, value = loc_line.split(_FIELD_SEPARATOR)
+        if not key or not value:
+            return
+        value = _apply_value_patterns(value)
+        return key, value
+
+    @classmethod
     def _process_localization_line_stat_ids(cls, loc_line: str):
         if _is_comment_or_invalid(loc_line):
             return
@@ -285,11 +298,12 @@ class DataBuilder:
         return key, value
 
     @classmethod
-    def _process_file_contents_by_line(cls, content: list) -> tuple[dict, dict]:
+    def _process_file_contents_by_line(cls, content: list) -> tuple[dict, dict, dict]:
         """Iterate through file contents list and create language map from information contained within"""
         logger.info(f"Processing language content...")
         lang_map = {}
         unit_name_map = {}
+        master_map = {}
         for line in content:
             if isinstance(line, bytes):
                 logger.debug("Decoding byte string...")
@@ -303,7 +317,11 @@ class DataBuilder:
             if result is not None:
                 key, value = result
                 unit_name_map[key] = value
-        return lang_map, unit_name_map
+            result = cls._process_localization_line(line)
+            if result is not None:
+                key, value = result
+                master_map[key] = value
+        return lang_map, unit_name_map, master_map
 
     @classmethod
     def _read_game_data(cls) -> None:
@@ -835,11 +853,13 @@ class DataBuilder:
                 with zip_obj.open(language) as lang_file:
                     contents = lang_file.readlines()
             lang_name = language.replace('Loc_', '').replace('.txt', '').lower()
+            master_file_name = lang_name + "_master"
             name_key_file = f"{lang_name}_unit_name_keys"
-            lang_map, name_key_map = cls._process_file_contents_by_line(contents)
+            lang_map, name_key_map, master_map = cls._process_file_contents_by_line(contents)
 
             for (file_name, data_map, path) in [(lang_name, lang_map, '/languages'),
-                                                (name_key_file, name_key_map, '/units')]:
+                                                (name_key_file, name_key_map, '/units'),
+                                                (master_file_name, master_map, '/master')]:
                 logger.info(f"Writing {file_name} data to disk.")
                 _write_json_file(f"{cls._DATA_PATH + path}", file_name, data_map)
             if lang_name not in cls._LANGUAGE_FILE_SKIP_LIST:
@@ -914,22 +934,24 @@ class DataBuilder:
             _verify_data_path(path)
             logger.info(f"Path validation for {path} complete.")
 
-    @classmethod
-    def is_initialized(cls) -> bool:
-        return cls._INITIALIZED
+    @property
+    def is_initialized(self) -> bool:
+        return self._INITIALIZED
 
     @classmethod
     def initialize(cls, comlink=None, /, **kwargs) -> bool:
         """Prepare DataBuilder environment for first use. Providing keyword arguments can override default settings.
 
         Parameters:
-            comlink: instance of comlink_python.SwgohComlink
-            data_path: str Defaults to './data'
-            data_version_file: str Defaults to 'dataVersion.json',
-            game_data_path_sub_folder: str Defaults to 'game',
-            zip_game_data: bool Defaults to False,
-            use_segments: bool Defaults to False,
-            use_unzip: bool Defaults to False,
+            comlink: instance of swgoh_comlink.SwgohComlink
+            
+        Optional Parameters:
+            data_path str: Defaults to './data'
+            data_version_file str: Defaults to 'dataVersion.json',
+            game_data_path_sub_folder str: Defaults to 'game',
+            zip_game_data bool: Defaults to False,
+            use_segments bool: Defaults to False,
+            use_unzip bool: Defaults to False,
 
         """
         allowed_parameters = [
@@ -943,7 +965,7 @@ class DataBuilder:
         ]
         logger.info("Initializing DataBuilder for first time use.")
         if comlink is None:
-            logger.error(f"DataBuilder must have an instance of comlink_python.SwgohComlink to operate properly.")
+            logger.error(f"DataBuilder must have an instance of swgoh_comlink.SwgohComlink to operate properly.")
             return False
         else:
             cls._COMLINK = comlink

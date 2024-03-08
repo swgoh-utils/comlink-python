@@ -11,6 +11,8 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from typing import Callable, LiteralString
 
+from swgoh_comlink import const
+
 # Store created logging instances in a hash table for quick retrieval on repeat calls
 logging_instances = {}
 
@@ -341,7 +343,7 @@ def create_localized_unit_name_dictionary(locale: str or list) -> dict:
     return unit_name_map
 
 
-def get_guild_members(comlink, *, /, player_id: str = None, allycode: str or int = None) -> list:
+def get_guild_members(comlink, /, *, player_id: str = None, allycode: str or int = None) -> list:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
     :param SwgohComlink comlink: Instance of SwgohComlink
@@ -359,6 +361,58 @@ def get_guild_members(comlink, *, /, player_id: str = None, allycode: str or int
         player = comlink.get_player(allycode=sanitize_allycode(allycode))
     guild = comlink.get_guild(guild_id=player['guildId'])
     return guild['member']
+
+
+def get_gac_brackets(comlink, /, *, league: str) -> dict or None:
+    """Scan currently running GAC brackets for the requested league and return them as a dictionary"""
+    current_events = comlink.get_events()
+    current_event_instance = None
+    for event in current_events['gameEvent']:
+        if event['type'] == 10:
+            current_event_instance = f"{event['id']}:{event['instance'][0]['id']}"
+    if not current_event_instance:
+        # No current GAC season running
+        logging.warning("There is no GAC season currently active in game events.")
+        return None
+    bracket = 0
+    # Use brackets to store the results for each bracket for processing once all brackets have been scanned
+    brackets = {}
+    number_of_players_in_bracket = 8
+    while number_of_players_in_bracket > 0:
+        group_id = f"{current_event_instance}:{league}:{bracket}"
+        group_of_8_players = comlink.get_gac_leaderboard(leaderboard_type=4,
+                                                         event_instance_id=current_event_instance,
+                                                         group_id=group_id)
+        brackets[bracket] = brackets.get(bracket, group_of_8_players['player'])
+        bracket += 1
+        number_of_players_in_bracket = len(group_of_8_players['player'])
+    return brackets
+
+
+def search_gac_brackets(gac_brackets: dict, player_name: str) -> dict:
+    """
+    Search the provided gac brackets data for a specific player and return the player and bracket information
+    as a dictionary
+    """
+    match_data = {}
+    for bracket in gac_brackets:
+        for player in gac_brackets[bracket]:
+            if player_name.lower() == player['name'].lower():
+                match_data['player'] = player
+                match_data['bracket'] = bracket
+    return match_data
+
+
+def load_master_map(master_map_path: str = const.DATA_PATH, language: str = "eng_us") -> dict or None:
+    """Read master localization key/string mapping file into dictionary and return"""
+    full_path = os.path.join(master_map_path, 'master', f"{language}_master.json")
+    try:
+        import json
+        with open(full_path) as fn:
+            return json.load(fn)
+    except FileNotFoundError as e_str:
+        logging.error(f"Unable to open {full_path}: {e_str}")
+        return None
 
 
 if __name__ == "__main__":

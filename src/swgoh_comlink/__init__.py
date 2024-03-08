@@ -1,6 +1,8 @@
 """
 Wrapper for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
+from .DataBuilder import DataBuilder, DataBuilderException, DataBuilderRuntimeError
+from .StatCalc import StatCalc, StatCalcException, StatCalcRuntimeError
 from .SwgohComlink import SwgohComlink
 from .SwgohComlinkAsync import SwgohComlinkAsync
 from .Utils import get_logger
@@ -14,4 +16,11 @@ __all__ = [
     __version__,
     SwgohComlink,
     SwgohComlinkAsync,
+    DataBuilder,
+    DataBuilderException,
+    DataBuilderRuntimeError,
+    StatCalc,
+    StatCalcException,
+    StatCalcRuntimeError,
+    const,
 ]

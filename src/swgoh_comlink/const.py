@@ -1,6 +1,7 @@
 """
 Constants used throughout the comlink_python package
 """
+import os
 
 __all__ = (
     'LEAGUES',
@@ -10,9 +11,12 @@ __all__ = (
     'MOD_SLOTS',
     'MOD_SET_IDS',
     'DEFAULT_LOGGER_NAME',
+    'DATA_PATH',
 )
 
 DEFAULT_LOGGER_NAME = 'swgoh_comlink'
+
+DATA_PATH = os.path.join(os.getcwd(), 'data')
 
 LEAGUES: dict[str, int] = {
     'kyber': 100,

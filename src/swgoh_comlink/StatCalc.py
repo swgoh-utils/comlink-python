@@ -888,8 +888,8 @@ class StatCalc:
 
         if cls._GAME_DATA is None:
             logger.info("Loading game data from DataBuilder.")
-            if DataBuilder.is_initialized() is False:
-                if DataBuilder.initialize() is False:
+            if not DataBuilder.is_initialized:
+                if not DataBuilder.initialize():
                     logger.error(f"An error occurred while initializing DataBuilder.")
                     return False
             try:

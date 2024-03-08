@@ -64,3 +64,31 @@ for player in lb_entries:
     out_str = (f"Player name: {player[0]:{name_col_width}} Guild: {player[1]:{guild_col_width}} "
                + f"Skill Rating: {player[2]}")
     print(out_str)
+
+############
+# Scanning brackets using type 4
+############
+
+# Get the current GAC event
+current_event_instance = None
+current_events = comlink.get_events()
+for event in current_events['gameEvent']:
+    if event['type'] == 10:
+        current_event_instance = f"{event['id']}:{event['instance'][0]['id']}"
+league = 'KYBER'
+# Use bracket to loop through the individual brackets
+bracket = 0
+# Use brackets to store the results for each bracket for processing once all brackets have been scanned
+brackets = {}
+number_of_players_in_bracket = 8
+if current_event_instance:
+    # Loop through all possible brackets until no players are returned. This will take a while since each bracket
+    # is a group of 8 players
+    while number_of_players_in_bracket > 0:
+        group_id = f"{current_event_instance}:{league}:{bracket}"
+        group_of_8_players = comlink.get_gac_leaderboard(leaderboard_type=4,
+                                                         event_instance_id=current_event_instance,
+                                                         group_id=group_id)
+        brackets[bracket] = brackets.get(bracket, group_of_8_players['player'])
+        bracket += 1
+        number_of_players_in_bracket = len(group_of_8_players['player'])

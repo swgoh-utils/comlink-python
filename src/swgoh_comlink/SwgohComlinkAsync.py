@@ -11,7 +11,7 @@ from json import dumps
 import aiohttp
 
 import swgoh_comlink
-from Core import SwgohComlinkBase
+from swgoh_comlink.Core import SwgohComlinkBase
 
 
 class SwgohComlinkAsync(SwgohComlinkBase):
