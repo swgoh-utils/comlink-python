@@ -1,2 +1,3 @@
-requests>=2.30.0
 aiohttp>=3.8.5
+pre-commit
+requests>=2.30.0

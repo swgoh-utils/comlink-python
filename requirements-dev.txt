@@ -1,0 +1,10 @@
+aiohttp>=3.8.5
+coverage
+flake8-pytest-style
+pre-commit
+pytest
+pytest-aiohttp
+pytest-cov
+pytest-mock
+requests>=2.30.0
+requests-mock

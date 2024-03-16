@@ -14,4 +14,3 @@ See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for mor
 ## Support
 
 Issues can be reported in [GitHub](https://github.com/swgoh-utils/comlink-python/issues).
-
