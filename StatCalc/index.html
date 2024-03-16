@@ -1,0 +1,2107 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://github.com/swgoh-utils/comlink-python/StatCalc/">
+      
+      
+        <link rel="prev" href="../DataBuilder/">
+      
+      
+        <link rel="next" href="../Utils/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+    
+    
+      
+        <title>StatCalc - swgoh_comlink</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e359304.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Titillium Web";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#swgoh_comlink.stat_calc.StatCalc" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="swgoh_comlink" class="md-header__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            swgoh_comlink
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              StatCalc
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="swgoh_comlink" class="md-nav__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    swgoh_comlink
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    SwgohComlink
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            SwgohComlink
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SwgohComlink/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic Installation and Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SwgohComlink_class/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module methods and attributes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    SwgohComlinkAsync
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            SwgohComlinkAsync
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SwgohComlinkAsync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic Installation and Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SwgohComlinkAsync_class/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module methods and attributes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DataBuilder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DataBuilder
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    StatCalc
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    StatCalc
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;StatCalc
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.is_initialized" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_initialized
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.calc_char_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;calc_char_stats
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.calc_roster_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;calc_roster_stats
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.calc_ship_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;calc_ship_stats
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.initialize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;initialize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.set_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_attribute
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.set_log_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_log_level
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Logging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;StatCalc
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.is_initialized" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_initialized
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.calc_char_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;calc_char_stats
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.calc_roster_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;calc_roster_stats
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.calc_ship_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;calc_ship_stats
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.initialize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;initialize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.set_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_attribute
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.stat_calc.StatCalc.set_log_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_log_level
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  <h1>StatCalc</h1>
+
+<div class="doc doc-object doc-class">
+
+
+
+<a id="swgoh_comlink.stat_calc.StatCalc"></a>
+  <div class="doc doc-contents first">
+
+  
+      <p>Container class to house collection of stat calculation methods. Not intended to be instantiated.</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="swgoh_comlink.stat_calc.StatCalc.is_initialized" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>          <code class=" language-python"><span class="n">is_initialized</span><span class="p">:</span> <span class="nb">bool</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#swgoh_comlink.stat_calc.StatCalc.is_initialized" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Return current state of StatCalc</p>
+  </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.stat_calc.StatCalc.calc_char_stats" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">calc_char_stats</span><span class="p">(</span><span class="n">char</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s1">&#39;eng_us&#39;</span><span class="p">,</span> <span class="n">set_global_options</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.stat_calc.StatCalc.calc_char_stats" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Calculate stats for a single character based upon arguments provided.</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>char</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Character object from player roster or game_data[&lsquo;unit&rsquo;]</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>dict</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>options</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Dictionary or list of options to enable</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>dict | list</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>use_values</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>See example below</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>dict</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>language</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Localization language stat key translations</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>str</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>&#39;eng_us&#39;</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>set_global_options</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Flag indicating if the global attributes should be set
+                        using the &lsquo;options&rsquo; attribute</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>bool</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>False</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>RETURNS</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+              <code>dict</code>
+          </td>
+          <td class="doc-returns-details">
+            <div class="doc-md-description">
+              <p>character object dictionary with stats calculated</p>
+            </div>
+              <p>
+                <span class="doc-returns-annotation">
+                  <b>TYPE:</b>
+                    <code>dict</code>
+                </span>
+              </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><strong>Examples:</strong></p>
+    <p>use_values dictionary template:</p>
+<p>{
+  &ldquo;char&rdquo;: {                           # used when calculating character stats
+    &ldquo;rarity&rdquo;: int,                    # 1-7 (default 7)
+    &ldquo;currentLevel&rdquo;: int,              # 1-90 (default 85)
+    &ldquo;currentTier&rdquo;: int,               # 1-13 (default 13)
+    &ldquo;equipped&rdquo;: list or str,          # See Below
+    &ldquo;relic&rdquo;: int,                     # 1-9 (See Below)
+    &ldquo;skills&rdquo;:list,                    # 1-7 (default 6)
+    &ldquo;mods&rdquo;: [ { &ldquo;level&rdquo;: <integer>,   # 1-5 (default 5)
+                &ldquo;rarity&rdquo;: <integer>,  # 1-15 (default 15)
+                &ldquo;tier&rdquo;: <integer>
+               }, &hellip;
+            ]
+  },
+  &ldquo;ship&rdquo;: {                              # used when calculating ship stats
+    &ldquo;rarity&rdquo;: int,                       # 1-7 (default 7)
+    &ldquo;currentLevel&rdquo;: int                  # 1-90 (default 85)
+  },
+  &ldquo;crew&rdquo;: {                              # used for characters when calculating ship stats
+    &ldquo;rarity&rdquo;: int,                       # 1-7 (default 7)
+    &ldquo;currentLevel&rdquo;: int,                 # 1-90 (default 85)
+    &ldquo;currentTier&rdquo;: int,                  # 1-12 (default 12)
+    &ldquo;equipped&rdquo;: str or int or list,      # See Below
+    &ldquo;skills&rdquo;: str or int,                # See Below
+    &ldquo;modRarity&rdquo;: int,                    # 1-7 (default 6)
+    &ldquo;modLevel&rdquo;: int,                     # 1-15 (default 15)
+    &ldquo;modTier&rdquo;: int,                      # 1-5 (default 5)
+    &ldquo;relic&rdquo;: int                         # 1-9 (See Below)
+  }
+}</p>
+<p>equipped: (defaults to &ldquo;all&rdquo;)
+    &ldquo;all&rdquo; defines all possible gear pieces are equipped.
+    &ldquo;none&rdquo; defines no gear pieces are equipped.
+    An Array can define which gear slots have gear equipped, i.e. [1,2,6] says the top two and the bottom
+    right slots are filled.
+    An integer 1-6 can define how many pieces are equipped, without specific slots (crew definition only).
+skills: (defaults to &ldquo;max&rdquo;)
+    &ldquo;max&rdquo; defines all skills are maxed.
+    &ldquo;maxNoZeta&rdquo; defines all non-zeta skills are maxed, while Zeta abilities are still rank 7.
+    An integer 1-8 defines all skills to be at that rank if possible, or as close to it if they max at a
+    lower rank (such as contracts).
+relic: (defaults to 9)
+    1 - Relic Locked (gear &lt;13).
+    2 - Relic Unlocked (but still level 0).
+    3-9 - Relic Levels 1-7, respectively. &lsquo;Tier&rsquo; value here is Relic Level + 2, as defined in game data.</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/stat_calc.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span>
+<span class="normal">668</span>
+<span class="normal">669</span>
+<span class="normal">670</span>
+<span class="normal">671</span>
+<span class="normal">672</span>
+<span class="normal">673</span>
+<span class="normal">674</span>
+<span class="normal">675</span>
+<span class="normal">676</span>
+<span class="normal">677</span>
+<span class="normal">678</span>
+<span class="normal">679</span>
+<span class="normal">680</span>
+<span class="normal">681</span>
+<span class="normal">682</span>
+<span class="normal">683</span>
+<span class="normal">684</span>
+<span class="normal">685</span>
+<span class="normal">686</span>
+<span class="normal">687</span>
+<span class="normal">688</span>
+<span class="normal">689</span>
+<span class="normal">690</span>
+<span class="normal">691</span>
+<span class="normal">692</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="nd">@utils</span><span class="o">.</span><span class="n">func_debug_logger</span>
+<span class="k">def</span> <span class="nf">calc_char_stats</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">char</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="o">/</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">options</span><span class="p">:</span> <span class="nb">list</span> <span class="ow">or</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_values</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;eng_us&quot;</span><span class="p">,</span>
+        <span class="n">set_global_options</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate stats for a single character based upon arguments provided.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        char (dict): Character object from player roster or game_data[&#39;unit&#39;]</span>
+<span class="sd">        options (dict|list): Dictionary or list of options to enable</span>
+<span class="sd">        use_values (dict): See example below</span>
+<span class="sd">        language (str): Localization language stat key translations</span>
+<span class="sd">        set_global_options (bool): Flag indicating if the global attributes should be set</span>
+<span class="sd">                                    using the &#39;options&#39; attribute</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: character object dictionary with stats calculated</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        use_values dictionary template:</span>
+
+<span class="sd">        {</span>
+<span class="sd">          &quot;char&quot;: {                           # used when calculating character stats</span>
+<span class="sd">            &quot;rarity&quot;: int,                    # 1-7 (default 7)</span>
+<span class="sd">            &quot;currentLevel&quot;: int,              # 1-90 (default 85)</span>
+<span class="sd">            &quot;currentTier&quot;: int,               # 1-13 (default 13)</span>
+<span class="sd">            &quot;equipped&quot;: list or str,          # See Below</span>
+<span class="sd">            &quot;relic&quot;: int,                     # 1-9 (See Below)</span>
+<span class="sd">            &quot;skills&quot;:list,                    # 1-7 (default 6)</span>
+<span class="sd">            &quot;mods&quot;: [ { &quot;level&quot;: &lt;integer&gt;,   # 1-5 (default 5)</span>
+<span class="sd">                        &quot;rarity&quot;: &lt;integer&gt;,  # 1-15 (default 15)</span>
+<span class="sd">                        &quot;tier&quot;: &lt;integer&gt;</span>
+<span class="sd">                       }, ...</span>
+<span class="sd">                    ]</span>
+<span class="sd">          },</span>
+<span class="sd">          &quot;ship&quot;: {                              # used when calculating ship stats</span>
+<span class="sd">            &quot;rarity&quot;: int,                       # 1-7 (default 7)</span>
+<span class="sd">            &quot;currentLevel&quot;: int                  # 1-90 (default 85)</span>
+<span class="sd">          },</span>
+<span class="sd">          &quot;crew&quot;: {                              # used for characters when calculating ship stats</span>
+<span class="sd">            &quot;rarity&quot;: int,                       # 1-7 (default 7)</span>
+<span class="sd">            &quot;currentLevel&quot;: int,                 # 1-90 (default 85)</span>
+<span class="sd">            &quot;currentTier&quot;: int,                  # 1-12 (default 12)</span>
+<span class="sd">            &quot;equipped&quot;: str or int or list,      # See Below</span>
+<span class="sd">            &quot;skills&quot;: str or int,                # See Below</span>
+<span class="sd">            &quot;modRarity&quot;: int,                    # 1-7 (default 6)</span>
+<span class="sd">            &quot;modLevel&quot;: int,                     # 1-15 (default 15)</span>
+<span class="sd">            &quot;modTier&quot;: int,                      # 1-5 (default 5)</span>
+<span class="sd">            &quot;relic&quot;: int                         # 1-9 (See Below)</span>
+<span class="sd">          }</span>
+<span class="sd">        }</span>
+
+<span class="sd">        equipped: (defaults to &quot;all&quot;)</span>
+<span class="sd">            &quot;all&quot; defines all possible gear pieces are equipped.</span>
+<span class="sd">            &quot;none&quot; defines no gear pieces are equipped.</span>
+<span class="sd">            An Array can define which gear slots have gear equipped, i.e. [1,2,6] says the top two and the bottom</span>
+<span class="sd">            right slots are filled.</span>
+<span class="sd">            An integer 1-6 can define how many pieces are equipped, without specific slots (crew definition only).</span>
+<span class="sd">        skills: (defaults to &quot;max&quot;)</span>
+<span class="sd">            &quot;max&quot; defines all skills are maxed.</span>
+<span class="sd">            &quot;maxNoZeta&quot; defines all non-zeta skills are maxed, while Zeta abilities are still rank 7.</span>
+<span class="sd">            An integer 1-8 defines all skills to be at that rank if possible, or as close to it if they max at a</span>
+<span class="sd">            lower rank (such as contracts).</span>
+<span class="sd">        relic: (defaults to 9)</span>
+<span class="sd">            1 - Relic Locked (gear &lt;13).</span>
+<span class="sd">            2 - Relic Unlocked (but still level 0).</span>
+<span class="sd">            3-9 - Relic Levels 1-7, respectively. &#39;Tier&#39; value here is Relic Level + 2, as defined in game data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">StatCalcException</span><span class="p">(</span>
+            <span class="s2">&quot;StatCalc is not initialized. Please perform the initialization first.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;defId&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">char</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;definitionId&quot;</span> <span class="ow">in</span> <span class="n">char</span> <span class="ow">and</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">char</span><span class="p">[</span><span class="s2">&quot;definitionId&quot;</span><span class="p">]:</span>
+            <span class="n">char</span><span class="p">[</span><span class="s2">&quot;defId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">char</span><span class="p">[</span><span class="s2">&quot;definitionId&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid character [</span><span class="si">{</span><span class="n">char</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calculating stats for </span><span class="si">{</span><span class="n">char</span><span class="p">[</span><span class="s1">&#39;defId&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_process_language</span><span class="p">(</span><span class="n">language</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_process_options</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">set_global</span><span class="o">=</span><span class="n">set_global_options</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_OPTIONS</span>
+
+    <span class="n">char</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_use_values_char</span><span class="p">(</span><span class="n">char</span><span class="p">,</span> <span class="n">use_values</span><span class="p">)</span>
+
+    <span class="n">stats</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_char_raw_stats</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_calculate_base_stats</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">char</span><span class="p">[</span><span class="s2">&quot;currentLevel&quot;</span><span class="p">],</span> <span class="n">char</span><span class="p">[</span><span class="s2">&quot;defId&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">char</span><span class="p">[</span><span class="s2">&quot;equippedStatMod&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s2">&quot;withoutModCalc&quot;</span><span class="p">]:</span>
+            <span class="n">stats</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_calculate_mod_stats</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;base&quot;</span><span class="p">],</span> <span class="n">char</span><span class="p">[</span><span class="s2">&quot;equippedStatMod&quot;</span><span class="p">])</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">_format_stats</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">char</span><span class="p">[</span><span class="s2">&quot;currentLevel&quot;</span><span class="p">]),</span> <span class="n">options</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_rename_stats</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stats</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.stat_calc.StatCalc.calc_roster_stats" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">calc_roster_stats</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s1">&#39;eng_us&#39;</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.stat_calc.StatCalc.calc_roster_stats" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Calculate units stats from SWGOH roster game data</p>
+<p>:param units: A list containing the value of the &lsquo;rosterUnit&rsquo; key within the SwgohComlink.get_player() result
+:type units: list
+:param options: A list of strings indicating the optional flags affecting how data is return to enable
+:type options: list
+:param use_values: A dictionary containing elements for &lsquo;char&rsquo;, &lsquo;ship&rsquo;, and &lsquo;crew&rsquo; for overriding defaults
+:type use_values: dict
+:param language: A string indicating which language to use for localization of statIds
+:type language: str</p>
+<p>:return: The same object format provided in the units parameter with additional fields added containing the
+         results of the stat calculations
+:rtype: list</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/stat_calc.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 926</span>
+<span class="normal"> 927</span>
+<span class="normal"> 928</span>
+<span class="normal"> 929</span>
+<span class="normal"> 930</span>
+<span class="normal"> 931</span>
+<span class="normal"> 932</span>
+<span class="normal"> 933</span>
+<span class="normal"> 934</span>
+<span class="normal"> 935</span>
+<span class="normal"> 936</span>
+<span class="normal"> 937</span>
+<span class="normal"> 938</span>
+<span class="normal"> 939</span>
+<span class="normal"> 940</span>
+<span class="normal"> 941</span>
+<span class="normal"> 942</span>
+<span class="normal"> 943</span>
+<span class="normal"> 944</span>
+<span class="normal"> 945</span>
+<span class="normal"> 946</span>
+<span class="normal"> 947</span>
+<span class="normal"> 948</span>
+<span class="normal"> 949</span>
+<span class="normal"> 950</span>
+<span class="normal"> 951</span>
+<span class="normal"> 952</span>
+<span class="normal"> 953</span>
+<span class="normal"> 954</span>
+<span class="normal"> 955</span>
+<span class="normal"> 956</span>
+<span class="normal"> 957</span>
+<span class="normal"> 958</span>
+<span class="normal"> 959</span>
+<span class="normal"> 960</span>
+<span class="normal"> 961</span>
+<span class="normal"> 962</span>
+<span class="normal"> 963</span>
+<span class="normal"> 964</span>
+<span class="normal"> 965</span>
+<span class="normal"> 966</span>
+<span class="normal"> 967</span>
+<span class="normal"> 968</span>
+<span class="normal"> 969</span>
+<span class="normal"> 970</span>
+<span class="normal"> 971</span>
+<span class="normal"> 972</span>
+<span class="normal"> 973</span>
+<span class="normal"> 974</span>
+<span class="normal"> 975</span>
+<span class="normal"> 976</span>
+<span class="normal"> 977</span>
+<span class="normal"> 978</span>
+<span class="normal"> 979</span>
+<span class="normal"> 980</span>
+<span class="normal"> 981</span>
+<span class="normal"> 982</span>
+<span class="normal"> 983</span>
+<span class="normal"> 984</span>
+<span class="normal"> 985</span>
+<span class="normal"> 986</span>
+<span class="normal"> 987</span>
+<span class="normal"> 988</span>
+<span class="normal"> 989</span>
+<span class="normal"> 990</span>
+<span class="normal"> 991</span>
+<span class="normal"> 992</span>
+<span class="normal"> 993</span>
+<span class="normal"> 994</span>
+<span class="normal"> 995</span>
+<span class="normal"> 996</span>
+<span class="normal"> 997</span>
+<span class="normal"> 998</span>
+<span class="normal"> 999</span>
+<span class="normal">1000</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="nd">@utils</span><span class="o">.</span><span class="n">func_debug_logger</span>
+<span class="k">def</span> <span class="nf">calc_roster_stats</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">units</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+        <span class="n">options</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_values</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;eng_us&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate units stats from SWGOH roster game data</span>
+
+<span class="sd">    :param units: A list containing the value of the &#39;rosterUnit&#39; key within the SwgohComlink.get_player() result</span>
+<span class="sd">    :type units: list</span>
+<span class="sd">    :param options: A list of strings indicating the optional flags affecting how data is return to enable</span>
+<span class="sd">    :type options: list</span>
+<span class="sd">    :param use_values: A dictionary containing elements for &#39;char&#39;, &#39;ship&#39;, and &#39;crew&#39; for overriding defaults</span>
+<span class="sd">    :type use_values: dict</span>
+<span class="sd">    :param language: A string indicating which language to use for localization of statIds</span>
+<span class="sd">    :type language: str</span>
+
+<span class="sd">    :return: The same object format provided in the units parameter with additional fields added containing the</span>
+<span class="sd">             results of the stat calculations</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">StatCalcException</span><span class="p">(</span>
+            <span class="s2">&quot;StatCalc is not initialized. Please perform the initialization first.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_process_options</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_process_use_values_settings</span><span class="p">(</span><span class="n">use_values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">language</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_process_language</span><span class="p">(</span><span class="n">language</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">ships</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">crew</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">units</span><span class="p">:</span>
+            <span class="n">defId</span> <span class="o">=</span> <span class="n">unit</span><span class="p">[</span><span class="s2">&quot;definitionId&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">unit</span><span class="p">[</span><span class="s2">&quot;defId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defId</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">unit</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_DATA</span><span class="p">[</span><span class="n">defId</span><span class="p">]:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to find </span><span class="si">{</span><span class="n">defId</span><span class="si">}</span><span class="s2"> in game data.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_DATA</span><span class="p">[</span><span class="n">defId</span><span class="p">][</span><span class="s2">&quot;combatType&quot;</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_DATA</span><span class="p">[</span><span class="n">defId</span><span class="p">][</span><span class="s2">&quot;combatType&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_DATA</span><span class="p">[</span><span class="n">defId</span><span class="p">][</span><span class="s2">&quot;combatType&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_DATA</span><span class="p">[</span><span class="n">defId</span><span class="p">][</span><span class="s2">&quot;combatType&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;SHIP&quot;</span>
+            <span class="p">):</span>
+                <span class="n">ships</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">crew</span><span class="p">[</span><span class="n">defId</span><span class="p">]</span> <span class="o">=</span> <span class="n">unit</span>
+                <span class="n">calculated_char_stats</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">calc_char_stats</span><span class="p">(</span>
+                    <span class="n">unit</span><span class="p">,</span> <span class="n">use_values</span><span class="o">=</span><span class="n">use_values</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="n">language</span>
+                <span class="p">)</span>
+        <span class="k">for</span> <span class="n">ship</span> <span class="ow">in</span> <span class="n">ships</span><span class="p">:</span>
+            <span class="n">defId</span> <span class="o">=</span> <span class="n">ship</span><span class="p">[</span><span class="s2">&quot;definitionId&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ship</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_DATA</span><span class="p">[</span><span class="n">defId</span><span class="p">]:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to find </span><span class="si">{</span><span class="n">defId</span><span class="si">}</span><span class="s2"> in game data.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            <span class="c1"># TODO: check the code below for proper functionality</span>
+            <span class="n">crw</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">id</span>
+                <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_DATA</span><span class="p">[</span><span class="n">defId</span><span class="p">][</span><span class="s2">&quot;crew&quot;</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">crew</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_DATA</span><span class="p">[</span><span class="n">defId</span><span class="p">][</span><span class="s2">&quot;crew&quot;</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+            <span class="p">]</span>
+            <span class="n">calculated_ship_stats</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">calc_ship_stats</span><span class="p">(</span><span class="n">ship</span><span class="p">,</span> <span class="n">crw</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">StatCalcRuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;[calc_roster_stats] Unsupported data type [</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="si">}</span><span class="s1">] for &quot;unit&quot; parameter&#39;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[]</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.stat_calc.StatCalc.calc_ship_stats" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">calc_ship_stats</span><span class="p">(</span><span class="n">ship</span><span class="p">,</span> <span class="n">crew</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.stat_calc.StatCalc.calc_ship_stats" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>ship</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Ship object from player roster</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>dict</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>crew</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>List of ship crew members</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>list</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>options</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Dictionary or list of options to enable</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>dict | list</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>use_values</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>See example from calc_char_stats</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>dict</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>language</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Localization language stat key translations</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>str</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>RETURNS</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+              <code>dict</code>
+          </td>
+          <td class="doc-returns-details">
+            <div class="doc-md-description">
+              <p>Ship object with stats calculated</p>
+            </div>
+              <p>
+                <span class="doc-returns-annotation">
+                  <b>TYPE:</b>
+                    <code>dict</code>
+                </span>
+              </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/stat_calc.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">694</span>
+<span class="normal">695</span>
+<span class="normal">696</span>
+<span class="normal">697</span>
+<span class="normal">698</span>
+<span class="normal">699</span>
+<span class="normal">700</span>
+<span class="normal">701</span>
+<span class="normal">702</span>
+<span class="normal">703</span>
+<span class="normal">704</span>
+<span class="normal">705</span>
+<span class="normal">706</span>
+<span class="normal">707</span>
+<span class="normal">708</span>
+<span class="normal">709</span>
+<span class="normal">710</span>
+<span class="normal">711</span>
+<span class="normal">712</span>
+<span class="normal">713</span>
+<span class="normal">714</span>
+<span class="normal">715</span>
+<span class="normal">716</span>
+<span class="normal">717</span>
+<span class="normal">718</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">calc_ship_stats</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">ship</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">crew</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+        <span class="o">/</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">options</span><span class="p">:</span> <span class="nb">list</span> <span class="ow">or</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_values</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ship (dict): Ship object from player roster</span>
+<span class="sd">        crew (list): List of ship crew members</span>
+<span class="sd">        options (dict|list): Dictionary or list of options to enable</span>
+<span class="sd">        use_values (dict): See example from calc_char_stats</span>
+<span class="sd">        language (str): Localization language stat key translations</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Ship object with stats calculated</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{}</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.stat_calc.StatCalc.initialize" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">initialize</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.stat_calc.StatCalc.initialize" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Prepare StatCalc environment for first use. Providing keyword arguments can override default settings.</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>game_data</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Defaults to None. Will autoload if not provided.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>dict</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>default_mod_tier</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Defaults to 5. Should not need to be set unless the game changes mods and some point.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>int</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>default_mod_level</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Defaults to 15. Should not need to be set unless the game mod system changes.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>int</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>default_mod_pips</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Defaults to 6. Should not need to be set unless the game mod system changes.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>int</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>RETURNS</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+              <code>bool</code>
+          </td>
+          <td class="doc-returns-details">
+            <div class="doc-md-description">
+              <p>True if initialization is successful, False otherwise</p>
+            </div>
+              <p>
+                <span class="doc-returns-annotation">
+                  <b>TYPE:</b>
+                    <code>bool</code>
+                </span>
+              </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/stat_calc.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1002</span>
+<span class="normal">1003</span>
+<span class="normal">1004</span>
+<span class="normal">1005</span>
+<span class="normal">1006</span>
+<span class="normal">1007</span>
+<span class="normal">1008</span>
+<span class="normal">1009</span>
+<span class="normal">1010</span>
+<span class="normal">1011</span>
+<span class="normal">1012</span>
+<span class="normal">1013</span>
+<span class="normal">1014</span>
+<span class="normal">1015</span>
+<span class="normal">1016</span>
+<span class="normal">1017</span>
+<span class="normal">1018</span>
+<span class="normal">1019</span>
+<span class="normal">1020</span>
+<span class="normal">1021</span>
+<span class="normal">1022</span>
+<span class="normal">1023</span>
+<span class="normal">1024</span>
+<span class="normal">1025</span>
+<span class="normal">1026</span>
+<span class="normal">1027</span>
+<span class="normal">1028</span>
+<span class="normal">1029</span>
+<span class="normal">1030</span>
+<span class="normal">1031</span>
+<span class="normal">1032</span>
+<span class="normal">1033</span>
+<span class="normal">1034</span>
+<span class="normal">1035</span>
+<span class="normal">1036</span>
+<span class="normal">1037</span>
+<span class="normal">1038</span>
+<span class="normal">1039</span>
+<span class="normal">1040</span>
+<span class="normal">1041</span>
+<span class="normal">1042</span>
+<span class="normal">1043</span>
+<span class="normal">1044</span>
+<span class="normal">1045</span>
+<span class="normal">1046</span>
+<span class="normal">1047</span>
+<span class="normal">1048</span>
+<span class="normal">1049</span>
+<span class="normal">1050</span>
+<span class="normal">1051</span>
+<span class="normal">1052</span>
+<span class="normal">1053</span>
+<span class="normal">1054</span>
+<span class="normal">1055</span>
+<span class="normal">1056</span>
+<span class="normal">1057</span>
+<span class="normal">1058</span>
+<span class="normal">1059</span>
+<span class="normal">1060</span>
+<span class="normal">1061</span>
+<span class="normal">1062</span>
+<span class="normal">1063</span>
+<span class="normal">1064</span>
+<span class="normal">1065</span>
+<span class="normal">1066</span>
+<span class="normal">1067</span>
+<span class="normal">1068</span>
+<span class="normal">1069</span>
+<span class="normal">1070</span>
+<span class="normal">1071</span>
+<span class="normal">1072</span>
+<span class="normal">1073</span>
+<span class="normal">1074</span>
+<span class="normal">1075</span>
+<span class="normal">1076</span>
+<span class="normal">1077</span>
+<span class="normal">1078</span>
+<span class="normal">1079</span>
+<span class="normal">1080</span>
+<span class="normal">1081</span>
+<span class="normal">1082</span>
+<span class="normal">1083</span>
+<span class="normal">1084</span>
+<span class="normal">1085</span>
+<span class="normal">1086</span>
+<span class="normal">1087</span>
+<span class="normal">1088</span>
+<span class="normal">1089</span>
+<span class="normal">1090</span>
+<span class="normal">1091</span>
+<span class="normal">1092</span>
+<span class="normal">1093</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepare StatCalc environment for first use. Providing keyword arguments can override default settings.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        game_data dict: Defaults to None. Will autoload if not provided.</span>
+<span class="sd">        default_mod_tier int: Defaults to 5. Should not need to be set unless the game changes mods and some point.</span>
+<span class="sd">        default_mod_level int: Defaults to 15. Should not need to be set unless the game mod system changes.</span>
+<span class="sd">        default_mod_pips int: Defaults to 6. Should not need to be set unless the game mod system changes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if initialization is successful, False otherwise</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Set allowed parameters and values for argument checking</span>
+    <span class="n">allowed_parameters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;default_mod_tier&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_DEFAULT_MOD_TIER</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="s2">&quot;default_mod_level&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_DEFAULT_MOD_LEVEL</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="s2">&quot;default_mod_pips&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_DEFAULT_MOD_PIPS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="s2">&quot;game_data&quot;</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span>
+        <span class="s2">&quot;language&quot;</span><span class="p">:</span> <span class="n">DataBuilder</span><span class="o">.</span><span class="n">get_languages</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing StatCalc for first time use.&quot;</span><span class="p">)</span>
+    <span class="n">class_vars</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class vars: </span><span class="si">{</span><span class="n">class_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">allowed_parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">allowed_parameters</span><span class="p">[</span><span class="n">param</span><span class="p">]:</span>
+                <span class="n">class_var</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">param</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting class variable </span><span class="si">{</span><span class="n">class_var</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="c1"># Remove .json file extension from file name arguments since it is added by the read/write methods</span>
+                <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Before: </span><span class="si">{</span><span class="n">class_var</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">class_vars</span><span class="p">[</span><span class="n">class_var</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">class_var</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="n">new_vars</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After: </span><span class="si">{</span><span class="n">class_var</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_vars</span><span class="p">[</span><span class="n">class_var</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid value (</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">) for argument (</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">). &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Allowed values are [</span><span class="si">{</span><span class="n">allowed_parameters</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="si">}</span><span class="s2">].&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading game data from DataBuilder.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">DataBuilder</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">DataBuilder</span><span class="o">.</span><span class="n">initialize</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occurred while initializing DataBuilder.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span> <span class="o">=</span> <span class="n">DataBuilder</span><span class="o">.</span><span class="n">get_game_data</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">DataBuilderException</span> <span class="k">as</span> <span class="n">e_str</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e_str</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Game stat information provided.&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_DATA</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span><span class="p">[</span><span class="s2">&quot;unitData&quot;</span><span class="p">]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_GEAR_DATA</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span><span class="p">[</span><span class="s2">&quot;gearData&quot;</span><span class="p">]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_MOD_SET_DATA</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span><span class="p">[</span><span class="s2">&quot;modSetData&quot;</span><span class="p">]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_CR_TABLES</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span><span class="p">[</span><span class="s2">&quot;crTables&quot;</span><span class="p">]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_GP_TABLES</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span><span class="p">[</span><span class="s2">&quot;gpTables&quot;</span><span class="p">]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_RELIC_DATA</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span><span class="p">[</span><span class="s2">&quot;relicData&quot;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">key_err_str</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to initialize stat data structures. [</span><span class="si">{</span><span class="n">key_err_str</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">StatCalcRuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unable to initialize stat data structures. [</span><span class="si">{</span><span class="n">key_err_str</span><span class="si">}</span><span class="s2">]&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading unit &#39;nameKey&#39; mapping object from DataBuilder files...&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_UNIT_NAME_MAP</span> <span class="o">=</span> <span class="n">DataBuilder</span><span class="o">.</span><span class="n">get_unit_names_mapping</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_LANGUAGE</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unit name mapping file not found. [</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_LANGUAGE</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Creating unit &#39;nameKey&#39; mapping object from game server data.&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_load_unit_name_map</span><span class="p">()</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Loading stat ID to localized name mapping for language: </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_LANGUAGE</span><span class="si">}</span><span class="s2"> ...&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_load_stat_name_map</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unable to load stat ID to name mapping. Stats will be referenced by ID only.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stat ID to localized name mapping loading complete.&quot;</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_INITIALIZED</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">True</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.stat_calc.StatCalc.set_attribute" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">set_attribute</span><span class="p">(</span><span class="n">attr_name</span><span class="p">,</span> <span class="n">attr_value</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.stat_calc.StatCalc.set_attribute" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Set class attribute</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>attr_name</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Name of attribute to set</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>str</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>attr_value</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>The value to assign to the attribute</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>any</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>RETURNS</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+              <span class="doc-returns-annotation">
+                  <code>None</code>
+              </span>
+          </td>
+          <td class="doc-returns-details">
+            <div class="doc-md-description">
+              <p>None</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/stat_calc.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">set_attribute</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attr_value</span><span class="p">:</span> <span class="nb">any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set class attribute</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        attr_name (str): Name of attribute to set</span>
+<span class="sd">        attr_value (any): The value to assign to the attribute</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">StatCalcException</span><span class="p">(</span>
+            <span class="s2">&quot;StatCalc is not initialized. Please perform the initialization first.&quot;</span>
+        <span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">,</span> <span class="n">attr_value</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.stat_calc.StatCalc.set_log_level" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">set_log_level</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.stat_calc.StatCalc.set_log_level" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Set the logging level for message output. Default is &lsquo;INFO&rsquo;</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>log_level</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Logging level</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>str</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>RAISES</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+            <span class="doc-raises-annotation">
+                <code><span title="swgoh_comlink.stat_calc.StatCalcException">StatCalcException</span></code>
+            </span>
+          </td>
+          <td class="doc-raises-details">
+            <div class="doc-md-description">
+              <p>If the logging level is not valid</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/stat_calc.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">set_log_level</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">log_level</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the logging level for message output. Default is &#39;INFO&#39;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        log_level (str): Logging level</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        StatCalcException: If the logging level is not valid</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">StatCalcException</span><span class="p">(</span>
+            <span class="s2">&quot;StatCalc is not initialized. Please perform the initialization first.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">log_levels</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelNamesMapping</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">log_level</span> <span class="ow">in</span> <span class="n">log_levels</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">log_levels</span><span class="p">[</span><span class="n">log_level</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">StatCalcRuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid log level </span><span class="si">{</span><span class="n">log_level</span><span class="si">}</span><span class="s2">. Available options are </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">log_levels</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      
+    
+  </body>
+</html>

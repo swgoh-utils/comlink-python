@@ -1,0 +1,2201 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://github.com/swgoh-utils/comlink-python/DataBuilder/">
+      
+      
+        <link rel="prev" href="../SwgohComlinkAsync_class/">
+      
+      
+        <link rel="next" href="../StatCalc/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+    
+    
+      
+        <title>DataBuilder - swgoh_comlink</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e359304.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Titillium Web";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#swgoh_comlink.data_builder.DataBuilder" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="swgoh_comlink" class="md-header__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            swgoh_comlink
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DataBuilder
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="swgoh_comlink" class="md-nav__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    swgoh_comlink
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    SwgohComlink
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            SwgohComlink
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SwgohComlink/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic Installation and Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SwgohComlink_class/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module methods and attributes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    SwgohComlinkAsync
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            SwgohComlinkAsync
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SwgohComlinkAsync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic Installation and Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SwgohComlinkAsync_class/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module methods and attributes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    DataBuilder
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    DataBuilder
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;DataBuilder
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.is_initialized" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_initialized
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.disable_auto_game_data_update_thread" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;disable_auto_game_data_update_thread
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.enable_auto_game_data_update" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;enable_auto_game_data_update
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_attribute
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_game_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_game_data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_language_file_path" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_language_file_path
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_languages" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_languages
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_unit_names_mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_unit_names_mapping
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.initialize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;initialize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.load_stats_enums_map" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;load_stats_enums_map
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.set_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_attribute
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.set_auto_game_data_update_interval" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_auto_game_data_update_interval
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.set_comlink" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_comlink
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.set_log_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_log_level
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.update_game_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_game_data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.update_localization_bundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_localization_bundle
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.write_data_version_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;write_data_version_file
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StatCalc/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    StatCalc
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Logging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;DataBuilder
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.is_initialized" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_initialized
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.disable_auto_game_data_update_thread" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;disable_auto_game_data_update_thread
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.enable_auto_game_data_update" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;enable_auto_game_data_update
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_attribute
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_game_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_game_data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_language_file_path" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_language_file_path
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_languages" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_languages
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.get_unit_names_mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_unit_names_mapping
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.initialize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;initialize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.load_stats_enums_map" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;load_stats_enums_map
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.set_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_attribute
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.set_auto_game_data_update_interval" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_auto_game_data_update_interval
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.set_comlink" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_comlink
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.set_log_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_log_level
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.update_game_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_game_data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.update_localization_bundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_localization_bundle
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swgoh_comlink.data_builder.DataBuilder.write_data_version_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;write_data_version_file
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  <h1>DataBuilder</h1>
+
+<div class="doc doc-object doc-class">
+
+
+
+<a id="swgoh_comlink.data_builder.DataBuilder"></a>
+  <div class="doc doc-contents first">
+
+  
+      <p>DataBuilder is a base container class representing a collection of methods for managing game data files
+populated with information retrieved from the game servers directly. This class is not intended to be instantiated.
+Rather, the DataBuilder class provides methods for creating and updating game data files on the local filesystem
+from information from the Capital Games server.</p>
+<p>The initialize() method must be called before any other operations are performed.</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.is_initialized" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>          <code class=" language-python"><span class="n">is_initialized</span><span class="p">:</span> <span class="nb">bool</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.is_initialized" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Return class initialization state</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>RETURNS</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+              <span class="doc-returns-annotation">
+                  <code>bool</code>
+              </span>
+          </td>
+          <td class="doc-returns-details">
+            <div class="doc-md-description">
+              <p>True or False</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.disable_auto_game_data_update_thread" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">disable_auto_game_data_update_thread</span><span class="p">()</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.disable_auto_game_data_update_thread" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Turn the automatic game data file update thread off</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1023</span>
+<span class="normal">1024</span>
+<span class="normal">1025</span>
+<span class="normal">1026</span>
+<span class="normal">1027</span>
+<span class="normal">1028</span>
+<span class="normal">1029</span>
+<span class="normal">1030</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">disable_auto_game_data_update_thread</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the automatic game data file update thread off&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Automatic game data updates are currently disabled.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Disabling automatic game data updates...&quot;</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.enable_auto_game_data_update" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">enable_auto_game_data_update</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.enable_auto_game_data_update" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Turn the automatic data file update thread on</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>interval</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Time in minutes to wait between polling cycles for new data</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>int</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 986</span>
+<span class="normal"> 987</span>
+<span class="normal"> 988</span>
+<span class="normal"> 989</span>
+<span class="normal"> 990</span>
+<span class="normal"> 991</span>
+<span class="normal"> 992</span>
+<span class="normal"> 993</span>
+<span class="normal"> 994</span>
+<span class="normal"> 995</span>
+<span class="normal"> 996</span>
+<span class="normal"> 997</span>
+<span class="normal"> 998</span>
+<span class="normal"> 999</span>
+<span class="normal">1000</span>
+<span class="normal">1001</span>
+<span class="normal">1002</span>
+<span class="normal">1003</span>
+<span class="normal">1004</span>
+<span class="normal">1005</span>
+<span class="normal">1006</span>
+<span class="normal">1007</span>
+<span class="normal">1008</span>
+<span class="normal">1009</span>
+<span class="normal">1010</span>
+<span class="normal">1011</span>
+<span class="normal">1012</span>
+<span class="normal">1013</span>
+<span class="normal">1014</span>
+<span class="normal">1015</span>
+<span class="normal">1016</span>
+<span class="normal">1017</span>
+<span class="normal">1018</span>
+<span class="normal">1019</span>
+<span class="normal">1020</span>
+<span class="normal">1021</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">enable_auto_game_data_update</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the automatic data file update thread on</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        interval: Time in minutes to wait between polling cycles for new data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Auto update is already enabled&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">interval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA_INTERVAL</span> <span class="o">=</span> <span class="n">interval</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Enabling automatic data updates at </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA_INTERVAL</span><span class="si">}</span><span class="s2"> minute interval.&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA_THREAD_NAME</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No existing auto update thread found. Creating a new one.&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_start_auto_update_thread</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Auto data update thread [</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA_THREAD_NAME</span><span class="si">}</span><span class="s2">] created successfully.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Auto data update thread [</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA_THREAD_NAME</span><span class="si">}</span><span class="s2">] failed to start.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Auto data update thread [</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA_THREAD_NAME</span><span class="si">}</span><span class="s2">] is already running.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.get_attribute" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">get_attribute</span><span class="p">(</span><span class="n">attribute_name</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.get_attribute" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Get an attribute value</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">get_attribute</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get an attribute value&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.get_game_data" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">get_game_data</span><span class="p">()</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.get_game_data" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Load game data objects from JSON file or build from game servers. Return a collection of dictionaries
+representing the unitData, gearData, modSetData, crTables, gpTables and relicData. Primary intended use
+is by the StatCalc library for initializing internal data structures for roster calculations.</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">855</span>
+<span class="normal">856</span>
+<span class="normal">857</span>
+<span class="normal">858</span>
+<span class="normal">859</span>
+<span class="normal">860</span>
+<span class="normal">861</span>
+<span class="normal">862</span>
+<span class="normal">863</span>
+<span class="normal">864</span>
+<span class="normal">865</span>
+<span class="normal">866</span>
+<span class="normal">867</span>
+<span class="normal">868</span>
+<span class="normal">869</span>
+<span class="normal">870</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">get_game_data</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load game data objects from JSON file or build from game servers. Return a collection of dictionaries</span>
+<span class="sd">    representing the unitData, gearData, modSetData, crTables, gpTables and relicData. Primary intended use</span>
+<span class="sd">    is by the StatCalc library for initializing internal data structures for roster calculations.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_INITIALIZED</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataBuilderException</span><span class="p">(</span>
+            <span class="s2">&quot;DataBuilder has not yet been initialized. Please perform that action first.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_verify_game_data_files</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">update_game_data</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_read_game_data</span><span class="p">()</span>
+    <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.get_language_file_path" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">get_language_file_path</span><span class="p">()</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.get_language_file_path" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Return path to localized language files</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">get_language_file_path</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return path to localized language files&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_PATH</span><span class="p">,</span> <span class="s2">&quot;languages&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.get_languages" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">get_languages</span><span class="p">()</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.get_languages" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Return list of current language localizations available</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">get_languages</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return list of current language localizations available&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_VERSION</span><span class="p">[</span><span class="s2">&quot;languages&quot;</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.get_unit_names_mapping" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">get_unit_names_mapping</span><span class="p">(</span><span class="n">language</span><span class="o">=</span><span class="s1">&#39;eng_us&#39;</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.get_unit_names_mapping" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Create a dictionary with unit[&lsquo;nameKey&rsquo;] as the key and the in-game unit name as the value</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>language</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Which language to use for creating the dictionary values [Default is &ldquo;eng_us&rdquo;]</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>str</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>&#39;eng_us&#39;</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">get_unit_names_mapping</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;eng_us&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a dictionary with unit[&#39;nameKey&#39;] as the key and the in-game unit name as the value</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        language: Which language to use for creating the dictionary values [Default is &quot;eng_us&quot;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">languages_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_PATH</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">)</span>
+    <span class="n">unit_file_name</span> <span class="o">=</span> <span class="n">language</span> <span class="o">+</span> <span class="s2">&quot;_unit_name_keys.json&quot;</span>
+    <span class="k">return</span> <span class="n">_read_json_file</span><span class="p">(</span><span class="n">languages_file_path</span><span class="p">,</span> <span class="n">unit_file_name</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.initialize" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">initialize</span><span class="p">(</span><span class="n">comlink</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.initialize" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Prepare DataBuilder environment for first use. Providing keyword arguments can override default settings.</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>comlink</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>instance of SwgohComlink</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-internal" title="swgoh_comlink.SwgohComlink" href="../SwgohComlink_class/#swgoh_comlink.swgoh_comlink.SwgohComlink">SwgohComlink</a></code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<details class="optional-parameters" open>
+  <summary>Optional Parameters</summary>
+  <p>data_path str: Defaults to &lsquo;./data&rsquo;
+data_version_file str: Defaults to &lsquo;dataVersion.json&rsquo;,
+game_data_path_sub_folder str: Defaults to &lsquo;game&rsquo;,
+zip_game_data bool: Defaults to False,
+use_segments bool: Defaults to False,
+use_unzip bool: Defaults to False,</p>
+</details>
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1068</span>
+<span class="normal">1069</span>
+<span class="normal">1070</span>
+<span class="normal">1071</span>
+<span class="normal">1072</span>
+<span class="normal">1073</span>
+<span class="normal">1074</span>
+<span class="normal">1075</span>
+<span class="normal">1076</span>
+<span class="normal">1077</span>
+<span class="normal">1078</span>
+<span class="normal">1079</span>
+<span class="normal">1080</span>
+<span class="normal">1081</span>
+<span class="normal">1082</span>
+<span class="normal">1083</span>
+<span class="normal">1084</span>
+<span class="normal">1085</span>
+<span class="normal">1086</span>
+<span class="normal">1087</span>
+<span class="normal">1088</span>
+<span class="normal">1089</span>
+<span class="normal">1090</span>
+<span class="normal">1091</span>
+<span class="normal">1092</span>
+<span class="normal">1093</span>
+<span class="normal">1094</span>
+<span class="normal">1095</span>
+<span class="normal">1096</span>
+<span class="normal">1097</span>
+<span class="normal">1098</span>
+<span class="normal">1099</span>
+<span class="normal">1100</span>
+<span class="normal">1101</span>
+<span class="normal">1102</span>
+<span class="normal">1103</span>
+<span class="normal">1104</span>
+<span class="normal">1105</span>
+<span class="normal">1106</span>
+<span class="normal">1107</span>
+<span class="normal">1108</span>
+<span class="normal">1109</span>
+<span class="normal">1110</span>
+<span class="normal">1111</span>
+<span class="normal">1112</span>
+<span class="normal">1113</span>
+<span class="normal">1114</span>
+<span class="normal">1115</span>
+<span class="normal">1116</span>
+<span class="normal">1117</span>
+<span class="normal">1118</span>
+<span class="normal">1119</span>
+<span class="normal">1120</span>
+<span class="normal">1121</span>
+<span class="normal">1122</span>
+<span class="normal">1123</span>
+<span class="normal">1124</span>
+<span class="normal">1125</span>
+<span class="normal">1126</span>
+<span class="normal">1127</span>
+<span class="normal">1128</span>
+<span class="normal">1129</span>
+<span class="normal">1130</span>
+<span class="normal">1131</span>
+<span class="normal">1132</span>
+<span class="normal">1133</span>
+<span class="normal">1134</span>
+<span class="normal">1135</span>
+<span class="normal">1136</span>
+<span class="normal">1137</span>
+<span class="normal">1138</span>
+<span class="normal">1139</span>
+<span class="normal">1140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
+    <span class="bp">cls</span><span class="p">,</span> <span class="n">comlink</span><span class="p">:</span> <span class="n">swgoh_comlink</span><span class="o">.</span><span class="n">SwgohComlink</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepare DataBuilder environment for first use. Providing keyword arguments can override default settings.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        comlink: instance of SwgohComlink</span>
+
+<span class="sd">    Optional Parameters:</span>
+<span class="sd">        data_path str: Defaults to &#39;./data&#39;</span>
+<span class="sd">        data_version_file str: Defaults to &#39;dataVersion.json&#39;,</span>
+<span class="sd">        game_data_path_sub_folder str: Defaults to &#39;game&#39;,</span>
+<span class="sd">        zip_game_data bool: Defaults to False,</span>
+<span class="sd">        use_segments bool: Defaults to False,</span>
+<span class="sd">        use_unzip bool: Defaults to False,</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allowed_parameters</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;comlink&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;data_path&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;data_version_file&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;game_data_path_sub_folder&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;zip_game_data&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;use_segments&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;use_unzip&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing DataBuilder for first time use.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">comlink</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">&quot;DataBuilder must have an instance of swgoh_comlink.SwgohComlink to operate properly.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_COMLINK</span> <span class="o">=</span> <span class="n">comlink</span>
+    <span class="n">class_vars</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class vars: </span><span class="si">{</span><span class="n">class_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">allowed_parameters</span><span class="p">:</span>
+            <span class="n">class_var</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">param</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting class variable </span><span class="si">{</span><span class="n">class_var</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># Remove .json file extension from file name arguments since it is added by the read/write methods</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Before: </span><span class="si">{</span><span class="n">class_var</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">class_vars</span><span class="p">[</span><span class="n">class_var</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">class_var</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="n">new_vars</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After: </span><span class="si">{</span><span class="n">class_var</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_vars</span><span class="p">[</span><span class="n">class_var</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Ensure that required data file paths exist on the filesystem</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_validate_data_file_paths</span><span class="p">()</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading stat_enums_map.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">load_stats_enums_map</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;stat_enums_map loaded successfully.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;stat_enums_map failed to load. Exiting.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">DataBuilderRuntimeError</span><span class="p">(</span><span class="s2">&quot;&#39;stat_enums_map&#39; failed to load.&quot;</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Checking for game data files&quot;</span><span class="p">)</span>
+    <span class="n">data_files_exist</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_verify_game_data_files</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">data_files_exist</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Reading game data from files&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_read_game_data</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating game data from servers.&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">update_game_data</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating localization data from servers.&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">update_localization_bundle</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing game version information to disk...&quot;</span><span class="p">)</span>
+        <span class="n">_write_json_file</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_PATH</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_VERSION_FILE</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_VERSION</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_INITIALIZED</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">True</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.load_stats_enums_map" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">load_stats_enums_map</span><span class="p">(</span><span class="n">force_reload</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.load_stats_enums_map" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Load data from statEnumMap object into statsEnum and localizationMap objects</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>force_reload</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Force reload of data from file. Defaults to False</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>bool</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>False</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">load_stats_enums_map</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">force_reload</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load data from statEnumMap object into statsEnum and localizationMap objects</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        force_reload: Force reload of data from file. Defaults to False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading stats_enum_map...&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_STATS_ENUM_MAP_LOADED</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">force_reload</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;stats_enum_map&#39; object is already populated. Won&#39;t load again. Use &#39;force_reload&#39; to override.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_STATS_ENUM</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_LOCALIZATION_MAP</span> <span class="o">=</span> <span class="n">_load_stat_enums_map_dict</span><span class="p">()</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">STATS_ENUMS_MAP_LOADED</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="n">DataBuilderException</span> <span class="k">as</span> <span class="n">e_str</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exception caught while loading statEnumMap object: </span><span class="si">{</span><span class="n">e_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">STATS_ENUMS_MAP_LOADED</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.set_attribute" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">set_attribute</span><span class="p">(</span><span class="n">attr_name</span><span class="p">,</span> <span class="n">attr_value</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.set_attribute" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Set class attribute</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">set_attribute</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attr_value</span><span class="p">:</span> <span class="nb">any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set class attribute&quot;&quot;&quot;</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">,</span> <span class="n">attr_value</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.set_auto_game_data_update_interval" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">set_auto_game_data_update_interval</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.set_auto_game_data_update_interval" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Set the automatic game data update interval in minutes. Default is 60 minutes.</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1032</span>
+<span class="normal">1033</span>
+<span class="normal">1034</span>
+<span class="normal">1035</span>
+<span class="normal">1036</span>
+<span class="normal">1037</span>
+<span class="normal">1038</span>
+<span class="normal">1039</span>
+<span class="normal">1040</span>
+<span class="normal">1041</span>
+<span class="normal">1042</span>
+<span class="normal">1043</span>
+<span class="normal">1044</span>
+<span class="normal">1045</span>
+<span class="normal">1046</span>
+<span class="normal">1047</span>
+<span class="normal">1048</span>
+<span class="normal">1049</span>
+<span class="normal">1050</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">set_auto_game_data_update_interval</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">minutes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the automatic game data update interval in minutes. Default is 60 minutes.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Value for the minutes argument should be &#39;int&#39;, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">DataBuilderRuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Value for the minutes argument should be &#39;int&#39;, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Updating automatic game data update interval to </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span><span class="si">}</span><span class="s2"> minutes.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">current_interval</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA_INTERVAL</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA_INTERVAL</span> <span class="o">=</span> <span class="n">minutes</span>
+    <span class="n">new_interval</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_AUTO_UPDATE_GAME_DATA_INTERVAL</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Automatic game data update interval changed from </span><span class="si">{</span><span class="n">current_interval</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">new_interval</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.set_comlink" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">set_comlink</span><span class="p">(</span><span class="n">comlink</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.set_comlink" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Assign a value to the DataBuilder class</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">set_comlink</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">comlink</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Assign a value to the DataBuilder class&quot;&quot;&quot;</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_COMLINK</span> <span class="o">=</span> <span class="n">comlink</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.set_log_level" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">set_log_level</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.set_log_level" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Set the logging level for message output. Default is &lsquo;INFO&rsquo;</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">set_log_level</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">log_level</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the logging level for message output. Default is &#39;INFO&#39;&quot;&quot;&quot;</span>
+    <span class="n">log_levels</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelNamesMapping</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">log_level</span> <span class="ow">in</span> <span class="n">log_levels</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">log_levels</span><span class="p">[</span><span class="n">log_level</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataBuilderException</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid log level </span><span class="si">{</span><span class="n">log_level</span><span class="si">}</span><span class="s2">. Available options are </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">log_levels</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.update_game_data" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">update_game_data</span><span class="p">()</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.update_game_data" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Get the latest game data from servers</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">872</span>
+<span class="normal">873</span>
+<span class="normal">874</span>
+<span class="normal">875</span>
+<span class="normal">876</span>
+<span class="normal">877</span>
+<span class="normal">878</span>
+<span class="normal">879</span>
+<span class="normal">880</span>
+<span class="normal">881</span>
+<span class="normal">882</span>
+<span class="normal">883</span>
+<span class="normal">884</span>
+<span class="normal">885</span>
+<span class="normal">886</span>
+<span class="normal">887</span>
+<span class="normal">888</span>
+<span class="normal">889</span>
+<span class="normal">890</span>
+<span class="normal">891</span>
+<span class="normal">892</span>
+<span class="normal">893</span>
+<span class="normal">894</span>
+<span class="normal">895</span>
+<span class="normal">896</span>
+<span class="normal">897</span>
+<span class="normal">898</span>
+<span class="normal">899</span>
+<span class="normal">900</span>
+<span class="normal">901</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">update_game_data</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the latest game data from servers&quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Getting game data from comlink instance&quot;</span><span class="p">)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+    <span class="n">game_data</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_COMLINK</span><span class="o">.</span><span class="n">get_game_data</span><span class="p">(</span><span class="n">include_pve_units</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Game data retrieval completed in </span><span class="si">{</span><span class="n">end_time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds.&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Building data constructs from game data...&quot;</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_build_data</span><span class="p">(</span><span class="n">game_data</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Validating that required data file paths exist.&quot;</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_validate_data_file_paths</span><span class="p">()</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;*** Writing game data files to disk... ***&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">game_data_file</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA_FILES</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... Writing game data file: </span><span class="si">{</span><span class="n">game_data_file</span><span class="si">}</span><span class="s2"> ...&quot;</span><span class="p">)</span>
+        <span class="n">target_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_PATH</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA_PATH_SUB_FOLDER</span>
+        <span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_write_game_data</span><span class="p">(</span>
+            <span class="n">target_directory</span><span class="p">,</span> <span class="n">game_data_file</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_GAME_DATA</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">game_data_file</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;*** Writing game version information to disk... ***&quot;</span><span class="p">)</span>
+    <span class="n">_write_json_file</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_PATH</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_VERSION_FILE</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_VERSION</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.update_localization_bundle" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">update_localization_bundle</span><span class="p">(</span><span class="n">force_update</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.update_localization_bundle" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Collect localization bundle from game servers.</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>force_update</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Flag to indicate whether existing files should be overwritten. Defaults to False</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code>bool</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>False</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">903</span>
+<span class="normal">904</span>
+<span class="normal">905</span>
+<span class="normal">906</span>
+<span class="normal">907</span>
+<span class="normal">908</span>
+<span class="normal">909</span>
+<span class="normal">910</span>
+<span class="normal">911</span>
+<span class="normal">912</span>
+<span class="normal">913</span>
+<span class="normal">914</span>
+<span class="normal">915</span>
+<span class="normal">916</span>
+<span class="normal">917</span>
+<span class="normal">918</span>
+<span class="normal">919</span>
+<span class="normal">920</span>
+<span class="normal">921</span>
+<span class="normal">922</span>
+<span class="normal">923</span>
+<span class="normal">924</span>
+<span class="normal">925</span>
+<span class="normal">926</span>
+<span class="normal">927</span>
+<span class="normal">928</span>
+<span class="normal">929</span>
+<span class="normal">930</span>
+<span class="normal">931</span>
+<span class="normal">932</span>
+<span class="normal">933</span>
+<span class="normal">934</span>
+<span class="normal">935</span>
+<span class="normal">936</span>
+<span class="normal">937</span>
+<span class="normal">938</span>
+<span class="normal">939</span>
+<span class="normal">940</span>
+<span class="normal">941</span>
+<span class="normal">942</span>
+<span class="normal">943</span>
+<span class="normal">944</span>
+<span class="normal">945</span>
+<span class="normal">946</span>
+<span class="normal">947</span>
+<span class="normal">948</span>
+<span class="normal">949</span>
+<span class="normal">950</span>
+<span class="normal">951</span>
+<span class="normal">952</span>
+<span class="normal">953</span>
+<span class="normal">954</span>
+<span class="normal">955</span>
+<span class="normal">956</span>
+<span class="normal">957</span>
+<span class="normal">958</span>
+<span class="normal">959</span>
+<span class="normal">960</span>
+<span class="normal">961</span>
+<span class="normal">962</span>
+<span class="normal">963</span>
+<span class="normal">964</span>
+<span class="normal">965</span>
+<span class="normal">966</span>
+<span class="normal">967</span>
+<span class="normal">968</span>
+<span class="normal">969</span>
+<span class="normal">970</span>
+<span class="normal">971</span>
+<span class="normal">972</span>
+<span class="normal">973</span>
+<span class="normal">974</span>
+<span class="normal">975</span>
+<span class="normal">976</span>
+<span class="normal">977</span>
+<span class="normal">978</span>
+<span class="normal">979</span>
+<span class="normal">980</span>
+<span class="normal">981</span>
+<span class="normal">982</span>
+<span class="normal">983</span>
+<span class="normal">984</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">update_localization_bundle</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">force_update</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect localization bundle from game servers.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        force_update: Flag to indicate whether existing files should be overwritten. Defaults to False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating localization bundle...&quot;</span><span class="p">)</span>
+    <span class="n">server_versions</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_COMLINK</span><span class="o">.</span><span class="n">get_latest_game_data_version</span><span class="p">()</span>
+
+    <span class="n">current_versions</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_data_versions_from_file</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">current_versions</span> <span class="o">==</span> <span class="n">server_versions</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The current server game versions are the same as those in </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_VERSION_FILE</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">force_update</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The &#39;force_update&#39; flag is set to &#39;</span><span class="si">{</span><span class="n">force_update</span><span class="si">}</span><span class="s2">&#39;. Data files contain most&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot; current data.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_VERSION</span><span class="p">[</span><span class="s2">&quot;game&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">server_versions</span><span class="p">[</span><span class="s2">&quot;game&quot;</span><span class="p">]</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_VERSION</span><span class="p">[</span><span class="s2">&quot;language&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">server_versions</span><span class="p">[</span><span class="s2">&quot;language&quot;</span><span class="p">]</span>
+
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_VERSION</span><span class="p">[</span><span class="s2">&quot;languages&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Validating that required data file paths exist.&quot;</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_validate_data_file_paths</span><span class="p">()</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Collecting bundle from game servers. &quot;</span>
+        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Language version: &#39;</span><span class="si">{</span><span class="n">server_versions</span><span class="p">[</span><span class="s1">&#39;language&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;, USE_UNZIP = &#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_USE_UNZIP</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+    <span class="p">)</span>
+    <span class="n">loc_bundle</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_COMLINK</span><span class="o">.</span><span class="n">get_localization_bundle</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">server_versions</span><span class="p">[</span><span class="s2">&quot;language&quot;</span><span class="p">],</span> <span class="n">unzip</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">_USE_UNZIP</span>
+    <span class="p">)</span>
+
+    <span class="n">zip_obj</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_USE_UNZIP</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Decoding Base64 data...&quot;</span><span class="p">)</span>
+        <span class="n">loc_bundle_decoded</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">loc_bundle</span><span class="p">[</span><span class="s2">&quot;localizationBundle&quot;</span><span class="p">])</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Decompressing data stream...&quot;</span><span class="p">)</span>
+        <span class="n">zip_obj</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">loc_bundle_decoded</span><span class="p">))</span>
+        <span class="n">language_files</span> <span class="o">=</span> <span class="n">zip_obj</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">language_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">loc_bundle</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">for</span> <span class="n">language</span> <span class="ow">in</span> <span class="n">language_files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_USE_UNZIP</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="n">loc_bundle</span><span class="p">[</span><span class="n">language</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">zip_obj</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">language</span><span class="p">)</span> <span class="k">as</span> <span class="n">lang_file</span><span class="p">:</span>
+                <span class="n">contents</span> <span class="o">=</span> <span class="n">lang_file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">lang_name</span> <span class="o">=</span> <span class="n">language</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Loc_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">master_file_name</span> <span class="o">=</span> <span class="n">lang_name</span> <span class="o">+</span> <span class="s2">&quot;_master&quot;</span>
+        <span class="n">name_key_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">lang_name</span><span class="si">}</span><span class="s2">_unit_name_keys&quot;</span>
+        <span class="n">lang_map</span><span class="p">,</span> <span class="n">name_key_map</span><span class="p">,</span> <span class="n">master_map</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_process_file_contents_by_line</span><span class="p">(</span>
+            <span class="n">contents</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">data_map</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">lang_name</span><span class="p">,</span> <span class="n">lang_map</span><span class="p">,</span> <span class="s2">&quot;/languages&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">name_key_file</span><span class="p">,</span> <span class="n">name_key_map</span><span class="p">,</span> <span class="s2">&quot;/units&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">master_file_name</span><span class="p">,</span> <span class="n">master_map</span><span class="p">,</span> <span class="s2">&quot;/master&quot;</span><span class="p">),</span>
+        <span class="p">]:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> data to disk.&quot;</span><span class="p">)</span>
+            <span class="n">_write_json_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_PATH</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">data_map</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lang_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_LANGUAGE_FILE_SKIP_LIST</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_VERSION</span><span class="p">[</span><span class="s2">&quot;languages&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lang_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_STATS_ENUM_MAP_LOADED</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;stats_enum_map not loaded. Loading now...&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">load_stats_enums_map</span><span class="p">()</span>
+
+    <span class="n">stat_enums</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_LOCALIZATION_MAP</span><span class="si">=}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_LOCALIZATION_MAP</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">stat_enums</span><span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing game version information to disk...&quot;</span><span class="p">)</span>
+    <span class="n">_write_json_file</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_PATH</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_VERSION_FILE</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_VERSION</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="swgoh_comlink.data_builder.DataBuilder.write_data_version_file" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>          <code class=" language-python"><span class="n">write_data_version_file</span><span class="p">()</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#swgoh_comlink.data_builder.DataBuilder.write_data_version_file" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Store contents of current game data version object to disk</p>
+
+          <details class="quote">
+            <summary>Source code in <code>swgoh_comlink/data_builder.py</code></summary>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">write_data_version_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store contents of current game data version object to disk&quot;&quot;&quot;</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">_write_game_data</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_PATH</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_DATA_VERSION_FILE</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_VERSION</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      
+    
+  </body>
+</html>
