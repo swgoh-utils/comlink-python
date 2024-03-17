@@ -14,7 +14,7 @@ player profile. In the example below, we'll make a call to the get_player() meth
 from the response to call the get_guild() method.
 """
 player = comlink.get_player(314927874)
-guild = comlink.get_guild(player['guildId'])
+guild = comlink.get_guild(player["guildId"])
 
 """
 The get_guild() method returns a dictionary containing information about the guild, its members and event participation.
@@ -22,7 +22,9 @@ By default, there is no actual statistic data returned. If the desire is to incl
 event result, then the 'include_recent_guild_activity_info' argument in the method should be set to True.
 """
 
-guild_with_stats = comlink.get_guild(player['guildId'], include_recent_guild_activity_info=True)
+guild_with_stats = comlink.get_guild(
+    player["guildId"], include_recent_guild_activity_info=True
+)
 
 """
 >>> pprint(guild['recentTerritoryWarResult'])

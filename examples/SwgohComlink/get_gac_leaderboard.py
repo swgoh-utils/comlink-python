@@ -8,7 +8,7 @@ from swgoh_comlink import SwgohComlink
 
 
 def format_output(lb_list: list):
-    """ Calculate the necessary column widths for formatted output based on data provided in tb_list """
+    """Calculate the necessary column widths for formatted output based on data provided in tb_list"""
     if not isinstance(lb_list, list):
         return None
     # First create a list of (name, guild, skill) tuples
@@ -16,14 +16,17 @@ def format_output(lb_list: list):
     max_name_len = 0
     max_guild_len = 0
     for player in lb_list:
-        if len(player['name']) > max_name_len:
-            max_name_len = len(player['name'])
-        if len(player['guild']['name']) > max_guild_len:
-            max_guild_len = len(player['guild']['name'])
-        output_list.append((player['name'],
-                            player['guild']['name'],
-                            player['playerRating']['playerSkillRating']['skillRating'])
-                           )
+        if len(player["name"]) > max_name_len:
+            max_name_len = len(player["name"])
+        if len(player["guild"]["name"]) > max_guild_len:
+            max_guild_len = len(player["guild"]["name"])
+        output_list.append(
+            (
+                player["name"],
+                player["guild"]["name"],
+                player["playerRating"]["playerSkillRating"]["skillRating"],
+            )
+        )
     return max_name_len + 2, max_guild_len + 2, output_list
 
 
@@ -52,17 +55,21 @@ on the GAC leaderboard desired. The parameters are:
                             Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000:CARBONITE:10431
         enums: Whether to translate enum values to text [Default: False]
 
- 
+
 """
 
 # Get the Kyber 2 leaderboard
-gac_kyber_2_lb = comlink.get_gac_leaderboard(leaderboard_type=6, league=100, division=20)
+gac_kyber_2_lb = comlink.get_gac_leaderboard(
+    leaderboard_type=6, league=100, division=20
+)
 
 # Output the GAC leaderboard information
-name_col_width, guild_col_width, lb_entries = format_output(gac_kyber_2_lb['player'])
+name_col_width, guild_col_width, lb_entries = format_output(gac_kyber_2_lb["player"])
 for player in lb_entries:
-    out_str = (f"Player name: {player[0]:{name_col_width}} Guild: {player[1]:{guild_col_width}} "
-               + f"Skill Rating: {player[2]}")
+    out_str = (
+            f"Player name: {player[0]:{name_col_width}} Guild: {player[1]:{guild_col_width}} "
+            + f"Skill Rating: {player[2]}"
+    )
     print(out_str)
 
 ############
@@ -72,10 +79,10 @@ for player in lb_entries:
 # Get the current GAC event
 current_event_instance = None
 current_events = comlink.get_events()
-for event in current_events['gameEvent']:
-    if event['type'] == 10:
+for event in current_events["gameEvent"]:
+    if event["type"] == 10:
         current_event_instance = f"{event['id']}:{event['instance'][0]['id']}"
-league = 'KYBER'
+league = "KYBER"
 # Use bracket to loop through the individual brackets
 bracket = 0
 # Use brackets to store the results for each bracket for processing once all brackets have been scanned
@@ -86,9 +93,11 @@ if current_event_instance:
     # is a group of 8 players
     while number_of_players_in_bracket > 0:
         group_id = f"{current_event_instance}:{league}:{bracket}"
-        group_of_8_players = comlink.get_gac_leaderboard(leaderboard_type=4,
-                                                         event_instance_id=current_event_instance,
-                                                         group_id=group_id)
-        brackets[bracket] = brackets.get(bracket, group_of_8_players['player'])
+        group_of_8_players = comlink.get_gac_leaderboard(
+            leaderboard_type=4,
+            event_instance_id=current_event_instance,
+            group_id=group_id,
+        )
+        brackets[bracket] = brackets.get(bracket, group_of_8_players["player"])
         bracket += 1
-        number_of_players_in_bracket = len(group_of_8_players['player'])
+        number_of_players_in_bracket = len(group_of_8_players["player"])

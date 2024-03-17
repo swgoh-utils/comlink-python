@@ -10,9 +10,11 @@ from swgoh_comlink import SwgohComlinkAsync
 
 def display_tw_data(tw_list: list) -> None:
     print(f'{"Territory War ID":18} {"Score":^10} {"GP Defeated":^15}')
-    print('=' * 45)
+    print("=" * 45)
     for tw in tw_list:
-        print(f'{tw["territoryWarId"]:^18} {int(tw["score"]):^10,} {int(tw["power"]):15,}')
+        print(
+            f'{tw["territoryWarId"]:^18} {int(tw["score"]):^10,} {int(tw["power"]):15,}'
+        )
 
 
 async def main():
@@ -25,26 +27,28 @@ async def main():
     from the response to call the get_guild() method.
     """
     player = await comlink.get_player(314927874)
-    guild = await comlink.get_guild(player['guildId'])
-    print(F"{guild['name']=}")
+    guild = await comlink.get_guild(player["guildId"])
+    print(f"{guild['name']=}")
 
     """
-    The get_guild() method returns a dictionary containing information about the guild, its members and event 
-    participation. By default, there is no actual statistic data returned. If the desire is to include information 
-    such as recent raid or event result, then the 'include_recent_guild_activity_info' argument in the method should 
+    The get_guild() method returns a dictionary containing information about the guild, its members and event
+    participation. By default, there is no actual statistic data returned. If the desire is to include information
+    such as recent raid or event result, then the 'include_recent_guild_activity_info' argument in the method should
     be set to True.
     """
 
-    guild_with_stats = await comlink.get_guild(player['guildId'], include_recent_guild_activity_info=True)
+    guild_with_stats = await comlink.get_guild(
+        player["guildId"], include_recent_guild_activity_info=True
+    )
     # Closing the aiohttp session is only needed for this example script. Normally, the client session would be
     # managed in a different method depending on the application needs
     await comlink.client_session.close()
-    display_tw_data(guild_with_stats['recentTerritoryWarResult'])
+    display_tw_data(guild_with_stats["recentTerritoryWarResult"])
 
     """
     >>> pprint(guild['recentTerritoryWarResult'])
     []
-    
+
     >>> pprint(guild_with_stats['recentTerritoryWarResult'])
     [{'endTimeSeconds': '1684083602',
       'opponentScore': '5993',
@@ -60,5 +64,5 @@ async def main():
     """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

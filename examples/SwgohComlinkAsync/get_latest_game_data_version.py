@@ -22,12 +22,12 @@ async def main():
     comlink = SwgohComlinkAsync()
     current_game_version = await comlink.get_latest_game_data_version()
 
-    print(f'{current_game_version}')
+    print(f"{current_game_version}")
     # For those that are averse to typing long descriptive function names, there is an alias that can be used
     # which is much shorter, getVersion()
 
     current_versions = await comlink.getVersion()
-    print(f'{current_versions}')
+    print(f"{current_versions}")
     await comlink.client_session.close()
 
 

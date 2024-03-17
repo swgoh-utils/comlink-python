@@ -16,9 +16,9 @@ async def main():
     """
     # Call the get_player() method of the SwgohComlink instance for a specific player ID or allyCode.
     # We use allyCode in this example.
-    
+
     The result is a dictionary with the following top level keys:
-    
+
         {
             'allyCode': '314927874',
             'datacron': [...],
@@ -48,13 +48,13 @@ async def main():
     player_profile_data = await comlink.get_player(allycode=314927874)
 
     # We can extract a list of the characters in the player's roster
-    player_roster = player_profile_data['rosterUnit']
+    player_roster = player_profile_data["rosterUnit"]
     pp(player_roster)
 
     """
     # Each unit in a player's roster is a dictionary with entries for all attributes including skills, equipped mods
     # and relics
-    
+
     >>> pprint.pprint(player['rosterUnit'][0], depth=1)
         {
             'currentLevel': 85,
@@ -76,5 +76,5 @@ async def main():
     await comlink.client_session.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

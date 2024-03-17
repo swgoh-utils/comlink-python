@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Python library module for building data files that can be used by the StatCalc module in the swgoh_comlink package.
 """
@@ -16,23 +17,27 @@ from pathlib import Path
 from typing import Any
 
 import swgoh_comlink
-from swgoh_comlink.const import STAT_ENUMS, UNIT_STAT_ENUMS_MAP
+from swgoh_comlink.const import Constants
 
-_COMMENT_START = '#'
-_FIELD_SEPARATOR = '|'
-_NEWLINE_CHARACTER = '\n'
-_PRE_PATTERN = re.compile(r'^\[[0-9A-F]*?]')
-_POST_PATTERN = re.compile(r'\s+\(([A-Z]+)\)\[-]$')
+_COMMENT_START = "#"
+_FIELD_SEPARATOR = "|"
+_NEWLINE_CHARACTER = "\n"
+_PRE_PATTERN = re.compile(r"^\[[0-9A-F]*?]")
+_POST_PATTERN = re.compile(r"\s+\(([A-Z]+)\)\[-]$")
 
-logger = swgoh_comlink.Utils.get_logger('DataBuilder')
+logger = Constants.get_logger()
 
 
 class DataBuilderException(Exception):
-    pass
+    """Generic exception"""
+
+    ...
 
 
 class DataBuilderRuntimeError(RuntimeError):
-    pass
+    """Generic runtime error"""
+
+    ...
 
 
 def _verify_data_path(data_path: str or Path):
@@ -57,7 +62,9 @@ def _verify_data_path(data_path: str or Path):
             index += 1
             target_path = parents[index]
             logger.debug(f"{path_err_str}")
-            logger.info(f"A parent folder in {data_path} does not exist. Moving up one level to {target_path}.")
+            logger.info(
+                f"A parent folder in {data_path} does not exist. Moving up one level to {target_path}."
+            )
 
 
 def _write_json_file(data_path: str, file_name: str, json_data: dict) -> None:
@@ -66,18 +73,22 @@ def _write_json_file(data_path: str, file_name: str, json_data: dict) -> None:
     logger.info(f"File write args received: {data_path=}, {file_name=}")
     logger.info(f"Verifying {data_path} exists ...")
     _verify_data_path(data_path)
-    if not file_name.endswith('.json'):
-        file_name += '.json'
+    if not file_name.endswith(".json"):
+        file_name += ".json"
     full_path = os.path.join(data_path, file_name)
     if os.path.isfile(full_path):
-        file_name_bak = file_name + '-' + time.strftime("%Y%m%d_%H%M%S", time.localtime()) + '.bak'
-        logger.info(f"{file_name} already exists. Renaming to {file_name_bak} before saving.")
-        _verify_data_path(os.path.join(data_path, 'backups'))
-        full_name_bak = os.path.join(data_path, 'backups', file_name_bak)
+        file_name_bak = (
+                file_name + "-" + time.strftime("%Y%m%d_%H%M%S", time.localtime()) + ".bak"
+        )
+        logger.info(
+            f"{file_name} already exists. Renaming to {file_name_bak} before saving."
+        )
+        _verify_data_path(os.path.join(data_path, "backups"))
+        full_name_bak = os.path.join(data_path, "backups", file_name_bak)
         shutil.move(full_path, full_name_bak)
     try:
         logger.info(f"Opening {full_path}...")
-        with open(full_path, 'w') as fn:
+        with open(full_path, "w") as fn:
             json.dump(json_data, fn, indent=2, ensure_ascii=False, sort_keys=True)
     except Exception as e_str:
         logger.error(f"Exception caught: {e_str}")
@@ -89,35 +100,37 @@ def _write_json_file(data_path: str, file_name: str, json_data: dict) -> None:
 def _read_json_file(data_path: str, file_name: str) -> dict:
     """Retrieve JSON data from file and return dictionary"""
 
-    if not file_name.endswith('.json'):
-        file_name += '.json'
+    if not file_name.endswith(".json"):
+        file_name += ".json"
     logger.info(f"Reading contents of {file_name}")
     full_path = os.path.join(data_path, file_name)
     try:
         with open(full_path) as fn:
             contents = json.load(fn)
     except FileNotFoundError:
-        logger.error(f'File {full_path} was not found. Please check that it exists.')
-        raise f'File {full_path} was not found. Please check that it exists.'
+        logger.error(f"File {full_path} was not found. Please check that it exists.")
+        raise f"File {full_path} was not found. Please check that it exists."
     except Exception as e_str:
-        logger.error(f'Encountered {e_str} while attempting to read contents of {full_path}')
+        logger.error(
+            f"Encountered {e_str} while attempting to read contents of {full_path}"
+        )
         raise e_str
     else:
-        logger.info(f'Returning contents of {full_path} ({len(contents)} bytes).')
+        logger.info(f"Returning contents of {full_path} ({len(contents)} bytes).")
         return contents
 
 
 def _load_stat_enums_map_dict() -> tuple[dict, dict]:
     """Load statsEnum mapping data from JSON file"""
 
-    logger.info(f"Creating 'stats_enum' and 'localization_map' objects")
+    logger.info("Creating 'stats_enum' and 'localization_map' objects")
     stat_enums = {}
     localization_map = {}
-    for key, value in UNIT_STAT_ENUMS_MAP.items():
-        if 'tableKey' in value.keys():
-            stat_enums[value['tableKey']] = key
-        if 'nameKey' in value.keys():
-            localization_map[value['nameKey']] = key
+    for key, value in Constants.UNIT_STAT_ENUMS_MAP.items():
+        if "tableKey" in value.keys():
+            stat_enums[value["tableKey"]] = key
+        if "nameKey" in value.keys():
+            localization_map[value["nameKey"]] = key
     return stat_enums, localization_map
 
 
@@ -126,13 +139,16 @@ def _is_comment_or_invalid(loc_line: str) -> bool:
 
 
 def _apply_value_patterns(value: str) -> str:
-    value = _PRE_PATTERN.sub('', value)
-    value = _POST_PATTERN.sub('', value)
-    return '' if value is None else value
+    value = _PRE_PATTERN.sub("", value)
+    value = _POST_PATTERN.sub("", value)
+    return "" if value is None else value
 
 
 def _compare_game_data_versions(current_version: dict, server_version: dict) -> bool:
-    stripped_current_version = {"game": current_version['game'], "language": current_version['language']}
+    stripped_current_version = {
+        "game": current_version["game"],
+        "language": current_version["language"],
+    }
     if stripped_current_version == server_version:
         return True
     else:
@@ -149,44 +165,41 @@ class DataBuilder:
     The initialize() method must be called before any other operations are performed.
 
     """
-    _INITIALIZED = False
-    _VERSION = {
-        "game": "",
-        "language": "",
-        "languages": []
-    }
 
-    _STATS_ENUM = STAT_ENUMS
+    _INITIALIZED = False
+    _VERSION = {"game": "", "language": "", "languages": []}
+
+    _STATS_ENUM = Constants.STAT_ENUMS
     _GAME_DATA = {}
     _ZIP_GAME_DATA = False
     _USE_SEGMENTS = False
     _USE_UNZIP = False
     _LOCALIZATION_MAP = {}
 
-    _DATA_PATH = os.path.join(os.getcwd(), 'data')
+    _DATA_PATH = os.path.join(os.getcwd(), "data")
     _DATA_FILE_PATHS = [
         _DATA_PATH,
-        os.path.join(_DATA_PATH, 'game'),
-        os.path.join(_DATA_PATH, 'game', 'backups'),
-        os.path.join(_DATA_PATH, 'units'),
-        os.path.join(_DATA_PATH, 'units', 'backups'),
-        os.path.join(_DATA_PATH, 'languages'),
-        os.path.join(_DATA_PATH, 'languages', 'backups')
+        os.path.join(_DATA_PATH, "game"),
+        os.path.join(_DATA_PATH, "game", "backups"),
+        os.path.join(_DATA_PATH, "units"),
+        os.path.join(_DATA_PATH, "units", "backups"),
+        os.path.join(_DATA_PATH, "languages"),
+        os.path.join(_DATA_PATH, "languages", "backups"),
     ]
-    _DATA_VERSION_FILE = 'dataVersion'
-    _GAME_DATA_PATH_SUB_FOLDER = 'game'
-    _GAME_DATA_FILE = 'gameData'
+    _DATA_VERSION_FILE = "dataVersion"
+    _GAME_DATA_PATH_SUB_FOLDER = "../../data/game"
+    _GAME_DATA_FILE = "gameData"
     _GAME_DATA_FILES = [
-        'crTables',
-        'gearData',
-        'gpTables',
-        'modSetData',
-        'relicData',
-        'unitData'
+        "crTables",
+        "gearData",
+        "gpTables",
+        "modSetData",
+        "relicData",
+        "unitData",
     ]
     _STATS_ENUM_MAP_LOADED = False
-    _LOG_LEVEL = 'INFO'
-    _LANGUAGE_FILE_SKIP_LIST = ['key_mapping']
+    _LOG_LEVEL = "INFO"
+    _LANGUAGE_FILE_SKIP_LIST = ["key_mapping"]
     _COMLINK = None
     _AUTO_UPDATE_GAME_DATA = False
     _AUTO_UPDATE_GAME_DATA_INTERVAL_DEFAULT = 60  # 5 minutes
@@ -198,37 +211,49 @@ class DataBuilder:
     @classmethod
     def get_language_file_path(cls) -> str:
         """Return path to localized language files"""
-        return os.path.join(cls._DATA_PATH, 'languages')
+        return os.path.join(cls._DATA_PATH, "languages")
 
     @classmethod
     def _auto_update_game_data(cls) -> None:
         """
         Background process to automatically update game data files from the servers if a new version is detected
         """
-        if cls._AUTO_UPDATE_GAME_DATA_INTERVAL < cls._AUTO_UPDATE_GAME_DATA_INTERVAL_MIN:
-            logger.warning(f"Setting the interval for automatic game data update checks to less than " +
-                           f"{cls._AUTO_UPDATE_GAME_DATA_INTERVAL_MIN} is not recommended. It may cause your Comlink " +
-                           "process to become rate limited by Capital Games.")
+        if (
+                cls._AUTO_UPDATE_GAME_DATA_INTERVAL
+                < cls._AUTO_UPDATE_GAME_DATA_INTERVAL_MIN
+        ):
+            logger.warning(
+                "Setting the interval for automatic game data update checks to less than "
+                + f"{cls._AUTO_UPDATE_GAME_DATA_INTERVAL_MIN} is not recommended. It may cause your Comlink "
+                + "process to become rate limited by Capital Games."
+            )
         thread_name = threading.current_thread().name
         sleep_minutes = cls._AUTO_UPDATE_GAME_DATA_INTERVAL * 60
-        logger.info(f"Automatic game data update thread [{thread_name}] starting with an update interval of " +
-                    f"{cls._AUTO_UPDATE_GAME_DATA_INTERVAL}")
+        logger.info(
+            f"Automatic game data update thread [{thread_name}] starting with an update interval of "
+            + f"{cls._AUTO_UPDATE_GAME_DATA_INTERVAL}"
+        )
         thread_shutdown = False
         while thread_shutdown is False:
             auto_update_polling_counter = 0
             server_game_versions = cls._COMLINK.get_latest_game_data_version()
             if not _compare_game_data_versions(server_game_versions, cls._VERSION):
                 logger.info(
-                    f"Server game versions {server_game_versions} does not equal the current data version file.")
+                    f"Server game versions {server_game_versions} does not equal the current data version file."
+                )
                 cls.update_game_data()
                 cls.update_localization_bundle()
 
                 logger.info("Writing game version information to disk...")
                 _write_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE, cls._VERSION)
-            while thread_shutdown is False and auto_update_polling_counter < sleep_minutes:
+            while (
+                    thread_shutdown is False and auto_update_polling_counter < sleep_minutes
+            ):
                 if cls._AUTO_UPDATE_GAME_DATA is False:
-                    logger.info(f"Automatic game data updates have been disabled. " +
-                                f"Shutting down thread {thread_name}.")
+                    logger.info(
+                        "Automatic game data updates have been disabled. "
+                        + f"Shutting down thread {thread_name}."
+                    )
                     thread_shutdown = True
                 time.sleep(10)
                 auto_update_polling_counter += 10
@@ -240,9 +265,9 @@ class DataBuilder:
     def _start_auto_update_thread(cls) -> bool:
         thread_name = "AUTO UPDATE GAME DATA THREAD"
         logger.info(f"Starting auto update thread [{thread_name}]...")
-        update_t = threading.Thread(target=cls._auto_update_game_data,
-                                    name=thread_name,
-                                    daemon=True)
+        update_t = threading.Thread(
+            target=cls._auto_update_game_data, name=thread_name, daemon=True
+        )
         update_t.start()
         status = update_t.is_alive()
         if status is True:
@@ -260,7 +285,7 @@ class DataBuilder:
         if not name_key or not name_desc:
             return
 
-        if not (name_key.startswith('UNIT_') and name_key.endswith('_NAME')):
+        if not (name_key.startswith("UNIT_") and name_key.endswith("_NAME")):
             return
 
         name_desc = _apply_value_patterns(name_desc)
@@ -300,7 +325,7 @@ class DataBuilder:
     @classmethod
     def _process_file_contents_by_line(cls, content: list) -> tuple[dict, dict, dict]:
         """Iterate through file contents list and create language map from information contained within"""
-        logger.info(f"Processing language content...")
+        logger.info("Processing language content...")
         lang_map = {}
         unit_name_map = {}
         master_map = {}
@@ -326,19 +351,25 @@ class DataBuilder:
     @classmethod
     def _read_game_data(cls) -> None:
         """Method to read game data stored on disk"""
-        game_data_file_path = os.path.join(cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER)
+        game_data_file_path = os.path.join(
+            cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER
+        )
         for game_data_file in cls._GAME_DATA_FILES:
             logger.info(f"Reading game data for {game_data_file}...")
-            cls._GAME_DATA[game_data_file]: dict = _read_json_file(game_data_file_path, game_data_file)
+            cls._GAME_DATA[game_data_file]: dict = _read_json_file(
+                game_data_file_path, game_data_file
+            )
         cls._VERSION: dict = _read_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE)
 
     @classmethod
     def _verify_game_data_files(cls) -> bool:
         """Validate file exists and contains data"""
         for game_data_file in cls._GAME_DATA_FILES:
-            if not game_data_file.endswith('.json'):
-                game_data_file += '.json'
-            full_path = os.path.join(cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER, game_data_file)
+            if not game_data_file.endswith(".json"):
+                game_data_file += ".json"
+            full_path = os.path.join(
+                cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER, game_data_file
+            )
             logger.info(f"Verifying {full_path} ...")
             if os.path.isfile(full_path):
                 file_info = os.stat(full_path)
@@ -355,8 +386,8 @@ class DataBuilder:
     @classmethod
     def _verify_data_version_file(cls) -> bool:
         """Validate file exists and contains data"""
-        if not cls._DATA_VERSION_FILE.endswith('.json'):
-            data_version_file = cls._DATA_VERSION_FILE + '.json'
+        if not cls._DATA_VERSION_FILE.endswith(".json"):
+            data_version_file = cls._DATA_VERSION_FILE + ".json"
         else:
             data_version_file = cls._DATA_VERSION_FILE
         full_path = os.path.join(cls._DATA_PATH, data_version_file)
@@ -386,7 +417,10 @@ class DataBuilder:
     def _get_data_versions_from_file(cls) -> dict:
         if cls._verify_data_version_file():
             file_version_data = _read_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE)
-            ret_dict = {"game": file_version_data['game'], "language": file_version_data['language']}
+            ret_dict = {
+                "game": file_version_data["game"],
+                "language": file_version_data["language"],
+            }
         else:
             ret_dict = {"game": None, "language": None}
         return ret_dict
@@ -402,7 +436,8 @@ class DataBuilder:
         logger.info("Loading stats_enum_map...")
         if cls._STATS_ENUM_MAP_LOADED is True and force_reload is False:
             logger.info(
-                "'stats_enum_map' object is already populated. Won't load again. Use 'force_reload' to override.")
+                "'stats_enum_map' object is already populated. Won't load again. Use 'force_reload' to override."
+            )
             return True
         try:
             cls._STATS_ENUM, cls._LOCALIZATION_MAP = _load_stat_enums_map_dict()
@@ -415,6 +450,7 @@ class DataBuilder:
 
     @classmethod
     def get_attribute(cls, attribute_name: str) -> Any:
+        """Get an attribute value"""
         return getattr(cls, attribute_name)
 
     @classmethod
@@ -424,6 +460,7 @@ class DataBuilder:
 
     @classmethod
     def set_comlink(cls, comlink: Any) -> None:
+        """Assign a value to the DataBuilder class"""
         cls._COMLINK = comlink
 
     @classmethod
@@ -434,12 +471,13 @@ class DataBuilder:
             logger.setLevel(log_levels[log_level])
         else:
             raise DataBuilderException(
-                f"Invalid log level {log_level}. Available options are {list(log_levels.keys())}")
+                f"Invalid log level {log_level}. Available options are {list(log_levels.keys())}"
+            )
 
     @classmethod
     def get_languages(cls) -> list:
         """Return list of current language localizations available"""
-        return cls._VERSION['languages']
+        return cls._VERSION["languages"]
 
     @classmethod
     def get_unit_names_mapping(cls, language: str = "eng_us") -> dict:
@@ -470,13 +508,9 @@ class DataBuilder:
         :rtype:str
         """
 
-        primary_stats = {
-            2: "strength",
-            3: "agility",
-            4: "intelligence"
-        }
-        role = [x for x in tags if 'role' in x and 'leader' not in x]
-        return str(primary_stats[primary_stat_id]) + '_' + role[0] + '_mastery'
+        primary_stats = {2: "strength", 3: "agility", 4: "intelligence"}
+        role = [x for x in tags if "role" in x and "leader" not in x]
+        return str(primary_stats[primary_stat_id]) + "_" + role[0] + "_mastery"
 
     @staticmethod
     def _parse_skills(skill_list: list) -> dict:
@@ -491,38 +525,40 @@ class DataBuilder:
         skills = {}
         for skill in skill_list:
             s = {
-                "id": skill['id'],
-                "maxTier": len(skill['tier']) + 1,
+                "id": skill["id"],
+                "maxTier": len(skill["tier"]) + 1,
                 "powerOverrideTags": {},
-                "isZeta": skill['isZeta'],
+                "isZeta": skill["isZeta"],
             }
             tier_count = 1
-            for tier in skill['tier']:
+            for tier in skill["tier"]:
                 tier_count += 1
-                if 'powerOverrideTag' in tier.keys():
-                    s['powerOverrideTags'][str(tier_count)] = tier['powerOverrideTag']
+                if "powerOverrideTag" in tier.keys():
+                    s["powerOverrideTags"][str(tier_count)] = tier["powerOverrideTag"]
                     tier_count = 1
-            skills[skill['id']] = s
+            skills[skill["id"]] = s
         return skills
 
     @staticmethod
     def _parse_xp_table_list(xp_table_list: list, data: dict) -> dict:
         for table in xp_table_list:
             tmp_table = {}
-            if table['id'].startswith('crew_rating') or table['id'].startswith('galactic_power'):
-                for row in table['row']:
-                    idx = row['index'] + 1
-                    tmp_table[str(idx)] = row['xp']
-                if table['id'] == 'crew_rating_per_unit_level':
-                    data['cr']['unitLevelCR'] = tmp_table
-                    data['gp']['unitLevelGP'] = tmp_table
-                elif table['id'] == 'crew_rating_per_ability_level':
-                    data['cr']['abilityLevelCR'] = tmp_table
-                    data['gp']['abilityLevelGP'] = tmp_table
-                elif table['id'] == 'galactic_power_per_ship_level_table':
-                    data['gp']['shipLevelGP'] = tmp_table
-                elif table['id'] == 'galactic_power_per_ship_ability_level_table':
-                    data['gp']['shipAbilityLevelGP'] = tmp_table
+            if table["id"].startswith("crew_rating") or table["id"].startswith(
+                    "galactic_power"
+            ):
+                for row in table["row"]:
+                    idx = row["index"] + 1
+                    tmp_table[str(idx)] = row["xp"]
+                if table["id"] == "crew_rating_per_unit_level":
+                    data["cr"]["unitLevelCR"] = tmp_table
+                    data["gp"]["unitLevelGP"] = tmp_table
+                elif table["id"] == "crew_rating_per_ability_level":
+                    data["cr"]["abilityLevelCR"] = tmp_table
+                    data["gp"]["abilityLevelGP"] = tmp_table
+                elif table["id"] == "galactic_power_per_ship_level_table":
+                    data["gp"]["shipLevelGP"] = tmp_table
+                elif table["id"] == "galactic_power_per_ship_ability_level_table":
+                    data["gp"]["shipAbilityLevelGP"] = tmp_table
         return data
 
     @classmethod
@@ -534,87 +570,107 @@ class DataBuilder:
             "FOUR_STAR": 4,
             "FIVE_STAR": 5,
             "SIX_STAR": 6,
-            "SEVEN_STAR": 7
+            "SEVEN_STAR": 7,
         }
         for table in table_list:
-            if table['id'] == 'galactic_power_modifier_per_ship_crew_size_table':
-                data['gp']['crewSizeFactor'] = {}
-                for row in table['row']:
-                    data['gp']['crewSizeFactor'][row['key']] = float(row['value'])
-            elif table['id'] == 'crew_rating_per_unit_rarity':
-                data['cr']['crewRarityCR'] = {}
-                for row in table['row']:
-                    data['cr']['crewRarityCR'][row['key']] = float(row['value'])
-                data['gp']['unitRarityGP'] = data['cr']['crewRarityCR']
-            elif table['id'] == 'crew_rating_per_gear_piece_at_tier':
-                data['cr']['gearPieceCR'] = {}
-                for row in table['row']:
-                    data['cr']['gearPieceCR'][row['key'].replace('TIER_0', '')] = float(row['value'])
-            elif table['id'] == 'galactic_power_per_complete_gear_tier_table':
-                data['gp']['gearLevelGP'] = {"1": 0}
-                for row in table['row']:
-                    row_key = row['key'].replace('TIER_', '')
-                    if row_key.startswith('0'):
-                        row_key = row_key.replace('0', '')
-                    data['gp']['gearLevelGP'][str(int(row_key) + 1)] = float(row['value'])
-                data['cr']['gearLevelCR'] = data['gp']['gearLevelGP']
-            elif table['id'] == 'galactic_power_per_tier_slot_table':
-                data['gp']['gearPieceGP'] = {}
-                for row in table['row']:
-                    (tier, slot) = row['key'].split(':')
-                    if tier not in data['gp']['gearPieceGP']:
-                        data['gp']['gearPieceGP'][tier] = {}
+            if table["id"] == "galactic_power_modifier_per_ship_crew_size_table":
+                data["gp"]["crewSizeFactor"] = {}
+                for row in table["row"]:
+                    data["gp"]["crewSizeFactor"][row["key"]] = float(row["value"])
+            elif table["id"] == "crew_rating_per_unit_rarity":
+                data["cr"]["crewRarityCR"] = {}
+                for row in table["row"]:
+                    data["cr"]["crewRarityCR"][row["key"]] = float(row["value"])
+                data["gp"]["unitRarityGP"] = data["cr"]["crewRarityCR"]
+            elif table["id"] == "crew_rating_per_gear_piece_at_tier":
+                data["cr"]["gearPieceCR"] = {}
+                for row in table["row"]:
+                    data["cr"]["gearPieceCR"][row["key"].replace("TIER_0", "")] = float(
+                        row["value"]
+                    )
+            elif table["id"] == "galactic_power_per_complete_gear_tier_table":
+                data["gp"]["gearLevelGP"] = {"1": 0}
+                for row in table["row"]:
+                    row_key = row["key"].replace("TIER_", "")
+                    if row_key.startswith("0"):
+                        row_key = row_key.replace("0", "")
+                    data["gp"]["gearLevelGP"][str(int(row_key) + 1)] = float(
+                        row["value"]
+                    )
+                data["cr"]["gearLevelCR"] = data["gp"]["gearLevelGP"]
+            elif table["id"] == "galactic_power_per_tier_slot_table":
+                data["gp"]["gearPieceGP"] = {}
+                for row in table["row"]:
+                    (tier, slot) = row["key"].split(":")
+                    if tier not in data["gp"]["gearPieceGP"]:
+                        data["gp"]["gearPieceGP"][tier] = {}
                     slot = int(slot) - 1
-                    data['gp']['gearPieceGP'][tier][slot] = float(row['value'])
-            elif table['id'] == 'crew_contribution_multiplier_per_rarity':
-                data['cr']['shipRarityFactor'] = {}
-                for row in table['row']:
-                    data['cr']['shipRarityFactor'][rarity_enum[row['key']]] = float(row['value'])
-                data['gp']['shipRarityFactor'] = data['cr']['shipRarityFactor']
-            elif table['id'] == 'galactic_power_per_tagged_ability_level_table':
-                data['gp']['abilitySpecialGP'] = {}
-                for row in table['row']:
-                    data['gp']['abilitySpecialGP'][row['key']] = float(row['value'])
-            elif table['id'] == 'crew_rating_per_mod_rarity_level_tier':
-                data['cr']['modRarityLevelCR'] = {}
-                data['gp']['modRarityLevelTierGP'] = {}
-                for row in table['row']:
-                    if row['key'].split(':')[-1] == "0":
-                        (pips, level, tier, mod_set) = row['key'].split(':')
+                    data["gp"]["gearPieceGP"][tier][slot] = float(row["value"])
+            elif table["id"] == "crew_contribution_multiplier_per_rarity":
+                data["cr"]["shipRarityFactor"] = {}
+                for row in table["row"]:
+                    data["cr"]["shipRarityFactor"][rarity_enum[row["key"]]] = float(
+                        row["value"]
+                    )
+                data["gp"]["shipRarityFactor"] = data["cr"]["shipRarityFactor"]
+            elif table["id"] == "galactic_power_per_tagged_ability_level_table":
+                data["gp"]["abilitySpecialGP"] = {}
+                for row in table["row"]:
+                    data["gp"]["abilitySpecialGP"][row["key"]] = float(row["value"])
+            elif table["id"] == "crew_rating_per_mod_rarity_level_tier":
+                data["cr"]["modRarityLevelCR"] = {}
+                data["gp"]["modRarityLevelTierGP"] = {}
+                for row in table["row"]:
+                    if row["key"].split(":")[-1] == "0":
+                        (pips, level, tier, mod_set) = row["key"].split(":")
                         if int(tier) == 1:
-                            data['cr']['modRarityLevelCR'].setdefault(pips, {})
-                            data['cr']['modRarityLevelCR'][pips][level] = float(row['value'])
-                        data['gp']['modRarityLevelTierGP'].setdefault(pips, {})
-                        data['gp']['modRarityLevelTierGP'][pips].setdefault(level, {})
-                        data['gp']['modRarityLevelTierGP'][pips][level][tier] = float(row['value'])
-            elif table['id'] == 'crew_rating_modifier_per_relic_tier':
-                data['cr']['relicTierLevelFactor'] = {}
-                for row in table['row']:
-                    data['cr']['relicTierLevelFactor'][int(row['key']) + 2] = float(row['value'])
-            elif table['id'] == 'crew_rating_per_relic_tier':
-                data['cr']['relicTierCR'] = {}
-                for row in table['row']:
-                    data['cr']['relicTierCR'][int(row['key']) + 2] = float(row['value'])
-            elif table['id'] == 'galactic_power_modifier_per_relic_tier':
-                data['gp']['relicTierLevelFactor'] = {}
-                for row in table['row']:
-                    data['gp']['relicTierLevelFactor'][int(row['key']) + 2] = float(row['value'])
-            elif table['id'] == 'galactic_power_per_relic_tier':
-                data['gp']['relicTierGP'] = {}
-                for row in table['row']:
-                    data['gp']['relicTierGP'][int(row['key']) + 2] = float(row['value'])
-            elif table['id'] == 'crew_rating_modifier_per_ability_crewless_ships':
-                data['cr']['crewlessAbilityFactor'] = {}
-                for row in table['row']:
-                    data['cr']['crewlessAbilityFactor'][row['key']] = float(row['value'])
-            elif table['id'] == 'galactic_power_modifier_per_ability_crewless_ships':
-                data['gp']['crewlessAbilityFactor'] = {}
-                for row in table['row']:
-                    data['gp']['crewlessAbilityFactor'][row['key']] = float(row['value'])
-            elif table['id'].endswith('_mastery'):
-                data['cr'][table['id']] = {}
-                for row in table['row']:
-                    data['cr'][table['id']][cls._STATS_ENUM[row['key']]] = float(row['value'])
+                            data["cr"]["modRarityLevelCR"].setdefault(pips, {})
+                            data["cr"]["modRarityLevelCR"][pips][level] = float(
+                                row["value"]
+                            )
+                        data["gp"]["modRarityLevelTierGP"].setdefault(pips, {})
+                        data["gp"]["modRarityLevelTierGP"][pips].setdefault(level, {})
+                        data["gp"]["modRarityLevelTierGP"][pips][level][tier] = float(
+                            row["value"]
+                        )
+            elif table["id"] == "crew_rating_modifier_per_relic_tier":
+                data["cr"]["relicTierLevelFactor"] = {}
+                for row in table["row"]:
+                    data["cr"]["relicTierLevelFactor"][int(row["key"]) + 2] = float(
+                        row["value"]
+                    )
+            elif table["id"] == "crew_rating_per_relic_tier":
+                data["cr"]["relicTierCR"] = {}
+                for row in table["row"]:
+                    data["cr"]["relicTierCR"][int(row["key"]) + 2] = float(row["value"])
+            elif table["id"] == "galactic_power_modifier_per_relic_tier":
+                data["gp"]["relicTierLevelFactor"] = {}
+                for row in table["row"]:
+                    data["gp"]["relicTierLevelFactor"][int(row["key"]) + 2] = float(
+                        row["value"]
+                    )
+            elif table["id"] == "galactic_power_per_relic_tier":
+                data["gp"]["relicTierGP"] = {}
+                for row in table["row"]:
+                    data["gp"]["relicTierGP"][int(row["key"]) + 2] = float(row["value"])
+            elif table["id"] == "crew_rating_modifier_per_ability_crewless_ships":
+                data["cr"]["crewlessAbilityFactor"] = {}
+                for row in table["row"]:
+                    data["cr"]["crewlessAbilityFactor"][row["key"]] = float(
+                        row["value"]
+                    )
+            elif table["id"] == "galactic_power_modifier_per_ability_crewless_ships":
+                data["gp"]["crewlessAbilityFactor"] = {}
+                for row in table["row"]:
+                    data["gp"]["crewlessAbilityFactor"][row["key"]] = float(
+                        row["value"]
+                    )
+            elif table["id"].endswith("_mastery"):
+                data["cr"][table["id"]] = {}
+                for row in table["row"]:
+                    data["cr"][table["id"]][cls._STATS_ENUM[row["key"]]] = float(
+                        row["value"]
+                    )
         return data
 
     @staticmethod
@@ -622,29 +678,31 @@ class DataBuilder:
         """Build config_map from the game meta data "config" element"""
 
         config_map = {}
-        for cfg_item in meta_data['config']:
-            config_map[cfg_item['key']] = cfg_item['value']
+        for cfg_item in meta_data["config"]:
+            config_map[cfg_item["key"]] = cfg_item["value"]
         return config_map
 
     @staticmethod
     def _build_stat_progression_list(stat_list: list) -> dict:
         stat_tables = {}
         for table in stat_list:
-            if 'stattable' in table['id']:
+            if "stattable" in table["id"]:
                 table_data = {}
-                for stat in table['stat']['stat']:
-                    table_data[stat['unitStatId']] = float(stat['unscaledDecimalValue'])
-                stat_tables[table['id']] = table_data
+                for stat in table["stat"]["stat"]:
+                    table_data[stat["unitStatId"]] = float(stat["unscaledDecimalValue"])
+                stat_tables[table["id"]] = table_data
         return stat_tables
 
     @staticmethod
     def _build_mod_set_data(stat_mod_set_list):
         data = {}
         for mod_set in stat_mod_set_list:
-            data[mod_set['id']] = {
-                'id': mod_set['completeBonus']['stat']['unitStatId'],
-                'count': mod_set['setCount'],
-                'value': float(mod_set['completeBonus']['stat']['unscaledDecimalValue'])
+            data[mod_set["id"]] = {
+                "id": mod_set["completeBonus"]["stat"]["unitStatId"],
+                "count": mod_set["setCount"],
+                "value": float(
+                    mod_set["completeBonus"]["stat"]["unscaledDecimalValue"]
+                ),
             }
         return data
 
@@ -653,19 +711,23 @@ class DataBuilder:
         """Take equipmentList from game data and use it to populate the 'gear' element in gameData.json"""
         data = {}
         for gear in equipment_list:
-            stat_list = gear['equipmentStat']['stat']
+            stat_list = gear["equipmentStat"]["stat"]
             if len(stat_list) > 0:
-                data[gear['id']] = {'stats': {}}
+                data[gear["id"]] = {"stats": {}}
                 for stat in stat_list:
-                    data[gear['id']]['stats'][stat['unitStatId']] = float(stat['unscaledDecimalValue'])
+                    data[gear["id"]]["stats"][stat["unitStatId"]] = float(
+                        stat["unscaledDecimalValue"]
+                    )
         return data
 
     @classmethod
-    def _build_table_data(cls, table_list: list, xp_table_list: list) -> tuple[dict, dict]:
-        data = {'cr': {}, 'gp': {}}
+    def _build_table_data(
+            cls, table_list: list, xp_table_list: list
+    ) -> tuple[dict, dict]:
+        data = {"cr": {}, "gp": {}}
         cls._parse_table_list(table_list, data)
         cls._parse_xp_table_list(xp_table_list, data)
-        return data['cr'], data['gp']
+        return data["cr"], data["gp"]
 
     @staticmethod
     def _build_relic_data(relic_list: list, stat_tables: dict) -> dict:
@@ -673,9 +735,14 @@ class DataBuilder:
 
         data = {}
         for relic in relic_list:
-            data[relic['id']] = {"stats": {}, "gms": stat_tables[relic['relicStatTable']]}
-            for stat in relic['stat']['stat']:
-                data[relic['id']]['stats'][stat['unitStatId']] = float(stat['unscaledDecimalValue'])
+            data[relic["id"]] = {
+                "stats": {},
+                "gms": stat_tables[relic["relicStatTable"]],
+            }
+            for stat in relic["stat"]["stat"]:
+                data[relic["id"]]["stats"][stat["unitStatId"]] = float(
+                    stat["unscaledDecimalValue"]
+                )
         return data
 
     @staticmethod
@@ -684,11 +751,13 @@ class DataBuilder:
 
         skill_ids = []
         for skill_ref in skill_ref_list:
-            skill_ids.append(skill_list[skill_ref['skillId']])
+            skill_ids.append(skill_list[skill_ref["skillId"]])
         return skill_ids
 
     @classmethod
-    def _build_unit_data(cls, units_list: list, skill_list: list, stat_tables: dict) -> dict:
+    def _build_unit_data(
+            cls, units_list: list, skill_list: list, stat_tables: dict
+    ) -> dict:
         """Combine units list, skills list and stats tables into a single list of unit objects"""
 
         skills = DataBuilder._parse_skills(skill_list)
@@ -696,53 +765,64 @@ class DataBuilder:
         unit_gm_tables = {}
 
         for unit in units_list:
-            if unit['obtainable'] is True and unit['obtainableTime'] == '0':
-                unit_gm_tables[unit['baseId']] = unit_gm_tables.setdefault(unit['baseId'], {})
-                unit_gm_tables[unit['baseId']][unit['rarity']] = stat_tables[unit['statProgressionId']]
+            if unit["obtainable"] is True and unit["obtainableTime"] == "0":
+                unit_gm_tables[unit["baseId"]] = unit_gm_tables.setdefault(
+                    unit["baseId"], {}
+                )
+                unit_gm_tables[unit["baseId"]][unit["rarity"]] = stat_tables[
+                    unit["statProgressionId"]
+                ]
 
-                if unit['rarity'] == 1:
+                if unit["rarity"] == 1:
                     base_list.append(unit)
         data = {}
         for unit in base_list:
-            if unit['combatType'] == 1:
+            if unit["combatType"] == 1:
                 tier_data = {}
                 relic_data = {}
 
-                for gear_tier in unit['unitTier']:
-                    tier_data[gear_tier['tier']] = {'gear': gear_tier['equipmentSet'], 'stats': {}}
-                    for stat in gear_tier['baseStat']['stat']:
-                        tier_data[gear_tier['tier']]['stats'][stat['unitStatId']] = float(stat['unscaledDecimalValue'])
-                for tier in unit['relicDefinition']['relicTierDefinitionId']:
+                for gear_tier in unit["unitTier"]:
+                    tier_data[gear_tier["tier"]] = {
+                        "gear": gear_tier["equipmentSet"],
+                        "stats": {},
+                    }
+                    for stat in gear_tier["baseStat"]["stat"]:
+                        tier_data[gear_tier["tier"]]["stats"][
+                            stat["unitStatId"]
+                        ] = float(stat["unscaledDecimalValue"])
+                for tier in unit["relicDefinition"]["relicTierDefinitionId"]:
                     # Example tier string 'TAC_SUP_RELIC_TIER_08', strip the last two digits, convert to number and
                     # add 2 for offset from relic unlock state in game
                     relic_data[int(tier[-2:]) + 2] = tier
-                data[unit['baseId']] = {
-                    'combatType': 1,
-                    'primaryStat': unit['primaryUnitStat'],
-                    'gearLvl': tier_data,
-                    'growthModifiers': unit_gm_tables[unit['baseId']],
-                    'skills': cls._map_skills(unit['skillReference'], skills),
-                    'relic': relic_data,
-                    'masteryModifierID': cls._get_mastery_multiplier_name(unit['primaryUnitStat'], unit['categoryId'])
+                data[unit["baseId"]] = {
+                    "combatType": 1,
+                    "primaryStat": unit["primaryUnitStat"],
+                    "gearLvl": tier_data,
+                    "growthModifiers": unit_gm_tables[unit["baseId"]],
+                    "skills": cls._map_skills(unit["skillReference"], skills),
+                    "relic": relic_data,
+                    "masteryModifierID": cls._get_mastery_multiplier_name(
+                        unit["primaryUnitStat"], unit["categoryId"]
+                    ),
                 }
             else:
                 stats = {}
-                for stat in unit['baseStat']['stat']:
-                    stats[stat['unitStatId']] = float(stat['unscaledDecimalValue'])
+                for stat in unit["baseStat"]["stat"]:
+                    stats[stat["unitStatId"]] = float(stat["unscaledDecimalValue"])
                 ship = {
-                    'combatType': 2,
-                    'primaryStat': unit['primaryUnitStat'],
-                    'stats': stats,
-                    'growthModifiers': unit_gm_tables[unit['baseId']],
-                    'skills': cls._map_skills(unit['skillReference'], skills),
-                    'crewStats': stat_tables[unit['crewContributionTableId']],
-                    'crew': []
+                    "combatType": 2,
+                    "primaryStat": unit["primaryUnitStat"],
+                    "stats": stats,
+                    "growthModifiers": unit_gm_tables[unit["baseId"]],
+                    "skills": cls._map_skills(unit["skillReference"], skills),
+                    "crewStats": stat_tables[unit["crewContributionTableId"]],
+                    "crew": [],
                 }
-                for crew in unit['crew']:
-                    ship['crew'].append(crew['unitId'])
-                    for s in crew['skillReference']:
-                        ship['skills'].append(skills[s['skillId']])
-                data[unit['baseId']] = ship
+                for crew in unit["crew"]:
+                    ship["crew"].append(crew["unitId"])
+                    for s in crew["skillReference"]:
+                        ship["skills"].append(skills[s["skillId"]])
+                data[unit["baseId"]] = ship
         return data
 
     @classmethod
@@ -751,19 +831,25 @@ class DataBuilder:
 
         game_data = {}
         logger.info("Building stat_tables from statProgression")
-        stat_tables = cls._build_stat_progression_list(data['statProgression'])
+        stat_tables = cls._build_stat_progression_list(data["statProgression"])
 
         logger.info("Building modSetData from equipment list")
-        game_data['modSetData'] = cls._build_mod_set_data(data['statModSet'])
+        game_data["modSetData"] = cls._build_mod_set_data(data["statModSet"])
         logger.info("Building crTables and gpTables")
-        (game_data['crTables'], game_data['gpTables']) = cls._build_table_data(data['table'], data['xpTable'])
+        (game_data["crTables"], game_data["gpTables"]) = cls._build_table_data(
+            data["table"], data["xpTable"]
+        )
 
         logger.info("Building gearData from equipment list")
-        game_data['gearData'] = cls._build_gear_data(data['equipment'])
+        game_data["gearData"] = cls._build_gear_data(data["equipment"])
         logger.info("Building relicData from relicTierDefinition list")
-        game_data['relicData'] = cls._build_relic_data(data['relicTierDefinition'], stat_tables)
+        game_data["relicData"] = cls._build_relic_data(
+            data["relicTierDefinition"], stat_tables
+        )
         logger.info("Building unitData from units and skill lists")
-        game_data['unitData'] = cls._build_unit_data(data['units'], data['skill'], stat_tables)
+        game_data["unitData"] = cls._build_unit_data(
+            data["units"], data["skill"], stat_tables
+        )
         return game_data
 
     @classmethod
@@ -774,7 +860,9 @@ class DataBuilder:
 
         """
         if cls._INITIALIZED is False:
-            raise DataBuilderException(f"DataBuilder has not yet been initialized. Please perform that action first.")
+            raise DataBuilderException(
+                "DataBuilder has not yet been initialized. Please perform that action first."
+            )
         if cls._verify_game_data_files() is False:
             cls.update_game_data()
         else:
@@ -789,19 +877,25 @@ class DataBuilder:
         start_time = time.perf_counter()
         game_data = cls._COMLINK.get_game_data(include_pve_units=False)
         end_time = time.perf_counter()
-        logger.debug(f"Game data retrieval completed in {end_time - start_time:.2f} seconds.")
+        logger.debug(
+            f"Game data retrieval completed in {end_time - start_time:.2f} seconds."
+        )
 
         logger.info("Building data constructs from game data...")
         cls._GAME_DATA = cls._build_data(game_data)
 
-        logger.info(f"Validating that required data file paths exist.")
+        logger.info("Validating that required data file paths exist.")
         cls._validate_data_file_paths()
 
         logger.info("*** Writing game data files to disk... ***")
         for game_data_file in cls._GAME_DATA_FILES:
             logger.info(f"... Writing game data file: {game_data_file} ...")
-            target_directory = os.path.join(cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER)
-            cls._write_game_data(target_directory, game_data_file, cls._GAME_DATA.get(game_data_file, {}))
+            target_directory = os.path.join(
+                cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER
+            )
+            cls._write_game_data(
+                target_directory, game_data_file, cls._GAME_DATA.get(game_data_file, {})
+            )
 
         logger.info("*** Writing game version information to disk... ***")
         _write_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE, cls._VERSION)
@@ -818,28 +912,36 @@ class DataBuilder:
 
         current_versions = cls._get_data_versions_from_file()
         if current_versions == server_versions:
-            logger.warning(f"The current server game versions are the same as those in {cls._DATA_VERSION_FILE}")
+            logger.warning(
+                f"The current server game versions are the same as those in {cls._DATA_VERSION_FILE}"
+            )
             if force_update is False:
-                logger.warning(f"The 'force_update' flag is set to '{force_update}'. Data files contain most" +
-                               " current data.")
+                logger.warning(
+                    f"The 'force_update' flag is set to '{force_update}'. Data files contain most"
+                    + " current data."
+                )
                 return
 
-        cls._VERSION['game'] = server_versions['game']
-        cls._VERSION['language'] = server_versions['language']
+        cls._VERSION["game"] = server_versions["game"]
+        cls._VERSION["language"] = server_versions["language"]
 
-        cls._VERSION['languages'] = []
+        cls._VERSION["languages"] = []
 
-        logger.info(f"Validating that required data file paths exist.")
+        logger.info("Validating that required data file paths exist.")
         cls._validate_data_file_paths()
 
-        logger.info(f"Collecting bundle from game servers. " +
-                    f"Language version: '{server_versions['language']}', USE_UNZIP = '{cls._USE_UNZIP}'")
-        loc_bundle = cls._COMLINK.get_localization_bundle(id=server_versions['language'], unzip=cls._USE_UNZIP)
+        logger.info(
+            "Collecting bundle from game servers. "
+            + f"Language version: '{server_versions['language']}', USE_UNZIP = '{cls._USE_UNZIP}'"
+        )
+        loc_bundle = cls._COMLINK.get_localization_bundle(
+            id=server_versions["language"], unzip=cls._USE_UNZIP
+        )
 
         zip_obj = None
         if cls._USE_UNZIP is False:
             logger.info("Decoding Base64 data...")
-            loc_bundle_decoded = base64.b64decode(loc_bundle['localizationBundle'])
+            loc_bundle_decoded = base64.b64decode(loc_bundle["localizationBundle"])
             logger.info("Decompressing data stream...")
             zip_obj = zipfile.ZipFile(io.BytesIO(loc_bundle_decoded))
             language_files = zip_obj.namelist()
@@ -852,21 +954,25 @@ class DataBuilder:
             else:
                 with zip_obj.open(language) as lang_file:
                     contents = lang_file.readlines()
-            lang_name = language.replace('Loc_', '').replace('.txt', '').lower()
+            lang_name = language.replace("Loc_", "").replace(".txt", "").lower()
             master_file_name = lang_name + "_master"
             name_key_file = f"{lang_name}_unit_name_keys"
-            lang_map, name_key_map, master_map = cls._process_file_contents_by_line(contents)
+            lang_map, name_key_map, master_map = cls._process_file_contents_by_line(
+                contents
+            )
 
-            for (file_name, data_map, path) in [(lang_name, lang_map, '/languages'),
-                                                (name_key_file, name_key_map, '/units'),
-                                                (master_file_name, master_map, '/master')]:
+            for file_name, data_map, path in [
+                (lang_name, lang_map, "/languages"),
+                (name_key_file, name_key_map, "/units"),
+                (master_file_name, master_map, "/master"),
+            ]:
                 logger.info(f"Writing {file_name} data to disk.")
                 _write_json_file(f"{cls._DATA_PATH + path}", file_name, data_map)
             if lang_name not in cls._LANGUAGE_FILE_SKIP_LIST:
-                cls._VERSION['languages'].append(lang_name)
+                cls._VERSION["languages"].append(lang_name)
 
         if cls._STATS_ENUM_MAP_LOADED is False:
-            logger.info(f"stats_enum_map not loaded. Loading now...")
+            logger.info("stats_enum_map not loaded. Loading now...")
             cls.load_stats_enums_map()
 
         stat_enums = {}
@@ -885,25 +991,33 @@ class DataBuilder:
             interval: Time in minutes to wait between polling cycles for new data
         """
         if cls._AUTO_UPDATE_GAME_DATA is True:
-            logger.info(f"Auto update is already enabled")
+            logger.info("Auto update is already enabled")
             return True
         cls._AUTO_UPDATE_GAME_DATA = True
 
         if interval is not None:
             cls._AUTO_UPDATE_GAME_DATA_INTERVAL = interval
 
-        logger.info(f"Enabling automatic data updates at {cls._AUTO_UPDATE_GAME_DATA_INTERVAL} minute interval.")
+        logger.info(
+            f"Enabling automatic data updates at {cls._AUTO_UPDATE_GAME_DATA_INTERVAL} minute interval."
+        )
         if cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME is None:
             logger.info("No existing auto update thread found. Creating a new one.")
             result = cls._start_auto_update_thread()
             if result is True:
-                logger.info(f"Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] created successfully.")
+                logger.info(
+                    f"Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] created successfully."
+                )
                 return True
             else:
-                logger.error(f"Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] failed to start.")
+                logger.error(
+                    f"Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] failed to start."
+                )
                 return False
         else:
-            logger.info(f"Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] is already running.")
+            logger.info(
+                f"Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] is already running."
+            )
             return True
 
     @classmethod
@@ -919,13 +1033,21 @@ class DataBuilder:
     def set_auto_game_data_update_interval(cls, minutes: int = None) -> None:
         """Set the automatic game data update interval in minutes. Default is 60 minutes."""
         if not isinstance(minutes, int):
-            logger.error(f"Value for the minutes argument should be 'int', not {type(minutes)}")
-            raise DataBuilderRuntimeError(f"Value for the minutes argument should be 'int', not {type(minutes)}")
-        logger.info(f"Updating automatic game data update interval to {str(minutes)} minutes.")
+            logger.error(
+                f"Value for the minutes argument should be 'int', not {type(minutes)}"
+            )
+            raise DataBuilderRuntimeError(
+                f"Value for the minutes argument should be 'int', not {type(minutes)}"
+            )
+        logger.info(
+            f"Updating automatic game data update interval to {str(minutes)} minutes."
+        )
         current_interval = str(cls._AUTO_UPDATE_GAME_DATA_INTERVAL)
         cls._AUTO_UPDATE_GAME_DATA_INTERVAL = minutes
         new_interval = str(cls._AUTO_UPDATE_GAME_DATA_INTERVAL)
-        logger.info(f"Automatic game data update interval changed from {current_interval} to {new_interval}.")
+        logger.info(
+            f"Automatic game data update interval changed from {current_interval} to {new_interval}."
+        )
 
     @classmethod
     def _validate_data_file_paths(cls) -> None:
@@ -936,15 +1058,22 @@ class DataBuilder:
 
     @property
     def is_initialized(self) -> bool:
+        """Return class initialization state
+
+        Returns:
+            True or False
+        """
         return self._INITIALIZED
 
     @classmethod
-    def initialize(cls, comlink=None, /, **kwargs) -> bool:
+    def initialize(
+            cls, comlink: swgoh_comlink.SwgohComlink = None, /, **kwargs
+    ) -> bool:
         """Prepare DataBuilder environment for first use. Providing keyword arguments can override default settings.
 
         Parameters:
-            comlink: instance of swgoh_comlink.SwgohComlink
-            
+            comlink: instance of SwgohComlink
+
         Optional Parameters:
             data_path str: Defaults to './data'
             data_version_file str: Defaults to 'dataVersion.json',
@@ -955,17 +1084,19 @@ class DataBuilder:
 
         """
         allowed_parameters = [
-            'comlink',
-            'data_path',
-            'data_version_file',
-            'game_data_path_sub_folder',
-            'zip_game_data',
-            'use_segments',
-            'use_unzip',
+            "comlink",
+            "data_path",
+            "data_version_file",
+            "game_data_path_sub_folder",
+            "zip_game_data",
+            "use_segments",
+            "use_unzip",
         ]
         logger.info("Initializing DataBuilder for first time use.")
         if comlink is None:
-            logger.error(f"DataBuilder must have an instance of swgoh_comlink.SwgohComlink to operate properly.")
+            logger.error(
+                "DataBuilder must have an instance of swgoh_comlink.SwgohComlink to operate properly."
+            )
             return False
         else:
             cls._COMLINK = comlink
@@ -973,11 +1104,11 @@ class DataBuilder:
         logger.debug(f"Class vars: {class_vars.keys()}")
         for param, value in kwargs.items():
             if param in allowed_parameters:
-                class_var = '_' + param.upper()
+                class_var = "_" + param.upper()
                 logger.debug(f"Setting class variable {class_var} to {value}")
                 # Remove .json file extension from file name arguments since it is added by the read/write methods
-                if value.endswith('.json'):
-                    value = value.replace('.json', '')
+                if value.endswith(".json"):
+                    value = value.replace(".json", "")
                 logger.debug(f"Before: {class_var} = {class_vars[class_var]}")
                 setattr(cls, class_var, value)
                 new_vars = vars(cls)

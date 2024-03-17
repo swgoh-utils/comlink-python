@@ -20,7 +20,7 @@ async def main():
     """
     The result is a dictionary containing PvP arena as well as left over data from the original GAC
     scoring system. That GAC data is no longer valid and should be ignored.
-        
+
         {
             'allyCode': '314927874',
              'level': 85,
@@ -29,22 +29,24 @@ async def main():
              'name': 'Mar Trepodi',
              'playerId': 'cRdX7yGvS-eKfyDxAAgaYw',
              'playerRating': {
-                'playerRankStatus': {...}, 
+                'playerRankStatus': {...},
                 'playerSkillRating': {...}
                 },
              'pvpProfile': [{...}, {...}]
          }
-    
-    If you only need basic stats and not the full arena squad unit information, you can provide the 
+
+    If you only need basic stats and not the full arena squad unit information, you can provide the
     "player_details_only=True" argument.
      """
 
     # Get a player's arena profile information
-    player_arena_profile_brief = await comlink.get_player_arena(allycode=314927874, player_details_only=True)
+    player_arena_profile_brief = await comlink.get_player_arena(
+        allycode=314927874, player_details_only=True
+    )
     pp(player_arena_profile_brief)
 
     await comlink.client_session.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

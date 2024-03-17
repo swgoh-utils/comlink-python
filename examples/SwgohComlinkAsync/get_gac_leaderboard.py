@@ -9,28 +9,36 @@ from swgoh_comlink import SwgohComlinkAsync
 
 
 def format_output(lb_list: list) -> tuple[int, int, list]:
-    """ Calculate the necessary column widths for formatted output based on data provided in tb_list """
+    """Calculate the necessary column widths for formatted output based on data provided in tb_list"""
     if not isinstance(lb_list, list):
-        raise RuntimeError(f"Invalid input. Expected type(list), received type({type(lb_list)}")
+        raise RuntimeError(
+            f"Invalid input. Expected type(list), received type({type(lb_list)}"
+        )
     # First create a list of (name, guild, skill) tuples
     output_list = []
     max_name_len = 0
     max_guild_len = 0
     for player in lb_list:
-        if len(player['name']) > max_name_len:
-            max_name_len = len(player['name'])
-        if player['guild'] is not None:
-            if len(player['guild']['name']) > max_guild_len:
-                max_guild_len = len(player['guild']['name'])
-            output_list.append((player['name'],
-                                player['guild']['name'],
-                                player['playerRating']['playerSkillRating']['skillRating'])
-                               )
+        if len(player["name"]) > max_name_len:
+            max_name_len = len(player["name"])
+        if player["guild"] is not None:
+            if len(player["guild"]["name"]) > max_guild_len:
+                max_guild_len = len(player["guild"]["name"])
+            output_list.append(
+                (
+                    player["name"],
+                    player["guild"]["name"],
+                    player["playerRating"]["playerSkillRating"]["skillRating"],
+                )
+            )
         else:
-            output_list.append((player['name'],
-                                'None',
-                                player['playerRating']['playerSkillRating']['skillRating'])
-                               )
+            output_list.append(
+                (
+                    player["name"],
+                    "None",
+                    player["playerRating"]["playerSkillRating"]["skillRating"],
+                )
+            )
 
     return max_name_len + 2, max_guild_len + 2, output_list
 
@@ -42,7 +50,7 @@ async def main():
     """
     The get_gac_leaderboard() method takes several required arguments. The combination of arguments required varies depending
     on the GAC leaderboard desired. The parameters are:
-    
+
             leaderboard_type: Type 4 is for scanning gac brackets, and only returns results while an event is active.
                                 When type 4 is indicated, the "event_instance_id" and "group_id" must also be provided.
                               Type 6 is for the global leaderboards for the league + divisions.
@@ -60,21 +68,27 @@ async def main():
                              goes from 0 to N, where N is the last group of 8 players.
                                 Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000:CARBONITE:10431
             enums: Whether to translate enum values to text [Default: False]
-    
-     
+
+
     """
 
     # Get the Kyber 2 leaderboard
-    gac_kyber_2_lb = await comlink.get_leaderboard(leaderboard_type=6, league=100, division=20)
+    gac_kyber_2_lb = await comlink.get_leaderboard(
+        leaderboard_type=6, league=100, division=20
+    )
     await comlink.client_session.close()
 
     # Output the GAC leaderboard information
-    name_col_width, guild_col_width, lb_entries = format_output(gac_kyber_2_lb['player'])
+    name_col_width, guild_col_width, lb_entries = format_output(
+        gac_kyber_2_lb["player"]
+    )
     for player in lb_entries:
-        print(f"Player nane: {player[0]:{name_col_width}} " +
-              f"Guild: {player[1]:{guild_col_width}} " +
-              f"Skill Rating: {player[2]}")
+        print(
+            f"Player nane: {player[0]:{name_col_width}} "
+            + f"Guild: {player[1]:{guild_col_width}} "
+            + f"Skill Rating: {player[2]}"
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
