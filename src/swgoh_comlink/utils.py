@@ -33,7 +33,7 @@ __all__ = [
     "param_alias",
     "sanitize_allycode",
     "search_gac_brackets",
-    "validate_path",
+    "validate_file_path",
 ]
 
 
@@ -88,7 +88,7 @@ def param_alias(param: str, alias: str) -> Callable:
     return decorator
 
 
-def validate_path(path: str) -> bool:
+def validate_file_path(path: str) -> bool:
     """Test whether provided path exists or not
 
     Args:

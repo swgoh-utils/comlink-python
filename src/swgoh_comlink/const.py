@@ -5,7 +5,7 @@ Constants used throughout the comlink_python package
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-from pathlib import PurePath
+from pathlib import Path
 from typing import LiteralString
 
 default_logger_name = "swgoh_comlink"
@@ -58,28 +58,6 @@ class LoggingFormatter(logging.Formatter):
         format_str = format_str.replace("(green)", self.green + self.bold)
         formatter = logging.Formatter(format_str, "%Y-%m-%d %H:%M:%S", style="{")
         return formatter.format(record)
-
-
-def split_path(chain: str) -> tuple[str, ...]:
-    """Split a path string into components"""
-    p = PurePath(chain)
-    return p.parts
-
-
-def make_chain_dir(full_path: str) -> None:
-    """make_chain_dir('ab/cd/ef') creates every directory in the chain if needed"""
-    parts = split_path(full_path)
-    for i in range(1, len(parts) + 1):
-        path = str(os.path.join(*parts[:i]))
-        try:
-            print(f"Attempting os.mkdir({path}) ...")
-            os.mkdir(path)
-        except FileExistsError as e_str:
-            print(f"Exception caught: {e_str}")
-            continue
-        except IsADirectoryError as e_str:
-            print(f"Exception caught: {e_str}")
-            continue
 
 
 def _get_new_logger(
@@ -135,8 +113,7 @@ def _get_new_logger(
             logfile_name = name + ".log"
         print(f"[DEBUG] {logfile_name=}")
         root_log_path = os.path.join(os.getcwd(), "logs")
-        if not os.path.exists(root_log_path):
-            make_chain_dir(root_log_path)
+        Path(root_log_path).mkdir(parents=True, exist_ok=True)
         log_path = os.path.join(root_log_path, logfile_name)
         file_handler = RotatingFileHandler(filename=log_path, encoding="utf-8")
         file_handler_formatter = LoggingFormatter()

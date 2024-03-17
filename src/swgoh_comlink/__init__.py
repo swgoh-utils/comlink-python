@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from .swgoh_comlink import SwgohComlink
 from .swgoh_comlink_async import SwgohComlinkAsync
 
-__version__ = "1.12.dev21"
+__version__ = "1.13.0rc1"
 
 __all__ = [
     "__version__",
