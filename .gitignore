@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.pythonrc.py
 
 # C extensions
 *.so
@@ -28,7 +29,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-comlink_python/utils/
 stash/
 
 # PyInstaller
@@ -99,7 +99,7 @@ ipython_config.py
 #   However, in case of collaboration, if having platform-specific dependencies or dependencies
 #   having no cross-platform support, pipenv may install dependencies that don't work, or not
 #   install all needed dependencies.
-#Pipfile.lock
+Pipfile.lock
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
@@ -143,7 +143,7 @@ venv.bak/
 .ropeproject
 
 # mkdocs documentation
-/site
+site
 
 # mypy
 .mypy_cache/
@@ -167,4 +167,3 @@ cython_debug/
 .idea/
 /docs/
 /Stash/
-/data/
