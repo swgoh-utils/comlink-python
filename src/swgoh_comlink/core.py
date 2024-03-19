@@ -2,7 +2,7 @@
 """
 Base definitions for the core swgoh_comlink module
 """
-from __future__ import annotations, absolute_import, print_function
+from __future__ import annotations
 
 import hashlib
 import hmac
@@ -11,10 +11,9 @@ import time
 from hmac import HMAC
 from json import dumps
 
-import swgoh_comlink.const as Constants
-import swgoh_comlink.utils as utils
-from swgoh_comlink.const import DEFAULT_LOGGER_ENABLED, get_logger, HMAC_ENABLED, LOGGER
+from swgoh_comlink.const import get_logger, HMAC_ENABLED, LOGGER
 from swgoh_comlink.int.helpers import get_function_name
+from swgoh_comlink.utils import sanitize_allycode, convert_divisions_to_int, convert_league_to_int
 
 logger = LOGGER
 
@@ -35,7 +34,7 @@ class SwgohComlinkBase:
     protocol: str = "http"
     port: int = 3000
     stats_port: int = 3223
-    default_logger: bool = DEFAULT_LOGGER_ENABLED
+    default_logger: bool = False
     hmac: bool = HMAC_ENABLED
 
     @staticmethod
@@ -104,7 +103,7 @@ class SwgohComlinkBase:
             raise ValueError("Only one of allycode or player_id can be provided.")
         payload = {"payload": {}, "enums": enums}
         if allycode:
-            allycode = utils.sanitize_allycode(allycode)
+            allycode = sanitize_allycode(allycode)
             payload["payload"]["allyCode"] = f"{allycode}"
         else:
             payload["payload"]["playerId"] = f"{player_id}"
@@ -207,8 +206,8 @@ class SwgohComlinkBase:
             payload["payload"]["eventInstanceId"] = event_instance_id
             payload["payload"]["groupId"] = group_id
         elif lb_type == 6:
-            league = utils.convert_league_to_int(league)
-            division = utils.convert_divisions_to_int(division)
+            league = convert_league_to_int(league)
+            division = convert_divisions_to_int(division)
             payload["payload"]["league"] = league
             payload["payload"]["division"] = division
         return payload
@@ -255,7 +254,6 @@ class SwgohComlinkBase:
         """
 
         if default_logger:
-            Constants.DEFAULT_LOGGER_ENABLED = True
             global logger
             logger = get_logger()
         else:

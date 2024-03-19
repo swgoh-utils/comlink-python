@@ -2,7 +2,7 @@
 """
 Helper utilities for the swgoh_comlink package and related modules
 """
-from __future__ import annotations, print_function, absolute_import
+from __future__ import annotations
 
 import os
 import time
@@ -10,6 +10,7 @@ from functools import wraps
 from pathlib import Path
 from typing import Callable, TYPE_CHECKING, Any
 
+import swgoh_comlink
 from swgoh_comlink.const import DATA_PATH, DIVISIONS, LEAGUES, LOGGER
 from swgoh_comlink.int.helpers import get_function_name
 

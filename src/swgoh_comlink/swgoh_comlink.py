@@ -9,17 +9,18 @@ Additional information on the swgoh-comlink service can be also be found on the 
 located at https://discord.gg/8ATYnUA746
 
 """
-from __future__ import annotations, print_function, absolute_import
+from __future__ import annotations
 
 import logging
 from typing import Any
 
-import requests
+# import requests
+import httpx
 
-import swgoh_comlink.utils as utils
 from swgoh_comlink.const import LOGGER
 from swgoh_comlink.core import SwgohComlinkBase
 from swgoh_comlink.int.helpers import get_function_name
+from swgoh_comlink.utils import param_alias, construct_unit_stats_query_string
 
 logger: logging.Logger = LOGGER
 
@@ -33,13 +34,22 @@ class SwgohComlink(SwgohComlinkBase):
 
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client = httpx.Client(base_url=self.url_base)
+        self.stats_client = httpx.Client(base_url=self.stats_url_base)
+
     def _get_game_version(self) -> str:
         """Get the current game version"""
         md = self.get_game_metadata(client_specs={})
         return md["latestGamedataVersion"]
 
     def _post(
-            self, url_base: str, endpoint: str, payload: dict | list[dict]
+            self,
+            url_base: str,
+            endpoint: str,
+            payload: dict | list[dict],
+            stats: bool = False
     ) -> Any:
         """
         Execute HTTP POST operation against swgoh-comlink
@@ -62,19 +72,22 @@ class SwgohComlink(SwgohComlinkBase):
         logger.info(f"Post URL: {post_url}")
 
         try:
-            r = requests.post(post_url, json=payload, headers=req_headers)
-            return r.json()
+            if stats:
+                resp = self.stats_client.post(f"/{endpoint}", json=payload, headers=req_headers)
+            else:
+                resp = self.client.post(f"/{endpoint}", json=payload, headers=req_headers)
+            return resp.json()
         except Exception as e:
             logger.warning("%s: %s", type(e).__name__, e)
             raise e
 
-    @utils.param_alias(param="request_payload", alias="roster_list")
+    @param_alias(param="request_payload", alias="roster_list")
     def get_unit_stats(
             self,
             request_payload: dict | list[dict],
             flags: list[str],
             language: str = "eng_us",
-    ) -> dict:
+    ) -> dict | list[dict]:
         """Calculate unit stats using swgoh-stats service interface to swgoh-comlink
 
         Args:
@@ -98,13 +111,14 @@ class SwgohComlink(SwgohComlinkBase):
             request_payload = [request_payload]
         if flags and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
-        query_string = utils.construct_unit_stats_query_string(flags, language)
+        query_string = construct_unit_stats_query_string(flags, language)
         endpoint_string = "api" + query_string if query_string else "api"
         logger.info(f"{self.stats_url_base=}, {endpoint_string=}")
         return self._post(
             url_base=self.stats_url_base,
             endpoint=endpoint_string,
             payload=request_payload,
+            stats=True
         )
 
     def get_enums(self) -> dict:
@@ -115,8 +129,10 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
         try:
-            r = requests.get(f"{self.url_base}/enums")
-            return r.json()
+            # r = requests.get(f"{self.url_base}/enums")
+            # return r.json()
+            resp = self.client.get(f"{self.url_base}/enums")
+            return resp.json()
         except Exception as e:
             raise e
 
@@ -263,7 +279,7 @@ class SwgohComlink(SwgohComlinkBase):
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @utils.param_alias(param="player_details_only", alias="playerDetailsOnly")
+    @param_alias(param="player_details_only", alias="playerDetailsOnly")
     def get_player_arena(
             self,
             allycode: str | int = '',
@@ -301,7 +317,7 @@ class SwgohComlink(SwgohComlinkBase):
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @utils.param_alias(
+    @param_alias(
         param="include_recent_guild_activity_info", alias="includeRecent"
     )
     def get_guild(

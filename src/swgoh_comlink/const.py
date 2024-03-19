@@ -14,7 +14,7 @@ from swgoh_comlink.int.helpers import LoggingFormatter
 _default_logger_name: str = "swgoh_comlink"
 _logging_instances: dict[str, dict] = {}
 
-__all__ = (
+__all__ = [
     "DEFAULT_LOGGER_ENABLED",
     "DATA_PATH",
     "DIVISIONS",
@@ -26,15 +26,14 @@ __all__ = (
     "MOD_SLOTS",
     "STAT_ENUMS",
     "UNIT_STAT_ENUMS_MAP",
-)
-
-LOGGER: logging.Logger
+]
 
 DEFAULT_LOGGER_ENABLED: bool = False
 # bool: Flag indicating whether the built-in logging framework is enabled
 HMAC_ENABLED: bool = False
 
-DATA_PATH: Path = Path.cwd() / "data"
+# DATA_PATH = os.path.join(os.getcwd(), "data")
+DATA_PATH: str = "./data"
 
 
 def _get_new_logger(

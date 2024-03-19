@@ -2,16 +2,16 @@
 """
 Python 3 interface library for swgoh-comlink-async (https://github.com/swgoh-utils/swgoh-comlink-async)
 """
-from __future__ import annotations, print_function
+from __future__ import annotations
 
 import logging
 
-import aiohttp
+import httpx
 
-import swgoh_comlink.utils as utils
 from swgoh_comlink.const import LOGGER
 from swgoh_comlink.core import SwgohComlinkBase
 from swgoh_comlink.int.helpers import get_function_name
+from swgoh_comlink.utils import param_alias, construct_unit_stats_query_string
 
 logger: logging.Logger = LOGGER
 
@@ -27,16 +27,15 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client_session = aiohttp.ClientSession(base_url=self.url_base)
+        # self.client_session = aiohttp.ClientSession(base_url=self.url_base)
+        self.client = httpx.AsyncClient(base_url=self.url_base)
 
     async def _post(self, endpoint: str, payload: dict | list[dict]) -> dict:
         req_headers = self.construct_request_headers(endpoint, payload)
         # If access_key and secret_key are set, perform HMAC security
         try:
-            async with self.client_session.post(
-                    f"/{endpoint}", json=payload, headers=req_headers
-            ) as resp:
-                return await resp.json()
+            resp = await self.client.post(f"/{endpoint}", json=payload, headers=req_headers)
+            return resp.json()
         except Exception as e:
             logger.exception(f"Exception occurred: {get_function_name()}: {e}")
             raise e
@@ -83,8 +82,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         """
         try:
-            async with self.client_session.get("/enums") as resp:
-                return await resp.json()
+            resp = await self.client.get("/enums")
+            return resp.json()
         except Exception as e:
             raise e
 
@@ -175,7 +174,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     # while fixing the original naming format mistake.
     # TODO: fix below. Won't work with single shared async http client session instance to comlink. Another instance
     #  to statCalc is needed as well. Also the _post method does not handle list payloads
-    @utils.param_alias(param="request_payload", alias="units_list")
+    @param_alias(param="request_payload", alias="units_list")
     async def get_unit_stats(
             self,
             request_payload: dict | list[dict],
@@ -200,7 +199,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         if flags is not None and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
 
-        query_string = utils.construct_unit_stats_query_string(flags, language)
+        query_string = construct_unit_stats_query_string(flags, language)
         endpoint_string = "api" + query_string if query_string else "api"
         return await self._post(endpoint=endpoint_string, payload=request_payload)
 
@@ -232,7 +231,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @utils.param_alias(param="player_details_only", alias="playerDetailsOnly")
+    @param_alias(param="player_details_only", alias="playerDetailsOnly")
     async def get_player_arena(
             self,
             allycode: str | int = '',
@@ -269,7 +268,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @utils.param_alias(
+    @param_alias(
         param="include_recent_guild_activity_info", alias="includeRecent"
     )
     async def get_guild(

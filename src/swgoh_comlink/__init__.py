@@ -2,7 +2,7 @@
 """
 Wrapper package for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
-from __future__ import absolute_import
+from __future__ import annotations
 
 import sys
 
@@ -11,8 +11,12 @@ if sys.version_info[:2] < (3, 10):
 
 from .swgoh_comlink import SwgohComlink
 from .swgoh_comlink_async import SwgohComlinkAsync
+from .core import *
+from .utils import *
+from .const import *
+from .int.helpers import *
 
-__version__ = "1.13.0rc1"
+__version__ = "1.13.1"
 
 __all__ = [
     "__version__",
