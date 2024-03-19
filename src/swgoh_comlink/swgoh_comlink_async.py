@@ -4,13 +4,16 @@ Python 3 interface library for swgoh-comlink-async (https://github.com/swgoh-uti
 """
 from __future__ import annotations, print_function
 
+import logging
+
 import aiohttp
 
-import swgoh_comlink.const as const
 import swgoh_comlink.utils as utils
+from swgoh_comlink.const import LOGGER
 from swgoh_comlink.core import SwgohComlinkBase
+from swgoh_comlink.int.helpers import get_function_name
 
-logger = const.Constants.get_logger()
+logger: logging.Logger = LOGGER
 
 
 class SwgohComlinkAsync(SwgohComlinkBase):
@@ -24,9 +27,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client_session = aiohttp.ClientSession(base_url=super().url_base)
+        self.client_session = aiohttp.ClientSession(base_url=self.url_base)
 
-    async def _post(self, endpoint: str = None, payload: dict = None) -> dict:
+    async def _post(self, endpoint: str, payload: dict | list[dict]) -> dict:
         req_headers = self.construct_request_headers(endpoint, payload)
         # If access_key and secret_key are set, perform HMAC security
         try:
@@ -35,10 +38,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ) as resp:
                 return await resp.json()
         except Exception as e:
+            logger.exception(f"Exception occurred: {get_function_name()}: {e}")
             raise e
 
     async def get_game_metadata(
-            self, client_specs: dict = None, enums: bool = False
+            self, client_specs: dict[str, str] | None = None, enums: bool = False
     ) -> dict:
         """Get the game metadata. Game metadata contains the current game and localization versions.
 
@@ -59,11 +63,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
                 }
 
         """
-        if client_specs:
-            payload = {"payload": {"client_specs": client_specs}, "enums": enums}
-        else:
-            payload = {}
-        return await self._post(endpoint="metadata", payload=payload)
+        return await self._post(endpoint="metadata", payload=self.make_client_specs(client_specs, enums))
 
     # alias for non PEP usage of direct endpoint calls
     getGameMetaData = get_game_metadata
@@ -72,7 +72,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     async def _get_game_version(self) -> str:
         """Get the current game version"""
-        md = await self.get_game_metadata()
+        md = await self.get_game_metadata(client_specs={})
         return md["latestGamedataVersion"]
 
     async def get_enums(self) -> dict:
@@ -133,15 +133,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             game_version = await self._get_game_version()
         else:
             game_version = version
-        payload = {
-            "payload": {
-                "version": f"{game_version}",
-                "includePveUnits": include_pve_units,
-                "requestSegment": request_segment,
-            },
-            "enums": enums,
-        }
-        return await self._post(endpoint="data", payload=payload)
+        return await self._post(endpoint="data",
+                                payload=self.make_game_data_payload(version=game_version,
+                                                                    include_pve_units=include_pve_units,
+                                                                    request_segment=request_segment,
+                                                                    enums=enums))
 
     # alias for non PEP usage of direct endpoint calls
     getGameData = get_game_data
@@ -162,12 +158,12 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         """
 
-        if id == "":
+        if not id:
             current_game_version = await self.get_latest_game_data_version()
             id = current_game_version["language"]
 
-        payload = {"unzip": unzip, "enums": enums, "payload": {"id": id}}
-        return await self._post(endpoint="localization", payload=payload)
+        return await self._post(endpoint="localization",
+                                payload={"unzip": unzip, "enums": enums, "payload": {"id": id}})
 
     # aliases for non PEP usage of direct endpoint calls
     getLocalization = get_localization
@@ -177,11 +173,13 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     # Introduced in 1.12.0
     # Use decorator to alias the request_payload parameter to 'units_list' to maintain backward compatibility
     # while fixing the original naming format mistake.
+    # TODO: fix below. Won't work with single shared async http client session instance to comlink. Another instance
+    #  to statCalc is needed as well. Also the _post method does not handle list payloads
     @utils.param_alias(param="request_payload", alias="units_list")
     async def get_unit_stats(
             self,
-            request_payload: dict or list,
-            flags: list[str] = None,
+            request_payload: dict | list[dict],
+            flags: list[str],
             language: str = "eng_us",
     ) -> dict:
         """Calculate unit stats using swgoh-stats service interface to swgoh-comlink
@@ -207,7 +205,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         return await self._post(endpoint=endpoint_string, payload=request_payload)
 
     async def get_player(
-            self, allycode: str | int = None, player_id: str = None, enums: bool = False
+            self, allycode: str | int = '', *, player_id: str = '', enums: bool = False
     ) -> dict:
         """Get player information from game
 
@@ -237,8 +235,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     @utils.param_alias(param="player_details_only", alias="playerDetailsOnly")
     async def get_player_arena(
             self,
-            allycode: str | int = None,
-            player_id: str = None,
+            allycode: str | int = '',
+            player_id: str = '',
             player_details_only: bool = False,
             enums: bool = False,
     ) -> dict:
@@ -258,11 +256,12 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ValueError: if neither a player_id nor allycode is provided
 
         """
-        payload = self.get_player_payload(
-            allycode=allycode, player_id=player_id, enums=enums
-        )
-        payload["payload"]["playerDetailsOnly"] = player_details_only
-        return await self._post(endpoint="playerArena", payload=payload)
+        return await self._post(endpoint="playerArena",
+                                payload=self.get_player_payload(allycode=allycode,
+                                                                player_id=player_id,
+                                                                enums=enums,
+                                                                include_player_details_flag=True,
+                                                                player_details_only=player_details_only))
 
     # alias to allow for get_arena() calls as a shortcut for get_player_arena() and non PEP variations
     get_arena = get_player_arena
@@ -275,7 +274,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     )
     async def get_guild(
             self,
-            guild_id: str,
+            guild_id: str = '',
             include_recent_guild_activity_info: bool = False,
             enums: bool = False,
     ) -> dict:
@@ -294,23 +293,22 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ValueError: if guild ID is not provided
 
         """
-        payload = {
-            "payload": {
-                "guildId": guild_id,
-                "includeRecentGuildActivityInfo": include_recent_guild_activity_info,
-            },
-            "enums": enums,
-        }
-        guild = await self._post(endpoint="guild", payload=payload)
+        guild = await self._post(endpoint="guild",
+                                 payload=self.make_guild_payload(
+                                     guild_id=guild_id,
+                                     include_recent_activity=include_recent_guild_activity_info,
+                                     enums=enums))
         if "guild" in guild.keys():
-            guild = guild["guild"]
-        return guild
+            return guild["guild"]
 
     # alias for non PEP usage of direct endpoint calls
     getGuild = get_guild
 
     async def get_guilds_by_name(
-            self, name: str, start_index: int = 0, count: int = 10, enums: bool = False
+            self, name: str = '',
+            start_index: int = 0,
+            count: int = 10, enums:
+            bool = False
     ) -> dict:
         """Search for guild by name and return match.
 
@@ -328,16 +326,14 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ValueError: if the 'name' argument is not provided
 
         """
-        payload = {
-            "payload": {
-                "name": name,
-                "filterType": 4,
-                "startIndex": start_index,
-                "count": count,
-            },
-            "enums": enums,
-        }
-        return await self._post(endpoint="getGuilds", payload=payload)
+        return await self._post(
+            endpoint="getGuilds",
+            payload=self.make_guilds_by_name_payload(
+                guild_name=name,
+                index=start_index,
+                count=count,
+                enums=enums
+            ))
 
     # alias for non PEP usage of direct endpoint calls
     getGuildByName = get_guilds_by_name
@@ -371,16 +367,14 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             }
 
         """
-        payload = {
-            "payload": {
-                "searchCriteria": search_criteria,
-                "filterType": 5,
-                "startIndex": start_index,
-                "count": count,
-            },
-            "enums": enums,
-        }
-        return await self._post(endpoint="getGuilds", payload=payload)
+        return await self._post(
+            endpoint="getGuilds",
+            payload=self.make_guilds_by_criteria_payload(
+                criteria=search_criteria,
+                index=start_index,
+                count=count,
+                enums=enums
+            ))
 
     # alias for non PEP usage of direct endpoint calls
     getGuildByCriteria = get_guilds_by_criteria
@@ -388,10 +382,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     async def get_leaderboard(
             self,
             leaderboard_type: int = 6,
+            *,
             league: int | str = "carbonite",
             division: int | str = 5,
-            event_instance_id: str = None,
-            group_id: str = None,
+            event_instance_id: str = '',
+            group_id: str = '',
             enums: bool = False,
     ) -> dict:
         """Retrieve Grand Arena Championship leaderboard information.
@@ -423,23 +418,16 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             Object containing 'player' and 'playerStatus' elements. The 'player' element is a list of players
 
         """
-
-        league = utils.convert_league_to_int(league)
-        division = utils.convert_divisions_to_int(division)
-
-        payload = {
-            "payload": {
-                "leaderboardType": leaderboard_type,
-            },
-            "enums": enums,
-        }
-        if leaderboard_type == 4:
-            payload["payload"]["eventInstanceId"] = event_instance_id
-            payload["payload"]["groupId"] = group_id
-        elif leaderboard_type == 6:
-            payload["payload"]["league"] = league
-            payload["payload"]["division"] = division
-        leaderboard = await self._post(endpoint="getLeaderboard", payload=payload)
+        leaderboard = await self._post(
+            endpoint="getLeaderboard",
+            payload=self.make_get_leaderboards_payload(
+                lb_type=leaderboard_type,
+                league=league,
+                division=division,
+                event_instance_id=event_instance_id,
+                group_id=group_id,
+                enums=enums
+            ))
         return leaderboard
 
     # alias for non PEP usage of direct endpoint calls
@@ -466,19 +454,18 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ValueError: If leaderboard_id is not a list object
 
         """
-        if not isinstance(leaderboard_id, list):
-            raise ValueError(
-                f"leaderboard_id argument should be type list not {type(leaderboard_id)}."
-            )
-        payload = dict(
-            payload={"leaderboardId": leaderboard_id, "count": count}, enums=enums
-        )
-        return await self._post(endpoint="getGuildLeaderboard", payload=payload)
+        return await self._post(
+            endpoint="getGuildLeaderboard",
+            payload=self.make_get_guild_leaderboard_payload(
+                lb_id=leaderboard_id,
+                count=count,
+                enums=enums
+            ))
 
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
 
-    async def get_latest_game_data_version(self, game_version: str = None) -> dict:
+    async def get_latest_game_data_version(self, game_version: str = '') -> dict:
         """Get the latest game data and language bundle versions
 
         Args:
@@ -488,7 +475,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             Dictionary containing only the current 'game' and 'language' versions
 
         """
-        client_specs = {"externalVersion": game_version} if game_version else None
+        client_specs: dict = {}
+        if game_version:
+            client_specs = {"externalVersion": game_version}
         current_metadata = await self.get_metadata(client_specs=client_specs)
         return {
             "game": current_metadata["latestGamedataVersion"],

@@ -8,7 +8,7 @@ dynamic = ["version"]
 authors = [
     { name = "Mar Trepodi", email = "martrepodi@gmail.com" },
 ]
-description = "Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)"
+description = "Python 3 interface library for the swgoh-comlink data proxy container (https://github.com/swgoh-utils/swgoh-comlink)"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [

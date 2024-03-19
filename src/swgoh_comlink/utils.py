@@ -7,14 +7,16 @@ from __future__ import annotations, print_function, absolute_import
 import os
 import time
 from functools import wraps
+from pathlib import Path
 from typing import Callable, TYPE_CHECKING, Any
 
-from swgoh_comlink.const import Constants
+from swgoh_comlink.const import DATA_PATH, DIVISIONS, LEAGUES, LOGGER
+from swgoh_comlink.int.helpers import get_function_name
 
 if TYPE_CHECKING:
     import swgoh_comlink
 
-logger = Constants.get_logger()
+logger = LOGGER
 
 __all__ = [
     "construct_unit_stats_query_string",
@@ -101,7 +103,7 @@ def validate_file_path(path: str) -> bool:
     return os.path.exists(path) and os.path.isfile(path)
 
 
-def sanitize_allycode(allycode: str or int) -> str:
+def sanitize_allycode(allycode: str | int) -> str:
     """Sanitize a player allycode
 
     Ensure that allycode does not:
@@ -116,9 +118,12 @@ def sanitize_allycode(allycode: str or int) -> str:
         Player allycode in the proper format
 
     """
+    if not allycode:
+        return str()
     if isinstance(allycode, int):
         allycode = str(allycode)
-    allycode = allycode.replace("-", "")
+    if '-' in allycode:
+        allycode = allycode.replace("-", "")
     if not allycode.isdigit() or len(allycode) != 9:
         raise ValueError(f"Invalid ally code: {allycode}")
     return allycode
@@ -157,7 +162,7 @@ def human_time(unix_time: Any) -> str:
     )
 
 
-def construct_unit_stats_query_string(flags: list[str], language: str) -> str:
+def construct_unit_stats_query_string(flags: list[str], language: str = "eng_us") -> str | None:
     """Constructs query string from provided flags and language to be used with the get_unit_stats() function
 
     Args:
@@ -168,28 +173,33 @@ def construct_unit_stats_query_string(flags: list[str], language: str) -> str:
         The query string portion of a URL
 
     """
-    flag_string = f'flags={",".join(flags)}' if flags else None
+    allowed_flags: set = set(sorted(["gameStyle", "calcGP", "onlyGP", "withoutModCalc", "percentVals", "useMax",
+                                     "scaled", "unscaled", "statIDs", "enums", "noSpace"]))
     language_string = f"language={language}" if language else None
-    constructed_string = "&".join(filter(None, [flag_string, language_string]))
-    return f"?{constructed_string}" if constructed_string else None
+    if flags:
+        if not isinstance(flags, list):
+            raise ValueError(f"{get_function_name()}, Invalid flags '{flags}', must be type list of strings.")
+        tmp_flags: set = set(sorted(list(dict.fromkeys(flags))))
+        flag_string = f'flags={",".join(sorted(tmp_flags.intersection(allowed_flags)))}' if flags else str()
+        constructed_string = "&".join(filter(None, [flag_string, language_string]))
+        return f"?{constructed_string}"
 
 
-def convert_league_to_int(league: int or str) -> int:
+def convert_league_to_int(league: str) -> int | None:
     """Convert GAC leagues to integer
 
     Args:
-        league (str|int): GAC league name
+        league (str): GAC league name
 
     Returns:
         GAC league identifier as used in game data
 
     """
-    if isinstance(league, str):
-        return Constants.LEAGUES[league.lower()]
-    return league
+    if isinstance(league, str) and league.lower() in LEAGUES:
+        return LEAGUES[league.lower()]
 
 
-def convert_divisions_to_int(division: int or str) -> int:
+def convert_divisions_to_int(division: int | str) -> int | None:
     """Convert GAC divisions to integer
 
     Args:
@@ -200,13 +210,14 @@ def convert_divisions_to_int(division: int or str) -> int:
 
     """
     if isinstance(division, str):
-        return Constants.DIVISIONS[division.lower()]
+        if division in DIVISIONS:
+            return DIVISIONS[division]
     if isinstance(division, int) and len(str(division)) == 1:
-        return Constants.DIVISIONS[str(division)]
-    return division
+        if str(division) in DIVISIONS:
+            return DIVISIONS[str(division)]
 
 
-def create_localized_unit_name_dictionary(locale: str or list) -> dict:
+def create_localized_unit_name_dictionary(locale: str | list) -> dict:
     """Create localized translation mapping for unit names
 
     Take a localization element from the SwgohComlink.get_localization() result dictionary and
@@ -221,6 +232,9 @@ def create_localized_unit_name_dictionary(locale: str or list) -> dict:
         A dictionary with the UNIT_NAME BASEID as keys and the UNIT_NAME description as values
 
     """
+    if not isinstance(locale, list) and not isinstance(locale, str):
+        raise ValueError(f"{get_function_name()}, locale must be a list of strings or string containing newlines")
+
     unit_name_map = {}
     lines = []
     if isinstance(locale, str):
@@ -242,8 +256,9 @@ def create_localized_unit_name_dictionary(locale: str or list) -> dict:
 
 def get_guild_members(
         comlink: swgoh_comlink.SwgohComlink,
-        player_id: str = None,
-        allycode: str or int = None,
+        *,
+        player_id: str | None = None,
+        allycode: str | int | None = None,
 ) -> list[dict]:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
@@ -256,9 +271,9 @@ def get_guild_members(
         list of guild members objects
 
     """
-    if player_id is None and allycode is None:
+    if not player_id and not allycode:
         raise RuntimeError("player_id or allycode must be provided.")
-    if player_id is not None:
+    if not allycode:
         player = comlink.get_player(player_id=player_id)
     else:
         player = comlink.get_player(allycode=sanitize_allycode(allycode))
@@ -266,23 +281,26 @@ def get_guild_members(
     return guild["member"]
 
 
-def get_current_gac_event(comlink: swgoh_comlink.SwgohComlink) -> dict or None:
+def get_current_gac_event(comlink: swgoh_comlink.SwgohComlink) -> dict:
     """Return the event object for the current gac season
 
     Args:
         comlink: Instance of SwgohComlink
 
     Returns:
-        Current GAC event object or none if no event is running
+        Current GAC event object or empty if no event is running
 
     """
-    current_events = comlink.get_events()
+    current_gac_event: dict = {}
+    current_events: dict[str, list] = comlink.get_events()
     for event in current_events["gameEvent"]:
         if event["type"] == 10:
-            return event
+            current_gac_event = event
+            break
+    return current_gac_event
 
 
-def get_gac_brackets(comlink: swgoh_comlink.SwgohComlink, league: str) -> dict or None:
+def get_gac_brackets(comlink: swgoh_comlink.SwgohComlink, league: str) -> dict | None:
     """Scan currently running GAC brackets for the requested league and return them as a dictionary
 
     Args:
@@ -301,10 +319,10 @@ def get_gac_brackets(comlink: swgoh_comlink.SwgohComlink, league: str) -> dict o
     else:
         # No current GAC season running
         logger.warning("There is no GAC season currently active in game events.")
-        return
+        return None
     bracket = 0
     # Use brackets to store the results for each bracket for processing once all brackets have been scanned
-    brackets = {}
+    brackets: dict = {}
     number_of_players_in_bracket = 8
     while number_of_players_in_bracket > 0:
         group_id = f"{current_event_instance}:{league}:{bracket}"
@@ -327,10 +345,10 @@ def search_gac_brackets(gac_brackets: dict, player_name: str) -> dict:
         player_name (str): Player name to search for
 
     Returns:
-        dict: GAC bracket and player information or None if no match is found
+        dict: GAC bracket and player information or empty if no match is found
 
     """
-    match_data = None
+    match_data: dict = {}
     for bracket in gac_brackets:
         for player in gac_brackets[bracket]:
             if player_name.lower() == player["name"].lower():
@@ -339,8 +357,8 @@ def search_gac_brackets(gac_brackets: dict, player_name: str) -> dict:
 
 
 def load_master_map(
-        master_map_path: str = Constants.DATA_PATH, language: str = "eng_us"
-) -> dict or None:
+        master_map_path: str | Path = DATA_PATH, language: str = "eng_us"
+) -> dict | None:
     """Read master localization key/string mapping file into dictionary and return
 
     Args:
@@ -366,12 +384,18 @@ def get_current_datacron_sets(datacron_list: list) -> list:
     """Get the currently active datacron sets
 
     Args:
-        datacron_list (list): List of datacron templates
+        datacron_list (list): List of 'datacronSet' from game data
 
     Returns:
         Filtered list of only active datacron sets
 
+    Raises:
+        ValueError: If datacron list is not a list
+
     """
+    if not isinstance(datacron_list, list):
+        raise ValueError(f"{get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}")
+
     import math
 
     current_datacron_sets = []
@@ -390,7 +414,12 @@ def get_tw_omicrons(skill_list: list) -> list:
     Returns:
         List of territory war omicron abilities
 
+    Raises:
+        ValueError: If skill_list is not a list
+
     """
+    if not isinstance(skill_list, list):
+        raise ValueError(f"{get_function_name()}, 'skill_list' must be a list, not {type(skill_list)}")
     tw_omicrons = []
     for skill in skill_list:
         if skill["omicronMode"] == 8:
