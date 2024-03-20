@@ -1,25 +1,21 @@
-# coding=utf-8
-"""
-Wrapper package for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
-"""
 from __future__ import annotations
 
+import os
 import sys
 
 if sys.version_info[:2] < (3, 10):
-    exit("Python 3.10 or greater is required to use this package version")
+    exit("Python 3.10 or later is required to use this package version")
 
-from .swgoh_comlink import SwgohComlink
-from .swgoh_comlink_async import SwgohComlinkAsync
-from .core import *
-from .utils import *
-from .const import *
-from .int.helpers import *
+sys.path.append(os.path.dirname(__file__))
 
-__version__ = "1.13.1"
+from .swgoh_comlink import SwgohComlink, SwgohComlinkAsync
+import utils
+
+__version__ = "1.13.2"
 
 __all__ = [
     "__version__",
     "SwgohComlink",
     "SwgohComlinkAsync",
+    "utils"
 ]

@@ -9,35 +9,71 @@ import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from swgoh_comlink.int.helpers import LoggingFormatter
-
 _default_logger_name: str = "swgoh_comlink"
-_logging_instances: dict[str, dict] = {}
+_default_logger_enabled: bool = False
 
 __all__ = [
-    "DEFAULT_LOGGER_ENABLED",
     "DATA_PATH",
     "DIVISIONS",
     "get_logger",
     "LEAGUES",
-    "HMAC_ENABLED",
-    "LOGGER",
     "MOD_SET_IDS",
     "MOD_SLOTS",
     "STAT_ENUMS",
     "UNIT_STAT_ENUMS_MAP",
 ]
 
-DEFAULT_LOGGER_ENABLED: bool = False
-# bool: Flag indicating whether the built-in logging framework is enabled
-HMAC_ENABLED: bool = False
+DATA_PATH = os.path.join(os.getcwd(), "data")
 
-# DATA_PATH = os.path.join(os.getcwd(), "data")
-DATA_PATH: str = "./data"
+
+class LoggingFormatter(logging.Formatter):
+    """Custom logging formatter class with colored output"""
+
+    # Colors
+    black = "\x1b[30m"
+    white = "\x1b[37m"
+    red = "\x1b[31m"
+    green = "\x1b[32m"
+    yellow = "\x1b[33m"
+    blue = "\x1b[34m"
+    gray = "\x1b[38m"
+    # Styles
+    reset = "\x1b[0m"
+    bold = "\x1b[1m"
+
+    # ANSI color reference https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
+
+    COLORS = {
+        logging.DEBUG: gray + bold,
+        logging.INFO: blue + bold,
+        logging.WARNING: yellow + bold,
+        logging.ERROR: red,
+        logging.CRITICAL: "\x1b[1;31;43m",  # Bold (1) Red (31) with Yellow (43) background
+    }
+
+    def format(self, record):
+        """Method to dynamically color log messages for console output based on message severity"""
+        log_color = self.COLORS[record.levelno]
+        time_color = "\x1b[1;30;47m"
+        format_str = (
+                "(black){asctime}(reset) | (lvl_color){levelname:8}(reset) | "
+                + "(green){name:<25} | {threadName} | "
+                + "(green){module:<14}(reset) | (green){funcName:>20}:{lineno:^4}(reset) | {message}"
+        )
+        """
+        log_message_format = ('{asctime} | [{levelname:^9}] | {name:25} | pid:{process} | {threadName} | ' +
+                              '{filename:<15} | {module:<14} : {funcName:>20}()_{lineno:_^4}_ | {message}')
+        """
+        format_str = format_str.replace("(black)", time_color)
+        format_str = format_str.replace("(reset)", self.reset)
+        format_str = format_str.replace("(lvl_color)", log_color)
+        format_str = format_str.replace("(green)", self.green + self.bold)
+        formatter = logging.Formatter(format_str, "%Y-%m-%d %H:%M:%S", style="{")
+        return formatter.format(record)
 
 
 def _get_new_logger(
-        name: str | None = None,
+        name: str | None = _default_logger_name,
         /,
         *,
         log_level: str = "INFO",
@@ -56,18 +92,7 @@ def _get_new_logger(
         logger instance
 
     """
-    """Create a logging instance and return a logger"""
-    if not name:
-        name = _default_logger_name
-
-    if name in _logging_instances:
-        print(f"[DEBUG] Existing logger instance for {name} found. Using that.")
-        _logging_instances[name]["instance"].info(
-            "Existing logger instance for %s found. Using that.", name
-        )
-        return _logging_instances[name]["instance"]
-    else:
-        tmp_logger = logging.getLogger(name)
+    tmp_logger = logging.getLogger(name)
     tmp_logger.setLevel(logging.getLevelName(log_level))
 
     # Console handler
@@ -77,7 +102,6 @@ def _get_new_logger(
         tmp_logger.addHandler(console_handler)
 
     # File handler
-    log_path = None
     if log_to_file:
         logfile_name = name + ".log"
         root_log_path = os.path.join(os.getcwd(), "logs")
@@ -88,23 +112,18 @@ def _get_new_logger(
         file_handler.setFormatter(file_handler_formatter)
         tmp_logger.addHandler(file_handler)
     tmp_logger.info(" --- [ Logging started for %s ] ---", name)
-    _logging_instances[name] = {"file": log_path, "instance": tmp_logger}
-    print(f"[DEBUG] {_logging_instances[name]=}")
     return tmp_logger
 
 
-if DEFAULT_LOGGER_ENABLED:
-    LOGGER = _get_new_logger(_default_logger_name)
-else:
-    logging.getLogger(_default_logger_name).addHandler(logging.NullHandler())
-    LOGGER = logging.getLogger(_default_logger_name)
-
-
-def get_logger(name: str | None = None) -> logging.Logger:
+def get_logger(name: str | None = _default_logger_name,
+               default_logger: bool = _default_logger_enabled) -> logging.Logger:
     """Returns a logger"""
-    if name and name in _logging_instances:
-        return _logging_instances[name]['instance']
-    return _get_new_logger(name)
+    if default_logger:
+        return _get_new_logger(name)
+    else:
+        default_logger = logging.getLogger(_default_logger_name)
+        default_logger.addHandler(logging.NullHandler())
+        return default_logger
 
 
 LEAGUES: dict[str, int] = {

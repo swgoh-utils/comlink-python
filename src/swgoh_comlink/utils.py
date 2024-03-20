@@ -4,20 +4,19 @@ Helper utilities for the swgoh_comlink package and related modules
 """
 from __future__ import annotations
 
+import inspect
 import os
 import time
 from functools import wraps
 from pathlib import Path
 from typing import Callable, TYPE_CHECKING, Any
 
-import swgoh_comlink
-from swgoh_comlink.const import DATA_PATH, DIVISIONS, LEAGUES, LOGGER
-from swgoh_comlink.int.helpers import get_function_name
+from _const import *
 
 if TYPE_CHECKING:
     import swgoh_comlink
 
-logger = LOGGER
+logger = get_logger()
 
 __all__ = [
     "construct_unit_stats_query_string",
@@ -38,6 +37,11 @@ __all__ = [
     "search_gac_brackets",
     "validate_file_path",
 ]
+
+
+def _get_function_name() -> str:
+    """Return the name for the calling function"""
+    return f"{inspect.stack()[1].function}()"
 
 
 def func_timer(f):
@@ -179,7 +183,7 @@ def construct_unit_stats_query_string(flags: list[str], language: str = "eng_us"
     language_string = f"language={language}" if language else None
     if flags:
         if not isinstance(flags, list):
-            raise ValueError(f"{get_function_name()}, Invalid flags '{flags}', must be type list of strings.")
+            raise ValueError(f"{_get_function_name()}, Invalid flags '{flags}', must be type list of strings.")
         tmp_flags: set = set(sorted(list(dict.fromkeys(flags))))
         flag_string = f'flags={",".join(sorted(tmp_flags.intersection(allowed_flags)))}' if flags else str()
         constructed_string = "&".join(filter(None, [flag_string, language_string]))
@@ -234,7 +238,7 @@ def create_localized_unit_name_dictionary(locale: str | list) -> dict:
 
     """
     if not isinstance(locale, list) and not isinstance(locale, str):
-        raise ValueError(f"{get_function_name()}, locale must be a list of strings or string containing newlines")
+        raise ValueError(f"{_get_function_name()}, locale must be a list of strings or string containing newlines")
 
     unit_name_map = {}
     lines = []
@@ -395,7 +399,7 @@ def get_current_datacron_sets(datacron_list: list) -> list:
 
     """
     if not isinstance(datacron_list, list):
-        raise ValueError(f"{get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}")
+        raise ValueError(f"{_get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}")
 
     import math
 
@@ -420,7 +424,7 @@ def get_tw_omicrons(skill_list: list) -> list:
 
     """
     if not isinstance(skill_list, list):
-        raise ValueError(f"{get_function_name()}, 'skill_list' must be a list, not {type(skill_list)}")
+        raise ValueError(f"{_get_function_name()}, 'skill_list' must be a list, not {type(skill_list)}")
     tw_omicrons = []
     for skill in skill_list:
         if skill["omicronMode"] == 8:
