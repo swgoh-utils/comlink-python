@@ -10,9 +10,13 @@ authors = [
 ]
 description = "Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)"
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
@@ -30,7 +34,7 @@ addopts = [
 ]
 
 [tool.setuptools.dynamic]
-version = {attr = "swgoh_comlink.version"}
+version = {attr = "swgoh_comlink"}
 
 [tool.semantic_release]
 version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"   # source location of version string
