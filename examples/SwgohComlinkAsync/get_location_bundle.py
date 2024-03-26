@@ -54,7 +54,7 @@ async def main():
 
     # Decode to string then split into individual lines
     eng_obj_decoded = eng_obj.decode("utf-8")
-    eng_obj_lines = eng_obj_decoded.split()
+    eng_obj_lines = eng_obj_decoded.splitlines()
 
     """
     Alternatively, if you elected to have Comlink send an unzipped response, the result is a dictionary containing keys
@@ -80,7 +80,7 @@ async def main():
     Time for unzipped: 7.85 seconds
 
     """
-    await comlink.client_session.close()
+    await comlink.client.aclose()
 
 
 if __name__ == "__main__":

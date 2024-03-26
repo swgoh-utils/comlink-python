@@ -50,7 +50,7 @@ async def main():
             print(f"\t{display_end=}")
             print(f"\t{start_time=}")
             print(f"\t{reward_time=}")
-    await comlink.client_session.close()
+    await comlink.client.aclose()
 
 
 if __name__ == "__main__":

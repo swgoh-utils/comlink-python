@@ -76,18 +76,21 @@ async def main():
     gac_kyber_2_lb = await comlink.get_leaderboard(
         leaderboard_type=6, league=100, division=20
     )
-    await comlink.client_session.close()
+    await comlink.client.aclose()
 
     # Output the GAC leaderboard information
-    name_col_width, guild_col_width, lb_entries = format_output(
-        gac_kyber_2_lb["player"]
-    )
-    for player in lb_entries:
-        print(
-            f"Player nane: {player[0]:{name_col_width}} "
-            + f"Guild: {player[1]:{guild_col_width}} "
-            + f"Skill Rating: {player[2]}"
+    if 'player' in gac_kyber_2_lb:
+        name_col_width, guild_col_width, lb_entries = format_output(
+            gac_kyber_2_lb["player"]
         )
+        for player in lb_entries:
+            print(
+                f"Player nane: {player[0]:{name_col_width}} "
+                + f"Guild: {player[1]:{guild_col_width}} "
+                + f"Skill Rating: {player[2]}"
+            )
+    else:
+        print("No GAC is currently running.")
 
 
 if __name__ == "__main__":

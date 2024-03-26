@@ -2,7 +2,8 @@
 
 ## Description
 
-This folder contains a collection of examples for common uses of the comlink_python interface wrapper for comlink-swgoh.
+This folder contains a collection of examples for common uses of the swgoh_comlink interface wrapper for the
+comlink-swgoh proxy service.
 
 ## Usage
 

@@ -49,7 +49,7 @@ async def main():
 
     # We can extract a list of the characters in the player's roster
     player_roster = player_profile_data["rosterUnit"]
-    pp(player_roster)
+    pp(player_roster, depth=2)
 
     """
     # Each unit in a player's roster is a dictionary with entries for all attributes including skills, equipped mods
@@ -73,7 +73,7 @@ async def main():
              'unitStat': None
         }
     """
-    await comlink.client_session.close()
+    await comlink.client.aclose()
 
 
 if __name__ == "__main__":

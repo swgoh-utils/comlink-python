@@ -210,7 +210,7 @@ class SwgohComlinkBase:
                                       group_id: str = "",
                                       enums: bool = False) -> dict:
         """Create get_leaderboards() method payload"""
-        if lb_type != 4 or lb_type != 6:
+        if lb_type != 4 and lb_type != 6:
             raise ValueError(f"{_get_function_name()}, 'leaderboard_type' must be either 4 (GAC brackets) or 6 (Global "
                              f"Leaderboards")
 

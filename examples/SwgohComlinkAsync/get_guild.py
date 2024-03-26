@@ -28,7 +28,7 @@ async def main():
     """
     player = await comlink.get_player(314927874)
     guild = await comlink.get_guild(player["guildId"])
-    print(f"{guild['name']=}")
+    print(f"{guild['profile']['name']=}")
 
     """
     The get_guild() method returns a dictionary containing information about the guild, its members and event
@@ -42,7 +42,7 @@ async def main():
     )
     # Closing the aiohttp session is only needed for this example script. Normally, the client session would be
     # managed in a different method depending on the application needs
-    await comlink.client_session.close()
+    await comlink.client.aclose()
     display_tw_data(guild_with_stats["recentTerritoryWarResult"])
 
     """

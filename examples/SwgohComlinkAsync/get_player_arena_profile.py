@@ -45,7 +45,7 @@ async def main():
     )
     pp(player_arena_profile_brief)
 
-    await comlink.client_session.close()
+    await comlink.client.aclose()
 
 
 if __name__ == "__main__":

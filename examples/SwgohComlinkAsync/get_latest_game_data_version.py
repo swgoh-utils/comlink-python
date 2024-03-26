@@ -28,7 +28,7 @@ async def main():
 
     current_versions = await comlink.getVersion()
     print(f"{current_versions}")
-    await comlink.client_session.close()
+    await comlink.client.aclose()
 
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ async def main():
     tw_top_5 = await comlink.get_guild_leaderboard(
         leaderboard_id=tw_leaderboard_id, count=5
     )
-    await comlink.client_session.close()
+    await comlink.client.aclose()
 
     # Print the top 5 information
     for guild in tw_top_5["leaderboard"][0]["guild"]:
