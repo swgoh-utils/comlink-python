@@ -20,8 +20,18 @@ jobs:
         with:
           fetch-depth: 0
       - name: Python Semantic Release
-        uses: python-semantic-release/python-semantic-release@master
+        id: release
+        uses: ./
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          root_options: "-vv"
+
+      # see https://docs.pypi.org/trusted-publishers/
       - name: Publish package distributions to PyPI
+        id: pypi-publish
+        # NOTE: DO NOT wrap the conditional in ${{ }} as it will always evaluate to true.
+        # See https://github.com/actions/runner/issues/1173
+        if: steps.release.outputs.released == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
