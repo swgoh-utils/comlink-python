@@ -873,6 +873,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         req_headers = self.construct_request_headers(endpoint, payload)
         # If access_key and secret_key are set, perform HMAC security
         try:
+            self.logger.debug(f"Sending POST, {endpoint=} {req_headers=}")
             resp = await self.client.post(f"/{endpoint}", json=payload, headers=req_headers)
             return resp.json()
         except Exception as e:

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "requests>=2.30.0", "aiohttp>=3.8.5", "asyncio"]
+requires = ["hatchling", "httpx"]
 build-backend = "hatchling.build"
 
 [project]
@@ -17,11 +17,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "requests",
+    "httpx",
     "mkdocstrings-python",
     "mkdocs-material",
     "mkdocs-material-extensions",
-    "aiohttp",
 ]
 
 [project.urls]

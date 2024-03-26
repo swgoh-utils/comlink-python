@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(__file__))
 from .swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 import utils
 
-__version__ = "1.13.2"
+__version__ = "1.13.0rc3"
 
 __all__ = [
     "__version__",

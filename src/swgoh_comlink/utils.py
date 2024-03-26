@@ -222,6 +222,39 @@ def convert_divisions_to_int(division: int | str) -> int | None:
             return DIVISIONS[str(division)]
 
 
+def convert_relic_tier(relic_tier: str | int) -> str | None:
+    """Convert character relic tier to offset string in-game value.
+
+    Conversion is done based on a zero based table indicating both the relic tier status and achieved level.
+
+    Args:
+        relic_tier (str | int): The relic tier from character game data to convert to in-game equivalent.
+
+    Returns:
+        String representing the relic status and tier
+
+    Raises:
+        ValueError | TypeError: If the provided 'relic_tier' cannot be converted to a string using the Python
+                                built-in str() method.
+
+    Examples:
+        Relic tier is '0' indicates the character has not yet achieved a level where access to relics have been
+            unlocked.
+        Relic tier of '1', indicates that the character has achieved the required level to access relics,
+            but has not yet upgraded to the first level.
+    """
+    relic_value = None
+    if isinstance(relic_tier, int):
+        try:
+            relic_tier = str(relic_tier)
+        except ValueError or TypeError as e_str:
+            logger.exception(f"{_get_function_name()}, {e_str}")
+            raise ValueError
+    if relic_tier in RELIC_TIERS:
+        relic_value = RELIC_TIERS[relic_tier]
+    return relic_value
+
+
 def create_localized_unit_name_dictionary(locale: str | list) -> dict:
     """Create localized translation mapping for unit names
 

@@ -5,3 +5,5 @@ pytest
 pytest-aiohttp
 pytest-cov
 pytest-mock
+httpx
+auto-changelog

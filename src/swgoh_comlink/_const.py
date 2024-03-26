@@ -21,6 +21,7 @@ __all__ = [
     "MOD_SLOTS",
     "STAT_ENUMS",
     "UNIT_STAT_ENUMS_MAP",
+    "RELIC_TIERS"
 ]
 
 DATA_PATH = os.path.join(os.getcwd(), "data")
@@ -74,9 +75,8 @@ class LoggingFormatter(logging.Formatter):
 
 def _get_new_logger(
         name: str | None = _default_logger_name,
-        /,
         *,
-        log_level: str = "INFO",
+        log_level: str = "DEBUG",
         log_to_console: bool = False,
         log_to_file: bool = True,
 ) -> logging.Logger:
@@ -528,4 +528,18 @@ MOD_SLOTS: dict[str, str] = {
     "5": "Triangle",
     "6": "Circle",
     "7": "Plus/Cross",
+}
+
+RELIC_TIERS: dict[str, str] = {
+    '0': 'LOCKED',
+    '1': 'UNLOCKED',
+    '2': '1',
+    '3': '2',
+    '4': '3',
+    '5': '4',
+    '6': '5',
+    '7': '6',
+    '8': '7',
+    '9': '8',
+    '10': '9'
 }
