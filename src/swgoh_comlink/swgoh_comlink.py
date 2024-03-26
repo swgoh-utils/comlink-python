@@ -7,6 +7,7 @@ import functools
 import hashlib
 import hmac
 import os
+import re
 import time
 from json import loads, dumps
 from typing import Callable
@@ -16,11 +17,15 @@ import urllib3
 
 from swgoh_comlink import version
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 __all__ = [
     'SwgohComlink'
 ]
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+url_port_re = re.compile(
+    r'^https://\S+:(\d+)$'
+    , re.VERBOSE | re.IGNORECASE
+)
 
 
 def _get_player_payload(allycode: str | int = None, player_id: str = None, enums: bool = False) -> dict:
@@ -58,6 +63,14 @@ def param_alias(param: str, alias: str) -> Callable:
     return decorator
 
 
+def sanitize_url(url: str) -> str:
+    """Make sure provided URL is in the expected format and return sanitized"""
+    url = url.strip("/")
+    if url.startswith("https") and not re.fullmatch(url_port_re, url):
+        url = f"{url}:443"
+    return url
+
+
 class SwgohComlink:
     """
     Class definition for swgoh-comlink interface and supported methods.
@@ -66,17 +79,20 @@ class SwgohComlink:
     running on the same host.
     """
 
+    PROTOCOL = 'http'
+
     def __init__(self,
                  url: str = "http://localhost:3000",
-                 access_key: str = None,
-                 secret_key: str = None,
                  stats_url: str = "http://localhost:3223",
-                 host: str = None,
+                 access_key: str | None = None,
+                 secret_key: str | None = None,
+                 host: str | None = None,
                  port: int = 3000,
                  stats_port: int = 3223
                  ):
         """
         Set initial values when new class instance is created
+
         :param url: The URL where swgoh-comlink is running. Defaults to 'http://localhost:3000'
         :param access_key: The HMAC public key. Default to None which indicates HMAC is not used.
         :param secret_key: The HMAC private key. Default to None which indicates HMAC is not used.
@@ -86,14 +102,14 @@ class SwgohComlink:
         :param stats_port: TCP port number of where the comlink-stats service is running [Default: 3223]
         """
         self.__version__ = version
-        self.url_base = url
-        self.stats_url_base = stats_url
+        self.url_base = sanitize_url(url)
+        self.stats_url_base = sanitize_url(stats_url)
         self.hmac = False  # HMAC use disabled by default
 
         # host and port parameters override defaults
         if host:
-            self.url_base = f'http://{host}:{port}'
-            self.stats_url_base = f'http://{host}:{stats_port}'
+            self.url_base = self.PROTOCOL + f'://{host}:{port}'
+            self.stats_url_base = self.PROTOCOL + f'://{host}:{stats_port}'
 
         # Use values passed from client first, otherwise check for environment variables
         if access_key:
@@ -167,16 +183,16 @@ class SwgohComlink:
         :return: dict
         """
         query_string = None
-
+        flag_str = None
         if flags:
             if isinstance(flags, list):
-                flags = 'flags=' + ','.join(flags)
+                flag_str = 'flags=' + ','.join(flags)
             else:
                 raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
         if language:
             language = f'language={language}'
-        if flags or language:
-            query_string = f'?' + '&'.join(filter(None, [flags, language]))
+        if flag_str or language:
+            query_string = f'?' + '&'.join(filter(None, iter([flag_str, language])))
         endpoint_string = f'api' + query_string if query_string else 'api'
         return self._post(url_base=self.stats_url_base, endpoint=endpoint_string, payload=request_payload)
 
