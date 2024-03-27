@@ -1,0 +1,14 @@
+#!/bin/sh -e
+
+if [ -d 'dist' ] ; then
+    rm -r dist
+fi
+if [ -d 'site' ] ; then
+    rm -r site
+fi
+if [ -d 'htmlcov' ] ; then
+    rm -r htmlcov
+fi
+if [ -d 'swgoh_comlink.egg-info' ] ; then
+    rm -r swgoh_comlink.egg-info
+fi

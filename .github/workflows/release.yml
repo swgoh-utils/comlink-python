@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: comlink_python release
+name: swgoh-comlink python package release
 
 on:
   push:
@@ -10,36 +10,27 @@ on:
 
 jobs:
   release:
+    name: "Publish release"
     runs-on: ubuntu-latest
-    concurrency: release
-    strategy:
-      matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+
+    environment: deploy
 
     permissions:
       id-token: write
       contents: write
     steps:
-      - name: Setup Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
       - name: Check-out repository
         uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          fetch-depth: 0
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install build
-          python -m pip install python-semantic-release
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install -e .
-      - name: Python Semantic Release
-        id: release
-        uses: python-semantic-release/python-semantic-release@master
-        with:
-          github_token: ${{ secrets.SEMANTIC_RELEASE }}
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        if: steps.release.outputs.released == 'true'
+          python-version: 3.9
+          cache: 'pip'
+      - name: "Clean environment"
+        run: "scripts/clean"
+      - name: "Install dependencies"
+        run: "scripts/install"
+      - name: "Build package & docs"
+        run: "scripts/build"
+      - name: "Publish to PyPI & deploy docs"
+        run: "scripts/publish"

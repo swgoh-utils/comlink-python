@@ -9,13 +9,8 @@ if sys.version_info[:2] < (3, 10):
 sys.path.append(os.path.dirname(__file__))
 
 from .swgoh_comlink import SwgohComlink, SwgohComlinkAsync
-import utils
+import swgoh_comlink.utils
 
 __version__ = "1.13.0rc3"
 
-__all__ = [
-    "__version__",
-    "SwgohComlink",
-    "SwgohComlinkAsync",
-    "utils"
-]
+__all__ = ["__version__", "SwgohComlink", "SwgohComlinkAsync", "utils"]

@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+set -x
+
+hatch build
+twine check dist/*
+mkdocs build

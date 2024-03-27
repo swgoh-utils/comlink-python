@@ -2,6 +2,7 @@
 """
 Constants used throughout the comlink_python package
 """
+
 from __future__ import annotations
 
 import logging
@@ -21,7 +22,7 @@ __all__ = [
     "MOD_SLOTS",
     "STAT_ENUMS",
     "UNIT_STAT_ENUMS_MAP",
-    "RELIC_TIERS"
+    "RELIC_TIERS",
 ]
 
 DATA_PATH = os.path.join(os.getcwd(), "data")
@@ -74,7 +75,7 @@ class LoggingFormatter(logging.Formatter):
 
 
 def _get_new_logger(
-        name: str | None = _default_logger_name,
+        name: str,
         *,
         log_level: str = "DEBUG",
         log_to_console: bool = False,
@@ -94,6 +95,9 @@ def _get_new_logger(
     """
     tmp_logger = logging.getLogger(name)
     tmp_logger.setLevel(logging.getLevelName(log_level))
+
+    if not name:
+        name = _default_logger_name
 
     # Console handler
     if log_to_console:
@@ -115,15 +119,17 @@ def _get_new_logger(
     return tmp_logger
 
 
-def get_logger(name: str | None = _default_logger_name,
-               default_logger: bool = _default_logger_enabled) -> logging.Logger:
+def get_logger(
+        name: str = _default_logger_name,
+        default_logger: bool = _default_logger_enabled,
+) -> logging.Logger:
     """Returns a logger"""
     if default_logger:
         return _get_new_logger(name)
     else:
-        default_logger = logging.getLogger(_default_logger_name)
-        default_logger.addHandler(logging.NullHandler())
-        return default_logger
+        base_logger: logging.Logger = logging.getLogger(_default_logger_name)
+        base_logger.addHandler(logging.NullHandler())
+        return base_logger
 
 
 LEAGUES: dict[str, int] = {
@@ -531,15 +537,15 @@ MOD_SLOTS: dict[str, str] = {
 }
 
 RELIC_TIERS: dict[str, str] = {
-    '0': 'LOCKED',
-    '1': 'UNLOCKED',
-    '2': '1',
-    '3': '2',
-    '4': '3',
-    '5': '4',
-    '6': '5',
-    '7': '6',
-    '8': '7',
-    '9': '8',
-    '10': '9'
+    "0": "LOCKED",
+    "1": "UNLOCKED",
+    "2": "1",
+    "3": "2",
+    "4": "3",
+    "5": "4",
+    "6": "5",
+    "7": "6",
+    "8": "7",
+    "9": "8",
+    "10": "9",
 }

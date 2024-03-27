@@ -1,0 +1,23 @@
+#!/bin/sh -e
+
+# Use the Python executable provided from the `-p` option, or a default.
+[ "$1" = "-p" ] && PYTHON=$2 || PYTHON="python3"
+
+REQUIREMENTS="requirements.txt"
+REQUIREMENTS_DEV="requirements-dev.txt"
+VENV="venv"
+
+set -x
+
+if [ -z "$GITHUB_ACTIONS" ]; then
+    "$PYTHON" -m venv "$VENV"
+    PIP="$VENV/bin/pip"
+else
+    PIP="pip"
+fi
+
+"$PIP" install -U pip setuptools wheel hatch
+"$PIP" install -r "$REQUIREMENTS"
+if [ -f "$REQUIREMENTS_DEV" ]; then
+    "$PIP" install -r "$REQUIREMENTS_DEV"
+fi

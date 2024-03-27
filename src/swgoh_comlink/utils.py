@@ -2,6 +2,7 @@
 """
 Helper utilities for the swgoh_comlink package and related modules
 """
+
 from __future__ import annotations
 
 import inspect
@@ -11,7 +12,7 @@ from functools import wraps
 from pathlib import Path
 from typing import Callable, TYPE_CHECKING, Any
 
-from _const import *
+from ._const import (get_logger, LEAGUES, DIVISIONS, RELIC_TIERS, DATA_PATH)
 
 if TYPE_CHECKING:
     import swgoh_comlink
@@ -127,7 +128,7 @@ def sanitize_allycode(allycode: str | int) -> str:
         return str()
     if isinstance(allycode, int):
         allycode = str(allycode)
-    if '-' in allycode:
+    if "-" in allycode:
         allycode = allycode.replace("-", "")
     if not allycode.isdigit() or len(allycode) != 9:
         raise ValueError(f"Invalid ally code: {allycode}")
@@ -167,7 +168,9 @@ def human_time(unix_time: Any) -> str:
     )
 
 
-def construct_unit_stats_query_string(flags: list[str], language: str = "eng_us") -> str | None:
+def construct_unit_stats_query_string(
+        flags: list[str], language: str = "eng_us"
+) -> str | None:
     """Constructs query string from provided flags and language to be used with the get_unit_stats() function
 
     Args:
@@ -178,16 +181,40 @@ def construct_unit_stats_query_string(flags: list[str], language: str = "eng_us"
         The query string portion of a URL
 
     """
-    allowed_flags: set = set(sorted(["gameStyle", "calcGP", "onlyGP", "withoutModCalc", "percentVals", "useMax",
-                                     "scaled", "unscaled", "statIDs", "enums", "noSpace"]))
+
+    allowed_flags: set = set(
+        sorted(
+            [
+                "gameStyle",
+                "calcGP",
+                "onlyGP",
+                "withoutModCalc",
+                "percentVals",
+                "useMax",
+                "scaled",
+                "unscaled",
+                "statIDs",
+                "enums",
+                "noSpace",
+            ]
+        )
+    )
     language_string = f"language={language}" if language else None
     if flags:
         if not isinstance(flags, list):
-            raise ValueError(f"{_get_function_name()}, Invalid flags '{flags}', must be type list of strings.")
+            raise ValueError(
+                f"{_get_function_name()}, Invalid flags '{flags}', must be type list of strings."
+            )
         tmp_flags: set = set(sorted(list(dict.fromkeys(flags))))
-        flag_string = f'flags={",".join(sorted(tmp_flags.intersection(allowed_flags)))}' if flags else str()
+        flag_string = (
+            f'flags={",".join(sorted(tmp_flags.intersection(allowed_flags)))}'
+            if flags
+            else str()
+        )
         constructed_string = "&".join(filter(None, [flag_string, language_string]))
         return f"?{constructed_string}"
+    else:
+        return None
 
 
 def convert_league_to_int(league: str) -> int | None:
@@ -202,6 +229,8 @@ def convert_league_to_int(league: str) -> int | None:
     """
     if isinstance(league, str) and league.lower() in LEAGUES:
         return LEAGUES[league.lower()]
+    else:
+        return None
 
 
 def convert_divisions_to_int(division: int | str) -> int | None:
@@ -220,6 +249,7 @@ def convert_divisions_to_int(division: int | str) -> int | None:
     if isinstance(division, int) and len(str(division)) == 1:
         if str(division) in DIVISIONS:
             return DIVISIONS[str(division)]
+    return None
 
 
 def convert_relic_tier(relic_tier: str | int) -> str | None:
@@ -234,8 +264,8 @@ def convert_relic_tier(relic_tier: str | int) -> str | None:
         String representing the relic status and tier
 
     Raises:
-        ValueError | TypeError: If the provided 'relic_tier' cannot be converted to a string using the Python
-                                built-in str() method.
+        TypeError: If the provided 'relic_tier' cannot be converted to a string using the Python
+                    built-in str() method.
 
     Examples:
         Relic tier is '0' indicates the character has not yet achieved a level where access to relics have been
@@ -247,9 +277,9 @@ def convert_relic_tier(relic_tier: str | int) -> str | None:
     if isinstance(relic_tier, int):
         try:
             relic_tier = str(relic_tier)
-        except ValueError or TypeError as e_str:
+        except TypeError as e_str:
             logger.exception(f"{_get_function_name()}, {e_str}")
-            raise ValueError
+            raise TypeError
     if relic_tier in RELIC_TIERS:
         relic_value = RELIC_TIERS[relic_tier]
     return relic_value
@@ -271,7 +301,9 @@ def create_localized_unit_name_dictionary(locale: str | list) -> dict:
 
     """
     if not isinstance(locale, list) and not isinstance(locale, str):
-        raise ValueError(f"{_get_function_name()}, locale must be a list of strings or string containing newlines")
+        raise ValueError(
+            f"{_get_function_name()}, locale must be a list of strings or string containing newlines"
+        )
 
     unit_name_map = {}
     lines = []
@@ -295,8 +327,8 @@ def create_localized_unit_name_dictionary(locale: str | list) -> dict:
 def get_guild_members(
         comlink: swgoh_comlink.SwgohComlink,
         *,
-        player_id: str | None = None,
-        allycode: str | int | None = None,
+        player_id: str = "",
+        allycode: str | int = "",
 ) -> list[dict]:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
@@ -432,7 +464,9 @@ def get_current_datacron_sets(datacron_list: list) -> list:
 
     """
     if not isinstance(datacron_list, list):
-        raise ValueError(f"{_get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}")
+        raise ValueError(
+            f"{_get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}"
+        )
 
     import math
 
@@ -457,7 +491,9 @@ def get_tw_omicrons(skill_list: list) -> list:
 
     """
     if not isinstance(skill_list, list):
-        raise ValueError(f"{_get_function_name()}, 'skill_list' must be a list, not {type(skill_list)}")
+        raise ValueError(
+            f"{_get_function_name()}, 'skill_list' must be a list, not {type(skill_list)}"
+        )
     tw_omicrons = []
     for skill in skill_list:
         if skill["omicronMode"] == 8:

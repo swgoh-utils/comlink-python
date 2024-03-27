@@ -1,9 +1,13 @@
 coverage
 flake8-pytest-style
 pre-commit
-pytest
+pytest~=8.1.1
 pytest-aiohttp
 pytest-cov
 pytest-mock
 httpx
 auto-changelog
+hatch
+twine
+build
+ruff~=0.3.4
