@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-Constants used throughout the comlink_python package
+Constants used throughout the swgoh_comlink package
 """
 
 from __future__ import annotations

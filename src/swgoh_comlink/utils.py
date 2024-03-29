@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 logger = get_logger()
 
 __all__ = [
-    "construct_unit_stats_query_string",
+    "_construct_unit_stats_query_string",
     "convert_divisions_to_int",
     "convert_league_to_int",
     "create_localized_unit_name_dictionary",
@@ -33,7 +33,7 @@ __all__ = [
     "get_tw_omicrons",
     "human_time",
     "load_master_map",
-    "param_alias",
+    "_param_alias",
     "sanitize_allycode",
     "search_gac_brackets",
     "validate_file_path",
@@ -78,7 +78,7 @@ def func_debug_logger(f):
     return wrap
 
 
-def param_alias(param: str, alias: str) -> Callable:
+def _param_alias(param: str, alias: str) -> Callable:
     """Decorator for aliasing function parameters"""
 
     def decorator(func: Callable) -> Callable:
@@ -168,7 +168,7 @@ def human_time(unix_time: Any) -> str:
     )
 
 
-def construct_unit_stats_query_string(
+def _construct_unit_stats_query_string(
         flags: list[str], language: str = "eng_us"
 ) -> str | None:
     """Constructs query string from provided flags and language to be used with the get_unit_stats() function

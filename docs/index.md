@@ -1,35 +1,31 @@
-# swgoh_comlink
+# Welcome to the documentation page for the swgoh_comlink python package
 
-## Description
+---
+## What is the swgoh_comlink python package?
 
-`swgoh_comlink` is a python language wrapper for the [swgoh-comlink](https://github.com/swgoh-utils/swgoh-comlink) tool.
+`swgoh_comlink` is a python package that provides a collection of interfaces to the [swgoh-comlink](https://github.com/swgoh-utils/swgoh-comlink) service proxy.
 
-There are several modules within the `swgoh_comlink` package. They are:
+`swgoh-comlink` provides a proxy interface to Electronic Arts' [Star Wars&trade; : Galaxy of Heroes](https://www.ea.com/games/starwars/galaxy-of-heroes) mobile game servers
 
-| Module Name                               | Purpose                                                                           |
-|-------------------------------------------|-----------------------------------------------------------------------------------|
-| [SwgohComlink](SwgohComlink.md)           | Used for traditional synchronous HTTP requests to the `swgoh-comlink` application |
-| [SwgohComlinkAsync](SwgohComlinkAsync.md) | Used for asynchronous HTTP requests to the `swgoh-comlink` application            |
-| [utils](/comlink-python/References/utils) | Helper functions to assist with typical tasks while working with game data        |
+### Installation
 
-The underlying HTTP framework used by both the `SwgohComlink` and `SwgohComlinkAsync` modules
-is [httpx](https://www.python-httpx.org/).
+It is recommended to install the `swgoh_comlink` package into a virtual environment
 
-## Installation
-
-`pip install swgoh-comlink`
-
-## Basic Usage
-
-```python
-from swgoh_comlink import SwgohComlink
-
-comlink = SwgohComlink(
-    url='http://localhost:3000',
-    stats_url='http://localhost:3223'
-)
-
-game_data = comlink.get_gamedata()
-
+```shell
+# python3 -m venv venv
+# source venv/bin/activate
+(venv) # python3 -m pip install swgoh-comlink
 ```
+
+### Available Modules
+
+The `swgoh_comlink` package contains several modules as well as a collection of helper utility functions for commonly 
+performed tasks when interacting with SWGoH game server data.
+
+| Module                                      | Description                                                                                  |
+|---------------------------------------------|----------------------------------------------------------------------------------------------|
+| [SwgohComlink](swgoh_comlink.md)            | Synchronous HTTP interface methods for interacting with Comlink                              |
+| [SwgohComlinkAsync](swgoh_comlink_async.md) | Asynchronous HTTP interface methods for interacting with Comlink                             |
+| [utils](utils.md)                           | Collection of utility functions for common game data interaction and manipulation activities |
+
 

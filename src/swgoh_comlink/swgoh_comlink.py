@@ -25,10 +25,10 @@ import httpx
 
 from swgoh_comlink.utils import (
     sanitize_allycode,
-    construct_unit_stats_query_string,
+    _construct_unit_stats_query_string,
     convert_league_to_int,
     convert_divisions_to_int,
-    param_alias,
+    _param_alias,
 )
 from ._const import get_logger
 
@@ -49,9 +49,9 @@ class SwgohComlinkBase:
     """
 
     url: str
-    access_key: str
-    secret_key: str
     stats_url: str
+    access_key: str | None
+    secret_key: str | None
     host: str = "localhost"
     protocol: str = "http"
     port: int = 3000
@@ -59,215 +59,19 @@ class SwgohComlinkBase:
     default_logger: bool = False
     hmac: bool = False
 
-    @staticmethod
-    def update_hmac_obj(hmac_obj: HMAC, values: list[str]) -> HMAC:
-        """Add encoded values to hmac object
-
-        Args:
-            hmac_obj (HMAC): An HMAC object to be updated
-            values (list[str]): List of stings to add to the HMAC object
-
-        Returns:
-            The updated HMAC object
-
-        """
-        for value in values:
-            hmac_obj.update(value.encode())
-        return hmac_obj
-
-    @staticmethod
-    def construct_url_base(protocol: str, host: str, port: int) -> str:
-        """Construct a URL base string from protocol, host and port inputs
-
-        Args:
-            protocol: http or https protocol
-            host: host address
-            port: port number
-
-        Returns:
-            URL string
-
-        """
-        return f"{protocol}://{host}:{port}"
-
-    DEFAULT_URL: str = construct_url_base(host=host, port=port, protocol=protocol)
-    # str: The URL of the swgoh-comlink service. Defaults to http://localhost:3000
-
-    DEFAULT_STATS_URL: str = construct_url_base(
-        host=host, port=stats_port, protocol=protocol
-    )
-
-    # str: The URL of the swgoh-stats service. Defaults to http://localhost:3223
-
-    @staticmethod
-    def get_player_payload(
-            allycode: str | int = "",
-            player_id: str = "",
-            enums: bool = False,
-            include_player_details_flag: bool = False,
-            player_details_only: bool = False,
-    ) -> dict:
-        """Create a swgoh-comlink payload object for player endpoints
-
-        Args:
-            allycode (str|int): Player allycode
-            player_id (str): Player ID
-            enums (bool): Flag to indicate whether ENUM values should be translated
-            include_player_details_flag (bool): Flag to indicate whether player_details_only should be included
-                                                in the response
-            player_details_only (bool): Flag to enable filtering of get_player_arena() method results
-
-        Returns:
-            Dict: swgoh-comlink payload object
-
-        """
-        if not allycode and not player_id:
-            raise ValueError("Either allycode or player_id must be provided.")
-        if allycode and player_id:
-            raise ValueError("Only one of allycode or player_id can be provided.")
-        payload: dict[str, Any] = {"payload": {}, "enums": enums}
-        if allycode:
-            allycode = sanitize_allycode(allycode)
-            payload["payload"]["allyCode"] = allycode
-        else:
-            payload["payload"]["playerId"] = player_id
-        if enums:
-            payload["enums"] = True
-        if include_player_details_flag:
-            payload["payload"]["playerDetailsOnly"] = player_details_only
-        return payload
-
-    @staticmethod
-    def make_client_specs(
-            client_specs: dict | None = None, enums: bool = False
-    ) -> dict:
-        """Create client_spec dictionary for get_metadata() method"""
-        payload = {}
-        if client_specs:
-            payload = {"payload": {"clientSpecs": client_specs}, "enums": enums}
-        return payload
-
-    @staticmethod
-    def make_game_data_payload(
-            version: str = "",
-            include_pve_units: bool = False,
-            request_segment: int = 0,
-            enums: bool = False,
-    ) -> dict:
-        """Create game_data payload object and return"""
-        if not version:
-            return {}
-        return {
-            "payload": {
-                "version": f"{version}",
-                "includePveUnits": include_pve_units,
-                "requestSegment": request_segment,
-            },
-            "enums": enums,
-        }
-
-    @staticmethod
-    def make_guild_payload(
-            guild_id: str = "", include_recent_activity: bool = False, enums: bool = False
-    ) -> dict:
-        """Create get_guild() method payload object"""
-        if not guild_id:
-            raise ValueError(f"{_get_function_name()}, 'guild_id' must be provided.")
-
-        return {
-            "payload": {
-                "guildId": guild_id,
-                "includeRecentGuildActivityInfo": include_recent_activity,
-            },
-            "enums": enums,
-        }
-
-    @staticmethod
-    def make_guilds_by_name_payload(
-            guild_name: str = "", index: int = 0, count: int = 10, enums: bool = False
-    ) -> dict:
-        """Create get_builds_by_name() method payload object"""
-        if not guild_name:
-            raise ValueError(f"{_get_function_name()}, 'guild_name' must be provided.")
-
-        return {
-            "payload": {
-                "name": guild_name,
-                "filterType": 4,
-                "startIndex": index,
-                "count": count,
-            },
-            "enums": enums,
-        }
-
-    @staticmethod
-    def make_guilds_by_criteria_payload(
-            criteria: dict, index: int = 0, count: int = 10, enums: bool = False
-    ) -> dict:
-        """Create get_builds_by_name() method payload object"""
-        if not criteria:
-            raise ValueError(f"{_get_function_name()}, 'criteria' must be provided.")
-
-        return {
-            "payload": {
-                "searchCriteria": criteria,
-                "filterType": 5,
-                "startIndex": index,
-                "count": count,
-            },
-            "enums": enums,
-        }
-
-    @staticmethod
-    def make_get_leaderboards_payload(
-            lb_type: int = 0,
-            league: int | str | None = "",
-            division: int | str | None = "",
-            event_instance_id: str = "",
-            group_id: str = "",
-            enums: bool = False,
-    ) -> dict:
-        """Create get_leaderboards() method payload"""
-        if lb_type != 4 and lb_type != 6:
-            raise ValueError(
-                f"{_get_function_name()}, 'leaderboard_type' must be either 4 (GAC brackets) or 6 (Global "
-                f"Leaderboards"
-            )
-
-        payload: dict = {
-            "payload": {
-                "leaderboardType": lb_type,
-            },
-            "enums": enums,
-        }
-        if lb_type == 4:
-            payload["payload"]["eventInstanceId"] = event_instance_id
-            payload["payload"]["groupId"] = group_id
-        elif lb_type == 6:
-            league = convert_league_to_int(league) if isinstance(league, str) else league
-            division = convert_divisions_to_int(division) if isinstance(division, str) else division
-            payload["payload"]["league"] = league
-            payload["payload"]["division"] = division
-        return payload
-
-    @staticmethod
-    def make_get_guild_leaderboard_payload(
-            lb_id: list, count: int, enums: bool = False
-    ) -> dict:
-        """Create get_guild_leaderboards() method payload"""
-        if not isinstance(lb_id, list):
-            raise ValueError(
-                f"{_get_function_name()}, leaderboard_id argument should be type list not {type(lb_id)}."
-            )
-        return {"payload": {"leaderboardId": lb_id, "count": count}, "enums": enums}
+    def __new__(cls, *args, **kwargs):
+        """Prevent instances of this base class from being created directly"""
+        if cls is SwgohComlinkBase:
+            raise TypeError(f"Only children of '{cls.__name__}' may be instantiated.")
+        return object.__new__(cls)
 
     def __init__(
             self,
-            url: str = "",
-            access_key: str = "",
-            secret_key: str = "",
-            stats_url: str | None = None,
-            host: str | None = None,
+            url: str = "http://localhost:3000",
+            stats_url: str = "http://localhost:3223",
+            access_key: str | None = None,
+            secret_key: str | None = None,
+            host: str = "localhost",
             protocol: str = "http",
             port: int = 3000,
             stats_port: int = 3223,
@@ -278,13 +82,13 @@ class SwgohComlinkBase:
 
         Args:
             url (str): The URL where swgoh-comlink is running.
+            stats_url (str): The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
             access_key (str): The HMAC public key. Default to None which indicates HMAC is not used.
             secret_key (str): The HMAC private key. Default to None which indicates HMAC is not used.
-            stats_url (str): The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
             protocol (str): The protocol to use for connecting to comlink. Typically, http or https.
             host (str): IP address or DNS name of server where the swgoh-comlink service is running
-            port (int): TCP port number where the swgoh-comlink service is running [Default: 3000]
-            stats_port (int): TCP port number of where the comlink-stats service is running [Default: 3223]
+            port (int): TCP port number between 1024 and 65535 where the swgoh-comlink service is running.
+            stats_port (int): TCP port number between 1024 and 65535 where the comlink-stats service is running.
             default_logger (bool): Flag to enable default logging. Should only be used if testing.
 
         Note:
@@ -332,7 +136,216 @@ class SwgohComlinkBase:
         self.logger.info(f"{self.url_base=}")
         self.logger.info(f"{self.stats_url_base=}")
 
-    def construct_request_headers(
+    @staticmethod
+    def _update_hmac_obj(hmac_obj: HMAC, values: list[str]) -> HMAC:
+        """Add encoded values to hmac object
+
+        Args:
+            hmac_obj (HMAC): An HMAC object to be updated
+            values (list[str]): List of stings to add to the HMAC object
+
+        Returns:
+            The updated HMAC object
+
+        """
+        for value in values:
+            hmac_obj.update(value.encode())
+        return hmac_obj
+
+    @staticmethod
+    def construct_url_base(protocol: str, host: str, port: int) -> str:
+        """Construct a URL base string from protocol, host and port inputs
+
+        Args:
+            protocol: http or https protocol
+            host: host address
+            port: port number
+
+        Returns:
+            URL string
+
+        Raises:
+            ValueError: If protocol is not 'http' or 'https' or port is not between 1024 and 65535.
+
+        """
+        if protocol not in ["http", "https"]:
+            raise ValueError(f"Protocol must be http or https.")
+        if 65535 < port < 1024:
+            raise ValueError(f"Port number must be between 1024 and 65535.")
+        return f"{protocol}://{host}:{port}"
+
+    DEFAULT_URL: str = construct_url_base(host=host, port=port, protocol=protocol)
+    # str: The URL of the swgoh-comlink service. Defaults to http://localhost:3000
+
+    DEFAULT_STATS_URL: str = construct_url_base(
+        host=host, port=stats_port, protocol=protocol
+    )
+
+    # str: The URL of the swgoh-stats service. Defaults to http://localhost:3223
+
+    @staticmethod
+    def _get_player_payload(
+            allycode: str | int = "",
+            player_id: str = "",
+            enums: bool = False,
+            include_player_details_flag: bool = False,
+            player_details_only: bool = False,
+    ) -> dict:
+        """Create a swgoh-comlink payload object for player endpoints
+
+        Args:
+            allycode (str|int): Player allycode
+            player_id (str): Player ID
+            enums (bool): Flag to indicate whether ENUM values should be translated
+            include_player_details_flag (bool): Flag to indicate whether player_details_only should be included
+                                                in the response
+            player_details_only (bool): Flag to enable filtering of get_player_arena() method results
+
+        Returns:
+            Dict: swgoh-comlink payload object
+
+        """
+        if not allycode and not player_id:
+            raise ValueError("Either allycode or player_id must be provided.")
+        if allycode and player_id:
+            raise ValueError("Only one of allycode or player_id can be provided.")
+        payload: dict[str, Any] = {"payload": {}, "enums": enums}
+        if allycode:
+            allycode = sanitize_allycode(allycode)
+            payload["payload"]["allyCode"] = allycode
+        else:
+            payload["payload"]["playerId"] = player_id
+        if enums:
+            payload["enums"] = True
+        if include_player_details_flag:
+            payload["payload"]["playerDetailsOnly"] = player_details_only
+        return payload
+
+    @staticmethod
+    def _make_client_specs(
+            client_specs: dict | None = None, enums: bool = False
+    ) -> dict:
+        """Create client_spec dictionary for get_metadata() method"""
+        payload = {}
+        if client_specs:
+            payload = {"payload": {"clientSpecs": client_specs}, "enums": enums}
+        return payload
+
+    @staticmethod
+    def _make_game_data_payload(
+            version: str = "",
+            include_pve_units: bool = False,
+            request_segment: int = 0,
+            enums: bool = False,
+    ) -> dict:
+        """Create game_data payload object and return"""
+        if not version:
+            return {}
+        return {
+            "payload": {
+                "version": f"{version}",
+                "includePveUnits": include_pve_units,
+                "requestSegment": request_segment,
+            },
+            "enums": enums,
+        }
+
+    @staticmethod
+    def _make_guild_payload(
+            guild_id: str = "", include_recent_activity: bool = False, enums: bool = False
+    ) -> dict:
+        """Create get_guild() method payload object"""
+        if not guild_id:
+            raise ValueError(f"{_get_function_name()}, 'guild_id' must be provided.")
+
+        return {
+            "payload": {
+                "guildId": guild_id,
+                "includeRecentGuildActivityInfo": include_recent_activity,
+            },
+            "enums": enums,
+        }
+
+    @staticmethod
+    def _make_guilds_by_name_payload(
+            guild_name: str = "", index: int = 0, count: int = 10, enums: bool = False
+    ) -> dict:
+        """Create get_builds_by_name() method payload object"""
+        if not guild_name:
+            raise ValueError(f"{_get_function_name()}, 'guild_name' must be provided.")
+
+        return {
+            "payload": {
+                "name": guild_name,
+                "filterType": 4,
+                "startIndex": index,
+                "count": count,
+            },
+            "enums": enums,
+        }
+
+    @staticmethod
+    def _make_guilds_by_criteria_payload(
+            criteria: dict, index: int = 0, count: int = 10, enums: bool = False
+    ) -> dict:
+        """Create get_builds_by_name() method payload object"""
+        if not criteria:
+            raise ValueError(f"{_get_function_name()}, 'criteria' must be provided.")
+
+        return {
+            "payload": {
+                "searchCriteria": criteria,
+                "filterType": 5,
+                "startIndex": index,
+                "count": count,
+            },
+            "enums": enums,
+        }
+
+    @staticmethod
+    def _make_get_leaderboards_payload(
+            lb_type: int = 0,
+            league: int | str | None = "",
+            division: int | str | None = "",
+            event_instance_id: str = "",
+            group_id: str = "",
+            enums: bool = False,
+    ) -> dict:
+        """Create get_leaderboards() method payload"""
+        if lb_type != 4 and lb_type != 6:
+            raise ValueError(
+                f"{_get_function_name()}, 'leaderboard_type' must be either 4 (GAC brackets) or 6 (Global "
+                f"Leaderboards"
+            )
+
+        payload: dict = {
+            "payload": {
+                "leaderboardType": lb_type,
+            },
+            "enums": enums,
+        }
+        if lb_type == 4:
+            payload["payload"]["eventInstanceId"] = event_instance_id
+            payload["payload"]["groupId"] = group_id
+        elif lb_type == 6:
+            league = convert_league_to_int(league) if isinstance(league, str) else league
+            division = convert_divisions_to_int(division) if isinstance(division, str) else division
+            payload["payload"]["league"] = league
+            payload["payload"]["division"] = division
+        return payload
+
+    @staticmethod
+    def _make_get_guild_leaderboard_payload(
+            lb_id: list, count: int, enums: bool = False
+    ) -> dict:
+        """Create get_guild_leaderboards() method payload"""
+        if not isinstance(lb_id, list):
+            raise ValueError(
+                f"{_get_function_name()}, leaderboard_id argument should be type list not {type(lb_id)}."
+            )
+        return {"payload": {"leaderboardId": lb_id, "count": count}, "enums": enums}
+
+    def _construct_request_headers(
             self, endpoint: str, payload: dict | list[dict]
     ) -> dict:
         """Create HTTP request headers for the given endpoint and payload
@@ -355,7 +368,7 @@ class SwgohComlinkBase:
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
 
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
-            hmac_obj = self.update_hmac_obj(
+            hmac_obj = self._update_hmac_obj(
                 hmac_obj, [req_time, "POST", f"/{endpoint}", payload_hash_digest]
             )
 
@@ -408,7 +421,7 @@ class SwgohComlink(SwgohComlinkBase):
 
         url_base = url_base or self.url_base
         post_url = url_base + f"/{endpoint}"
-        req_headers = self.construct_request_headers(endpoint, payload)
+        req_headers = self._construct_request_headers(endpoint, payload)
         self.logger.info(f"Request headers: {req_headers}")
         self.logger.info(f"Post URL: {post_url}")
 
@@ -426,7 +439,7 @@ class SwgohComlink(SwgohComlinkBase):
             self.logger.warning("%s: %s", type(e).__name__, e)
             raise e
 
-    @param_alias(param="request_payload", alias="roster_list")
+    @_param_alias(param="request_payload", alias="roster_list")
     def get_unit_stats(
             self,
             request_payload: dict | list[dict],
@@ -458,7 +471,7 @@ class SwgohComlink(SwgohComlinkBase):
             request_payload = [request_payload]
         if flags and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
-        query_string = construct_unit_stats_query_string(flags, language)
+        query_string = _construct_unit_stats_query_string(flags, language)
         endpoint_string = "api" + query_string if query_string else "api"
         self.logger.info(f"{self.stats_url_base=}, {endpoint_string=}")
         return self._post(
@@ -532,7 +545,7 @@ class SwgohComlink(SwgohComlinkBase):
         return self._post(
             url_base=self.url_base,
             endpoint="data",
-            payload=self.make_game_data_payload(
+            payload=self._make_game_data_payload(
                 version=game_version,
                 include_pve_units=include_pve_units,
                 request_segment=request_segment,
@@ -586,6 +599,7 @@ class SwgohComlink(SwgohComlinkBase):
             Current game client metadata
 
         Examples:
+            ```python
             client_specs: {
                   "platform": "string",
                   "bundleId": "string",
@@ -593,11 +607,12 @@ class SwgohComlink(SwgohComlinkBase):
                   "internalVersion": "string",
                   "region": "string"
                 }
+            ```
         """
         return self._post(
             url_base=self.url_base,
             endpoint="metadata",
-            payload=self.make_client_specs(client_specs, enums),
+            payload=self._make_client_specs(client_specs, enums),
         )
 
     # alias for non PEP usage of direct endpoint calls
@@ -625,7 +640,7 @@ class SwgohComlink(SwgohComlinkBase):
         if not allycode and not player_id:
             raise ValueError("Either 'allycode' or 'player_id' must be provided.")
 
-        payload = self.get_player_payload(
+        payload = self._get_player_payload(
             allycode=allycode, player_id=player_id, enums=enums
         )
         return self._post(url_base=self.url_base, endpoint="player", payload=payload)
@@ -636,7 +651,7 @@ class SwgohComlink(SwgohComlinkBase):
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @param_alias(param="player_details_only", alias="playerDetailsOnly")
+    @_param_alias(param="player_details_only", alias="playerDetailsOnly")
     def get_player_arena(
             self,
             allycode: str | int = "",
@@ -663,7 +678,7 @@ class SwgohComlink(SwgohComlinkBase):
         return self._post(
             url_base=self.url_base,
             endpoint="playerArena",
-            payload=self.get_player_payload(
+            payload=self._get_player_payload(
                 allycode=allycode,
                 player_id=player_id,
                 enums=enums,
@@ -678,7 +693,7 @@ class SwgohComlink(SwgohComlinkBase):
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @_param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(
             self,
             guild_id: str = "",
@@ -703,7 +718,7 @@ class SwgohComlink(SwgohComlinkBase):
         guild = self._post(
             url_base=self.url_base,
             endpoint="guild",
-            payload=self.make_guild_payload(
+            payload=self._make_guild_payload(
                 guild_id=guild_id,
                 include_recent_activity=include_recent_guild_activity_info,
                 enums=enums,
@@ -742,7 +757,7 @@ class SwgohComlink(SwgohComlinkBase):
         return self._post(
             url_base=self.url_base,
             endpoint="getGuilds",
-            payload=self.make_guilds_by_name_payload(
+            payload=self._make_guilds_by_name_payload(
                 guild_name=name, index=start_index, count=count, enums=enums
             ),
         )
@@ -768,7 +783,8 @@ class SwgohComlink(SwgohComlinkBase):
         Returns:
             Search results as a dictionaries
 
-        Examples
+        Examples:
+            ```python
             search_criteria = {
                 "minMemberCount": 1,
                 "maxMemberCount": 50,
@@ -777,11 +793,12 @@ class SwgohComlink(SwgohComlinkBase):
                 "maxGuildGalacticPower": 500000000,
                 "recentTbParticipatedIn": []
             }
+            ```
         """
         return self._post(
             url_base=self.url_base,
             endpoint="getGuilds",
-            payload=self.make_guilds_by_criteria_payload(
+            payload=self._make_guilds_by_criteria_payload(
                 criteria=search_criteria, index=start_index, count=count, enums=enums
             ),
         )
@@ -828,7 +845,7 @@ class SwgohComlink(SwgohComlinkBase):
         leaderboard = self._post(
             url_base=self.url_base,
             endpoint="getLeaderboard",
-            payload=self.make_get_leaderboards_payload(
+            payload=self._make_get_leaderboards_payload(
                 lb_type=leaderboard_type,
                 league=league,
                 division=division,
@@ -866,7 +883,7 @@ class SwgohComlink(SwgohComlinkBase):
         return self._post(
             url_base=self.url_base,
             endpoint="getGuildLeaderboard",
-            payload=self.make_get_guild_leaderboard_payload(
+            payload=self._make_get_guild_leaderboard_payload(
                 lb_id=leaderboard_id, count=count, enums=enums
             ),
         )
@@ -874,7 +891,7 @@ class SwgohComlink(SwgohComlinkBase):
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
 
-    def get_latest_game_data_version(self, game_version: str = "") -> dict:
+    def get_latest_game_data_version(self, game_version: str) -> dict:
         """Get the latest game data and language bundle versions
 
         Optional Args:
@@ -913,7 +930,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         self.client = httpx.AsyncClient(base_url=self.url_base)
 
     async def _post(self, endpoint: str, payload: dict | list[dict]) -> dict:
-        req_headers = self.construct_request_headers(endpoint, payload)
+        req_headers = self._construct_request_headers(endpoint, payload)
         # If access_key and secret_key are set, perform HMAC security
         try:
             self.logger.debug(f"Sending POST, {endpoint=} {req_headers=}")
@@ -938,6 +955,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             Current game client metadata
 
         Examples:
+            ```python
             client_specs: {
                   "platform": "string",
                   "bundleId": "string",
@@ -945,10 +963,10 @@ class SwgohComlinkAsync(SwgohComlinkBase):
                   "internalVersion": "string",
                   "region": "string"
                 }
-
+            ```
         """
         return await self._post(
-            endpoint="metadata", payload=self.make_client_specs(client_specs, enums)
+            endpoint="metadata", payload=self._make_client_specs(client_specs, enums)
         )
 
     # alias for non PEP usage of direct endpoint calls
@@ -987,7 +1005,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             Dictionary containing a single 'gameEvents' which is a list of events as dicts
 
         Raises:
-            requests.Exception:
+            requests.Exception: HTTP Request exception
 
         """
         payload = {"payload": {}, "enums": enums}
@@ -1021,7 +1039,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             game_version = version
         return await self._post(
             endpoint="data",
-            payload=self.make_game_data_payload(
+            payload=self._make_game_data_payload(
                 version=game_version,
                 include_pve_units=include_pve_units,
                 request_segment=request_segment,
@@ -1067,7 +1085,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     # while fixing the original naming format mistake.
     # TODO: fix below. Won't work with single shared async http client session instance to comlink. Another instance
     #  to statCalc is needed as well. Also the _post method does not handle list payloads
-    @param_alias(param="request_payload", alias="units_list")
+    @_param_alias(param="request_payload", alias="units_list")
     async def get_unit_stats(
             self,
             request_payload: dict | list[dict],
@@ -1092,7 +1110,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         if flags is not None and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
 
-        query_string = construct_unit_stats_query_string(flags, language)
+        query_string = _construct_unit_stats_query_string(flags, language)
         endpoint_string = "api" + query_string if query_string else "api"
         return await self._post(endpoint=endpoint_string, payload=request_payload)
 
@@ -1113,7 +1131,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ValueError: if neither an allycode nor player_id is provided
 
         """
-        payload = self.get_player_payload(
+        payload = self._get_player_payload(
             allycode=allycode, player_id=player_id, enums=enums
         )
         return await self._post(endpoint="player", payload=payload)
@@ -1124,7 +1142,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @param_alias(param="player_details_only", alias="playerDetailsOnly")
+    @_param_alias(param="player_details_only", alias="playerDetailsOnly")
     async def get_player_arena(
             self,
             allycode: str | int = "",
@@ -1150,7 +1168,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         """
         return await self._post(
             endpoint="playerArena",
-            payload=self.get_player_payload(
+            payload=self._get_player_payload(
                 allycode=allycode,
                 player_id=player_id,
                 enums=enums,
@@ -1165,7 +1183,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     getPlayerArena = get_player_arena
     getPlayerArenaProfile = get_player_arena
 
-    @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
+    @_param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     async def get_guild(
             self,
             guild_id: str = "",
@@ -1189,7 +1207,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         """
         guild = await self._post(
             endpoint="guild",
-            payload=self.make_guild_payload(
+            payload=self._make_guild_payload(
                 guild_id=guild_id,
                 include_recent_activity=include_recent_guild_activity_info,
                 enums=enums,
@@ -1224,7 +1242,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         """
         return await self._post(
             endpoint="getGuilds",
-            payload=self.make_guilds_by_name_payload(
+            payload=self._make_guilds_by_name_payload(
                 guild_name=name, index=start_index, count=count, enums=enums
             ),
         )
@@ -1250,7 +1268,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         Returns:
             Search results as a list of dictionaries
 
-        Examples
+        Examples:
+            ```python
             search_criteria = {
                 "minMemberCount": 1,
                 "maxMemberCount": 50,
@@ -1259,11 +1278,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
                 "maxGuildGalacticPower": 500000000,
                 "recentTbParticipatedIn": []
             }
-
+            ```
         """
         return await self._post(
             endpoint="getGuilds",
-            payload=self.make_guilds_by_criteria_payload(
+            payload=self._make_guilds_by_criteria_payload(
                 criteria=search_criteria, index=start_index, count=count, enums=enums
             ),
         )
@@ -1312,7 +1331,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         """
         leaderboard = await self._post(
             endpoint="getLeaderboard",
-            payload=self.make_get_leaderboards_payload(
+            payload=self._make_get_leaderboards_payload(
                 lb_type=leaderboard_type,
                 league=league,
                 division=division,
@@ -1349,7 +1368,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         """
         return await self._post(
             endpoint="getGuildLeaderboard",
-            payload=self.make_get_guild_leaderboard_payload(
+            payload=self._make_get_guild_leaderboard_payload(
                 lb_id=leaderboard_id, count=count, enums=enums
             ),
         )
