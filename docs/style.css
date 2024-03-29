@@ -1,0 +1,53 @@
+
+.rst-content code {
+    color: darkblue;
+    font-family: "Roboto Slab";
+    font-size: 14px;
+    border-radius: 15px;
+    padding: 4px 10px;
+}
+
+.doc {
+    font-family: "Roboto Slab";
+}
+
+.doc-label {
+    border-radius: 15px;
+    padding: 2px 8px;
+    font-weight: bold;
+    color: darkgreen;
+}
+
+.doc-label-special {
+    background-color: #3330E4;
+    color: white;
+}
+
+.doc-label-private {
+    background-color: #F637EC;
+    color: white;
+}
+
+.doc-label-property {
+    background-color: #FBB454;
+    color: black;
+}
+
+.doc-label-read-only {
+    background-color: #FAEA48;
+    color: black;
+}
+
+.md-sidebar__scrollwrap {
+    min-width: 320px;
+}
+
+.md-sidebar--secondary {
+    min-width: 350px;
+    width: 350px;
+}
+
+.md-sidebar__inner {
+    min-width: 350px;
+    width: 350px;
+}
