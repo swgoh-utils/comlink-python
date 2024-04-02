@@ -5,24 +5,35 @@ Constants used throughout the swgoh_comlink package
 
 from __future__ import annotations
 
+import inspect
 import logging
 import os
+from functools import wraps
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from typing import Callable
 
-_default_logger_name: str = "swgoh_comlink"
-_default_logger_enabled: bool = False
+from sentinels import Sentinel
+
+OPTIONAL = Sentinel('NotGiven')
+NotGiven = Sentinel('NotGiven')
+
+_DEFAULT_LOGGER_NAME: str = "swgoh_comlink"
+_DEFAULT_LOGGER_ENABLED: bool = False
 
 __all__ = [
+    "OPTIONAL",  # Sentinel
+    "NotGiven",  # Sentinel
     "DATA_PATH",
-    "DIVISIONS",
+    "DIVISIONS",  # Lookup dictionary
     "get_logger",
-    "LEAGUES",
-    "MOD_SET_IDS",
-    "MOD_SLOTS",
-    "STAT_ENUMS",
-    "UNIT_STAT_ENUMS_MAP",
-    "RELIC_TIERS",
+    "LEAGUES",  # Lookup dictionary
+    "MOD_SET_IDS",  # Lookup dictionary
+    "MOD_SLOTS",  # Lookup dictionary
+    "param_alias",  # Decorator
+    "RELIC_TIERS",  # Lookup dictionary
+    "STAT_ENUMS",  # Lookup dictionary
+    "UNIT_STAT_ENUMS_MAP",  # Lookup dictionary
 ]
 
 DATA_PATH = os.path.join(os.getcwd(), "data")
@@ -74,8 +85,26 @@ class LoggingFormatter(logging.Formatter):
         return formatter.format(record)
 
 
+def param_alias(param: str, alias: str) -> Callable:
+    """Decorator for aliasing function parameters"""
+
+    def decorator(func: Callable) -> Callable:
+        """Decorating function"""
+
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> Callable:
+            """Wrapper function"""
+            if alias in kwargs:
+                kwargs[param] = kwargs.pop(alias)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def _get_new_logger(
-        name: str,
+        name: str | Sentinel = OPTIONAL,
         *,
         log_level: str = "DEBUG",
         log_to_console: bool = False,
@@ -96,8 +125,8 @@ def _get_new_logger(
     tmp_logger = logging.getLogger(name)
     tmp_logger.setLevel(logging.getLevelName(log_level))
 
-    if not name:
-        name = _default_logger_name
+    if name is NotGiven:
+        name = _DEFAULT_LOGGER_NAME
 
     # Console handler
     if log_to_console:
@@ -120,16 +149,23 @@ def _get_new_logger(
 
 
 def get_logger(
-        name: str = _default_logger_name,
-        default_logger: bool = _default_logger_enabled,
+        name: str = _DEFAULT_LOGGER_NAME,
+        default_logger: bool = _DEFAULT_LOGGER_ENABLED,
 ) -> logging.Logger:
     """Returns a logger"""
     if default_logger:
         return _get_new_logger(name)
     else:
-        base_logger: logging.Logger = logging.getLogger(_default_logger_name)
+        # If the default logger is disabled, log messages to NULL handler
+        # This allows library users to implement their own loggers, if desired
+        base_logger: logging.Logger = logging.getLogger(_DEFAULT_LOGGER_NAME)
         base_logger.addHandler(logging.NullHandler())
         return base_logger
+
+
+def _get_function_name() -> str:
+    """Return the name for the calling function"""
+    return f"{inspect.stack()[1].function}()"
 
 
 LEAGUES: dict[str, int] = {

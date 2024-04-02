@@ -9,7 +9,7 @@ authors = [
     { name = "Mar Trepodi", email = "martrepodi@gmail.com" },
 ]
 description = "Python 3 interface library for the swgoh-comlink data proxy container (https://github.com/swgoh-utils/swgoh-comlink)"
-readme = "README.md"
+readme = "docs/index.md"
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",

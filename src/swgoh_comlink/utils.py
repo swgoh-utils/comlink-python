@@ -10,9 +10,9 @@ import os
 import time
 from functools import wraps
 from pathlib import Path
-from typing import Callable, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
 
-from ._const import (get_logger, LEAGUES, DIVISIONS, RELIC_TIERS, DATA_PATH)
+from .constants import (get_logger, LEAGUES, DIVISIONS, RELIC_TIERS, DATA_PATH)
 
 if TYPE_CHECKING:
     import swgoh_comlink
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 logger = get_logger()
 
 __all__ = [
-    "_construct_unit_stats_query_string",
     "convert_divisions_to_int",
     "convert_league_to_int",
     "create_localized_unit_name_dictionary",
@@ -33,7 +32,6 @@ __all__ = [
     "get_tw_omicrons",
     "human_time",
     "load_master_map",
-    "_param_alias",
     "sanitize_allycode",
     "search_gac_brackets",
     "validate_file_path",
@@ -76,24 +74,6 @@ def func_debug_logger(f):
         return result
 
     return wrap
-
-
-def _param_alias(param: str, alias: str) -> Callable:
-    """Decorator for aliasing function parameters"""
-
-    def decorator(func: Callable) -> Callable:
-        """Decorating function"""
-
-        @wraps(func)
-        def wrapper(*args, **kwargs) -> Callable:
-            """Wrapper function"""
-            if alias in kwargs:
-                kwargs[param] = kwargs.pop(alias)
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
 
 
 def validate_file_path(path: str) -> bool:
@@ -166,55 +146,6 @@ def human_time(unix_time: Any) -> str:
     return datetime.fromtimestamp(unix_time, tz=timezone.utc).strftime(
         "%Y-%m-%d %H:%M:%S"
     )
-
-
-def _construct_unit_stats_query_string(
-        flags: list[str], language: str = "eng_us"
-) -> str | None:
-    """Constructs query string from provided flags and language to be used with the get_unit_stats() function
-
-    Args:
-        flags: List of strings indicating the flags to enable for the unit_stats function call
-        language: Language of the localization to use for returned data
-
-    Returns:
-        The query string portion of a URL
-
-    """
-
-    allowed_flags: set = set(
-        sorted(
-            [
-                "gameStyle",
-                "calcGP",
-                "onlyGP",
-                "withoutModCalc",
-                "percentVals",
-                "useMax",
-                "scaled",
-                "unscaled",
-                "statIDs",
-                "enums",
-                "noSpace",
-            ]
-        )
-    )
-    language_string = f"language={language}" if language else None
-    if flags:
-        if not isinstance(flags, list):
-            raise ValueError(
-                f"{_get_function_name()}, Invalid flags '{flags}', must be type list of strings."
-            )
-        tmp_flags: set = set(sorted(list(dict.fromkeys(flags))))
-        flag_string = (
-            f'flags={",".join(sorted(tmp_flags.intersection(allowed_flags)))}'
-            if flags
-            else str()
-        )
-        constructed_string = "&".join(filter(None, [flag_string, language_string]))
-        return f"?{constructed_string}"
-    else:
-        return None
 
 
 def convert_league_to_int(league: str) -> int | None:
