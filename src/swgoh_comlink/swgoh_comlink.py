@@ -22,6 +22,7 @@ from json import dumps
 from typing import Any
 
 import httpx
+from sentinels import Sentinel
 
 from swgoh_comlink.utils import (
     sanitize_allycode,
@@ -33,6 +34,8 @@ from swgoh_comlink.utils import (
 from ._const import get_logger
 
 __all__ = ["SwgohComlink", "SwgohComlinkAsync"]
+
+NotGiven = Sentinel('NotGiven')
 
 
 def _get_function_name() -> str:
@@ -185,8 +188,8 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _get_player_payload(
-            allycode: str | int = "",
-            player_id: str = "",
+            allycode: str | int = NotGiven,
+            player_id: str = NotGiven,
             enums: bool = False,
             include_player_details_flag: bool = False,
             player_details_only: bool = False,
@@ -205,7 +208,7 @@ class SwgohComlinkBase:
             Dict: swgoh-comlink payload object
 
         """
-        if not allycode and not player_id:
+        if allycode is NotGiven and player_id is NotGiven:
             raise ValueError("Either allycode or player_id must be provided.")
         if allycode and player_id:
             raise ValueError("Only one of allycode or player_id can be provided.")
@@ -233,13 +236,13 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _make_game_data_payload(
-            version: str = "",
+            version: str = NotGiven,
             include_pve_units: bool = False,
             request_segment: int = 0,
             enums: bool = False,
     ) -> dict:
         """Create game_data payload object and return"""
-        if not version:
+        if version is NotGiven:
             return {}
         return {
             "payload": {
@@ -252,10 +255,10 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _make_guild_payload(
-            guild_id: str = "", include_recent_activity: bool = False, enums: bool = False
+            guild_id: str = NotGiven, include_recent_activity: bool = False, enums: bool = False
     ) -> dict:
         """Create get_guild() method payload object"""
-        if not guild_id:
+        if guild_id is NotGiven:
             raise ValueError(f"{_get_function_name()}, 'guild_id' must be provided.")
 
         return {
@@ -268,10 +271,10 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _make_guilds_by_name_payload(
-            guild_name: str = "", index: int = 0, count: int = 10, enums: bool = False
+            guild_name: str = NotGiven, index: int = 0, count: int = 10, enums: bool = False
     ) -> dict:
         """Create get_builds_by_name() method payload object"""
-        if not guild_name:
+        if guild_name is NotGiven:
             raise ValueError(f"{_get_function_name()}, 'guild_name' must be provided.")
 
         return {
@@ -305,10 +308,10 @@ class SwgohComlinkBase:
     @staticmethod
     def _make_get_leaderboards_payload(
             lb_type: int = 0,
-            league: int | str | None = "",
-            division: int | str | None = "",
-            event_instance_id: str = "",
-            group_id: str = "",
+            league: int | str | Sentinel = NotGiven,
+            division: int | str | Sentinel = NotGiven,
+            event_instance_id: str | Sentinel = NotGiven,
+            group_id: str | Sentinel = NotGiven,
             enums: bool = False,
     ) -> dict:
         """Create get_leaderboards() method payload"""
@@ -519,7 +522,7 @@ class SwgohComlink(SwgohComlinkBase):
 
     def get_game_data(
             self,
-            version: str = "",
+            version: str | Sentinel = NotGiven,
             include_pve_units: bool = True,
             request_segment: int = 0,
             enums: bool = False,
@@ -537,10 +540,10 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
 
-        if version:
-            game_version = version
-        else:
+        if version is NotGiven:
             game_version = self._get_game_version()
+        else:
+            game_version = version
 
         return self._post(
             url_base=self.url_base,
@@ -557,7 +560,7 @@ class SwgohComlink(SwgohComlinkBase):
     getGameData = get_game_data
 
     def get_localization(
-            self, id: str = "", unzip: bool = False, enums: bool = False
+            self, id: str | Sentinel = NotGiven, unzip: bool = False, enums: bool = False
     ) -> dict:
         """Get localization data from game
 
@@ -571,7 +574,7 @@ class SwgohComlink(SwgohComlinkBase):
             Dictionary containing each localization file in a separate element value
 
         """
-        if not id:
+        if id is NotGiven:
             current_game_version = self.get_latest_game_data_version()
             id = current_game_version["language"]
 
@@ -621,7 +624,8 @@ class SwgohComlink(SwgohComlinkBase):
     get_metadata = get_game_metadata
 
     def get_player(
-            self, allycode: str | int = "", *, player_id: str = "", enums: bool = False
+            self, allycode: str | int | Sentinel = NotGiven, *, player_id: str | Sentinel = NotGiven,
+            enums: bool = False
     ) -> dict:
         """Get player information from game
 
@@ -637,7 +641,7 @@ class SwgohComlink(SwgohComlinkBase):
             ValueError: if neither an allycode nor player_id is provided
 
         """
-        if not allycode and not player_id:
+        if allycode is NotGiven and player_id is NotGiven:
             raise ValueError("Either 'allycode' or 'player_id' must be provided.")
 
         payload = self._get_player_payload(
@@ -654,8 +658,8 @@ class SwgohComlink(SwgohComlinkBase):
     @_param_alias(param="player_details_only", alias="playerDetailsOnly")
     def get_player_arena(
             self,
-            allycode: str | int = "",
-            player_id: str = "",
+            allycode: str | int | Sentinel = NotGiven,
+            player_id: str | Sentinel = NotGiven,
             player_details_only: bool = False,
             enums: bool = False,
     ) -> dict:
@@ -696,7 +700,7 @@ class SwgohComlink(SwgohComlinkBase):
     @_param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(
             self,
-            guild_id: str = "",
+            guild_id: str | Sentinel = NotGiven,
             include_recent_guild_activity_info: bool = False,
             enums: bool = False,
     ) -> dict:
@@ -734,7 +738,7 @@ class SwgohComlink(SwgohComlinkBase):
 
     def get_guilds_by_name(
             self,
-            name: str = "",
+            name: str | Sentinel = NotGiven,
             start_index: int = 0,
             count: int = 10,
             enums: bool = False,
@@ -812,8 +816,8 @@ class SwgohComlink(SwgohComlinkBase):
             *,
             league: int | str = "carbonite",
             division: int | str = 5,
-            event_instance_id: str = "",
-            group_id: str = "",
+            event_instance_id: str | Sentinel = NotGiven,
+            group_id: str | Sentinel = NotGiven,
             enums: bool = False,
     ) -> dict:
         """Retrieve Grand Arena Championship leaderboard information.
@@ -891,7 +895,7 @@ class SwgohComlink(SwgohComlinkBase):
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
 
-    def get_latest_game_data_version(self, game_version: str) -> dict:
+    def get_latest_game_data_version(self, game_version: str | Sentinel = NotGiven) -> dict:
         """Get the latest game data and language bundle versions
 
         Optional Args:
@@ -926,7 +930,6 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.client_session = aiohttp.ClientSession(base_url=self.url_base)
         self.client = httpx.AsyncClient(base_url=self.url_base)
 
     async def _post(self, endpoint: str, payload: dict | list[dict]) -> dict:
@@ -1016,7 +1019,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     async def get_game_data(
             self,
-            version: str = "",
+            version: str | Sentinel = NotGiven,
             include_pve_units: bool = True,
             request_segment: int = 0,
             enums: bool = False,
@@ -1033,7 +1036,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             Current game data
 
         """
-        if version == "":
+        if version is NotGiven:
             game_version = await self._get_game_version()
         else:
             game_version = version
@@ -1115,7 +1118,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         return await self._post(endpoint=endpoint_string, payload=request_payload)
 
     async def get_player(
-            self, allycode: str | int = "", *, player_id: str = "", enums: bool = False
+            self, allycode: str | int = NotGiven, *, player_id: str = NotGiven, enums: bool = False
     ) -> dict:
         """Get player information from game
 
@@ -1145,8 +1148,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     @_param_alias(param="player_details_only", alias="playerDetailsOnly")
     async def get_player_arena(
             self,
-            allycode: str | int = "",
-            player_id: str = "",
+            allycode: str | int | Sentinel = NotGiven,
+            player_id: str | Sentinel = NotGiven,
             player_details_only: bool = False,
             enums: bool = False,
     ) -> dict:
@@ -1186,7 +1189,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     @_param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     async def get_guild(
             self,
-            guild_id: str = "",
+            guild_id: str | Sentinel = NotGiven,
             include_recent_guild_activity_info: bool = False,
             enums: bool = False,
     ) -> dict:
@@ -1222,7 +1225,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     getGuild = get_guild
 
     async def get_guilds_by_name(
-            self, name: str = "", start_index: int = 0, count: int = 10, enums: bool = False
+            self, name: str | Sentinel = NotGiven, start_index: int = 0, count: int = 10, enums: bool = False
     ) -> dict:
         """Search for guild by name and return match.
 
@@ -1296,8 +1299,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             *,
             league: int | str = "carbonite",
             division: int | str = 5,
-            event_instance_id: str = "",
-            group_id: str = "",
+            event_instance_id: str | Sentinel = NotGiven,
+            group_id: str | Sentinel = NotGiven,
             enums: bool = False,
     ) -> dict:
         """Retrieve Grand Arena Championship leaderboard information.
@@ -1376,7 +1379,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
 
-    async def get_latest_game_data_version(self, game_version: str = "") -> dict:
+    async def get_latest_game_data_version(self, game_version: str | Sentinel = NotGiven) -> dict:
         """Get the latest game data and language bundle versions
 
         Args:

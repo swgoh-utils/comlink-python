@@ -467,9 +467,7 @@ def get_current_datacron_sets(datacron_list: list) -> list:
         raise ValueError(
             f"{_get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}"
         )
-
     import math
-
     current_datacron_sets = []
     for datacron in datacron_list:
         if int(datacron["expirationTimeMs"]) > math.floor(time.time() * 1000):

@@ -11,3 +11,4 @@ hatch
 twine
 build
 ruff~=0.3.4
+sentinels~=1.0.0
