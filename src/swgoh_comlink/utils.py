@@ -5,17 +5,28 @@ Helper utilities for the swgoh_comlink package and related modules
 
 from __future__ import annotations
 
+import asyncio
 import inspect
 import os
 import time
 from functools import wraps
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any, TYPE_CHECKING
 
-from .constants import (get_logger, LEAGUES, DIVISIONS, RELIC_TIERS, DATA_PATH)
+from sentinels import Sentinel
+
+from .constants import (
+    get_logger,
+    LEAGUES,
+    DIVISIONS,
+    RELIC_TIERS,
+    DATA_PATH,
+    REQUIRED,
+    MutualExclusiveRequired,
+)
 
 if TYPE_CHECKING:
-    import swgoh_comlink
+    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 
 logger = get_logger()
 
@@ -76,7 +87,7 @@ def func_debug_logger(f):
     return wrap
 
 
-def validate_file_path(path: str) -> bool:
+def validate_file_path(path: str | Sentinel = REQUIRED) -> bool:
     """Test whether provided path exists or not
 
     Args:
@@ -89,7 +100,7 @@ def validate_file_path(path: str) -> bool:
     return os.path.exists(path) and os.path.isfile(path)
 
 
-def sanitize_allycode(allycode: str | int) -> str:
+def sanitize_allycode(allycode: str | int | Sentinel = REQUIRED) -> str:
     """Sanitize a player allycode
 
     Ensure that allycode does not:
@@ -115,7 +126,7 @@ def sanitize_allycode(allycode: str | int) -> str:
     return allycode
 
 
-def human_time(unix_time: Any) -> str:
+def human_time(unix_time: Any | Sentinel = REQUIRED) -> str:
     """Convert unix time to human-readable string
 
     Args:
@@ -148,7 +159,7 @@ def human_time(unix_time: Any) -> str:
     )
 
 
-def convert_league_to_int(league: str) -> int | None:
+def convert_league_to_int(league: str | Sentinel = REQUIRED) -> int | None:
     """Convert GAC leagues to integer
 
     Args:
@@ -164,7 +175,7 @@ def convert_league_to_int(league: str) -> int | None:
         return None
 
 
-def convert_divisions_to_int(division: int | str) -> int | None:
+def convert_divisions_to_int(division: int | str | Sentinel = REQUIRED) -> int | None:
     """Convert GAC divisions to integer
 
     Args:
@@ -183,7 +194,7 @@ def convert_divisions_to_int(division: int | str) -> int | None:
     return None
 
 
-def convert_relic_tier(relic_tier: str | int) -> str | None:
+def convert_relic_tier(relic_tier: str | int | Sentinel = REQUIRED) -> str | None:
     """Convert character relic tier to offset string in-game value.
 
     Conversion is done based on a zero based table indicating both the relic tier status and achieved level.
@@ -216,7 +227,7 @@ def convert_relic_tier(relic_tier: str | int) -> str | None:
     return relic_value
 
 
-def create_localized_unit_name_dictionary(locale: str | list) -> dict:
+def create_localized_unit_name_dictionary(locale: str | list | Sentinel = REQUIRED) -> dict:
     """Create localized translation mapping for unit names
 
     Take a localization element from the SwgohComlink.get_localization() result dictionary and
@@ -255,34 +266,62 @@ def create_localized_unit_name_dictionary(locale: str | list) -> dict:
     return unit_name_map
 
 
+async def get_async_player(comlink: SwgohComlinkAsync,
+                           *,
+                           player_id: str | Sentinel = MutualExclusiveRequired,
+                           allycode: str | Sentinel = MutualExclusiveRequired) -> dict | None:
+    if player_id:
+        return await comlink.get_player(player_id=player_id)
+    elif allycode:
+        return await comlink.get_player(allycode=allycode)
+    else:
+        return None
+
+
 def get_guild_members(
-        comlink: swgoh_comlink.SwgohComlink,
-        *,
-        player_id: str = "",
-        allycode: str | int = "",
-) -> list[dict]:
+        comlink: SwgohComlink | SwgohComlinkAsync | Sentinel = REQUIRED,
+        player_id: str | Sentinel = MutualExclusiveRequired,
+        allycode: str | int | Sentinel = MutualExclusiveRequired,
+) -> list[dict] | None:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
     Args:
-        comlink: Instance of SwgohComlink
+        comlink: Instance of SwgohComlink or SwgohComlinkAsync
         player_id: Player's ID
         allycode: Player's allycode
 
     Returns:
         list of guild members objects
 
+    Note:
+        A player_id or allycode argument is REQUIRED
+
     """
     if not player_id and not allycode:
         raise RuntimeError("player_id or allycode must be provided.")
-    if not allycode:
-        player = comlink.get_player(player_id=player_id)
+
+    if isinstance(comlink, SwgohComlink):
+        if not allycode:
+            player = comlink.get_player(player_id=player_id)
+        else:
+            player = comlink.get_player(allycode=sanitize_allycode(allycode))
+    elif isinstance(comlink, SwgohComlinkAsync):
+        if not allycode:
+            player = asyncio.run(get_async_player(comlink=comlink, player_id=player_id))
+        else:
+            player = asyncio.run(get_async_player(comlink=comlink, allycode=allycode))
     else:
-        player = comlink.get_player(allycode=sanitize_allycode(allycode))
+        raise ValueError(f"{_get_function_name()} Invalid comlink instance")
+
     guild = comlink.get_guild(guild_id=player["guildId"])
     return guild["member"]
 
 
-def get_current_gac_event(comlink: swgoh_comlink.SwgohComlink) -> dict:
+async def get_async_events(comlink: SwgohComlinkAsync) -> dict:
+    return await comlink.get_events()
+
+
+def get_current_gac_event(comlink: SwgohComlink | SwgohComlinkAsync) -> dict:
     """Return the event object for the current gac season
 
     Args:
@@ -293,7 +332,12 @@ def get_current_gac_event(comlink: swgoh_comlink.SwgohComlink) -> dict:
 
     """
     current_gac_event: dict = {}
-    current_events: dict[str, list] = comlink.get_events()
+    if isinstance(comlink, SwgohComlink):  # type: ignore
+        current_events: dict[str, list] = comlink.get_events()
+    elif isinstance(comlink, SwgohComlinkAsync):
+        current_events: dict[str, list] = asyncio.run(get_async_events(comlink))
+    else:
+        raise ValueError(f"{_get_function_name()} Invalid comlink instance")
     for event in current_events["gameEvent"]:
         if event["type"] == 10:
             current_gac_event = event
@@ -301,7 +345,7 @@ def get_current_gac_event(comlink: swgoh_comlink.SwgohComlink) -> dict:
     return current_gac_event
 
 
-def get_gac_brackets(comlink: swgoh_comlink.SwgohComlink, league: str) -> dict | None:
+def get_gac_brackets(comlink: SwgohComlink, league: str) -> dict | None:
     """Scan currently running GAC brackets for the requested league and return them as a dictionary
 
     Args:

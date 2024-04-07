@@ -17,13 +17,17 @@ from sentinels import Sentinel
 
 OPTIONAL = Sentinel('NotGiven')
 NotGiven = Sentinel('NotGiven')
+REQUIRED = Sentinel('REQUIRED')
+MutualExclusiveRequired = Sentinel('MutualExclusiveRequired')
 
 _DEFAULT_LOGGER_NAME: str = "swgoh_comlink"
 _DEFAULT_LOGGER_ENABLED: bool = False
 
 __all__ = [
-    "OPTIONAL",  # Sentinel
-    "NotGiven",  # Sentinel
+    OPTIONAL,  # Sentinel
+    NotGiven,  # Sentinel
+    REQUIRED,  # Sentinel
+    MutualExclusiveRequired,  # Sentinel
     "DATA_PATH",
     "DIVISIONS",  # Lookup dictionary
     "get_logger",

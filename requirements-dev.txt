@@ -2,11 +2,10 @@ coverage
 flake8-pytest-style
 pre-commit
 pytest~=8.1.1
-pytest-aiohttp
+pytest-httpx
 pytest-cov
 pytest-mock
 httpx
-auto-changelog
 hatch
 twine
 build

@@ -234,8 +234,8 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _get_player_payload(
-            allycode: str | int = OPTIONAL,
-            player_id: str = OPTIONAL,
+            allycode: str | int | Sentinel = OPTIONAL,
+            player_id: str | Sentinel = OPTIONAL,
             enums: bool = False,
             include_player_details_flag: bool = False,
             player_details_only: bool = False,
@@ -256,10 +256,12 @@ class SwgohComlinkBase:
         """
         if allycode is NotGiven and player_id is NotGiven:
             raise ValueError("Either allycode or player_id must be provided.")
-        if isinstance(str(allycode), str) and isinstance(player_id, str):
+        if isinstance(allycode, int):
+            allycode = str(allycode)
+        if isinstance(allycode, str) and allycode != "" and isinstance(player_id, str) and player_id != "":
             raise ValueError("Only one of allycode or player_id can be provided.")
         payload: dict[str, Any] = {"payload": {}, "enums": enums}
-        if allycode:
+        if allycode is not OPTIONAL and (isinstance(allycode, int) or isinstance(allycode, str)):
             allycode = sanitize_allycode(allycode)
             payload["payload"]["allyCode"] = allycode
         else:

@@ -17,74 +17,195 @@ from typing import Any
 import httpx
 from sentinels import Sentinel
 
-from swgoh_comlink.Base import SwgohComlinkBase
-from swgoh_comlink.constants import OPTIONAL, NotGiven, param_alias
+from swgoh_comlink.Base.swgoh_comlink_base import SwgohComlinkBase
+from swgoh_comlink.constants import param_alias, OPTIONAL, NotGiven
 
-__all__ = ["SwgohComlink"]
+__all__ = ["SwgohComlinkAsync"]
 
 
-class SwgohComlink(SwgohComlinkBase):
-    """Synchronous interface methods for the swgoh-comlink service.
-
+class SwgohComlinkAsync(SwgohComlinkBase):
+    """
+    Class definition for swgoh-comlink interface and supported methods.
     Instances of this class are used to query the Star Wars Galaxy of Heroes
     game servers for exposed endpoints via the swgoh-comlink proxy library
     running on the same host.
 
     """
 
+    __module__ = None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client = httpx.Client(base_url=self.url_base)
-        self.stats_client = httpx.Client(base_url=self.stats_url_base)
+        self.client = httpx.AsyncClient(base_url=self.url_base, verify=False)
+        self.stats_client = httpx.AsyncClient(base_url=self.stats_url_base, verify=False)
 
-    def _get_game_version(self) -> str:
-        """Get the current game version"""
-        md = self.get_game_metadata(client_specs={})
-        return md["latestGamedataVersion"]
-
-    def _post(
-            self,
-            url_base: str,
-            endpoint: str,
-            payload: dict | list[dict],
-            stats: bool = False,
-    ) -> Any:
-        """
-        Execute HTTP POST operation against swgoh-comlink
-
-        Args:
-            endpoint: which game endpoint to call
-            payload: POST payload json data
-
-        Returns:
-            JSON decoded response or None
-
-        Raises:
-            requests.Exceptions
-        """
-
-        url_base = url_base or self.url_base
-        post_url = url_base + f"/{endpoint}"
+    async def _post(self,
+                    endpoint: str,
+                    payload: dict | list[dict],
+                    stats: bool = False
+                    ) -> Any:
         req_headers = self._construct_request_headers(endpoint, payload)
-        self.logger.info(f"Request headers: {req_headers}")
-        self.logger.info(f"Post URL: {post_url}")
 
         try:
+            self.logger.debug(f"Sending POST, {endpoint=} {req_headers=}")
             if stats:
-                resp = self.stats_client.post(
+                resp = await self.stats_client.post(
                     f"/{endpoint}", json=payload, headers=req_headers
                 )
             else:
-                resp = self.client.post(
+                resp = await self.client.post(
                     f"/{endpoint}", json=payload, headers=req_headers
                 )
             return resp.json()
         except Exception as e:
-            self.logger.warning("%s: %s", type(e).__name__, e)
+            self.logger.exception(f"Exception occurred: {self._get_function_name()}: {e}")
             raise e
 
-    @param_alias(param="request_payload", alias="roster_list")
-    def get_unit_stats(
+    async def get_game_metadata(
+            self, client_specs: dict[str, str] | None = None, enums: bool = False
+    ) -> dict:
+        """Get the game metadata. Game metadata contains the current game and localization versions.
+
+        Args:
+            client_specs:  Optional dictionary containing
+            enums: Flag signifying whether enums in response should be translated to text. [Default: False]
+
+        Returns:
+            Current game client metadata
+
+        Examples:
+            ```python
+            client_specs: {
+                  "platform": "string",
+                  "bundleId": "string",
+                  "externalVersion": "string",
+                  "internalVersion": "string",
+                  "region": "string"
+                }
+            ```
+        """
+        return await self._post(
+            endpoint="metadata", payload=self._make_client_specs(client_specs, enums)
+        )
+
+    # alias for non PEP usage of direct endpoint calls
+    getGameMetaData = get_game_metadata
+    getMetaData = get_game_metadata
+    get_metadata = get_game_metadata
+
+    async def _get_game_version(self) -> str:
+        """Get the current game version"""
+        md = await self.get_game_metadata(client_specs={})
+        return md["latestGamedataVersion"]
+
+    async def get_enums(self) -> dict:
+        """Get an object containing the game data enums
+
+        Raises:
+            requests.Exceptions: If the HTTP request encounters an error
+
+        """
+        try:
+            resp = await self.client.get("/enums")
+            return resp.json()
+        except Exception as e:
+            raise e
+
+    # alias for non PEP usage of direct endpoint calls
+    getEnums = get_enums
+
+    async def get_events(self, enums: bool = False) -> dict:
+        """Get an object containing the events game data
+
+        Args:
+            enums: Boolean flag to indicate whether enum value should be converted in response.
+
+        Returns:
+            Dictionary containing a single 'gameEvents' which is a list of events as dicts
+
+        Raises:
+            requests.Exception: HTTP Request exception
+
+        """
+        payload = {"payload": {}, "enums": enums}
+        return await self._post(endpoint="getEvents", payload=payload)
+
+    # alias for non PEP usage of direct endpoint calls
+    getEvents = get_events
+
+    async def get_game_data(
+            self,
+            version: str | Sentinel = OPTIONAL,
+            include_pve_units: bool = True,
+            request_segment: int = 0,
+            enums: bool = False,
+    ) -> dict:
+        """Get current game data from servers
+
+        Args:
+            version: Game data version (found in metadata key value 'latestGamedataVersion')
+            include_pve_units: Flag to indicate whether PVE units should be included in results  [Defaults to True]
+            request_segment: Identifier for whether to return all data (segment 0) or partial segments (values 1-4)
+            enums: Flag to enable ENUM replace [Defaults to False]
+
+        Returns:
+            Current game data
+
+        """
+        if version is NotGiven:
+            game_version = await self._get_game_version()
+        else:
+            game_version = version
+        return await self._post(
+            endpoint="data",
+            payload=self._make_game_data_payload(
+                version=game_version,
+                include_pve_units=include_pve_units,
+                request_segment=request_segment,
+                enums=enums,
+            ),
+        )
+
+    # alias for non PEP usage of direct endpoint calls
+    getGameData = get_game_data
+
+    async def get_localization(
+            self, id: str, unzip: bool = False, enums: bool = False
+    ) -> dict:
+        """Get localization data from game
+
+        Args:
+            id: latestLocalizationBundleVersion found in game metadata. This method will collect the latest language
+                            version if the 'id' argument is not provided.
+            unzip: Flag to indicate whether the localization bundle should be unzipped. [Default: False]
+            enums: Flag to indicate whether ENUMs should be translated. [Default: False]
+
+        Returns:
+            Dictionary containing each localization file in a separate element value
+
+        """
+
+        if not id:
+            current_game_version = await self.get_latest_game_data_version()
+            id = current_game_version["language"]
+
+        return await self._post(
+            endpoint="localization",
+            payload={"unzip": unzip, "enums": enums, "payload": {"id": id}},
+        )
+
+    # aliases for non PEP usage of direct endpoint calls
+    getLocalization = get_localization
+    getLocalizationBundle = get_localization
+    get_localization_bundle = get_localization
+
+    # Introduced in 1.12.0
+    # Use decorator to alias the request_payload parameter to 'units_list' to maintain backward compatibility
+    # while fixing the original naming format mistake.
+    # TODO: fix below. Won't work with single shared async http client session instance to comlink. Another instance
+    #  to statCalc is needed as well. Also the _post method does not handle list payloads
+    @param_alias(param="request_payload", alias="units_list")
+    async def get_unit_stats(
             self,
             request_payload: dict | list[dict],
             flags: list[str],
@@ -113,160 +234,18 @@ class SwgohComlink(SwgohComlinkBase):
         # Convert a single character/ship object to a one item list of obj for StatCalc
         if isinstance(request_payload, dict):
             request_payload = [request_payload]
-        if flags and not isinstance(flags, list):
+        if flags is not None and not isinstance(flags, list):
             raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
         query_string = self._construct_unit_stats_query_string(flags, language)
         endpoint_string = "api" + query_string if query_string else "api"
-        self.logger.info(f"{self.stats_url_base=}, {endpoint_string=}")
-        return self._post(
-            url_base=self.stats_url_base,
+        return await self._post(
             endpoint=endpoint_string,
             payload=request_payload,
             stats=True,
         )
 
-    def get_enums(self) -> dict:
-        """Get an object containing the game data enums
-
-        Raises:
-            requests.Exceptions: If the HTTP request encounters an error
-
-        """
-        try:
-            # r = requests.get(f"{self.url_base}/enums")
-            # return r.json()
-            resp = self.client.get(f"{self.url_base}/enums")
-            return resp.json()
-        except Exception as e:
-            raise e
-
-    # alias for non PEP usage of direct endpoint calls
-    getEnums = get_enums
-
-    def get_events(self, enums: bool = False) -> dict:
-        """Get an object containing the events game data
-
-        Args:
-            enums: Boolean flag to indicate whether enum value should be converted in response.
-
-        Returns:
-            Dictionary containing a single 'gameEvents' which is a list of events as dicts
-
-        Raises:
-            requests.Exception:
-        """
-        payload = {"payload": {}, "enums": enums}
-        return self._post(url_base=self.url_base, endpoint="getEvents", payload=payload)
-
-    # alias for non PEP usage of direct endpoint calls
-    getEvents = get_events
-
-    def get_game_data(
-            self,
-            version: str | Sentinel = OPTIONAL,
-            include_pve_units: bool = True,
-            request_segment: int = 0,
-            enums: bool = False,
-    ) -> dict:
-        """Get current game data from servers
-
-        Args:
-            version: Game data version (found in metadata key value 'latestGamedataVersion')
-            include_pve_units: Flag to indicate whether PVE units should be included in results  [Defaults to True]
-            request_segment: Identifier for whether to return all data (segment 0) or partial segments (values 1-4)
-            enums: Flag to enable ENUM replace [Defaults to False]
-
-        Returns:
-            Current game data
-
-        """
-
-        if version is NotGiven:
-            game_version = self._get_game_version()
-        else:
-            game_version = version
-
-        return self._post(
-            url_base=self.url_base,
-            endpoint="data",
-            payload=self._make_game_data_payload(
-                version=game_version,
-                include_pve_units=include_pve_units,
-                request_segment=request_segment,
-                enums=enums,
-            ),
-        )
-
-    # alias for non PEP usage of direct endpoint calls
-    getGameData = get_game_data
-
-    def get_localization(
-            self, id: str | Sentinel = OPTIONAL, unzip: bool = False, enums: bool = False
-    ) -> dict:
-        """Get localization data from game
-
-        Args:
-            id: latestLocalizationBundleVersion found in game metadata. This method will collect the latest language
-                            version if the 'id' argument is not provided.
-            unzip: Flag to indicate whether the localization bundle should be unzipped. [Default: False]
-            enums: Flag to indicate whether ENUMs should be translated. [Default: False]
-
-        Returns:
-            Dictionary containing each localization file in a separate element value
-
-        """
-        if id is NotGiven:
-            current_game_version = self.get_latest_game_data_version()
-            id = current_game_version["language"]
-
-        return self._post(
-            url_base=self.url_base,
-            endpoint="localization",
-            payload={"unzip": unzip, "enums": enums, "payload": {"id": id}},
-        )
-
-    # aliases for non PEP usage of direct endpoint calls
-    getLocalization = get_localization
-    getLocalizationBundle = get_localization
-    get_localization_bundle = get_localization
-
-    def get_game_metadata(
-            self, client_specs: dict[str, str] | None = None, enums: bool = False
-    ) -> dict:
-        """Get the game metadata. Game metadata contains the current game and localization versions.
-
-        Args:
-            client_specs:  Optional dictionary containing
-            enums: Flag signifying whether enums in response should be translated to text. [Default: False]
-
-        Returns:
-            Current game client metadata
-
-        Examples:
-            ```python
-            client_specs: {
-                  "platform": "string",
-                  "bundleId": "string",
-                  "externalVersion": "string",
-                  "internalVersion": "string",
-                  "region": "string"
-                }
-            ```
-        """
-        return self._post(
-            url_base=self.url_base,
-            endpoint="metadata",
-            payload=self._make_client_specs(client_specs, enums),
-        )
-
-    # alias for non PEP usage of direct endpoint calls
-    getGameMetaData = get_game_metadata
-    getMetaData = get_game_metadata
-    get_metadata = get_game_metadata
-
-    def get_player(
-            self, allycode: str | int | Sentinel = OPTIONAL, *, player_id: str | Sentinel = OPTIONAL,
-            enums: bool = False
+    async def get_player(
+            self, allycode: str | int = OPTIONAL, *, player_id: str = OPTIONAL, enums: bool = False
     ) -> dict:
         """Get player information from game
 
@@ -285,7 +264,7 @@ class SwgohComlink(SwgohComlinkBase):
         payload = self._get_player_payload(
             allycode=allycode, player_id=player_id, enums=enums
         )
-        return self._post(url_base=self.url_base, endpoint="player", payload=payload)
+        return await self._post(endpoint="player", payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getPlayer = get_player
@@ -294,7 +273,7 @@ class SwgohComlink(SwgohComlinkBase):
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
     @param_alias(param="player_details_only", alias="playerDetailsOnly")
-    def get_player_arena(
+    async def get_player_arena(
             self,
             allycode: str | int | Sentinel = OPTIONAL,
             player_id: str | Sentinel = OPTIONAL,
@@ -317,8 +296,7 @@ class SwgohComlink(SwgohComlinkBase):
             ValueError: if neither a player_id nor allycode is provided
 
         """
-        return self._post(
-            url_base=self.url_base,
+        return await self._post(
             endpoint="playerArena",
             payload=self._get_player_payload(
                 allycode=allycode,
@@ -336,7 +314,7 @@ class SwgohComlink(SwgohComlinkBase):
     getPlayerArenaProfile = get_player_arena
 
     @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
-    def get_guild(
+    async def get_guild(
             self,
             guild_id: str | Sentinel = OPTIONAL,
             include_recent_guild_activity_info: bool = False,
@@ -357,8 +335,7 @@ class SwgohComlink(SwgohComlinkBase):
             ValueError: if guild ID is not provided
 
         """
-        guild = self._post(
-            url_base=self.url_base,
+        guild = await self._post(
             endpoint="guild",
             payload=self._make_guild_payload(
                 guild_id=guild_id,
@@ -374,12 +351,8 @@ class SwgohComlink(SwgohComlinkBase):
     # alias for non PEP usage of direct endpoint calls
     getGuild = get_guild
 
-    def get_guilds_by_name(
-            self,
-            name: str | Sentinel = OPTIONAL,
-            start_index: int = 0,
-            count: int = 10,
-            enums: bool = False,
+    async def get_guilds_by_name(
+            self, name: str | Sentinel = OPTIONAL, start_index: int = 0, count: int = 10, enums: bool = False
     ) -> dict:
         """Search for guild by name and return match.
 
@@ -395,9 +368,9 @@ class SwgohComlink(SwgohComlinkBase):
 
         Raises:
             ValueError: if the 'name' argument is not provided
+
         """
-        return self._post(
-            url_base=self.url_base,
+        return await self._post(
             endpoint="getGuilds",
             payload=self._make_guilds_by_name_payload(
                 guild_name=name, index=start_index, count=count, enums=enums
@@ -407,7 +380,7 @@ class SwgohComlink(SwgohComlinkBase):
     # alias for non PEP usage of direct endpoint calls
     getGuildByName = get_guilds_by_name
 
-    def get_guilds_by_criteria(
+    async def get_guilds_by_criteria(
             self,
             search_criteria: dict,
             start_index: int = 0,
@@ -423,7 +396,7 @@ class SwgohComlink(SwgohComlinkBase):
             enums: Whether to translate enum values to text [Default: False]
 
         Returns:
-            Search results as a dictionaries
+            Search results as a list of dictionaries
 
         Examples:
             ```python
@@ -437,8 +410,7 @@ class SwgohComlink(SwgohComlinkBase):
             }
             ```
         """
-        return self._post(
-            url_base=self.url_base,
+        return await self._post(
             endpoint="getGuilds",
             payload=self._make_guilds_by_criteria_payload(
                 criteria=search_criteria, index=start_index, count=count, enums=enums
@@ -448,7 +420,7 @@ class SwgohComlink(SwgohComlinkBase):
     # alias for non PEP usage of direct endpoint calls
     getGuildByCriteria = get_guilds_by_criteria
 
-    def get_leaderboard(
+    async def get_leaderboard(
             self,
             leaderboard_type: int = 6,
             *,
@@ -466,15 +438,18 @@ class SwgohComlink(SwgohComlinkBase):
                             When type 4 is indicated, the "league" and "division" arguments must also be provided.
                         Type 6 is for the global leaderboards for the league + divisions.
                             When type 6 is indicated, the "event_instance_id" and "group_id" must also be provided.
-
-            league: Enum values 20, 40, 60, 80, and 100 correspond to carbonite, bronzium, chromium,
-                        aurodium, and kyber respectively. Also accepts string values for each league.
-            division: Enum values 5, 10, 15, 20, and 25 correspond to divisions 5 through 1 respectively.
+            league:
+                        Enum values 20, 40, 60, 80, and 100 correspond to carbonite, bronzium, chromium, aurodium,
+                           and kyber respectively. Also accepts string values for each league.
+            division:
+                        Enum values 5, 10, 15, 20, and 25 correspond to divisions 5 through 1 respectively.
                              Also accepts string or int values for each division.
-            event_instance_id: When leaderboard_type 4 is indicated, a combination of the event Id and the instance ID
-                                separated by ':'
-                                Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000
-            group_id: When leaderboard_type 4 is indicated, must start with the same eventInstanceId, followed
+            event_instance_id:
+                        When leaderboard_type 4 is indicated, a combination of the event Id and the instance ID
+                        separated by ':'
+                            Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000
+            group_id:
+                        When leaderboard_type 4 is indicated, must start with the same eventInstanceId, followed
                         by the league and bracketId, separated by :. The number at the end is the bracketId, and
                         goes from 0 to N, where N is the last group of 8 players.
                             Example: CHAMPIONSHIPS_GRAND_ARENA_GA2_EVENT_SEASON_36:O1675202400000:CARBONITE:10431
@@ -484,8 +459,7 @@ class SwgohComlink(SwgohComlinkBase):
             Object containing 'player' and 'playerStatus' elements. The 'player' element is a list of players
 
         """
-        leaderboard = self._post(
-            url_base=self.url_base,
+        leaderboard = await self._post(
             endpoint="getLeaderboard",
             payload=self._make_get_leaderboards_payload(
                 lb_type=leaderboard_type,
@@ -503,9 +477,9 @@ class SwgohComlink(SwgohComlinkBase):
     get_gac_leaderboard = get_leaderboard
     getGacLeaderboard = get_leaderboard
 
-    def get_guild_leaderboard(
+    async def get_guild_leaderboard(
             self, leaderboard_id: list, count: int = 200, enums: bool = False
-    ) -> list[dict]:
+    ) -> dict:
         """Retrieve leaderboard information from SWGOH game servers.
 
         Args:
@@ -522,8 +496,7 @@ class SwgohComlink(SwgohComlinkBase):
             ValueError: If leaderboard_id is not a list object
 
         """
-        return self._post(
-            url_base=self.url_base,
+        return await self._post(
             endpoint="getGuildLeaderboard",
             payload=self._make_get_guild_leaderboard_payload(
                 lb_id=leaderboard_id, count=count, enums=enums
@@ -533,10 +506,10 @@ class SwgohComlink(SwgohComlinkBase):
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
 
-    def get_latest_game_data_version(self, game_version: str | Sentinel = OPTIONAL) -> dict:
+    async def get_latest_game_data_version(self, game_version: str | Sentinel = OPTIONAL) -> dict:
         """Get the latest game data and language bundle versions
 
-        Optional Args:
+        Args:
             game_version: String of specific game data version to retrieve
 
         Returns:
@@ -544,9 +517,9 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
         client_specs: dict = {}
-        if game_version:
+        if game_version is not OPTIONAL:
             client_specs = {"externalVersion": game_version}
-        current_metadata = self.get_metadata(client_specs=client_specs)
+        current_metadata = await self.get_metadata(client_specs=client_specs)
         return {
             "game": current_metadata["latestGamedataVersion"],
             "language": current_metadata["latestLocalizationBundleVersion"],
@@ -554,4 +527,3 @@ class SwgohComlink(SwgohComlinkBase):
 
     # alias for shorthand call
     getVersion = get_latest_game_data_version
-    get_version = get_latest_game_data_version
