@@ -12,9 +12,6 @@ jobs:
   build:
     name: "Build release"
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ "3.9", "3.10" ]
 
     permissions:
       id-token: write
@@ -26,7 +23,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
       - name: Setup pip cache
         if: runner.os == 'Linux'
         uses: actions/cache@v3
@@ -36,12 +33,22 @@ jobs:
           restore-keys: ${{ runner.os }}-pip-
       - name: Install Hatch
         run: pipx install hatch
-      - name: Build dist
+      - name: Build distribution
         run: hatch build
-      - name: Send discord notification
+      - name: Get build version
+        id: build_version
+        run: echo "version=$(hatch version)" >> $GITHUB_OUTPUT
+      - name: Send discord success notification
         uses: rjstone/discord-webhook-notify@v1
         if: success()
         with:
           severity: info
-          details: Test Succeeded!
+          details: Build of swgoh_comlink version ${{ steps.build_version.outputs.version }} completed
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+      - name: Send discord failure notification
+        uses: rjstone/discord-webhook-notify@v1
+        if: failure()
+        with:
+          severity: error
+          details: Build of swgoh_comlink version ${{ steps.build_version.outputs.version }} failed
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
