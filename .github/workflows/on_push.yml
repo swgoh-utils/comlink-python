@@ -6,7 +6,7 @@ name: swgoh-comlink python package release
 on:
   push:
     branches:
-      - main
+      - 1.13.0rc1
 
 jobs:
   build:
