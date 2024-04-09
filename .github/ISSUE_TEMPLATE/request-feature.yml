@@ -1,5 +1,6 @@
 name: Feature Request
 description: Request new functionality.
+labels: [ enhancement ]
 title: "[FEAT] Your Title Here"
 
 body:

@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report broken or incorrect behavior.
-labels: [ "Bug::Library" ]
+labels: [ "bug" ]
 title: "[BUG] Your Title Here"
 
 body:
@@ -10,7 +10,7 @@ body:
         Thank you for taking the time to fill out this bug report!
         We rely on users to tell us things that we might not find on our own,
         and your help is greatly valued by the team and others contributing.
-        If you want real-time support, consider joining our [Discord](https://discord.gg/interactions) instead.
+        If you want real-time support, consider joining our [Discord](https://discord.gg/8ATYnUA746) instead.
 
   - type: input
     attributes:
