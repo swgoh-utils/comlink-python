@@ -1,0 +1,6266 @@
+[
+  {
+    "id": "basicskill_ARC170CLONESERGEANT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ARC170CLONESERGEANT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ARC170CLONESERGEANT02",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_ARC170CLONESERGEANT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_arc170rex",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_arc170rex",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_arc170rex",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_arc170rex",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BLADEOFDORIN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BLADEOFDORIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BLADEOFDORIN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_BLADEOFDORIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALCHIMAERA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALCHIMAERA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALCHIMAERA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALCHIMAERA03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALCHIMAERA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALJEDICRUISER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALJEDICRUISER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALJEDICRUISER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALJEDICRUISER03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALJEDICRUISER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALMONCALAMARICRUISER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALMONCALAMARICRUISER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALMONCALAMARICRUISER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALMONCALAMARICRUISER03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALMONCALAMARICRUISER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALSTARDESTROYER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALSTARDESTROYER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALSTARDESTROYER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALSTARDESTROYER03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALSTARDESTROYER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_commandshuttle",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_commandshuttle01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_commandshuttle02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_commandshuttle03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_commandshuttle01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_commandshuttle",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GAUNTLETSTARFIGHTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GAUNTLETSTARFIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GAUNTLETSTARFIGHTER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GAUNTLETSTARFIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_GAUNTLETSTARFIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GEONOSIANSTARFIGHTER1",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GEONOSIANSTARFIGHTER101",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GEONOSIANSTARFIGHTER101",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_GEONOSIANSTARFIGHTER101",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GEONOSIANSTARFIGHTER2",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GEONOSIANSTARFIGHTER201",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GEONOSIANSTARFIGHTER201",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_GEONOSIANSTARFIGHTER201",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GEONOSIANSTARFIGHTER3",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GEONOSIANSTARFIGHTER301",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GEONOSIANSTARFIGHTER301",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_GEONOSIANSTARFIGHTER301",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GHOST",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GHOST01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GHOST02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GHOST03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GHOST01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_GHOST01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDISTARFIGHTERAHSOKATANO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDISTARFIGHTERAHSOKATANO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDISTARFIGHTERAHSOKATANO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_JEDISTARFIGHTERAHSOKATANO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDISTARFIGHTERCONSULAR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDISTARFIGHTERCONSULAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDISTARFIGHTERCONSULAR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_JEDISTARFIGHTERCONSULAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MILLENNIUMFALCONEP7",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MILLENNIUMFALCONEP701",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MILLENNIUMFALCONEP702",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MILLENNIUMFALCONEP701",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_MILLENNIUMFALCONEP701",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_PHANTOM2",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PHANTOM201",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PHANTOM202",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_PHANTOM201",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_PHANTOM202",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_PHANTOM201",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SITHINFILTRATOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHINFILTRATOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SITHINFILTRATOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_SITHINFILTRATOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_slave1",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_slave101",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_slave102",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_slave101",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_slave101",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEADVANCED",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEADVANCED01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEADVANCED01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIEADVANCED01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEFIGHTERFOSF",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEFIGHTERFOSF01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEFIGHTERFOSF02",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIEFIGHTERFOSF01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEFIGHTERFIRSTORDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEFIGHTERFIRSTORDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEFIGHTERFIRSTORDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIEFIGHTERFIRSTORDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEFIGHTERIMPERIAL",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEFIGHTERIMPERIAL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEFIGHTERIMPERIAL02",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIEFIGHTERIMPERIAL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEREAPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEREAPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEREAPER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEREAPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIEREAPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIESILENCER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIESILENCER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIESILENCER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIESILENCER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_UMBARANSTARFIGHTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_UMBARANSTARFIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_UMBARANSTARFIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_UMBARANSTARFIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_uwingrogueone",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_uwingrogueone01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_uwingrogueone02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_uwingrogueone03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_uwingrogueone01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_uwingrogueone01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_UWINGSCARIF",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_UWINGSCARIF01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_UWINGSCARIF01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_UWINGSCARIF02",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_UWINGSCARIF01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_XWINGBLACKONE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_XWINGBLACKONE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_XWINGBLACKONE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_XWINGBLACKONE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_XWINGRED3",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_XWINGRED301",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_XWINGRED301",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_XWINGRED301",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_XWINGRED2",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_XWINGRED201",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_XWINGRED201",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_XWINGRED201",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_XWINGRESISTANCE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_XWINGRESISTANCE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_XWINGRESISTANCE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_XWINGRESISTANCE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MILLENNIUMFALCONPRISTINE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MILLENNIUMFALCONPRISTINE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MILLENNIUMFALCONPRISTINE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MILLENNIUMFALCONPRISTINE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_MILLENNIUMFALCONPRISTINE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SITHFIGHTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHFIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SITHFIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_SITHFIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HOUNDSTOOTH",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HOUNDSTOOTH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HOUNDSTOOTH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_HOUNDSTOOTH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_XANADUBLOOD",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_XANADUBLOOD01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_XANADUBLOOD01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_XANADUBLOOD01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_IG2000",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IG20001",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IG20001",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_IG20001",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_sithbomber",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_sithbomber01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_sithbomber01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_sithbomber01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDISTARFIGHTERANAKIN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDISTARFIGHTERANAKIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JEDISTARFIGHTERANAKIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_JEDISTARFIGHTERANAKIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MILLENNIUMFALCON",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MILLENNIUMFALCON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MILLENNIUMFALCON02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MILLENNIUMFALCON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_MILLENNIUMFALCON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FOTF_DEVASTATOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FOTF_DEVASTATOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FOTF_DEVASTATOR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FOTF_DEVASTATOR03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FOTF_DEVASTATOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_emperorsshuttle",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_emperorsshuttle01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_emperorsshuttle02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_emperorsshuttle01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_emperorsshuttle01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_EBONHAWK",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EBONHAWK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EBONHAWK02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_EBONHAWK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_EBONHAWK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALNEGOTIATOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALNEGOTIATOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALNEGOTIATOR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALNEGOTIATOR03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALNEGOTIATOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_VULTUREDROID",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_VULTUREDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_VULTUREDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_VULTUREDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_VULTUREDROID_tb",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_VULTUREDROID01_tb",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_VULTUREDROID01_tb",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_VULTUREDROID01_tb",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HYENABOMBER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HYENABOMBER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HYENABOMBER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_HYENABOMBER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALMALEVOLENCE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALMALEVOLENCE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALMALEVOLENCE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALMALEVOLENCE03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALMALEVOLENCE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_YWINGCLONEWARS",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_YWINGCLONEWARS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_YWINGCLONEWARS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_YWINGCLONEWARS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALRADDUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALRADDUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALRADDUS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALRADDUS03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALRADDUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALFINALIZER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALFINALIZER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALFINALIZER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALFINALIZER03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALFINALIZER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_YWINGREBEL",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_YWINGREBEL",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_YWINGREBEL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_YWINGREBEL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEBOMBERIMPERIAL",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEBOMBERIMPERIAL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEBOMBERIMPERIAL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIEBOMBERIMPERIAL",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GR75_JKL",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GR75_JKL_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GR75_JKL_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_RAZORCREST",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_RAZORCREST",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_RAZORCREST01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_RAZORCREST01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_RAZORCREST02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALEXECUTOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALEXECUTOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALEXECUTOR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALEXECUTOR03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALEXECUTOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEINTERCEPTOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIEINTERCEPTOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEINTERCEPTOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEINTERCEPTOR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEINTERCEPTOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MG100STARFORTRESSSF17",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_MG100STARFORTRESSSF17",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MG100STARFORTRESSSF1701",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MG100STARFORTRESSSF1702",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MG100STARFORTRESSSF1701",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FIRSTORDERTIEECHELON",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_FIRSTORDERTIEECHELON",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FIRSTORDERTIEECHELON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FIRSTORDERTIEECHELON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_OUTRIDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_OUTRIDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_OUTRIDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_OUTRIDER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_OUTRIDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_RAVENSCLAW",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_RAVENSCLAW",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_RAVENSCLAW01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_RAVENSCLAW01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_RAVENSCLAW02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALPROFUNDITY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALPROFUNDITY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALPROFUNDITY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALPROFUNDITY03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALPROFUNDITY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SCYTHE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SCYTHE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SCYTHE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SCYTHE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_SCYTHE",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEDEFENDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIEDEFENDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEDEFENDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEDEFENDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEDEFENDER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FURYCLASSINTERCEPTOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_FURYCLASSINTERCEPTOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FURYCLASSINTERCEPTOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FURYCLASSINTERCEPTOR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FURYCLASSINTERCEPTOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEDAGGER",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_TIEDAGGER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEDAGGER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEDAGGER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEDAGGER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SITHSUPREMACYCLASS",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_SITHSUPREMACYCLASS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHSUPREMACYCLASS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHSUPREMACYCLASS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SITHSUPREMACYCLASS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPITALLEVIATHAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALLEVIATHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALLEVIATHAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPITALLEVIATHAN03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPITALLEVIATHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MARAUDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_MARAUDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MARAUDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MARAUDER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MARAUDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MARAUDER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_COMEUPPANCE",
+    "omicronMode": 1
+  },
+  {
+    "id": "hardwareskill_COMEUPPANCE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COMEUPPANCE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_COMEUPPANCE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_COMEUPPANCE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_AAYLASECURA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_AAYLASECURA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_AAYLASECURA",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_AAYLASECURA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ADMINISTRATORLANDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ADMINISTRATORLANDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_ADMINISTRATORLANDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ADMINISTRATORLANDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ADMINISTRATORLANDO_GL_EVENT_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ADMIRALACKBAR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ADMIRALACKBAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ADMIRALACKBAR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_ADMIRALACKBAR",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_AHSOKATANO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_AHSOKATANO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_AHSOKATANO",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_AHSOKATANO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ANAKINKNIGHT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ANAKINKNIGHT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_ANAKINKNIGHT",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ANAKINKNIGHT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ASAJVENTRESS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ASAJVENTRESS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ASAJVENTRESS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_ASAJVENTRESS",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ASAJVENTRESS01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_BARRISSOFFEE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BARRISSOFFEE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_BARRISSOFFEE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BARRISSOFFEE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BAZEMALBUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BAZEMALBUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BAZEMALBUS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BAZEMALBUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BAZEMALBUS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BIGGSDARKLIGHTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BIGGSDARKLIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BIGGSDARKLIGHTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BISTAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BISTAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BISTAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BISTAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BOBAFETT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BOBAFETT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BOBAFETT02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_BOBAFETT",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BOBAFETT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_BOBAFETT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CADBANE",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_CADBANE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CADBANE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CADBANE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_CADBANE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CASSIANANDOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CASSIANANDOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CASSIANANDOR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CASSIANANDOR01",
+    "omicronMode": 7
+  },
+  {
+    "id": "basicskill_CHIEFCHIRPA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHIEFCHIRPA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHIEFCHIRPA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_CHIEFCHIRPA",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_CHIEFNEBIT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHIEFNEBIT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHIEFNEBIT02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_CHIEFNEBIT",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_CHIRRUTIMWE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHIRRUTIMWE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHIRRUTIMWE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CHIRRUTIMWE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CHIRRUTIMWE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CHOPPERS3",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHOPPERS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHOPPERS302",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CHOPPERS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CLONESERGEANTPHASEI",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CLONESERGEANTPHASEI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CLONESERGEANTPHASEI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CLONEWARSCHEWBACCA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CLONEWARSCHEWBACCA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CLONEWARSCHEWBACCA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_CLONEWARSCHEWBACCA",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CC2224",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CC222401",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CC222402",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_CC2224",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CORUSCANTUNDERWORLDPOLICE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CORUSCANTUNDERWORLDPOLICE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CORUSCANTUNDERWORLDPOLICE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_COUNTDOOKU",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COUNTDOOKU01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COUNTDOOKU02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_COUNTDOOKU",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_COUNTDOOKU01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DAKA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DAKA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DAKA",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DAKA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DARTHSIDIOUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHSIDIOUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DARTHSIDIOUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHSIDIOUS01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_DARTHNIHILUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHNIHILUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHNIHILUS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DARTHNIHILUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHNIHILUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DASHRENDAR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DASHRENDAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DASHRENDAR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DASHRENDAR",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DASHRENDAR",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_DATHCHA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DATHCHA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DATHCHA",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DATHCHA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DEATHTROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DEATHTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DEATHTROOPER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DEATHTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DENGAR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DENGAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DENGAR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DENGAR",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DENGAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_DENGAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DIRECTORKRENNIC",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DIRECTORKRENNIC01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DIRECTORKRENNIC02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DIRECTORKRENNIC",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DIRECTORKRENNIC01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_CT210408",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CT210408",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ct21040801",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ct21040802",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_EETHKOTH",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EETHKOTH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_EETHKOTH",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_EETHKOTH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_EMPERORPALPATINE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EMPERORPALPATINE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EMPERORPALPATINE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_EMPERORPALPATINE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_EMPERORPALPATINE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_EWOKELDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EWOKELDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EWOKELDER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_EWOKSCOUT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EWOKSCOUT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_EWOKSCOUT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_EZRABRIDGERS3",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EZRABRIDGERS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EZRABRIDGERS302",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_EZRABRIDGERS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FINN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FINN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FINN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_FINN",
+    "omicronMode": 7
+  },
+  {
+    "id": "basicskill_FIRSTORDEROFFICERMALE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FIRSTORDEROFFICERMALE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FIRSTORDEROFFICERMALE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FIRSTORDERTIEPILOT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FIRSTORDERTIEPILOT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FIRSTORDERTIEPILOT01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_FIRSTORDERTROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FIRSTORDERTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FIRSTORDERTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CT5555",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CT555501",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CT555501",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CT555502",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_CT5555",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ct555501_JMK_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GAMORREANGUARD",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GAMORREANGUARD01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GAMORREANGUARD02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GAMORREANGUARD01",
+    "omicronMode": 7
+  },
+  {
+    "id": "basicskill_GENERALKENOBI",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALKENOBI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALKENOBI02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GENERALKENOBI",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GENERALKENOBI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GENERALKENOBI_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALKENOBI_GLE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALKENOBI_GLE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GENERALKENOBI_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GENERALKENOBI_GLE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GENERALKENOBI_JMK_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALKENOBI_JMK_GLE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALKENOBI_JMK_GLE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GEONOSIANSOLDIER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GEONOSIANSOLDIER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GEONOSIANSOLDIER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GEONOSIANSPY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GEONOSIANSPY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GEONOSIANSPY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GEONOSIANSPY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GRANDMASTERYODA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDMASTERYODA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDMASTERYODA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDMASTERYODA03",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GRANDMASTERYODA",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GRANDMOFFTARKIN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDMOFFTARKIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDMOFFTARKIN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GRANDMOFFTARKIN",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GRANDMOFFTARKIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GREEDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GREEDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GREEDO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GREEDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GREEDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_GREEDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HANSOLO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HANSOLO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HANSOLO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HANSOLO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HANSOLO01_GLJMLUKE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HANSOLO02_GLJMLUKE",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HERASYNDULLAS3",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HERASYNDULLAS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HERASYNDULLAS302",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_HERASYNDULLAS3",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_HOTHREBELSCOUT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HOTHREBELSCOUT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HOTHREBELSCOUT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HOTHREBELSOLDIER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HOTHREBELSOLDIER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HOTHREBELSOLDIER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_IG86SENTINELDROID",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IG86SENTINELDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IG86SENTINELDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_IG88",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IG8801",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_IG88",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IG8801",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_IG8801",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_IMAGUNDI",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IMAGUNDI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_IMAGUNDI",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IMAGUNDI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JAWA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JAWA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JAWA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JAWAENGINEER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JAWAENGINEER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JAWAENGINEER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JAWAENGINEER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JAWASCAVENGER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JAWASCAVENGER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JAWASCAVENGER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JAWASCAVENGER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDIKNIGHTCONSULAR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTCONSULAR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTCONSULAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDIKNIGHTGUARDIAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTGUARDIAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JEDIKNIGHTGUARDIAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JYNERSO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JYNERSO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JYNERSO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JYNERSO",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JYNERSO01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_K2SO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_K2SO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_K2SO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_K2SO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_KANANJARRUSS3",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KANANJARRUSS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KANANJARRUSS302",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_KANANJARRUSS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_KITFISTO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KITFISTO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_KITFISTO",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_KITFISTO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_KYLOREN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KYLOREN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KYLOREN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_KYLOREN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_LOBOT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LOBOT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_LOBOT",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_LOBOT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_LOBOT02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_LOGRAY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LOGRAY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LOGRAY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_LOGRAY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_LUKESKYWALKER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LUKESKYWALKER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_LUKESKYWALKER",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_LUKESKYWALKER01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_LUMINARAUNDULI",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LUMINARAUNDULI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LUMINARAUNDULI02",
+    "omicronMode": 9
+  },
+  {
+    "id": "leaderskill_LUMINARAUNDULI",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MACEWINDU",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MACEWINDU01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MACEWINDU02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MACEWINDU01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MACEWINDU02",
+    "omicronMode": 8
+  },
+  {
+    "id": "leaderskill_MACEWINDU",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MAGMATROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MAGMATROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MAGMATROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MAUL",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MAUL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_MAUL",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MAUL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HUMANTHUG",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HUMANTHUG01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HUMANTHUG01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_NIGHTSISTERACOLYTE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_NIGHTSISTERACOLYTE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_NIGHTSISTERACOLYTE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_NIGHTSISTERINITIATE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_NIGHTSISTERINITIATE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_NIGHTSISTERINITIATE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_NIGHTSISTERINITIATE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_NUTEGUNRAY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_NUTEGUNRAY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_NUTEGUNRAY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_NUTEGUNRAY",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_NUTEGUNRAY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_OLDBENKENOBI",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_OLDBENKENOBI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_OLDBENKENOBI02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_OLDBENKENOBI",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_OLDBENKENOBI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_PAPLOO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PAPLOO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PAPLOO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_PAPLOO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_PHASMA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PHASMA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PHASMA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_PHASMA",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_POE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_POE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_POE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_POE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_PLOKOON",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PLOKOON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PLOKOON02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_PLOKOON",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_POGGLETHELESSER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_POGGLETHELESSER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_POGGLETHELESSER01",
+    "omicronMode": 8
+  },
+  {
+    "id": "leaderskill_POGGLETHELESSER",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_PRINCESSLEIA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PRINCESSLEIA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_PRINCESSLEIA",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_PRINCESSLEIA01",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_PRINCESSLEIA_GLJMLUKE_EVENT_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_QUIGONJINN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_QUIGONJINN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_QUIGONJINN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_QUIGONJINN",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_RESISTANCEPILOT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_RESISTANCEPILOT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_RESISTANCEPILOT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_RESISTANCETROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_RESISTANCETROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_RESISTANCETROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_REX",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_REX01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_REX02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_REX",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_REX01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ct756701_JMK_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_REY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_REY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_REY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_REY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ROYALGUARD",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ROYALGUARD01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ROYALGUARD01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SABINEWRENS3",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SABINEWRENS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SABINEWRENS302",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SABINEWRENS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SAVAGEOPRESS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SAVAGEOPRESS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_SAVAGEOPRESS",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SAVAGEOPRESS01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_SCARIFREBEL",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SCARIFREBEL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SCARIFREBEL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SHORETROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SHORETROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SHORETROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SITHASSASSIN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHASSASSIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHASSASSIN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SITHTROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SITHTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SNOWTROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SNOWTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SNOWTROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_STARKILLER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_STARKILLER01",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_STARKILLER02",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_STARKILLER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_STARKILLER02",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_STARKILLER01_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_STARKILLER01_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_STORMTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_STORMTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_STORMTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_STORMTROOPERHAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_STORMTROOPERHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_STORMTROOPERHAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_STORMTROOPERHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SUNFAC",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SUNFAC01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SUNFAC02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SUNFAC01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TALIA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TALIA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TALIA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_TALIA",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TEEBO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TEEBO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TEEBO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_TEEBO",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TIEFIGHTERPILOT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TIEFIGHTERPILOT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TIEFIGHTERPILOT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TUSKENHUNTRESS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TUSKENHUNTRESS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TUSKENHUNTRESS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TUSKENHUNTRESS01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_TUSKENRAIDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TUSKENRAIDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TUSKENRAIDER01",
+    "omicronMode": 14
+  },
+  {
+    "id": "basicskill_TUSKENSHAMAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TUSKENSHAMAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TUSKENSHAMAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_UGNAUGHT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_UGNAUGHT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_UGNAUGHT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_URORRURRR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_URORRURRR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_URORRURRR",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_URORRURRR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_VADER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_VADER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_VADER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_VADER",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_VADER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_VADER03",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_VEERS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_VEERS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_VEERS",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_VEERS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_WEDGEANTILLES",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_WEDGEANTILLES01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_WEDGEANTILLES",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_WEDGEANTILLES01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_WICKET",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_WICKET01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_WICKET02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_WICKET01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ZEBS3",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ZEBS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ZEBS302",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ZEBS301",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_PAO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PAO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PAO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_PAO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BB8",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BB801",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BB802",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BB801",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BB802",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BODHIROOK",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BODHIROOK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BODHIROOK02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BODHIROOK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_IMPERIALSUPERCOMMANDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IMPERIALSUPERCOMMANDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IMPERIALSUPERCOMMANDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IMPERIALSUPERCOMMANDO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IMPERIALSUPERCOMMANDO01_PG",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GARSAXON",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GARSAXON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GARSAXON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GARSAXON",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_R2D2_LEGENDARY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_R2D2_LEGENDARY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_R2D2_LEGENDARY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_R2D2_LEGENDARY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_R2D2_LEGENDARY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FULCRUMAHSOKA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FULCRUMAHSOKA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FULCRUMAHSOKA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FULCRUMAHSOKA01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_IMPERIALSCOUTDROID",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IMPERIALSCOUTDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IMPERIALSCOUTDROID02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IMPERIALSCOUTDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GRANDADMIRALTHRAWN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDADMIRALTHRAWN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDADMIRALTHRAWN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GRANDADMIRALTHRAWN",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GRANDADMIRALTHRAWN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_COMMANDERLUKESKYWALKER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COMMANDERLUKESKYWALKER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COMMANDERLUKESKYWALKER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_COMMANDERLUKESKYWALKER",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_COMMANDERLUKESKYWALKER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_COMMANDERLUKESKYWALKER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_COMMANDERLUKESKYWALKER_JKL_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COMMANDERLUKESKYWALKER01_JKL_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COMMANDERLUKESKYWALKER01_HOTH_JKL_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COMMANDERLUKESKYWALKER02_HOTH_JKL_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HOTHLEIA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HOTHLEIA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_HOTHLEIA",
+    "omicronMode": 7
+  },
+  {
+    "id": "uniqueskill_HOTHLEIA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HOTHLEIA_JKL_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HOTHLEIA01_JKL_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HOTHHAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HOTHHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HOTHHAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HOTHHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HERMITYODA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HERMITYODA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HERMITYODA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HERMITYODA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HERMITYODA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SMUGGLERCHEWBACCA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SMUGGLERCHEWBACCA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SMUGGLERCHEWBACCA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SMUGGLERCHEWBACCA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SMUGGLERHAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SMUGGLERHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SMUGGLERHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SMUGGLERHAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_NIGHTSISTERSPIRIT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_NIGHTSISTERSPIRIT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_NIGHTSISTERSPIRIT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_NIGHTSISTERZOMBIE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_NIGHTSISTERZOMBIE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_NIGHTSISTERZOMBIE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_NIGHTSISTERZOMBIE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MOTHERTALZIN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MOTHERTALZIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MOTHERTALZIN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_MOTHERTALZIN",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MOTHERTALZIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FIRSTORDERSPECIALFORCESPILOT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FIRSTORDERSPECIALFORCESPILOT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FIRSTORDERSPECIALFORCESPILOT02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_KYLORENUNMASKED",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KYLORENUNMASKED01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KYLORENUNMASKED02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_KYLORENUNMASKED",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_KYLORENUNMASKED01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_COLONELSTARCK",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COLONELSTARCK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COLONELSTARCK02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_COLONELSTARCK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_IMPERIALPROBEDROID",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IMPERIALPROBEDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IMPERIALPROBEDROID02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IMPERIALPROBEDROID01",
+    "omicronMode": 7
+  },
+  {
+    "id": "basicskill_WAMPA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_WAMPA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_WAMPA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_WAMPA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_WAMPA02",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_AWAKENEDREY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_AWAKENEDREY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_AWAKENEDREY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_REYJEDITRAINING",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_REYJEDITRAINING01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_REYJEDITRAINING02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_REYJEDITRAINING",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_REYJEDITRAINING01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_REYJEDITRAINING02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FIRSTORDEREXECUTIONER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FIRSTORDEREXECUTIONER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FIRSTORDEREXECUTIONER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_AMILYNHOLDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_AMILYNHOLDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_AMILYNHOLDO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_AMILYNHOLDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ROSETICO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ROSETICO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ROSETICO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ROSETICO01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_SITHMARAUDER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHMARAUDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SITHMARAUDER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DARTHSION",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHSION01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHSION02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHSION03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHSION01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_VISASMARR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_VISASMARR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_VISASMARR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_VISASMARR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DARTHTRAYA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHTRAYA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHTRAYA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DARTHTRAYA",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHTRAYA01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_BOSSK",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BOSSK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BOSSK02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_BOSSK",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BOSSK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_BOSSK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_YOUNGHAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_YOUNGHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_YOUNGHAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_YOUNGHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_YOUNGCHEWBACCA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_YOUNGCHEWBACCA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_YOUNGCHEWBACCA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_YOUNGCHEWBACCA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_QIRA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_QIRA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_QIRA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_QIRA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_QIRA",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ENFYSNEST",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ENFYSNEST01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ENFYSNEST02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ENFYSNEST01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_l3_37",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_l3_37_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_l3_37_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_l3_37_02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_YOUNGLANDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_YOUNGLANDO_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_YOUNGLANDO_02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_YOUNGLANDO_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_RANGETROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_RANGETROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_RANGETROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BASTILASHAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BASTILASHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BASTILASHAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BASTILASHAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_BASTILASHAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BASTILASHAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JOLEEBINDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JOLEEBINDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JOLEEBINDO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JOLEEBINDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JOLEEBINDO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MISSIONVAO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MISSIONVAO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MISSIONVAO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MISSIONVAO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ZAALBAR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ZAALBAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ZAALBAR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ZAALBAR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_t3_m4",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_t3_m4_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_t3_m4_02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_t3_m4_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_t3_m4_02",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_EMBO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EMBO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_EMBO",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_EMBO01",
+    "omicronMode": 8
+  },
+  {
+    "id": "contractskill_EMBO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_AURRA_SING",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_AURRA_SING01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_AURRA_SING02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_AURRA_SING",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_AURRA_SING01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_AURRA_SING01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JANGOFETT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JANGOFETT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JANGOFETT02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JANGOFETT",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JANGOFETT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_JANGOFETT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ZAMWESELL",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ZAMWESELL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ZAMWESELL02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_ZAMWESELL",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ZAMWESELL01",
+    "omicronMode": 9
+  },
+  {
+    "id": "contractskill_ZAMWESELL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CHEWBACCALEGENDARY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHEWBACCALEGENDARY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CHEWBACCALEGENDARY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CHEWBACCALEGENDARY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CHEWBACCALEGENDARY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDIKNIGHTREVAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTREVAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTREVAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JEDIKNIGHTREVAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JEDIKNIGHTREVAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JEDIKNIGHTREVAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BASTILASHANDARK",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BASTILASHANDARK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BASTILASHANDARK02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BASTILASHANDARK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BASTILASHANDARK02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BASTILASHANDARK03",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CANDEROUSORDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CANDEROUSORDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CANDEROUSORDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CANDEROUSORDO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_juhani",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_juhani01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_juhani02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_juhani01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_carthonasi",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_carthonasi",
+    "omicronMode": 7
+  },
+  {
+    "id": "specialskill_carthonasi",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_carthonasi",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_C3POLEGENDARY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_C3POLEGENDARY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_C3POLEGENDARY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_C3POLEGENDARY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_C3POLEGENDARY03",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_C3POLEGENDARY04",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_C3POLEGENDARY05",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_b1battledroidv2",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_b1battledroidv2_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_b1battledroidv2_01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_b1battledroidv2_02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_B2SUPERBATTLEDROID",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_B2SUPERBATTLEDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_B2SUPERBATTLEDROID01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_B2SUPERBATTLEDROID02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MAGNAGUARD",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MAGNAGUARD01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MAGNAGUARD02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MAGNAGUARD01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DROIDEKA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DROIDEKA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DROIDEKA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DROIDEKA01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_GRIEVOUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRIEVOUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRIEVOUS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GRIEVOUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GRIEVOUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HK47",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HK4701",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HK4702",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_HK47",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HK4701",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HK4702",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DARTHREVAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHREVAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHREVAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DARTHREVAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHREVAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHREVAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DARTHMALAK",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHMALAK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHMALAK02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHMALAK01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHMALAK02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_PADMEAMIDALA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PADMEAMIDALA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PADMEAMIDALA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_PADMEAMIDALA",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_PADMEAMIDALA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SHAAKTI",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SHAAKTI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SHAAKTI02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_SHAAKTI",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SHAAKTI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_kiadimundi",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_kiadimundi01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_kiadimundi02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_kiadimundi01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_kiadimundi02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_WATTAMBOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_WATTAMBOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_WATTAMBOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_WATTAMBOR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GEONOSIANBROODALPHA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GEONOSIANBROODALPHA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GEONOSIANBROODALPHA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GEONOSIANBROODALPHA",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GEONOSIANBROODALPHA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GEONOSIANBROODALPHA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GENERALSKYWALKER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALSKYWALKER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALSKYWALKER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GENERALSKYWALKER",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GENERALSKYWALKER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GENERALSKYWALKER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ARCTROOPER501ST",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ARCTROOPER501ST01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ARCTROOPER501ST01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GENERALHUX",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALHUX01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GENERALHUX02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GENERALHUX",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GENERALHUX01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FOSITHTROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FOSITHTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FOSITHTROOPER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FOSITHTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_EPIXFINN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EPIXFINN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EPIXFINN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_EPIXFINN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_EPIXPOE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EPIXPOE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EPIXPOE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_EPIXPOE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SUPREMELEADERKYLOREN",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_SUPREMELEADERKYLOREN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SUPREMELEADERKYLOREN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SUPREMELEADERKYLOREN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SUPREMELEADERKYLOREN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GLREY",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GLREY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GLREY02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GLREY",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GLREY01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_THEMANDALORIAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_THEMANDALORIAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_THEMANDALORIAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_THEMANDALORIAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_THEMANDALORIAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GALACTICLEGEND01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GALACTICLEGEND01_DUMMY",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CARADUNE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CARADUNE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CARADUNE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CARADUNE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CARADUNE_MANDALORIAN_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GREEFKARGA",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GREEFKARGA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GREEFKARGA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GREEFKARGA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GREEFKARGA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_GREEFKARGA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GREEFKARGA01_MANDALORIAN_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GREEFKARGA02_MANDALORIAN_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDIKNIGHTLUKE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTLUKE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTLUKE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JEDIKNIGHTLUKE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JEDIKNIGHTLUKE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDIKNIGHTLUKE_JABBA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTLUKE01_JABBA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTLUKE02_JABBA",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JEDIKNIGHTLUKE_JABBA",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_C3POCHEWBACCA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_C3POCHEWBACCA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_C3POCHEWBACCA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_C3POCHEWBACCA",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MONMOTHMA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MONMOTHMA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MONMOTHMA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_MONMOTHMA",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MONMOTHMA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ADMIRALPIETT",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_ADMIRALPIETT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ADMIRALPIETT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ADMIRALPIETT02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ADMIRALPIETT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SITHPALPATINE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHPALPATINE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SITHPALPATINE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_SITHPALPATINE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SITHPALPATINE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_SITHPALPATINE_DUMMY",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SITHPALPATINE01_DUMMY",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GRANDMASTERLUKE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDMASTERLUKE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDMASTERLUKE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GRANDMASTERLUKE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GRANDMASTERLUKE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GRANDMASTERLUKE_DUMMY",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GRANDMASTERLUKE01_DUMMY",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDIMASTERLUKE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIMASTERLUKE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIMASTERLUKE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_KUIIL",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KUIIL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KUIIL02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_KUIIL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_IG11",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IG1101",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IG1102",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IG1101",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IG1101_MANDALORIAN_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IG1102_MANDALORIAN_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_IG12",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IG1201",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IG1202",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IG1201",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_MOFFGIDEONS1",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_MOFFGIDEONS1",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MOFFGIDEONS101",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MOFFGIDEONS102",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MOFFGIDEONS101",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_THEMANDALORIANBESKARARMOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_THEMANDALORIANBESKARARMOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_THEMANDALORIANBESKARARMOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_THEMANDALORIANBESKARARMOR02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_THEMANDALORIANBESKARARMOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_THEMANDALORIANBESKARARMOR_JOURNEY_EVENT",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ARMORER",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_ARMORER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ARMORER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ARMORER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ARMORER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BOKATAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_BOKATAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BOKATAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BOKATAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DARKTROOPER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARKTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARKTROOPER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARKTROOPER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BADBATCHHUNTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_BADBATCHHUNTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHHUNTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHHUNTER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BADBATCHTECH",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHTECH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHTECH02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BADBATCHTECH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BADBATCHWRECKER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHWRECKER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHWRECKER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BADBATCHWRECKER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BADBATCHECHO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHECHO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHECHO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BADBATCHECHO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_COMMANDERAHSOKA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COMMANDERAHSOKA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_COMMANDERAHSOKA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_COMMANDERAHSOKA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDIMASTERKENOBI",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIMASTERKENOBI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIMASTERKENOBI02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JEDIMASTERKENOBI",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JEDIMASTERKENOBI01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDIMASTERKENOBI_GLE_INHERIT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIMASTERKENOBI01_GLE_INHERIT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIMASTERKENOBI02_GLE_INHERIT",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JEDIMASTERKENOBI_GLE_INHERIT",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JEDIMASTERKENOBI01_GLE_INHERIT",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JEDIMASTERKENOBI_GLE_INHERIT_T6",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIMASTERKENOBI01_GLE_INHERIT_T6",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIMASTERKENOBI02_GLE_INHERIT_T6",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JEDIMASTERKENOBI_GLE_INHERIT_T6",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JEDIMASTERKENOBI01_GLE_INHERIT_T6",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CLONETROOPER212_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CLONETROOPER212_GLE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CLONETROOPER212_GLE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CLONETROOPER212_GLE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CLONEVETERAN212_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CLONEVETERAN212_GLE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CLONEVETERAN212_GLE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CLONEVETERAN212_GLE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_CLONEVETERAN212_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BADBATCHOMEGA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHOMEGA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BADBATCHOMEGA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BADBATCHOMEGA01",
+    "omicronMode": 7
+  },
+  {
+    "id": "basicskill_MAULS7",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_MAULS7",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MAULS701",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MAULS702",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MAULS701",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_LORDVADER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LORDVADER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LORDVADER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_LORDVADER",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_LORDVADER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_LORDVADER_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LORDVADER01_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LORDVADER02_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_LORDVADER_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_LORDVADER01_GLE",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_REX_GLV",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_REX01_GLV",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_REX02_GLV",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_FENNECSHAND",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FENNECSHAND01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_FENNECSHAND01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FENNECSHAND01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_FENNECSHAND",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BOBAFETTSCION",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_BOBAFETTSCION",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_BOBAFETTSCION01",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_BOBAFETTSCION02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BOBAFETTSCION01",
+    "omicronMode": 8
+  },
+  {
+    "id": "contractskill_BOBAFETTSCION01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_KYLEKATARN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KYLEKATARN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KYLEKATARN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_KYLEKATARN01",
+    "omicronMode": 7
+  },
+  {
+    "id": "basicskill_DARTHTALON",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHTALON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHTALON02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHTALON01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHTALON02",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_MARAJADE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MARAJADE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MARAJADE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MARAJADE01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_IDENVERSIOEMPIRE",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_IDENVERSIOEMPIRE",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_IDENVERSIOEMPIRE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_IDENVERSIOEMPIRE02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_IDENVERSIOEMPIRE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SECONDSISTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_SECONDSISTER",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_SECONDSISTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SECONDSISTER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SECONDSISTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_INQUISITOR01_SECONDSISTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_NINTHSISTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_NINTHSISTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_NINTHSISTER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_NINTHSISTER",
+    "omicronMode": 8
+  },
+  {
+    "id": "uniqueskill_NINTHSISTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_INQUISITOR01_TANK",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SEVENTHSISTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_SEVENTHSISTER",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_SEVENTHSISTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SEVENTHSISTER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SEVENTHSISTER04",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_INQUISITOR01_HEALER",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_EIGHTHBROTHER",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_EIGHTHBROTHER",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_EIGHTHBROTHER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_EIGHTHBROTHER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_EIGHTHBROTHER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_INQUISITOR01_EIGHTHBROTHER",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DARTHMALGUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_DARTHMALGUS",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_DARTHMALGUS01",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_DARTHMALGUS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHMALGUS01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_FIFTHBROTHER",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_FIFTHBROTHER",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_FIFTHBROTHER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_FIFTHBROTHER02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_FIFTHBROTHER",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_INQUISITOR01_SUPPORT",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_50RT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_50RT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_50RT02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_50RT",
+    "omicronMode": 11
+  },
+  {
+    "id": "uniqueskill_50RT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_ADMIRALRADDUS",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_ADMIRALRADDUS",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_ADMIRALRADDUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ADMIRALRADDUS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ADMIRALRADDUS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_GRANDINQUISITOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GRANDINQUISITOR",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_GRANDINQUISITOR01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GRANDINQUISITOR02",
+    "omicronMode": 8
+  },
+  {
+    "id": "uniqueskill_GRANDINQUISITOR01",
+    "omicronMode": 8
+  },
+  {
+    "id": "uniqueskill_INQUISITOR01_GRANDINQUISITOR",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_KRRSANTAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KRRSANTAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KRRSANTAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_KRRSANTAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_KRRSANTAN01",
+    "omicronMode": 9
+  },
+  {
+    "id": "contractskill_KRRSANTAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BENSOLO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BENSOLO01",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_BENSOLO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BENSOLO01",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_BENSOLO02",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_UNDERCOVERLANDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_UNDERCOVERLANDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_UNDERCOVERLANDO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_UNDERCOVERLANDO01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_BOUSHH",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_BOUSHH",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BOUSHH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BOUSHH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BOUSHH02",
+    "omicronMode": 4
+  },
+  {
+    "id": "contractskill_BOUSHH",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_JABBATHEHUTT",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JABBATHEHUTT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JABBATHEHUTT02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JABBATHEHUTT",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_JABBATHEHUTT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "contractskill_JABBATHEHUTT01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_HONDO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HONDO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_HONDO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_HONDO01",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_HONDO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_THIRDSISTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_THIRDSISTER",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_THIRDSISTER01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_THIRDSISTER02",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_THIRDSISTER01",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_INQUISITOR01_THIRDSISTER",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TRIPLEZERO",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TRIPLEZERO01",
+    "omicronMode": 14
+  },
+  {
+    "id": "uniqueskill_TRIPLEZERO01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TRIPLEZERO02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_BT1",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BT101",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_BT101",
+    "omicronMode": 14
+  },
+  {
+    "id": "uniqueskill_BT102",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SANASTARROS",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_SANASTARROS",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_SANASTARROS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SANASTARROS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SANASTARROS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_DOCTORAPHRA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DOCTORAPHRA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DOCTORAPHRA02",
+    "omicronMode": 15
+  },
+  {
+    "id": "leaderskill_DOCTORAPHRA",
+    "omicronMode": 15
+  },
+  {
+    "id": "uniqueskill_DOCTORAPHRA01",
+    "omicronMode": 15
+  },
+  {
+    "id": "basicskill_ZORIIBLISS_V2",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ZORIIBLISS_V201",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_ZORIIBLISS_V202",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_ZORIIBLISS_V201",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_ZORIIBLISS_V202",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TRENCH",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_TRENCH01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_TRENCH",
+    "omicronMode": 8
+  },
+  {
+    "id": "uniqueskill_TRENCH01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_TUSKENCHIEFTAIN",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_TUSKENCHIEFTAIN",
+    "omicronMode": 14
+  },
+  {
+    "id": "specialskill_TUSKENCHIEFTAIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TUSKENCHIEFTAIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CALKESTIS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CALKESTIS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CALKESTIS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CALKESTIS01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_CEREJUNDA",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_CEREJUNDA",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_CEREJUNDA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CEREJUNDA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CEREJUNDA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MERRIN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MERRIN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MERRIN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MERRIN01",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_MERRIN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TARFFUL",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_TARFFUL",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_TARFFUL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TARFFUL02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_TARFFUL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_SAWGERRERA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SAWGERRERA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_SAWGERRERA",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_SAWGERRERA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPTAINREX",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPTAINREX01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPTAINREX02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPTAINREX01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_JEDIKNIGHTCAL",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_JEDIKNIGHTCAL",
+    "omicronMode": 7
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTCAL01",
+    "omicronMode": 7
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTCAL02",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_JEDIKNIGHTCAL03",
+    "omicronMode": 7
+  },
+  {
+    "id": "uniqueskill_JEDIKNIGHTCAL01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_TARONMALICOS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TARONMALICOS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_TARONMALICOS02",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_TARONMALICOS01",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_TARONMALICOS02",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_PRINCESSKNEESAA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PRINCESSKNEESAA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PRINCESSKNEESAA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_PRINCESSKNEESAA01",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_SCOUTTROOPER_V3",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SCOUTTROOPER_V301",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_SCOUTTROOPER_V302",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_SCOUTTROOPER_V301",
+    "omicronMode": 4
+  },
+  {
+    "id": "basicskill_CAPTAINDROGAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPTAINDROGAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPTAINDROGAN02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPTAINDROGAN01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_GLLEIA",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_GLLEIA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GLLEIA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_GLLEIA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_GLLEIA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MOFFGIDEONS3",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_MOFFGIDEONS3",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_MOFFGIDEONS301",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_MOFFGIDEONS302",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_MOFFGIDEONS301",
+    "omicronMode": 8
+  },
+  {
+    "id": "basicskill_PAZVIZSLA",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PAZVIZSLA01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_PAZVIZSLA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_PAZVIZSLA01",
+    "omicronMode": 7
+  },
+  {
+    "id": "basicskill_KELLERANBEQ",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_KELLERANBEQ",
+    "omicronMode": 8
+  },
+  {
+    "id": "specialskill_KELLERANBEQ01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_KELLERANBEQ02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_KELLERANBEQ01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_MANDALORBOKATAN",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MANDALORBOKATAN01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_MANDALORBOKATAN02",
+    "omicronMode": 9
+  },
+  {
+    "id": "uniqueskill_MANDALORBOKATAN01",
+    "omicronMode": 9
+  },
+  {
+    "id": "leaderskill_MANDALORBOKATAN",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_DARTHBANE",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_DARTHBANE01",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_DARTHBANE02",
+    "omicronMode": 9
+  },
+  {
+    "id": "leaderskill_DARTHBANE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_DARTHBANE01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_STAP",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_STAP01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_STAP02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_STAP01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_BOSSNASS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BOSSNASS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_BOSSNASS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_BOSSNASS",
+    "omicronMode": 8
+  },
+  {
+    "id": "uniqueskill_BOSSNASS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_CAPTAINTARPALS",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPTAINTARPALS01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_CAPTAINTARPALS02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_CAPTAINTARPALS01",
+    "omicronMode": 7
+  },
+  {
+    "id": "basicskill_QUEENAMIDALA",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_QUEENAMIDALA",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_QUEENAMIDALA01",
+    "omicronMode": 9
+  },
+  {
+    "id": "specialskill_QUEENAMIDALA02",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_QUEENAMIDALA01",
+    "omicronMode": 9
+  },
+  {
+    "id": "basicskill_LUCE",
+    "omicronMode": 1
+  },
+  {
+    "id": "basicskill_R2D2",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_LUCE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_R2D201",
+    "omicronMode": 1
+  },
+  {
+    "id": "specialskill_R2D202",
+    "omicronMode": 1
+  },
+  {
+    "id": "leaderskill_LUCE",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_LUCE01",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_R2D201",
+    "omicronMode": 1
+  },
+  {
+    "id": "uniqueskill_R2D202",
+    "omicronMode": 1
+  }
+]

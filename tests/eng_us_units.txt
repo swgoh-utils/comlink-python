@@ -1,0 +1,1901 @@
+UNIT_501ARCTROOPER501ST_NAME|501st ARC Trooper
+UNIT_501ST_NAME|501st Clone Battalion
+UNIT_AAT_CANNON_LEFT_DESC|
+UNIT_AAT_CANNON_LEFT_NAME|AAT (Left Cannon)
+UNIT_AAT_CANNON_RIGHT_DESC|
+UNIT_AAT_CANNON_RIGHT_NAME|AAT (Right Cannon)
+UNIT_AAT_DESC|
+UNIT_AAT_NAME|AAT
+UNIT_AAT_TURRET_DESC|
+UNIT_AAT_TURRET_NAME|AAT (Main Cannon)
+UNIT_AAYLASECURA_DESC|Versatile attacker with high survivability through Dodge, Hitpoints, and self healing.
+UNIT_AAYLASECURA_NAME|Aayla Secura
+UNIT_ABILITY_UNLOCK_ERROR_RESTART_MESSAGE|There was an error unlocking this ability.\nPlease restart the game to resync with the server.
+UNIT_ABILITY_UNLOCK_ERROR_TITLE|UNLOCK ERROR
+UNIT_ABILITY_UPGRADE_ERROR_RESTART_MESSAGE|There was an error upgrading this ability.\nPlease restart the game to resync with the server.
+UNIT_ABILITY_UPGRADE_ERROR_TITLE|UPGRADE ERROR
+UNIT_ACKLAY_DESC|
+UNIT_ACKLAY_NAME|Acklay
+UNIT_ADMINISTRATORLANDO_DESC|Scoundrel leader with high offense and excellent Critical Hit synergy
+UNIT_ADMINISTRATORLANDO_NAME|Lando Calrissian
+UNIT_ADMIRALACKBAR_DESC|Rebel Support that can Dispel debuffs and grant allies extra turns
+UNIT_ADMIRALACKBAR_NAME|Admiral Ackbar
+UNIT_ADMIRALPIETT_DESC|An ambitious Imperial Officer who supports his allies while plotting their demise
+UNIT_ADMIRALPIETT_NAME|Admiral Piett
+UNIT_AGENKOLAR_NAME|Agen Kolar
+UNIT_AHSOKATANO_DESC|Attacker with self healing, group healing, and stacking hit point and dodge buffs.
+UNIT_AHSOKATANO_DESC_V2|Versatile Attacker with healing and superior stats as long as she can avoid suffering Critical Hits
+UNIT_AHSOKATANO_DESC_V3|Versatile Attacker who constantly assists while healing and dispelling
+UNIT_AHSOKATANO_NAME|Ahsoka Tano
+UNIT_AJUNTAPALL_NAME|Ajunta Pall
+UNIT_AJUNTAPALLSPIRIT_NAME|Spirit of Ajunta Pall
+UNIT_AMILYNHOLDO_DESC|Seasoned Resistance Tank with powerful ally support and enemy debuffs
+UNIT_AMILYNHOLDO_NAME|Amilyn Holdo
+UNIT_ANAKINKNIGHT_DESC|High-pressure Jedi attacker that punishes enemies for wounding his allies
+UNIT_ANAKINKNIGHT_NAME|Jedi Knight Anakin
+UNIT_ANAKINPADAWAN_NAME|Padawan Anakin Skywalker
+UNIT_APPRENTICECONSULAR_DESC|
+UNIT_APPRENTICECONSULAR_NAME|Jedi Knight Apprentice
+UNIT_APPRENTICEGUARDIAN_DESC|
+UNIT_APPRENTICEGUARDIAN_NAME|Apprentice Guardian
+UNIT_APPRENTICESAGE_DESC|
+UNIT_APPRENTICESAGE_NAME|Apprentice Sage
+UNIT_APPRENTICESENTINEL_DESC|
+UNIT_APPRENTICESENTINEL_NAME|Apprentice Sentinel
+UNIT_APPRENTICEVANGUARD_DESC|
+UNIT_APPRENTICEVANGUARD_NAME|Apprentice Vanguard
+UNIT_ARC170_DESC|
+UNIT_ARC170_DESC01|Crit debuff and counter attack tank.
+UNIT_ARC170_NAME|Arc-170
+UNIT_ARC170_NAME01|ARC-170
+UNIT_ARC170CLONESERGEANT_DESC|Reliable Clone Tank that both inflicts and exploits Target Lock
+UNIT_ARC170CLONESERGEANT_NAME|Clone Sergeant's ARC-170
+UNIT_ARC170REX_DESC|Defensive Clone Tank that can inflict Target Lock and boost ally Protection and Tenacity
+UNIT_ARC170REX_NAME|Rex's ARC-170
+UNIT_ARCTROOPER_DESC|
+UNIT_ARCTROOPER_NAME|Clone ARC Trooper
+UNIT_ARCTROOPER501ST_DESC|Powerful Clone Attacker that can command a Blaster Turret on the battlefield
+UNIT_ARCTROOPER501ST_NAME|ARC Trooper
+UNIT_ARENAFOE_NAME|Arena Combatant
+UNIT_ARMORER_DESC|A Mandalorian leader and support unit that collects beskar to buff her team and rally them.
+UNIT_ARMORER_NAME|The Armorer
+UNIT_ASAJVENTRESS_DESC|Nightsister controller with self healing who generates attack power on enemy death.
+UNIT_ASAJVENTRESS_DESC_V2|Nightsister controller with healing who generates attack power as characters are defeated
+UNIT_ASAJVENTRESS_NAME|Asajj Ventress
+UNIT_ASSAULTDROIDMK1_NAME|Assault Droid Mk I
+UNIT_ASSAULTDROIDMK4_NAME|Assault Droid Mk IV
+UNIT_ATST_NAME|Imperial AT-ST
+UNIT_ATSTDRIVER_DESC|
+UNIT_ATSTDRIVER_NAME|AT-ST Driver
+UNIT_AURRA_SING_DESC|Deadly Bounty Hunter that has increased damage while Stealthed
+UNIT_AURRA_SING_NAME|Aurra Sing
+UNIT_AURRASING_DESC|
+UNIT_AURRASING_NAME|Aurra Sing
+UNIT_AWING_DESC|
+UNIT_AWING_DESC01|Fast Attack and high Dodge multi-hitter with some bomb/debuff synergies.
+UNIT_AWING_NAME|A-wing
+UNIT_AWING_NAME01|A-wing
+UNIT_AWING_OTFALCON_NAME|A-wing Interceptor
+UNIT_B1BATTLEDROID_DESC|Droid horde character with high Turn Meter potential
+UNIT_B1BATTLEDROID_NAME|B1 Battle Droid
+UNIT_B1BATTLEDROIDV2_DESC|Fragile Separatist Attacker that overwhelms their enemies with numbers
+UNIT_B1BATTLEDROIDV2_NAME|B1 Battle Droid
+UNIT_B1COMMANDERRAID_DESC|
+UNIT_B1COMMANDERRAID_NAME|Geonosis B1 Battle Droid Commander
+UNIT_B1HEAVYGUNNER_NAME|B1 Heavy Gunner
+UNIT_B1RAID_DESC|
+UNIT_B1RAID_NAME|Geonosis B1 Battle Droid
+UNIT_B1SNOWDROID_NAME|B1 Snow Droid
+UNIT_B2ROCKET_DESC|
+UNIT_B2ROCKET_NAME|B2 Rocket Trooper
+UNIT_B2ROCKETDROID_NAME|B2 Rocket Droid
+UNIT_B2SUPERBATTLEDROID_DESC|
+UNIT_B2SUPERBATTLEDROID_DESC_V2|Droid Tank that relentlessly punishes enemies that evade attacks or damage allies
+UNIT_B2SUPERBATTLEDROID_NAME|B2 Super Battle Droid
+UNIT_BADBATCHECHO_DESC|Loyal Clone Trooper who supports his allies in battle
+UNIT_BADBATCHECHO_NAME|Echo
+UNIT_BADBATCHHUNTER_DESC|Tactical leader of the Bad Batch who subtly destroys his enemies.
+UNIT_BADBATCHHUNTER_NAME|Hunter
+UNIT_BADBATCHOMEGA_DESC|Clever and empathetic attacker who utilizes buffs, debuffs, and the presence of her Bad Batch allies to take out her foes.
+UNIT_BADBATCHOMEGA_NAME|Omega
+UNIT_BADBATCHTECH_DESC|Stealthy support character that gives Translation to other Clone Troopers and applies Target Lock to enemies.
+UNIT_BADBATCHTECH_NAME|Tech
+UNIT_BADBATCHWRECKER_DESC|Resilient Clone Trooper who protects his allies and gets empowered when taking damage
+UNIT_BADBATCHWRECKER_NAME|Wrecker
+UNIT_BARRISSOFFEE_DESC|Jedi Healer that can balance party Health and Dispel allied Jedi frequently
+UNIT_BARRISSOFFEE_NAME|Barriss Offee
+UNIT_BASTILASHAN_DESC|Strong Jedi Support that grants allies an overwhelming first turn with her Leader ability
+UNIT_BASTILASHAN_NAME|Bastila Shan
+UNIT_BASTILASHANDARK_DESC|Strong Sith Support who inflicts a large number of debuffs including Shock, Stun and Corrupted Battle Meditation
+UNIT_BASTILASHANDARK_DESC_V2|Strong Sith Support who inflicts a large number of debuffs including Shock, Fear, and Corrupted Battle Meditation
+UNIT_BASTILASHANDARK_NAME|Bastila Shan (Fallen)
+UNIT_BAZEMALBUS_DESC|Fearsome Rebel Tank who Taunts, dispels buffs, and inflicts debuffs
+UNIT_BAZEMALBUS_NAME|Baze Malbus
+UNIT_BB8_DESC|Persistent Resistance Droid who empowers allies by circulating Secret Intel
+UNIT_BB8_NAME|BB-8
+UNIT_BELBULLAB22SOULLESSONE_DESC|
+UNIT_BELBULLAB22SOULLESSONE_NAME|Belbullab-22 [i]Souless One[/i]
+UNIT_BENDAKSTARKILLER_NAME|Bendak Starkiller
+UNIT_BENSOLOEXEGOL_NAME|Ben Solo
+UNIT_BESPINLUKE_DESC|Powerful Rebel with a focus on gaining huge advantages with both Critical Hits and Evasion
+UNIT_BESPINLUKE_NAME|Rebel Luke Skywalker
+UNIT_BESPINWINGGUARD_DESC|
+UNIT_BESPINWINGGUARD_NAME|Bespin Wing Guard
+UNIT_BIGGSDARKLIGHTER_DESC|Fighter pilot with joint attack ability and built in ship synergies.
+UNIT_BIGGSDARKLIGHTER_DESC_V2|Rebel Support with Critical Hit synergies who calls Assists
+UNIT_BIGGSDARKLIGHTER_NAME|Biggs Darklighter
+UNIT_BISTAN_DESC|Wild Rebel Attacker who gains Frenzy, debuffs enemies, and removes Turn Meter
+UNIT_BISTAN_NAME|Bistan
+UNIT_BLADEOFDORIN_DESC|Versatile Jedi Support with powerful Republic buffs and a targeted ally Taunt
+UNIT_BLADEOFDORIN_NAME|Plo Koon's Jedi Starfighter
+UNIT_BLAST_DOOR_NAME|Blast Door
+UNIT_BLASTERTURRET501ST_NAME|Blaster Turret
+UNIT_BOBAFETT_DESC|Durable attacker with Ability Block and self-revive abilities.
+UNIT_BOBAFETT_DESC_V2|Ruthless Bounty Hunter Attacker who ignores Taunts, Ability Blocks and self-revives
+UNIT_BOBAFETT_NAME|Boba Fett
+UNIT_BOBAFETTSCION_DESC|Infamous Bounty Hunter Attacker with a variety of debuffs and synergy with both Bounty Hunters and Scoundrels
+UNIT_BOBAFETTSCION_NAME|Boba Fett, Scion of Jango
+UNIT_BODHIROOK_DESC|Clever Rebel Support who spots enemy units for his allies
+UNIT_BODHIROOK_NAME|Bodhi Rook
+UNIT_BOKATAN_DESC|A Mandalorian leader that unites fellow Mandalorians and rallies them to assist.
+UNIT_BOKATAN_NAME|Bo-Katan Kryze
+UNIT_BOSSK_DESC|
+UNIT_BOSSK_DESC_V2|Bounty Hunter Tank that constantly regenerates Health and Protection
+UNIT_BOSSK_NAME|Bossk
+UNIT_BWING_DESC|
+UNIT_BWING_NAME|B-wing
+UNIT_BWING_OTFALCON_NAME|B-wing Starfighter
+UNIT_BXCOMMANDODROID_NAME|Commando Droid
+UNIT_BXSERIESCOMMANDODROID_NAME|BX-series Commando Droid
+UNIT_C3PO_DESC|
+UNIT_C3PO_NAME|C-3PO
+UNIT_C3POCHEWBACCA_DESC|Rebel Attacker duo that can distract their enemies with Blind and deal significant damage to all enemies in multi-encounter battles
+UNIT_C3POCHEWBACCA_NAME|Threepio & Chewie
+UNIT_C3POCHEWBACCA_V2_NAME|Threepio & Chewie
+UNIT_C3POLEGENDARY_DESC|Evasive support character that Confuses foes and strengthens mixed-faction interplay with Translation.
+UNIT_C3POLEGENDARY_NAME|C-3PO
+UNIT_CADBANE_DESC|High damage attacker with a powerful stun and bonuses against Jedi characters.
+UNIT_CADBANE_DESC_V2|Bounty Hunter Support with a powerful Stun and bonuses against Jedi characters
+UNIT_CADBANE_NAME|Cad Bane
+UNIT_CALONORD_NAME|Calo Nord
+UNIT_CANDEROUSORDO_DESC|Powerful attacker who can make short work of enemy Tanks
+UNIT_CANDEROUSORDO_NAME|Canderous Ordo
+UNIT_CANTINAKEEPER_NAME|Cantina Keeper
+UNIT_CAPITALCHIMAERA_DESC|Tactical Empire Capital Ship that shuts down enemy Capital Ships and manipulates the flow of battle
+UNIT_CAPITALCHIMAERA_NAME|Chimaera
+UNIT_CAPITALDROIDCONTROLSHIP_DESC|Separatist capital ship that starts slow, but gradually sets up an unstoppable fleet
+UNIT_CAPITALDROIDCONTROLSHIP_NAME|Saak'ak
+UNIT_CAPITALEXECUTOR_DESC|Empire capital ship with strong Bounty Hunter synergy
+UNIT_CAPITALEXECUTOR_DESC_V2|Empire Capital Ship with strong Bounty Hunter synergy.
+UNIT_CAPITALEXECUTOR_NAME|Executor
+UNIT_CAPITALFINALIZER_DESC|First Order Capital Ship that enables the First Order fleet to have an early game advantage and relentlessly pursue enemies
+UNIT_CAPITALFINALIZER_NAME|Finalizer
+UNIT_CAPITALJEDICRUISER_DESC|Defensive Jedi Capital Ship that uses Valor to gain a huge Speed advantage
+UNIT_CAPITALJEDICRUISER_NAME|Endurance
+UNIT_CAPITALMALEVOLENCE_DESC|Separatist Capital Ship that powers up both Separatists and Droids and has the means to shut down entire enemy fleets.
+UNIT_CAPITALMALEVOLENCE_NAME|Malevolence
+UNIT_CAPITALMONCALAMARICRUISER_DESC|Versatile Rebel Capital Ship that uses Advantage and bonus attacks to turn the tide
+UNIT_CAPITALMONCALAMARICRUISER_NAME|Home One
+UNIT_CAPITALNEGOTIATOR_DESC|Offensive Jedi Capital Ship that uses Valor to bolster ally attacks and increase its Speed
+UNIT_CAPITALNEGOTIATOR_NAME|Negotiator
+UNIT_CAPITALRADDUS_DESC|Supportive Resistance Capital Ship that will do whatever is necessary to protect the fleet
+UNIT_CAPITALRADDUS_NAME|Raddus
+UNIT_CAPITALSTARDESTROYER_DESC|Aggressive Empire Capital Ship that crushes debuffed enemies
+UNIT_CAPITALSTARDESTROYER_NAME|Executrix
+UNIT_CARADUNE_DESC|A Scoundrel/Rebel Tank who gains benefits when being led by either.
+UNIT_CARADUNE_NAME|Cara Dune
+UNIT_CARLISTRIEEKAN_DESC|
+UNIT_CARLISTRIEEKAN_NAME|Carlist Rieekan
+UNIT_CARTELBRUISER_DESC|
+UNIT_CARTELBRUISER_NAME|Cartel Bruiser
+UNIT_CARTELSABOTEUR_DESC|
+UNIT_CARTELSABOTEUR_NAME|Cartel Saboteur
+UNIT_CARTELSPY_DESC|
+UNIT_CARTELSPY_NAME|Cartel Spy
+UNIT_CARTHONASI_DESC|Old Republic soldier that excels at clearing waves of enemies
+UNIT_CARTHONASI_NAME|Carth Onasi
+UNIT_CASSIANANDOR_DESC|Rebel Support who buffs allies at the start of battle and debuffs enemies during battle
+UNIT_CASSIANANDOR_NAME|Cassian Andor
+UNIT_CATEGORY_ANY|Any Character
+UNIT_CC2224_DESC|
+UNIT_CC2224_DESC_V2|Clone Attacker that Stuns and calls tons of Assists
+UNIT_CC2224_NAME|CC2224 "Commander Cody"
+UNIT_CC2224_NAME_V2|CC-2224 "Cody"
+UNIT_CHEWBACCA_DESC|Tank character with high hit points and defenses, self healing, and the ability to force enemy characters to attack him.
+UNIT_CHEWBACCA_NAME|Chewbacca
+UNIT_CHEWBACCALEGENDARY_DESC|Mighty Rebel Attacker who Guards the weakest ally 
+UNIT_CHEWBACCALEGENDARY_NAME|Chewbacca
+UNIT_CHIEFCHIRPA_DESC|Ewok Leader that greatly improves ally Basic abilities
+UNIT_CHIEFCHIRPA_NAME|Chief Chirpa
+UNIT_CHIEFNEBIT_DESC|Jawa Leader and Controller with moderate Turn Meter potential
+UNIT_CHIEFNEBIT_DESC_V2|Cunning Jawa Tank with Stealth synergies who can reduce cooldowns
+UNIT_CHIEFNEBIT_NAME|Chief Nebit
+UNIT_CHIRRUTIMWE_DESC|Balanced Rebel Attacker who dispels debuffs, heals allies, and grants Tenacity Up
+UNIT_CHIRRUTIMWE_NAME|Chirrut Îmwe
+UNIT_CHOPPERS3_DESC|Surly Phoenix Support who Taunts and Dispels, and can recover Phoenix cooldowns
+UNIT_CHOPPERS3_NAME|Chopper
+UNIT_CLASH_ARCTROOPER501ST_NAME|501st ARC Trooper
+UNIT_CLONECAPTAINPHASEI_DESC|
+UNIT_CLONECAPTAINPHASEI_NAME|Clone Captain - Phase I
+UNIT_CLONECOMMANDERPHASEI_DESC|
+UNIT_CLONECOMMANDERPHASEI_NAME|Clone Commander - Phase I
+UNIT_CLONELIEUTENANTPHASEI_DESC|
+UNIT_CLONELIEUTENANTPHASEI_NAME|Clone Lieutenant - Phase I
+UNIT_CLONEMEDIC_DESC|
+UNIT_CLONEMEDIC_NAME|Clone Trooper Medic
+UNIT_CLONEPRIVATEPHASEI_DESC|
+UNIT_CLONEPRIVATEPHASEI_NAME|Clone Private - Phase I
+UNIT_CLONESERGEANTPHASEI_DESC|Clone Attacker with AoE damage and Turn Meter Reduction
+UNIT_CLONESERGEANTPHASEI_DESC_TU3|AOE character who grows stronger the more Clone allies he has.
+UNIT_CLONESERGEANTPHASEI_NAME|Clone Sergeant - Phase I
+UNIT_CLONETROOPER212_GLE_DESC|A 212th Clone Trooper
+UNIT_CLONETROOPER212_GLE_NAME|212th Clone Trooper
+UNIT_CLONEVETERAN212_GLE_DESC|A 212th Veteran Clone Trooper
+UNIT_CLONEVETERAN212_GLE_NAME|212th Veteran
+UNIT_CLONEWARS_CHEWBACCA_NAME|Clone Wars Chewbacca
+UNIT_CLONEWARSCHEWBACCA_DESC|Durable Tank with both Taunt and self-Healing
+UNIT_CLONEWARSCHEWBACCA_NAME|Clone Wars Chewbacca
+UNIT_COLONELSTARCK_DESC|Offensive Support who provides critical buffs and removes enemy Turn Meter
+UNIT_COLONELSTARCK_NAME|Colonel Starck
+UNIT_COMMANDBATTLEDROID_NAME|Command Battle Droid
+UNIT_COMMANDERAHSOKA_DESC|Legendary Master of Jar'Kai and Shien form Attacker, who deals high damage to a single target.
+UNIT_COMMANDERAHSOKA_NAME|Commander Ahsoka Tano
+UNIT_COMMANDERLUKESKYWALKER_DESC|Determined Rebel hero who can ignore debuffs or ignore Taunts
+UNIT_COMMANDERLUKESKYWALKER_HOTH_NAME|Commander Luke Skywalker (Hoth)
+UNIT_COMMANDERLUKESKYWALKER_NAME|Commander Luke Skywalker
+UNIT_COMMANDODROIDDIPLOMAT_DESC|Stealth-based Attacker with Crit buildup and high survivability
+UNIT_COMMANDODROIDDIPLOMAT_NAME|Commando Droid Diplomat
+UNIT_COMMANDSHUTTLE_DESC|Durable First Order Support with unparalleled ability to manipulate allied Turn Meter
+UNIT_COMMANDSHUTTLE_NAME|Kylo Ren's Command Shuttle
+UNIT_CORUSCANTUNDERWORLDPOLICE__CAPT_NAME|Police Captain
+UNIT_CORUSCANTUNDERWORLDPOLICE__LT_NAME|Police Lieutenant
+UNIT_CORUSCANTUNDERWORLDPOLICE__SGT_NAME|Police Sergeant
+UNIT_CORUSCANTUNDERWORLDPOLICE_DESC|Support that shuts down enemies with Stuns and Offense Down
+UNIT_CORUSCANTUNDERWORLDPOLICE_NAME|Coruscant Underworld Police
+UNIT_COUNTDOOKU_DESC|High-damage attacker with stun, bonus attacks, and incredible counter-attacking.
+UNIT_COUNTDOOKU_DESC_V2|Disciplined Separatist Attacker with high damage, counter attacks, and debuff capabilities
+UNIT_COUNTDOOKU_NAME|Count Dooku
+UNIT_COUNTDOOKUDESC|
+UNIT_CRITCHANCE_NAME|CRIT CHANCE
+UNIT_CRITDAMAGE_NAME|CRIT DAMAGE
+UNIT_CT210408_DESC|Clone Support that automatically Assists allies and can Dispel all enemies
+UNIT_CT210408_DESC_V2|Clone Trooper Support that automatically assists allies and can dispel all enemy buffs
+UNIT_CT210408_NAME|CT-21-0408 "Echo"
+UNIT_CT5555_DESC|Tank character with high Defense, enemy speed reduction, and joint attack ability.
+UNIT_CT5555_DESC_V2|Tank with high Defense, enemy Speed reduction, and team-wide stat bonuses
+UNIT_CT5555_NAME|CT-5555 "Fives"
+UNIT_CT7567_DESC|
+UNIT_CT7567_NAME|CT-7567 "Rex"
+UNIT_DAKA_DESC|Defensive Healer with a Stunning attack and multiple Revives
+UNIT_DAKA_DESC_V2|Defensive Nightsister Healer who Stuns and Revives
+UNIT_DAKA_NAME|Old Daka
+UNIT_DARKBARRISSOFFEE_DESC|Strong Stealth/Crit Attacker with low survivability
+UNIT_DARKBARRISSOFFEE_NAME|Dark Side Barriss Offee
+UNIT_DARKTROOPER_DESC|An Imperial Remnant attacker whose abilities are modified by the amount in Dark Trooper Squad
+UNIT_DARKTROOPER_NAME|Dark Trooper
+UNIT_DARTHMALAK_DESC|Brutal Sith Tank who terrorizes and drains enemies to stay alive
+UNIT_DARTHMALAK_NAME|Darth Malak
+UNIT_DARTHNIHILUS_DESC|Sith Support that can instantly defeat enemies by draining cooldowns
+UNIT_DARTHNIHILUS_NAME|Darth Nihilus
+UNIT_DARTHREVAN_DESC|Ruthless Sith Lord that is extremely effective at taking down the enemy leader
+UNIT_DARTHREVAN_NAME|Darth Revan
+UNIT_DARTHSIDIOUS_DESC|Brutal Attacker effective against Healers and Jedi while boosting allied Criticals as a Leader
+UNIT_DARTHSIDIOUS_NAME|Darth Sidious
+UNIT_DARTHSION_DESC|Aggressive Sith tank that becomes stronger with Hatred
+UNIT_DARTHSION_NAME|Darth Sion
+UNIT_DARTHSION_SITHRAID_NAME|Darth Sion
+UNIT_DARTHTALON_DESC|Nimble Sith attacker whose loyalty and lethality is without question
+UNIT_DARTHTALON_NAME|Darth Talon
+UNIT_DARTHTRAYA_DESC|Sith support who punishes enemies for relying on others
+UNIT_DARTHTRAYA_NAME|Darth Traya
+UNIT_DARTHTRAYA_SITHRAID_NAME|Darth Traya
+UNIT_DARTHTRAYA_SPECIAL_NAME|[99FF33]Darth Traya Shards[-]
+UNIT_DASHRENDAR_DESC|Charismatic Scoundrel Leader who gives Scoundrel allies Prepared
+UNIT_DASHRENDAR_NAME|Dash Rendar
+UNIT_DATCHA_NAME|Dathcha
+UNIT_DATHCHA_DESC|Versatile Support able to Ability Block and Stealth, effective against Droids or with Jawas
+UNIT_DATHCHA_NAME|Dathcha
+UNIT_DEATHTROOPER_DESC|Terrifying Empire Attacker who inflicts debilitating debuffs and prevents revives
+UNIT_DEATHTROOPER_NAME|Death Trooper
+UNIT_DEFENSE_NAME|DEFENSE
+UNIT_DELTA7BAZUREANGEL_DESC|
+UNIT_DELTA7BAZUREANGEL_NAME|Anakin's Delta-7B
+UNIT_DELTA7BBLADEDORIN_DESC|
+UNIT_DELTA7BBLADEDORIN_NAME|Plo Koon's Delta-7B
+UNIT_DELTA7BJEDISTARFIGHTER_DESC|
+UNIT_DELTA7BJEDISTARFIGHTER_NAME|Aayla Secura's Delta-7B
+UNIT_DELTA7JEDISTARFIGHTER_DESC|
+UNIT_DELTA7JEDISTARFIGHTER_DESC01|Enemy Buff clearing ship.
+UNIT_DELTA7JEDISTARFIGHTER_NAME|Delta-7 Jedi Starfighter
+UNIT_DELTA7JEDISTARFIGHTER_NAME01|Delta-7 Jedi Starfighter
+UNIT_DENGAR_DESC|
+UNIT_DENGAR_DESC_V2|Adaptable Scoundrel attacker that Stuns and inflicts Tenacity Down.
+UNIT_DENGAR_NAME|Dengar
+UNIT_DETAILS_ABILITY_UPGRADE_INSUFFICIENT_CURRENCY_MESSAGE|Insufficient Credits. Collect more Credits by completing Battles or purchasing a Credit Pack from the Store.
+UNIT_DETAILS_ABILITY_UPGRADE_INSUFFICIENT_CURRENCY_TITLE|Insufficient Credits
+UNIT_DETAILS_ABILITY_UPGRADE_RARE_CONFIRM_MESSAGE|Are you sure you want to spend rare materials to upgrade this ability?
+UNIT_DETAILS_ABILITY_UPGRADE_RARE_CONFIRM_NO_BUTTON|CANCEL
+UNIT_DETAILS_ABILITY_UPGRADE_RARE_CONFIRM_TITLE|Ability Upgrade
+UNIT_DETAILS_ABILITY_UPGRADE_RARE_CONFIRM_YES_BUTTON|UPGRADE
+UNIT_DETAILS_FAVORITE|FAVORITE
+UNIT_DETAILS_STATS|STATS
+UNIT_DETAILS_STATS_VIEW_PRIMARY_TITLE_V2|Base Attributes
+UNIT_DETAILS_VIEW_ABILITY_SKILL_OVERLAY_UNIQUE_CAPITAL_TAG|(Commander Ability)
+UNIT_DETAILS_VIEW_CONFIRM_TIER_UP_MESSAGE|Any gear that is not yet equipped will be equipped or crafted as needed.
+UNIT_DETAILS_VIEW_CONFIRM_TIER_UP_TITLE|Upgrade Character
+UNIT_DETAILS_VIEW_SKILLS_LOCKED_MESSAGE_SHORT_CONDITIONAL|[EBB000]Can be unlocked at [-][{0}]{1}[-]
+UNIT_DETAILS_VIEW_SKILLS_RARITY_LOCKED_MESSAGE_SHORT_CONDITIONAL|[EBB000]Can be unlocked at [-]{0}[EBB000] stars[-]
+UNIT_DETAILS_VIEW_SKILLS_RELIC_LOCKED_MESSAGE|This ability unlocks when this character's Relic Amplifier reaches level {0}.
+UNIT_DETAILS_VIEW_SKILLS_RELIC_LOCKED_MESSAGE_SHIP_CREW|This ability unlocks when crew member {0}'s Relic Amplifier reaches level {1}.
+UNIT_DETAILS_VIEW_SKILLS_RELIC_LOCKED_MESSAGE_SHORT|[EBB000]Unlocks at Relic Amplifier level [-]{0}[EBB000].[-]
+UNIT_DETAILS_VIEW_SKILLS_RELIC_LOCKED_MESSAGE_SHORT_CONDITIONAL|[EBB000]Can be unlocked at Relic Amplifier level [-]{0}[EBB000].[-]
+UNIT_DIRECTORKRENNIC_DESC|Intimidating Empire Support who inflicts devastating debuffs and slows enemies
+UNIT_DIRECTORKRENNIC_NAME|Director Krennic
+UNIT_DROCHCLASSBOARDINGSHIP_DESC|
+UNIT_DROCHCLASSBOARDINGSHIP_NAME|Droch-class Boarding Ship
+UNIT_DROID_COMBATREMOTE_NAME|Training Remote
+UNIT_DROID_DLC13MINING_DESC|Awards significant amount of Credits when sold.
+UNIT_DROID_DLC13MINING_NAME|DLC-13 Mining Droid
+UNIT_DROIDBOMBER_DESC|Heavy Separatist Droid fighter that deploys massive attacks against all enemies and is piloted automatically
+UNIT_DROIDBOMBER_NAME|Hyena Bomber Droid
+UNIT_DROIDEKA_DESC|Destructive Droid attacker that punishes fast enemies from behind its deflector shield
+UNIT_DROIDEKA_NAME|Droideka
+UNIT_DROIDFIGHTER_NAME|Droid Fighter
+UNIT_DROIDSTARFIGHTER_DESC|Simple but persistent Separatist fighter that is always replaced when defeated
+UNIT_DROIDSTARFIGHTER_NAME|Droid Starfighter
+UNIT_DROIDTRIFIGHTER_DESC|
+UNIT_DROIDTRIFIGHTER_NAME|Droid Tri-fighter
+UNIT_DUELIST_DESC|This duelist has special abilities used only in this battle. This character isn't obtainable, and can't be used outside of this battle.
+UNIT_EBONHAWK_DESC|Durable Old Republic Support that dispels enemies and prevents Target Lock
+UNIT_EBONHAWK_NAME|Ebon Hawk
+UNIT_EETHKOTH_DESC|Stunning Jedi Support extremely effective against Droids
+UNIT_EETHKOTH_NAME|Eeth Koth
+UNIT_EIGHTHBROTHER_DESC|A stealthy member of the Inquisitorious with an arsenal of tricks and weapons to surprise his opponent.
+UNIT_EIGHTHBROTHER_NAME|Eighth Brother
+UNIT_EMBO_DESC|
+UNIT_EMBO_DESC_V2|Deadly Bounty Hunter Attacker that consumes his Protection to boost his damage
+UNIT_EMBO_NAME|Embo
+UNIT_EMPERORPALPATINE_DESC|Stun-based Attacker with death-fueled Turn Meter and Health Fill
+UNIT_EMPERORPALPATINE_DESC_V2|Overwhelming Sith Support who inflicts Shock and can Stun targets for multiple turns
+UNIT_EMPERORPALPATINE_NAME|Emperor Palpatine
+UNIT_EMPERORSSHUTTLE_DESC|Versatile Support that boosts Empire and Sith survivability while debuffing enemies
+UNIT_EMPERORSSHUTTLE_NAME|Emperor's Shuttle
+UNIT_ENDORLEIA_NAME|Endor Leia
+UNIT_ENDORREBELOFFICER_DESC|
+UNIT_ENDORREBELOFFICER_NAME|Endor Rebel Officer
+UNIT_ENDORREBELSCOUT_DESC|
+UNIT_ENDORREBELSCOUT_NAME|Endor Rebel Scout
+UNIT_ENDORREBELSOLDIER_DESC|Rebel Tank with unique Ewok Attack bonuses
+UNIT_ENDORREBELSOLDIER_NAME|Endor Rebel Soldier
+UNIT_ENFYSNEST_DESC|Powerhouse attacker that stacks Protection when attacked, then dismantles enemy defenses with Dispels and Turn Meter manipulation
+UNIT_ENFYSNEST_NAME|Enfys Nest
+UNIT_EPIXFINN_DESC|Supportive Attacker whose inspiration empowers his allies on the battlefield
+UNIT_EPIXFINN_NAME|Resistance Hero Finn
+UNIT_EPIXPOE_DESC|Offensive Attacker who overpowers his enemies with debilitating effects
+UNIT_EPIXPOE_NAME|Resistance Hero Poe
+UNIT_ETA2JEDIINTERCEPTOR_DESC|
+UNIT_ETA2JEDIINTERCEPTOR_NAME|ETA-2 Jedi Interceptor
+UNIT_EVENPIELL_DESC|Tank via high HP Regeneration Dodge with Stealth potential
+UNIT_EVENPIELL_NAME|Even Piell
+UNIT_EWOKELDER_DESC|Ewok Healer that specializes in Revives
+UNIT_EWOKELDER_NAME|Ewok Elder
+UNIT_EWOKSCOUT_DEADLY_NAME|Ewok Scout
+UNIT_EWOKSCOUT_DESC|Powerful single-target Attacker that becomes evasive with Ewok allies
+UNIT_EWOKSCOUT_NAME|Ewok Scout
+UNIT_EWOKWARRIOR_DEADLY_NAME|Ewok Warrior
+UNIT_EWOKWARRIOR_DESC|
+UNIT_EWOKWARRIOR_NAME|Ewok Warrior
+UNIT_EZRABRIDGER_DESC|
+UNIT_EZRABRIDGER_NAME|Ezra Bridger
+UNIT_EZRABRIDGERS3_DESC|Versatile Phoenix Attacker that can perform a variety of effects based on the Roles of allies
+UNIT_EZRABRIDGERS3_NAME|Ezra Bridger
+UNIT_FENNECSHAND_DESC|Lethal Bounty Hunter capable of taking on the most dangerous foes
+UNIT_FENNECSHAND_NAME|Fennec Shand
+UNIT_FINN_DESC|Resistance tank that keeps the pressure up with a balance between offense and defense
+UNIT_FINN_NAME|Finn
+UNIT_FIRSTORDEREXECUTIONER_DESC|Merciless First Order Attacker who executes powerful attacks
+UNIT_FIRSTORDEREXECUTIONER_NAME|First Order Executioner
+UNIT_FIRSTORDEROFFICERMALE_DESC|First Order support that grants Advantage and can manipulate both ally and enemy Turn Meters
+UNIT_FIRSTORDEROFFICERMALE_NAME|First Order Officer
+UNIT_FIRSTORDERSPECIALFORCESPILOT_DESC|Subversive First Order Attacker who buffs allies and disrupts enemies
+UNIT_FIRSTORDERSPECIALFORCESPILOT_NAME|First Order SF TIE Pilot
+UNIT_FIRSTORDERTIEECHELON_DESC|First Order Tank that covers its allies by providing them with Stealth
+UNIT_FIRSTORDERTIEECHELON_NAME|TIE Echelon
+UNIT_FIRSTORDERTIEPILOT_DESC|First Order attacker that can deal extreme damage in a single turn with Advantage
+UNIT_FIRSTORDERTIEPILOT_NAME|First Order TIE Pilot
+UNIT_FIRSTORDERTROOPER_DESC|First Order tank that uses Advantage to disrupt enemies
+UNIT_FIRSTORDERTROOPER_NAME|First Order Stormtrooper
+UNIT_FIRSTORDERTROOPERCOMMANDER_NAME|First Order Stormtrooper Commander
+UNIT_FISTO_KIT_NAME|Kit Fisto
+UNIT_FORAIDER_NAME|First Order Raider
+UNIT_FORIOTCONTROLSTORMTROOPER_DESC|First Order Tank that can recover Allies' protection
+UNIT_FORIOTCONTROLSTORMTROOPER_NAME|FO Riot Control Stormtrooper
+UNIT_FOSITHTROOPER_DESC|Elite trooper with powerful First Order and Sith synergy and high damage potential.
+UNIT_FOSITHTROOPER_NAME|Sith Trooper
+UNIT_FOSNOWTROOPER_NAME|First Order Snowtrooper
+UNIT_FOSNOWTROOPEROFFICER_NAME|First Order Snowtrooper Officer
+UNIT_FOTF_DEVASTATOR_DESC|Ruthless Empire Capital Ship that crushes debuffed enemies and dispels buffs when reinforcements enter battle
+UNIT_FOTF_DEVASTATOR_NAME|Devastator
+UNIT_FULCRUMAHSOKA_DESC|Enduring Rebel Attacker who shrugs off debuffs and consumes buffs to deal extra damage
+UNIT_FULCRUMAHSOKA_NAME|Ahsoka Tano (Fulcrum)
+UNIT_GAMORREANBOSS_NAME|Gamorrean Boss
+UNIT_GAMORREANBRUTE_NAME|Gamorrean Brute
+UNIT_GAMORREANCAPTAIN_NAME|Gamorrean Captain
+UNIT_GAMORREANGUARD_DESC|Aggressive tank that Taunts and Counters with multiple Damage Over Time effects
+UNIT_GAMORREANGUARD_NAME|Gamorrean Guard
+UNIT_GAMORREANTHUG_NAME|Gamorrean Thug
+UNIT_GARAZEBORRELIOS_DESC|
+UNIT_GARAZEBORRELIOS_NAME|Garazeb 'Zeb' Orrelios
+UNIT_GARSAXON_DESC|Leader who grants Empire allies Counter Chance and Assists them when they Counter Attack
+UNIT_GARSAXON_NAME|Gar Saxon
+UNIT_GAUNTLETSTARFIGHTER_DESC|Reliable Empire Support that dispels ally debuffs and prevents enemy buffs
+UNIT_GAUNTLETSTARFIGHTER_NAME|Gauntlet Starfighter
+UNIT_GENERALHUX_DESC|Ruthless First Order Support that can prevent enemies from counterattacking.
+UNIT_GENERALHUX_NAME|General Hux
+UNIT_GENERALKENOBI_DESC|Vigorous Jedi Tank who gains Foresight, dispels debuffs to grant buffs, and calls buffed allies to Assist
+UNIT_GENERALKENOBI_NAME|General Kenobi
+UNIT_GENERALKENOBI_SPECIAL_NAME|[99FF33]General Kenobi Shards[-]
+UNIT_GENERALSKYWALKER_DESC|Fierce Jedi Attacker who protects his battalion at all costs
+UNIT_GENERALSKYWALKER_NAME|General Skywalker
+UNIT_GENERIC_BOUNTYHUNTER_NAME|Bounty Hunter
+UNIT_GEONOSIANBROODALPHA_DESC|Geonosian Support that swarms enemies with summoned allies and Hive Mind
+UNIT_GEONOSIANBROODALPHA_NAME|Geonosian Brood Alpha
+UNIT_GEONOSIANBRUTE_NAME|Geonosian Brute
+UNIT_GEONOSIANCOMMANDER_DESC|
+UNIT_GEONOSIANCOMMANDER_NAME|Geonosian Commander
+UNIT_GEONOSIANFIGHTER_DESC|
+UNIT_GEONOSIANFIGHTER_DESC01|Dodge/evasion oriented tank. Known for being incredibly agile because what they lack in raw defenses, they make up for not getting hit.
+UNIT_GEONOSIANFIGHTER_NAME|Geonosian Fighter
+UNIT_GEONOSIANFIGHTER_NAME01|Geonosian Fighter
+UNIT_GEONOSIANSOLDIER_DESC|Aggressive Attacker that calls Assists and works extremely well with Geonosians
+UNIT_GEONOSIANSOLDIER_DESC_V2|Aggressive Attacker who calls assists and grants powerful offensive bonuses to Geonosian allies
+UNIT_GEONOSIANSOLDIER_NAME|Geonosian Soldier
+UNIT_GEONOSIANSPY_DESC|Geonosian horde character with Stealth and high Critical Damage capability
+UNIT_GEONOSIANSPY_DESC_V2|Stealthy Geonosian attacker that can dispel status effects to deal massive damage.
+UNIT_GEONOSIANSPY_DESC_V3|Stealthy Geonosian Attacker who Exposes enemies and has high damage potential
+UNIT_GEONOSIANSPY_NAME|Geonosian Spy
+UNIT_GEONOSIANSTARFIGHTER1_DESC|Punishing Separatist Tank that automatically Taunts against buffed enemies
+UNIT_GEONOSIANSTARFIGHTER1_NAME|Sun Fac's Geonosian Starfighter
+UNIT_GEONOSIANSTARFIGHTER2_DESC|Aggressive Separatist Attacker that can Assist allies automatically
+UNIT_GEONOSIANSTARFIGHTER2_NAME|Geonosian Soldier's Starfighter
+UNIT_GEONOSIANSTARFIGHTER3_DESC|Elusive Separatist Attacker that uses Stealth for both offense and defense
+UNIT_GEONOSIANSTARFIGHTER3_NAME|Geonosian Spy's Starfighter
+UNIT_GHOST_DESC|Elusive Rebel attacker that reduces enemy Potency and wreaks havok with Rebel allies
+UNIT_GHOST_NAME|Ghost
+UNIT_GINIVEXCLASSSTARFIGHTER_DESC|
+UNIT_GINIVEXCLASSSTARFIGHTER_DESC01|Deflection shields and small silhouette make this a difficult ship to take down.
+UNIT_GINIVEXCLASSSTARFIGHTER_NAME|Ginivex-class Starfighter
+UNIT_GINIVEXCLASSSTARFIGHTER_NAME01|Ginivex-class Starfighter
+UNIT_GLREY_DESC|Resistance Leader who safeguards her allies by providing powerful shields and delivering high damage
+UNIT_GLREY_NAME|Rey
+UNIT_GRANDADMIRALTHRAWN_DESC|Calculating Empire Leader who can halt enemies in their tracks, and grants Empire allies a new Special ability
+UNIT_GRANDADMIRALTHRAWN_NAME|Grand Admiral Thrawn
+UNIT_GRANDMASTERLUKE_DESC|The wizened Jedi master of legend who empowers his Jedi allies with the knowledge and skills he has obtained
+UNIT_GRANDMASTERLUKE_NAME|Jedi Master Luke Skywalker
+UNIT_GRANDMASTERLUKECRAIT_NAME|Jedi Master Luke Skywalker (Heroic)
+UNIT_GRANDMASTERYODA_DESC|Masterful Jedi support that can replicate enemy buffs and share them with allies
+UNIT_GRANDMASTERYODA_NAME|Grand Master Yoda
+UNIT_GRANDMOFFTARKIN_DESC|Offensive Empire Support with crushing AoE debuffs
+UNIT_GRANDMOFFTARKIN_NAME|Grand Moff Tarkin
+UNIT_GREEDO_DESC|Deadly Attacker that gains extra attacks from Critical Hits
+UNIT_GREEDO_NAME|Greedo
+UNIT_GREEFKARGA_DESC|Bounty Hunter Support that provides recovery and assist calls
+UNIT_GREEFKARGA_NAME|Greef Karga
+UNIT_GRIEVOUS_DESC|Brutal Attacker that cuts down defensive enemies while protecting himself with forced ally taunts; although he hates being called a droid, he counts as one in combat.
+UNIT_GRIEVOUS_DESC_V2|Aggressive Attacker that grows increasingly stronger as the Droids around him fall. Although he hates being called a droid, he counts as one in combat.
+UNIT_GRIEVOUS_NAME|General Grievous
+UNIT_GUIDE_4X_PACK_DESC|4x Journey Guide Data Cards
+UNIT_GUIDE_8X_PACK_DESC|8x Journey Guide Data Cards
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_ACTIVITY_FORMAT|Go To {0}
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_EVENT_LABEL|Event
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_EVENTS_LABEL|Event
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_GUILD_EVENTS_LABEL|Territory Battle
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_GUILD_RAID_LABEL|Guild Raid
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_GUILD_RAIDS_LABEL|Guild Raid
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_GUILD_RAIDS_LABELV2|Guild Raids
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_GUILDS_LABEL|Guilds
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_JOIN_GUILD_LABEL|Join A Guild
+UNIT_GUIDE_ACTIVITY_TAB_GOTO_TERRITORY_BATTLE_LABEL|Territory Battle
+UNIT_GUIDE_ACTIVITY_TAB_RECOMMENDED_LABEL|Recommended:
+UNIT_GUIDE_ACTIVITY_TAB_REQUIRED_LABEL|Required:
+UNIT_GUIDE_ACTIVITY_TAB_REQUIREMENTS_HEADER_CHARACTERS|Characters
+UNIT_GUIDE_ACTIVITY_TAB_REQUIREMENTS_HEADER_SHIPS|Ships
+UNIT_GUIDE_ACTIVITY_TAB_REQUIREMENTS_HEADER_UNITS|Units
+UNIT_GUIDE_ACTIVITY_TAB_TIMER_ENDING|{0} left
+UNIT_GUIDE_ACTIVITY_TAB_TIMER_UPCOMING|Starts in {0}
+UNIT_GUIDE_ACTIVITY_TAB_UNIT_TOTAL_UNMET_COLOR|[c][EB415A]{0}[-][/c]
+UNIT_GUIDE_ALPHA_TEXT|[Aa][{0}]{1}[-]
+UNIT_GUIDE_BATTLE_BUTTON_EVENT_INACTIVE|CURRENTLY UNAVAILABLE
+UNIT_GUIDE_BATTLE_INFO_BATTLE_DETAILS_HEADER|Battle Details
+UNIT_GUIDE_BATTLE_INFO_CAPITAL_SHIP_TAG|CAPITAL
+UNIT_GUIDE_BATTLE_INFO_ENTRY_RESTRICTION_TEXT|[c][23C8F5]Requirements:[-] [BFE5F3]{0}[-][/c]
+UNIT_GUIDE_BATTLE_INFO_MANDATORY_UNIT_TAG|REQUIRED
+UNIT_GUIDE_BATTLE_INFO_RECOMMENDED_UNIT_GP|Recommended Power: [c][FFD962]{0}[-][/c]
+UNIT_GUIDE_BATTLE_INFO_REWARDS_HEADER|Full Rewards
+UNIT_GUIDE_CHALLENGE_HIDDEN_TITLE|Coming Soon!
+UNIT_GUIDE_DETAILS_ACTIVITIES_LABEL|ACTIVITY
+UNIT_GUIDE_DETAILS_CAPITAL_SHIP_REQUIREMENT_DESCRIPTION|Capital Ship
+UNIT_GUIDE_DETAILS_CHARACTER_MIN_ALL_ABILITY_LEVEL|Ability Level {0}
+UNIT_GUIDE_DETAILS_CHARACTER_MIN_AVG_ABILITY_LEVEL|Avg. Ability Level {0}
+UNIT_GUIDE_DETAILS_CHARACTER_MIN_GP|{0} GP
+UNIT_GUIDE_DETAILS_CHARACTER_MIN_LEVEL|Level {0}
+UNIT_GUIDE_DETAILS_CHARACTER_MIN_MOD_RARITY|{0} Mods
+UNIT_GUIDE_DETAILS_CHARACTER_MIN_RARITY|{0} Stars
+UNIT_GUIDE_DETAILS_CHARACTER_MIN_RELIC_TIER|Relic Tier {0}
+UNIT_GUIDE_DETAILS_CHARACTER_MIN_UNIT_TIER|Gear Tier {0}
+UNIT_GUIDE_DETAILS_CHARACTER_VIEW_TITLE|CHARACTER DETAILS
+UNIT_GUIDE_DETAILS_MISSING_REQUIREMENTS_BODY|You do not meet the prerequisites to access this activity.
+UNIT_GUIDE_DETAILS_MISSING_REQUIREMENTS_TITLE|PREREQUISITES NOT MET
+UNIT_GUIDE_DETAILS_NO_REQUIREMENTS_DESCRIPTION|None
+UNIT_GUIDE_DETAILS_PREVIEW_TITLE|COMING SOON
+UNIT_GUIDE_DETAILS_REQUIREMENTS_LABEL|PREREQUISITES
+UNIT_GUIDE_DETAILS_SHIP_MIN_ALL_ABILITY_LEVEL|Ability Level {0}
+UNIT_GUIDE_DETAILS_SHIP_MIN_AVG_ABILITY_LEVEL|Avg. Ability Level {0}
+UNIT_GUIDE_DETAILS_SHIP_MIN_GP|{0} GP
+UNIT_GUIDE_DETAILS_SHIP_MIN_LEVEL|Level {0}
+UNIT_GUIDE_DETAILS_SHIP_MIN_RARITY|{0} Stars
+UNIT_GUIDE_DETAILS_SHIP_VIEW_TITLE|SHIP DETAILS
+UNIT_GUIDE_DETAILS_SPECIFIC_UNITS_DESCRIPTION|Specific Units
+UNIT_GUIDE_DETAILS_STORE_LABEL|SHOP
+UNIT_GUIDE_DETAILS_SUMMARY_LABEL|SUMMARY
+UNIT_GUIDE_EVENT_ENDS_IN_SUBTITLE|{0} - [c][ACFEFF]EVENT ENDS IN {1}[-][/c]
+UNIT_GUIDE_EVENT_INACTIVE_KEY|Activity currently unavailable
+UNIT_GUIDE_EVENT_INACTIVE_MESSAGE|This activity is currently unavailable. Please check back later.
+UNIT_GUIDE_EVENT_INACTIVE_SUBTITLE|[c][FF0000]EVENT CURRENTLY UNAVAILABLE[-][/c]
+UNIT_GUIDE_EVENT_INACTIVE_TITLE|ACTIVITY CURRENTLY UNAVAILABLE
+UNIT_GUIDE_EVENT_STARTS_IN_SUBTITLE|{0} - [c][ACFEFF]EVENT STARTS IN {1}[-][/c]
+UNIT_GUIDE_FEATURED_LABEL|FEATURED
+UNIT_GUIDE_FIND_FLOW_CARD_TITLE|JOURNEY GUIDE
+UNIT_GUIDE_FOCUS_BEGIN|BEGIN JOURNEY
+UNIT_GUIDE_FOCUS_CONTINUE|CONTINUE JOURNEY
+UNIT_GUIDE_FOCUS_IN_PROGRESS|Journey in Progress
+UNIT_GUIDE_FOCUS_TOAST|You have begun the Journey for:\n[c][FFC891]{0}[-][/c]
+UNIT_GUIDE_FOCUS_TOAST_END|You have completed the Journey for:\n[c][FFC891]{0}[-][/c]\nSelect your next goal in the Journey Guide
+UNIT_GUIDE_FULL_ALPHA_TEXT|[Aa][ff]{1}[-]
+UNIT_GUIDE_GALLERY_TAB_TITLE_GALACTIC_LEGENDS|Galactic Legends
+UNIT_GUIDE_GALLERY_TAB_TITLE_GUILD_EVENTS|Guild Journeys
+UNIT_GUIDE_GALLERY_TAB_TITLE_JG_TEST|Test Data
+UNIT_GUIDE_GALLERY_TAB_TITLE_NESTING_DOLL|Solo Journeys
+UNIT_GUIDE_GALLERY_TILE_COMING_SOON|COMING SOON
+UNIT_GUIDE_GUILD_EVENT_ENDS_IN|Ends In
+UNIT_GUIDE_GUILD_EVENT_STARTS_IN|Starts In
+UNIT_GUIDE_INTRO_V2_01|Congratulations! That Rebel team is pretty amazing.\n\nLet's work on getting your own Rebel Squad!
+UNIT_GUIDE_INTRO_V2_02|You're ready now for the [f0ff23]JOURNEY GUIDE[-]. It will help you unlock [f0ff23]LEGENDARY[-] characters like Commander Luke Skywalker.
+UNIT_GUIDE_INTRO_V2_03|Tap on the Objectives button to head to the Journey Guide.
+UNIT_GUIDE_INTRO_V2_04|As you can see, there are a lot of Legendary Characters to unlock.
+UNIT_GUIDE_INTRO_V2_05|You can work towards them however you feel is best, but I would suggest using your Rebel Squad to unlock Emperor Palpatine first.
+UNIT_GUIDE_INTRO_V2_06|Tap on the Emperor Palpatine tile to enter the event page.
+UNIT_GUIDE_INTRO_V2_07|On this page, you will learn about Emperor Palpatine's strengths, abilities, and synergies.
+UNIT_GUIDE_INTRO_V2_08|Next, let's take a look at the [f0ff23]ACTIVITY[-] tab.
+UNIT_GUIDE_INTRO_V2_09|Here you can learn about the required characters needed to unlock Emperor Palpatine. As I mentioned before, you will need at least 5 Rebel characters to start the [f0ff23]EMPEROR'S DEMISE[-] legendary event.
+UNIT_GUIDE_INTRO_V2_10|Tap this button to enter the event.
+UNIT_GUIDE_INTRO_V2_11|After beating [f0ff23]TIER V[-] of the Emperor's Demise legendary event, you will be able to activate Emperor Palpatine.
+UNIT_GUIDE_INTRO_V2_12|Emperor Palpatine and a squad of Empire units can be used to unlock R2-D2, who then sets you on the path to Commander Luke Skywalker!
+UNIT_GUIDE_INTRO_V2_13|Keep playing and collecting and you will have your own amazing teams!
+UNIT_GUIDE_INTRO_V3_01|You're ready now for the [f0ff23]Journey Guide[-]. It will help you unlock [f0ff23]Legendary[-] characters like Commander Luke Skywalker.
+UNIT_GUIDE_INTRO_V3_02|Tap on the [f0ff23]Journey Guide[-] button to head to the Gallery.
+UNIT_GUIDE_INTRO_V3_03|As you can see, there are a lot of Legendary Units to unlock.
+UNIT_GUIDE_INTRO_V3_04|To make it easier to follow, Journey Guide Units are split into three groups: Solo Journeys, Guild Journeys, and Galactic Legends.
+UNIT_GUIDE_INTRO_V3_05|Let's get started by selecting Emperor Palpatine.
+UNIT_GUIDE_INTRO_V3_06|Here you can learn everything you need to be successful on your Journey.
+UNIT_GUIDE_INTRO_V3_07|The Battle Chain at the top shows your current progress.
+UNIT_GUIDE_INTRO_V3_08|The Requirements and Recommendations for the selected battle are displayed under the Battle Chain.
+UNIT_GUIDE_INTRO_V3_09|First, lets set our Goal by selecting Begin Journey.
+UNIT_GUIDE_INTRO_V3_10|With our Goal set, the units and gear required for the next battle are now marked throughout your Collection.
+UNIT_GUIDE_INTRO_V3_11|After beating [f0ff23]Tier V[-] of the Emperor's Demise legendary event, you will be able to activate Emperor Palpatine.
+UNIT_GUIDE_JOURNEY_COMPLETE_DESCRIPTION|You've Promoted This Character to 7 Stars
+UNIT_GUIDE_JOURNEY_COMPLETE_TITLE|Journey Complete
+UNIT_GUIDE_LAYOUT_RAID_TITLE|Guild Raids
+UNIT_GUIDE_LAYOUT_TERRITORY_BATTLE_TITLE|Territory Battles
+UNIT_GUIDE_LAYOUT_TIER_FIVE_JG_TEST_TITLE|2x4 Layout
+UNIT_GUIDE_LAYOUT_TIER_FIVE_SOLO_SUBTITLE|Recommended for players with 2M+ GP
+UNIT_GUIDE_LAYOUT_TIER_FIVE_SOLO_TITLE|Tier V
+UNIT_GUIDE_LAYOUT_TIER_FOUR_JG_TEST_TITLE|1x8 Layout
+UNIT_GUIDE_LAYOUT_TIER_FOUR_SOLO_SUBTITLE|Recommended for players with 1.5M+ GP
+UNIT_GUIDE_LAYOUT_TIER_FOUR_SOLO_TITLE|Tier IV
+UNIT_GUIDE_LAYOUT_TIER_ONE_GALACTIC_LEGENDS_TITLE|Galactic Legends
+UNIT_GUIDE_LAYOUT_TIER_ONE_JG_TEST_TITLE|1x5 Layout
+UNIT_GUIDE_LAYOUT_TIER_ONE_SOLO_SUBTITLE|Recommended for players of any level
+UNIT_GUIDE_LAYOUT_TIER_ONE_SOLO_TITLE|Tier I
+UNIT_GUIDE_LAYOUT_TIER_THREE_JG_TEST_TITLE|1x7 Layout
+UNIT_GUIDE_LAYOUT_TIER_THREE_SOLO_SUBTITLE|Recommended for players with 1M+ GP
+UNIT_GUIDE_LAYOUT_TIER_THREE_SOLO_TITLE|Tier III
+UNIT_GUIDE_LAYOUT_TIER_TWO_JG_TEST_TITLE|1x6 Layout
+UNIT_GUIDE_LAYOUT_TIER_TWO_SOLO_SUBTITLE|Recommended for players with 500K+ GP
+UNIT_GUIDE_LAYOUT_TIER_TWO_SOLO_TITLE|Tier II
+UNIT_GUIDE_LINKED_STORE_EVENT_TITLE|{0} Store
+UNIT_GUIDE_LINKED_STORE_RAID_TITLE|{0} Raid Store
+UNIT_GUIDE_LINKED_STORE_UNIT_FIND_BUTTON|Find Shards
+UNIT_GUIDE_LINKED_STORE_UNIT_NO_ITEMS|NO STORE ITEMS AVAILABLE AT THIS TIME
+UNIT_GUIDE_PACK_CAROUSEL_01_DESC|Possible Characters ([c][f0ff23]1-GUARANTEED[-][/c])
+UNIT_GUIDE_PREREQUISITE_DESC|Reach the indicated Relic or Star level with each unit
+UNIT_GUIDE_PREREQUISITE_PROGRESS|Prerequisites ({0}/{1} - Completed)
+UNIT_GUIDE_PREREQUISITE_QUEST_COMPLETED|{0} - COMPLETED
+UNIT_GUIDE_PREREQUISITE_REWARD|Reward:
+UNIT_GUIDE_PREREQUISITE_REWARD_CLAIMED|Reward Claimed
+UNIT_GUIDE_PREREQUISITE_TASK_DESCRIPTION_FORMAT|- {0}
+UNIT_GUIDE_R2D2_01|The R2-D2 Legendary event is now unlocked. Let's head to the Journey Guide to learn more about the event.
+UNIT_GUIDE_R2D2_02|Tap on the Objectives button to head to the Journey Guide.
+UNIT_GUIDE_R2D2_03|Tap on the R2-D2 tile to enter the event page.
+UNIT_GUIDE_R2D2_04|On this page, you will learn about R2-D2's strengths, abilities, and synergies.
+UNIT_GUIDE_R2D2_05|Next, let's take a look at the Activity tab.
+UNIT_GUIDE_R2D2_06|Here you can learn about the required characters needed to unlock R2-D2. You will need at least 5 Empire characters to start the Daring Droid, Legendary event.
+UNIT_GUIDE_R2D2_07|Tap this button to enter the event.
+UNIT_GUIDE_RAID_DETAILS_BANNER_DESCRIPTION|Earn Character shards by completing a special mission in:
+UNIT_GUIDE_RAID_DETAILS_BANNER_TITLE|Guild Raid
+UNIT_GUIDE_RAID_DETAILS_GO_TO_RAID_BUTTON|GO TO GUILD RAID
+UNIT_GUIDE_RAID_DETAILS_JOIN_GUILD|Join a guild to participate in Raids
+UNIT_GUIDE_RAID_DETAILS_JOIN_GUILD_BUTTON|JOIN A GUILD
+UNIT_GUIDE_RAID_DETAILS_JOIN_RAID_BUTTON|JOIN GUILD RAID
+UNIT_GUIDE_RAID_DETAILS_NOT_RECENTLY_COMPLETED|Not Completed Recently
+UNIT_GUIDE_RAID_DETAILS_RAID_ENDS_IN|Ends In
+UNIT_GUIDE_RAID_DETAILS_RAID_JOURNEY_INFO|Promote {0} to 7 Stars to complete this journey
+UNIT_GUIDE_RAID_DETAILS_RAID_STARTS_IN|Starts In
+UNIT_GUIDE_RAID_DETAILS_RAID_UNAVAILABLE|Currently Unavailable
+UNIT_GUIDE_RAID_DETAILS_RECENTLY_COMPLETED|Latest Tier Completed by [c][FFEECC]Your Guild[-][/c] - {0}
+UNIT_GUIDE_SHOP_BUTTON|SHOP FOR REQUIREMENTS
+UNIT_GUIDE_SHOP_PREREQUISITES_SUBTITLE|Prerequisites Store
+UNIT_GUIDE_SHOP_REQUIREMENTS_SUBTITLE_FORMAT|{0} Requirements Store
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_AGGRESSIVE_NEGOTIATIONS_KEY|Aggressive Negotiations
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_ARTIST_OF_WAR_KEY|Artist of War
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_CONTACT_PROTOCOL_KEY|Contact Protocol
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_DARING_DROID_KEY|Daring Droid
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_EMPERORS_DEMISE_KEY|Emperor's Demise
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_FLIGHT_OF_THE_FALCON_KEY|Flight of the Falcon
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_GRAND_MASTERS_TRAINING_KEY|Grand Master's Training
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_IMPERIAL_CHIMAERA_KEY|Imperial Chimaera
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_LEGEND_OF_THE_OLD_REPUBLIC_KEY|Legend of the Old Republic
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_LUKE_SKYWALKER_KEY|Luke Skywalker's Hero's Journey
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_ONE_FAMOUS_WOOKIEE_KEY|One Famous Wookiee
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_PIECES_AND_PLANS_KEY|Pieces and Plans
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_REY_KEY|Rey's Hero's Journey
+UNIT_GUIDE_STORE_ITEM_GUARANTEE_SCOURGE_OF_THE_OLD_REPUBLIC_KEY|Scourge of the Old Republic
+UNIT_GUIDE_SUMMARY_TAB_ABILITIES_HEADER|Abilities
+UNIT_GUIDE_SUMMARY_TAB_ACTION_CONTINUE|CONTINUE
+UNIT_GUIDE_SUMMARY_TAB_ACTION_MESSAGE|Watching this video will cause you to leave the game. Do you want to continue?
+UNIT_GUIDE_SUMMARY_TAB_ACTION_TITLE|Watch Video?
+UNIT_GUIDE_SUMMARY_TAB_PREVIEW_REQUIRED_HEADER|Required Units
+UNIT_GUIDE_SUMMARY_TAB_STRENGTH_HEADER|Lore
+UNIT_GUIDE_SUMMARY_TAB_SYNERGY_HEADER|Synergies
+UNIT_GUIDE_TERRITORY_BATTLE_DESCRIPTION|Earn character shards by completing a special mission in:
+UNIT_GUIDE_TERRITORY_BATTLE_MISSION_NAME|{0} - {1}
+UNIT_GUIDE_TERRITORY_BATTLE_UNAVAILABLE|Currently Unavailable
+UNIT_HANSOLO_DESC|
+UNIT_HANSOLO_DESC_V2|Daring Attacker that stacks Criticals in his favor and always shoots first
+UNIT_HANSOLO_NAME|Han Solo
+UNIT_HANSOLO_SPECIAL_NAME|[99FF33]Han Solo Shards[-]
+UNIT_HEALTH_NAME|HEALTH
+UNIT_HERASYNDULLA_DESC|
+UNIT_HERASYNDULLA_NAME|Hera Syndulla
+UNIT_HERASYNDULLAS3_DESC|Cunning Phoenix Support that allows Phoenix allies to share their Unique abilities with each other
+UNIT_HERASYNDULLAS3_NAME|Hera Syndulla
+UNIT_HERMITYODA_DESC|
+UNIT_HERMITYODA_DESC_V2|Jedi recluse who imparts sage wisdom in the ways of the Force
+UNIT_HERMITYODA_NAME|Hermit Yoda
+UNIT_HH87STARHOPPER_DESC|
+UNIT_HH87STARHOPPER_NAME|HH-87 Starhopper
+UNIT_HK47_DESC|Offensive Support with a variety of debuffs and a high chance to self-Revive once
+UNIT_HK47_DESC_V2|Offensive Attacker with powerful Darth Revan synergy
+UNIT_HK47_NAME|HK-47
+UNIT_HMPDROIDGUNSHIP_DESC|
+UNIT_HMPDROIDGUNSHIP_NAME|HMP Droid Gunship
+UNIT_HMPDROIDGUNSHIP_TB_DESC|This is a description.
+UNIT_HMPDROIDGUNSHIP_TB_NAME|HMP Droid Gunship
+UNIT_HOTHHAN_DESC|Daring Rebel Support that risks himself to Revive allies and Daze enemies
+UNIT_HOTHHAN_NAME|Captain Han Solo
+UNIT_HOTHLEIA_DESC|
+UNIT_HOTHLEIA_DESC_V2|Tenacious Rebel Attacker that counters debuffs and is more effective against healthy targets
+UNIT_HOTHLEIA_JKL_EVENT_NAME|Rebel Officer Leia Organa (Bespin)
+UNIT_HOTHLEIA_NAME|Hoth Leia
+UNIT_HOTHLEIA_NAME_V2|Rebel Officer Leia Organa
+UNIT_HOTHLEIA_SPECIAL_NAME|[99FF33]Rebel Officer Leia Organa Shards[-]
+UNIT_HOTHREBELLUKE_DESC|
+UNIT_HOTHREBELLUKE_NAME|Hoth Rebel Luke
+UNIT_HOTHREBELOFFICER_DESC|
+UNIT_HOTHREBELOFFICER_NAME|Hoth Rebel Commander
+UNIT_HOTHREBELSCOUT_DESC|Single target attacker with crit synergies and speed building abilities.
+UNIT_HOTHREBELSCOUT_NAME|Hoth Rebel Scout
+UNIT_HOTHREBELSOLDIER_DESC|Support character that debuffs, taunts, and defensively buffs, with Rebel and anti-Empire synergies.
+UNIT_HOTHREBELSOLDIER_NAME|Hoth Rebel Soldier
+UNIT_HOUNDSTOOTH_DESC|Sustainable Bounty Hunter Tank that debilitates enemies
+UNIT_HOUNDSTOOTH_NAME|Hound's Tooth
+UNIT_HUMANTHUG_DESC|Scoundrel Tank with enemy debuff ability and a thermal detonator.
+UNIT_HUMANTHUG_NAME|Mob Enforcer
+UNIT_HYENA_BOMBER|Hyena Bomber
+UNIT_HYENABOMBER_DESC|Robust Separatist Tank that inflicts Buzz Droids and protects allies
+UNIT_HYENABOMBER_NAME|Hyena Bomber
+UNIT_HYENACLASSBOMBER_DESC|
+UNIT_HYENACLASSBOMBER_NAME|Hyena Class Bomber
+UNIT_IDENVERSIOEMPIRE_DESC|Tenacious Empire Attacker who expertly takes out foes while supporting her squad 
+UNIT_IDENVERSIOEMPIRE_NAME|Iden Versio
+UNIT_IG11_DESC|Versatile Healer with strong Scoundrel and Droid synergies
+UNIT_IG11_MANDALORIAN_JOURNEY_NAME|IG-11 (Bounty Hunter)
+UNIT_IG11_NAME|IG-11
+UNIT_IG2000_DESC|Aggressive Bounty Hunter Attacker that deals massive damage to Breached enemies
+UNIT_IG2000_NAME|IG-2000
+UNIT_IG86SENTINELDROID_DESC|Droid Attacker with a powerful Droid Assist and devastating Criticals
+UNIT_IG86SENTINELDROID_NAME|IG-86 Sentinel Droid
+UNIT_IG88_DESC|Droid Attacker with debuffs and a damage bonus against debuffed enemies
+UNIT_IG88_NAME|IG-88
+UNIT_IMAGUNDI_DESC|Supportive Tank that boost ally defense and grants Jedi allies Counter Chance
+UNIT_IMAGUNDI_NAME|Ima-Gun Di
+UNIT_IMPERIALMERCLEADER_DESC|
+UNIT_IMPERIALMERCLEADER_NAME|Imperial Merc Leader
+UNIT_IMPERIALOFFICER_DESC|
+UNIT_IMPERIALOFFICER_NAME|Imperial Officer
+UNIT_IMPERIALPROBEDROID_DESC|Imperial Droid who reveals and tracks enemies with Target Lock
+UNIT_IMPERIALPROBEDROID_NAME|Imperial Probe Droid
+UNIT_IMPERIALPROBEDROID_SPECIAL_NAME|[99FF33]Imperial Probe Droid Shards[-]
+UNIT_IMPERIALSCOUTDROID_DESC|Versatile Empire Droid Support that can dispel Stealth, boost speed, and Self-Destruct for heavy damage
+UNIT_IMPERIALSCOUTDROID_NAME|Imperial Probe Droid
+UNIT_IMPERIALSUPERCOMMANDO_DESC|An Empire Attacker with counter mechanics who dispels buffs and applies buff immunity
+UNIT_IMPERIALSUPERCOMMANDO_NAME|Imperial Super Commando
+UNIT_INCINERATORTROOPER_NAME|Incinerator Trooper
+UNIT_INQUISITOR_DESC|
+UNIT_INQUISITOR_NAME|Inquisitor
+UNIT_JABBAENFORCER_NAME|Jabba's Enforcer
+UNIT_JABBAHEAVY_NAME|Jabba's Brute
+UNIT_JABBAPIRATE_NAME|Jabba's Spy
+UNIT_JABBATHUG_NAME|Jabba's Guard
+UNIT_JABBAWEEQUAYPIRATE_NAME|Weequay Saboteur
+UNIT_JANGOFETT_DESC|Notorious Bounty Hunter that exploits debuffed foes and inflicts Burning
+UNIT_JANGOFETT_NAME|Jango Fett
+UNIT_JAWA_DESC|Attacker effective against debuffed enemies as well as Droids
+UNIT_JAWA_NAME|Jawa
+UNIT_JAWAENGINEER_DESC|High-speed Jawa Healer with a Critical Chance buff and both Jawa and Droid synergy
+UNIT_JAWAENGINEER_NAME|Jawa Engineer
+UNIT_JAWASCAVENGER_DESC|Versatile Jawa Support who can detonate Thermal Detonators to inflict a large variety of status effects
+UNIT_JAWASCAVENGER_NAME|Jawa Scavenger
+UNIT_JEDI_TEMPLEGUARD_DESC|
+UNIT_JEDI_TEMPLEGUARD_NAME|Jedi Temple Guard
+UNIT_JEDIKNIGHTCONSULAR_DESC|Well-rounded Jedi Healer with a mix of offense and defense
+UNIT_JEDIKNIGHTCONSULAR_NAME|Jedi Consular
+UNIT_JEDIKNIGHTCONSULAR_NAME_V2|Jedi Knight Consular
+UNIT_JEDIKNIGHTGUARDIAN_DESC|Tenacious Jedi tank with crippling debuffs and natural recovery at low Health
+UNIT_JEDIKNIGHTGUARDIAN_NAME|Jedi Knight Guardian
+UNIT_JEDIKNIGHTLUKE_DESC|Stalwart Jedi hero of legend who ascends to victorious heights alongside his Jedi allies through the will of the Force
+UNIT_JEDIKNIGHTLUKE_NAME|Jedi Knight Luke Skywalker
+UNIT_JEDIKNIGHTREVAN_DESC|Fabled Jedi leader who controls the battle with a wide mix of powerful abilities
+UNIT_JEDIKNIGHTREVAN_NAME|Jedi Knight Revan
+UNIT_JEDIKNIGHTSAGE_DESC|
+UNIT_JEDIKNIGHTSAGE_NAME|Jedi Knight Sage
+UNIT_JEDIKNIGHTSENTINEL_DESC|
+UNIT_JEDIKNIGHTSENTINEL_NAME|Jedi Sentinel
+UNIT_JEDIKNIGHTSENTINEL_NAME_V2|Jedi Knight Sentinel
+UNIT_JEDIKNIGHTVANGUARD_DESC|
+UNIT_JEDIKNIGHTVANGUARD_NAME|Jedi Vanguard
+UNIT_JEDIKNIGHTVANGUARD_NAME_V2|Jedi Knight Vanguard
+UNIT_JEDIMASTERCONSULAR_DESC|
+UNIT_JEDIMASTERCONSULAR_NAME|Jedi Master Consular
+UNIT_JEDIMASTERGUARDIAN_DESC|
+UNIT_JEDIMASTERGUARDIAN_NAME|Jedi Master Guardian
+UNIT_JEDIMASTERKENOBI_DESC|Renowned Jedi Master that provides damage and support through a diverse set of abilities
+UNIT_JEDIMASTERKENOBI_NAME|Jedi Master Kenobi
+UNIT_JEDIMASTERSAGE_DESC|
+UNIT_JEDIMASTERSAGE_NAME|Jedi Master Sage
+UNIT_JEDIMASTERSENTINEL_DESC|
+UNIT_JEDIMASTERSENTINEL_NAME|Jedi Master Sentinel
+UNIT_JEDIMASTERVANGUARD_DESC|
+UNIT_JEDIMASTERVANGUARD_NAME|Jedi Master Vanguard
+UNIT_JEDISTARFIGHTER_GENERALSKYWALKER_NAME|Anakin's Delta-7B Starfighter
+UNIT_JEDISTARFIGHTER_NAME|Jedi Starfighter
+UNIT_JEDISTARFIGHTERAHSOKATANO_DESC|Versatile Jedi Attacker that uses dispels and buffs to adapt to the battle
+UNIT_JEDISTARFIGHTERAHSOKATANO_NAME|Ahsoka Tano's Jedi Starfighter
+UNIT_JEDISTARFIGHTERANAKIN_DESC|Mighty Jedi fighter that can dominate the battlefield by keeping all enemies Target Locked
+UNIT_JEDISTARFIGHTERANAKIN_DESC_V2|Aggressive Jedi Attacker that bolsters Offense and retaliates when allies are in trouble
+UNIT_JEDISTARFIGHTERANAKIN_NAME|Jedi Knight Anakin's Starfighter
+UNIT_JEDISTARFIGHTERANAKIN_NAME_V2|Anakin's Eta-2 Starfighter
+UNIT_JEDISTARFIGHTERCONSULAR_DESC|Defensive Jedi Support that can rapidly restore ally Protection
+UNIT_JEDISTARFIGHTERCONSULAR_NAME|Jedi Consular's Starfighter
+UNIT_JEDISTARFIGHTERYODA_DESC|Focused Jedi fighter that gains Foresight and can Ability Block enemy Fleet Commanders
+UNIT_JEDISTARFIGHTERYODA_NAME|Yoda's Jedi Starfighter
+UNIT_JKL_GR75_DESC|A rebel transport ship that excels at protecting its allies.
+UNIT_JKL_GR75_NAME|GR-75
+UNIT_JMK_501_GLE_ARCT_NAME|501st ARC Trooper
+UNIT_JMK_501_GLE_CAP_NAME|501st Captain
+UNIT_JMK_501_GLE_CT_NAME|501st Clone Trooper
+UNIT_JMK_501_GLE_VET_NAME|501st Veteran
+UNIT_JOLEEBINDO_DESC|Potent Jedi Healer with high durability and resistance to disruption
+UNIT_JOLEEBINDO_NAME|Jolee Bindo
+UNIT_JUHANI_DESC|Unique Jedi Tank who dispels debuffs from Old Republic allies and becomes more dangerous below full Health
+UNIT_JUHANI_NAME|Juhani
+UNIT_JYNERSO_DESC|Offensive Rebel Leader who gains Advantage, Stuns enemies, revives Rebel allies and grants them Potency Up
+UNIT_JYNERSO_NAME|Jyn Erso
+UNIT_K2SO_DESC|Rebel Tank who Taunts and Counter Attacks
+UNIT_K2SO_NAME|K-2SO
+UNIT_K3PO_NAME|K-3PO
+UNIT_KALANI_NAME|General Kalani
+UNIT_KALLUS_DESC|
+UNIT_KALLUS_NAME|Kallus
+UNIT_KANANJARRUS_DESC|
+UNIT_KANANJARRUS_NAME|Kanan Jarrus
+UNIT_KANANJARRUSS3_DESC|Durable Phoenix Tank that keeps enemy Offense crippled and allies healthy
+UNIT_KANANJARRUSS3_NAME|Kanan Jarrus
+UNIT_KARIS_DESC|
+UNIT_KARIS_NAME|Karis
+UNIT_KIADIMUNDI_DESC|
+UNIT_KIADIMUNDI_DESC_V2|Formidable Jedi Master who shifts between Ataru and Makashi lightsaber forms
+UNIT_KIADIMUNDI_NAME|Ki-Adi-Mundi
+UNIT_KIADIMUNDI_NAME_V2|Ki-Adi-Mundi
+UNIT_KIADIMUNDI_SPECIAL_NAME|[99FF33]Ki-Adi-Mundi Shards[-]
+UNIT_KITFISTO_DESC|Versatile Jedi Attacker with multi-attack, Counter Chance, and a variety of ally buffs
+UNIT_KITFISTO_NAME|Kit Fisto
+UNIT_KLATOOINIAN_CAPTAIN_NAME|Raider Captain
+UNIT_KLATOOINIAN_NAME|Klatooinian Raider
+UNIT_KOTORTURRET_BLASTER_NAME|Blaster Turret
+UNIT_KOTORTURRET_CRYO_NAME|Cryo Turret
+UNIT_KOTORTURRET_FLAME_NAME|Flame Turret
+UNIT_KOTORTURRET_ION_NAME|Ion Turret
+UNIT_KOTORTURRET_NAME|Turret
+UNIT_KOTORTURRET_SONIC_NAME|Sonic Turret
+UNIT_KUIIL_DESC|A supportive mechanic who aids Droids and Scoundrels.
+UNIT_KUIIL_NAME|Kuiil
+UNIT_KYLEKATARN_DESC|A Force-sensitive Rebel operative and Jedi Knight 
+UNIT_KYLEKATARN_NAME|Kyle Katarn
+UNIT_KYLOREN_DESC|Versatile First Order attacker that can reuse special attacks when damaged
+UNIT_KYLOREN_FORCEDUEL_NAME|Kylo Ren (Force Duel)
+UNIT_KYLOREN_KEFBIR_NAME|Kylo Ren (Kef Bir)
+UNIT_KYLOREN_NAME|Kylo Ren
+UNIT_KYLORENUNMASKED_DESC|Tough First Order Tank with a powerful Stun
+UNIT_KYLORENUNMASKED_NAME|Kylo Ren (Unmasked)
+UNIT_L3_37_DESC|Droid Tank that can dispel allies and has multiple ways to increase her stats permanently
+UNIT_L3_37_NAME|L3-37
+UNIT_LATTSRAZZI_DESC|
+UNIT_LATTSRAZZI_NAME|Latts Razzi
+UNIT_LIEUTENANTCOWELL_NAME|Lieutenant Cowell
+UNIT_LIGHTSABER_NAME|Lightsaber
+UNIT_LOBOT_DESC|Rebel Support that can reliably inflict Defense Down, clear allied debuffs, and speed up allied Droids
+UNIT_LOBOT_NAME|Lobot
+UNIT_LOGRAY_DESC|
+UNIT_LOGRAY_DESC_V2|Sage Ewok Support who can Daze enemies and grant Ewok allies many buffs
+UNIT_LOGRAY_NAME|Logray
+UNIT_LORDVADER_DESC|Legendary Sith Lord who utilizes the actions of others to empower his own potential and is not to be underestimated
+UNIT_LORDVADER_NAME|Lord Vader
+UNIT_LORE_501ST_DESC|[c][ffff33]Lore:[-][/c] Well known for their tenacity in combat, bravery, and unconventional tactics, the 501st Clone Battalion fought upon many different worlds across the galaxy and participated in numerous critical missions during the Clone Wars under the command of General Anakin Skywalker. Under Order 66 the 501st continued to serve the Empire with the same level of ferocity that they had for the Republic during the Clone Wars, eventually becoming Lord Vader's personal troopers.
+UNIT_LORE_AAYLASECURA_DESC|[c][ffff33]Lore:[-][/c] A Twi'lek Jedi Master, Aayla Secura served as a General of the Clone Army during the Clone Wars, leading the 327th Star Corps. Aayla and the 327th served in multiple battles throughout the conflict, including Geonosis, Quell, Coruscant, and Felucia.
+UNIT_LORE_ACKLAY_DESC|[c][ffff33]Lore:[-][/c] Found on the planet Vendaxa, the ferocious acklays are a mix of reptile and crustacean, able to inhabit both land and water. An unknown number of acklays were used by the Genosians as execution beasts in the Petranaki arena on Geonosis.
+UNIT_LORE_AGENKOLAR_DESC|[c][ffff33]Lore:[-][/c] Known for his combat skills, the Zabrak Agen Kolar was hand-picked by Mace Windu to help in the arrest of Chancellor Palpatine. Agen Kolar participated in the First Battle of Geonosis, and eventually replaced Eeth Koth on the Jedi Council.
+UNIT_LORE_AJUNTAPALLSPIRIT_DESC|[c][ffff33]Lore:[-][/c] Little is known about the ancient Sith named Ajunta Pall save that Revan and the companions encountered his spirit deep within a tomb on Korriban. The sheer unbelievability of the story has led many to believe that the tale of a Sith spirit is nothing more than a fable meant to amuse Cantina patrons across the galaxy.\n\n[c][ffff33]Boss Battle:[-][/c] This Boss can attack up to 3 times per turn and will automatically counter attack. He cannot be inflicted with Ability Block, Fear, or Deathmark, or have his cooldowns increased.
+UNIT_LORE_AJUNTAPALLSPIRIT_NAME|Ajunta Pall
+UNIT_LORE_ANAKINSKYWALKER_DESC|[c][ffff33]Lore:[-][/c] Obi-Wan Kenobi's Jedi Padawan, Anakin Skywalker, would become a legendary Jedi Knight, serving as a General of the Clone Army during the Clone Wars where he would lead the 501st Legion with Clone Captain Rex serving at his side. Thought to be the prophesized Chosen One, Anakin's growth in power and skill as a Jedi was second-to-none. He would eventually succumb to the Dark Side of the Force in an attempt to save Padmé Amidala, thereby becoming Darth Vader.
+UNIT_LORE_ARC170REX_DESC|[c][ffff33]Lore:[-][/c] Although primarily ground combat specialists, the 501st would occasionally engage in starfighter combat when called upon. In these instances, the 501st flew ARC-170 starfighers that could be distinguished by a blue and white paint scheme matching its ground troopers.
+UNIT_LORE_ARC170STARFIGHTER_DESC|[c][ffff33]Lore:[-][/c] The Aggressive ReConnaissance-170 starfighter saw use in the later stages of the Clone Wars. Crewed by 3 troopers and an astromech, the multi-purpose ARC-170 was designed both for short-range dogfights and longer deep-space missions. The ARC-170 could serve as a fighter-bomber and was armed heavily enough to damage the armor of capital ships.
+UNIT_LORE_ARCTROOPER_DESC|[c][ffff33]Lore:[-][/c] Advanced Recon Commandos, commonly referred to as ARC troopers, represented the best of the clone army and were given assignments deemed too dangerous for standard troopers. ARC troopers donned specialized armor and equipment.
+UNIT_LORE_ARCTROOPER501ST_DESC|[c][ffff33]Lore:[-][/c] Advanced Recon Commandos, commonly referred to as ARC troopers, represented the best of the clone army and were given assignments deemed too dangerous for standard troopers. ARC troopers in the 501st donned specialized armor and equipment accented by the legion's signature blue color.
+UNIT_LORE_ASAJJVENTRESS_DESC|[c][ffff33]Lore:[-][/c] Asajj Ventress was a Nightsister of Dathomir trained by Count Dooku to use the dark side of the Force. Although she was never truly a Sith, she fought with two red-bladed lightsabers, the signature weapon of the Sith. Dooku eventually abandoned Ventress under orders from Darth Sidious, and she became a bounty hunter, at one point even helping Ahsoka Tano.
+UNIT_LORE_ASSAULTDROIDMK1_DESC|[c][ffff33]Lore:[-][/c] This deadly droid was often used for security purposes and left to guard critical areas.\n\n[c][ffff33]Boss Battle:[-][/c] This droid will occasionally scan for its allies. For each one active, Assault Droid Mk I will gain bonus Protection. If no allies are found, the cooldown of Overload will be reduced to 0. This Boss cannot be inflicted with Ability Block, Fear, or Stun, or have its cooldowns increased.
+UNIT_LORE_ASSAULTDROIDMK1_NAME|Assault Droid Mk I
+UNIT_LORE_ASSAULTDROIDMK4_DESC|[c][ffff33]Lore:[-][/c] The Assault Droid Mk IV was often used in small forces as security, supplementing more effective troops or dedicated droids.
+UNIT_LORE_ASSAULTDROIDMK4_NAME|Assault Droid Mk IV
+UNIT_LORE_B1BATTLEDROID_DESC|[c][ffff33]Lore:[-][/c] Built to loosely resemble their Geonosian designers, B1 Battle Droids comprised the backbone of the Separatist war machine. While typically requiring a central command center to operate, B1s were also observed acting independently throughout the Clone Wars. B1s were designed to overwhelm opponents in volume rather than use cunning tactics to outwit them.
+UNIT_LORE_B1HEAVYGUNNER_DESC|[c][ffff33]Lore:[-][/c] Separatists augmented their defensive capabilities by deploying mounted heavy repeating blasters that could be operated by rank-and-file B1 Battle Droids. These turrets could turn a standard B1 from little more than a nuisance into a highly-destructive force if not dealt with swiftly, although other B1s could simply step up and continue the fusillade of blaster fire, making this easier said than done.
+UNIT_LORE_B2ROCKETTROOPER_DESC|[c][ffff33]Lore:[-][/c] A substantial upgrade of the B2-RP Battle Droid, the B2 Rocket Trooper was quicker and more lethal than the B2-RP thanks to larger jetpacks and deadlier blasters. B2 Rocket Troopers were uncommon on the battlefield, but seeing one typically meant trouble.
+UNIT_LORE_B2SUPERBATTLEDROID_DESC|[c][ffff33]Lore:[-][/c] B2 Super Battle Droids were developed in the Geonosian foundries as a response to the large number of flaws found with the B1s and their effectiveness in battle. Unlike early B1s, B2s did not require any command signal to operate, giving them independence in battle that allowed them to press the attack until destroyed. B2s could be found on battlefields augmenting Separatist forces throughout the Clone Wars.
+UNIT_LORE_BARRISSOFFEE_DESC|[c][ffff33]Lore:[-][/c] A Mirialan Jedi Padawan training under Luminara Unduli, Barriss Offee served both with and without her master during many battles throughout the Clone Wars. Eventually she would come to believe the Jedi and the Republic had lost their way, framing Ahsoka Tano and bombing the Jedi Temple in an attempt to make a statement against the Order and its involvement in the war.
+UNIT_LORE_BB8_DESC|[c][ffff33]Lore:[-][/c] BB-8 was a BB-series astromech droid in service to the Resistance during the war between the Resistance and the First Order. Though BB-8 was primarily in the service of Poe Dameron, he was an important companion for other heroes of the Resistance such as Finn and Rey. BB-8 was responsible for safeguarding a piece of the map leading to Jedi Master Luke Skywalker, which was a crucial turning point for the Resistance in their efforts against the First Order.
+UNIT_LORE_BENDAKSTARKILLER_DESC|[c][ffff33]Lore:[-][/c] Bendak Starkiller was the champion of the Taris Fighting Arena, and was known throughout the sector for his combat prowess. Prior to Revan's arrival on Taris he had retired, but witnessing Revan in battle led the fearsome champion to return to the ring for one final battle.
+UNIT_LORE_BENDAKSTARKILLER_NAME|Bendak Starkiller
+UNIT_LORE_BENSOLOEXEGOL_DESC|[c][ffff33]Lore:[-][/c] After being defeated by Rey at the wreckage of the second Death Star on Kef Bir, Kylo Ren had a vision of the memory of his father, Han Solo. After reflecting on his actions and how he was manipulated by the Emperor, he discarded the persona of Kylo Ren to become Ben Solo once more.
+UNIT_LORE_BOBAFETT_DESC|[c][ffff33]Lore:[-][/c] Donning a suit of Mandalorian armor previously owned by Jango Fett, Boba Fett would become one of the most notorious bounty hunters in the galaxy by the time of the Galactic Civil War. Following his father Jango's death during the Clone Wars, Boba, an unaltered clone of Jango, would put his years of combat training with his father to good use as he built his reputation. On many occasions, Boba would take on contracts from the Galactic Empire and Jabba the Hutt, contributing to his legendary status.
+UNIT_LORE_BXCOMMANDODROID_DESC|[c][ffff33]Lore:[-][/c] BX-series Commando Droids were created as elite droid soldiers. While too expensive to mass-produce, the small number of BX-series droids that were produced were used to great effect as infiltrators, with their speed and agility being leveraged in stealthy operations. BX-series droids were often seen with standard blasters but were occasionally armed with Vibroswords better suited to close-quarters combat.
+UNIT_LORE_C3PO_DESC|[c][ffff33]Lore:[-][/c] A protocol droid specializing in human-cyborg relations, C-3PO was an integral part in the Resistance war effort against the First Order. With his extensive translation database including that of ancient Sith dialects, he was crucial in uncovering the hidden Sith world of Exegol. Though this task wiped much of his memory, his willingness to sacrifice helped secure the Resistance victory over the First Order during the Battle of Exegol, defeating the Emperor once and for all.
+UNIT_LORE_CALONORD_DESC|[c][ffff33]Lore:[-][/c] Calo Nord was an infamous bounty hunter during Revan's time. He was known as someone to never let his quarry escape, a trait that would lead him to doggedly pursue Revan across the galaxy.\n\n[c][ffff33]Boss Battle:[-][/c] Calo will count to 3, at which point he will deal massive damage with his next attack. Each time an enemy is defeated Calo gains a permanent (stacking) Speed boost.
+UNIT_LORE_CALONORD_NAME|Calo Nord
+UNIT_LORE_CANDEROUS_DESC|[c][ffff33]Lore:[-][/c] A grizzled veteran of previous wars, Canderous was found by Revan on Taris serving as a local cartel enforcer. It wasn't long before they joined forces and stole the Ebon Hawk to escape Taris. It is said that Canderous would go on to have a famous destiny of his own, long after his journey with Revan ended.
+UNIT_LORE_CANDEROUS_NAME|Canderous Ordo
+UNIT_LORE_CAPTAINREX_DESC|[c][ffff33]Lore:[-][/c] Serving under Anakin Skywalker during the Clone Wars, CT-7567, known as "Rex," was a veteran Clone Captain in the 501st. Rex accompanied Anakin on almost every mission during the conflict, ranging from the Battle of Christophsis at the start of the Clone Wars to the Invasion of Scipio near its conclusion, and beyond.
+UNIT_LORE_CAPTIVE_JEDI_DESC|[c][ffff33]Lore:[-][/c] This unknown Jedi was one of many who were killed when Darth Malak attacked the Jedi Enclave on Dantooine. Malak placed the Jedi in a stasis field to allow the star forge to prevent the Jedi from becoming one with the Force and corrupt what remained of their power so he could absorb it.
+UNIT_LORE_CARTH_DESC|[c][ffff33]Lore:[-][/c] Carth and Revan met on the Republic ship [i]Endar Spire[/i] when it fell under attack by Malak's forces. Together they crash-landed on Taris, rescued Bastila Shan, and went on a galaxy-spanning adventure to find a lost Star Map and defeat Darth Malak.
+UNIT_LORE_CARTH_NAME|Carth Onasi
+UNIT_LORE_CLONECAPTAIN_DESC|[c][ffff33]Lore:[-][/c] Clones with the rank of captain during the Clone Wars led companies of 144 troopers. The captains in each corps took orders from a Clone Commander or sometimes reported directly to a Jedi General. At the start of the Clone Wars, captains were distinguishable by maroon markings on their armor.
+UNIT_LORE_CLONECOMMANDER_DESC|[c][ffff33]Lore:[-][/c] Clones with the rank of commander during the Clone Wars led regiments of 2,304 troopers. The commanders in each corps took orders from one of the Jedi Generals. At the start of the Clone Wars, commanders were distinguishable by yellow markings on their armor.
+UNIT_LORE_CLONELIEUTENANT_DESC|[c][ffff33]Lore:[-][/c] Clones with the rank of lieutenant during the Clone Wars led platoons of 36 troopers. The lieutenants in each corps took orders from a Clone Captain. At the start of the Clone Wars, lieutenants were distinguishable by blue markings on their armor.
+UNIT_LORE_CLONEMEDIC_DESC|[c][ffff33]Lore:[-][/c] Trained specifically to treat their clone brethren, clone trooper medics were outfitted with portable medical droids, a medical crate containing specialized field equipment, and a backpack containing bacta supplies and other dressings. At the start of the Clone Wars, medics were distinguishable by red markings on their armor.
+UNIT_LORE_CLONESERGEANT_DESC|[c][ffff33]Lore:[-][/c] Clones with the rank of sergeant during the Clone Wars led squads of nine troopers. The sergeants in each corps took orders from a Clone Lieutenant. At the start of the Clone Wars, sergeants were distinguishable by green markings on their armor.
+UNIT_LORE_CLONESHARPSHOOTER_DESC|[c][ffff33]Lore:[-][/c] Specialized clone troopers who received training in long-range marksmanship, clone sharpshooters were able to hit enemies at range and provide valuable intel to their allies on the front line. Clone sharpshooters were distinguishable by their DC-15x sniper rifles.
+UNIT_LORE_CLONETROOPER_DESC|[c][ffff33]Lore:[-][/c] The backbone of the Grand Army of the Republic, the clone troopers were bred in secret on the planet Kamino using Jango Fett’s genetic makeup as a template. With the ability to think freely, these clone soldiers were believed to be superior to their battle droid adversaries during the Clone Wars. Rookie troopers, commonly called "shinies,” bore no markings on their armor.
+UNIT_LORE_COMMANDBATTLEDROID_DESC|[c][ffff33]Lore:[-][/c] Command Battle Droids were used as early as 32 BBY during the invasion of Naboo and saw frequent use by the Separatists through the close of the Clone Wars. Distinguishable by their yellow markings, Command Battle Droids were given command of droid forces throughout the conflict. Although considered commanders, they still answered to T-series Tactical Droids and flesh-and-blood officers.
+UNIT_LORE_COMMANDERCODY_DESC|[c][ffff33]Lore:[-][/c] Serving under Obi-Wan Kenobi during the Clone Wars, CC-2224, known as "Cody," was a Marshal Commander in the 212th Attack Battalion. Cody was present with Obi-Wan for several major battles throughout the conflict including Christophsis, Ryloth, Geonosis, Saleucami, and more.
+UNIT_LORE_COMMANDERLUKESKYWALKER_DESC|[c][ffff33]Lore:[-][/c] After the Battle of Yavin and the destruction of the first Death Star, Luke Skywalker continued serving with the rebellion, earning the rank of Commander by the time the Alliance set up their base on Hoth. Following the Battle of Hoth, Luke started his Jedi training with Yoda on the planet Dagobah. Luke left Dagobah prior to completing his training in order to save his friends on Cloud City. After arriving he would learn a terrible truth about Darth Vader.
+UNIT_LORE_COMMANDERLUKESKYWALKER_HOTH_DESC|[c][ffff33]Lore:[-][/c] After the Battle of Yavin and the destruction of the first Death Star, Luke Skywalker continued serving with the rebellion, earning the rank of Commander by the time the Alliance set up their base on Hoth. 
+UNIT_LORE_COUNTDOOKU_DESC|[c][ffff33]Lore:[-][/c] Once a Jedi Master held in high regard, Count Dooku of Serenno left the Order and later became the secret apprentice of Darth Sidious. Known in this role as Darth Tyranus, Dooku helped guide and shape the Clone Wars to his Master’s design as a member of the Separatist Council, sometimes stepping in personally and putting his lethal lightsaber skills on display to accomplish his goals.
+UNIT_LORE_DARTHMALAK_MYTHICPVE_DESC|[c][ffff33]Lore:[-][/c] Once a brave Jedi who followed Revan to war, Malak returned as Revan's Sith Apprentice and accomplice. When the Jedi attacked Revan's ship, Malak sensed an opportunity and fired on his Master.\n\nAfterward, Malak seized control of the Sith Empire and proclaimed himself Dark Lord, never knowing that Revan survived his betrayal. When he learned of Revan's survival, he knew a confrontation was inevitable and planned accordingly.
+UNIT_LORE_DARTHMALAK_MYTHICPVE_NAME|Darth Malak
+UNIT_LORE_DEATHTROOPER_DESC|[c][ffff33]Lore:[-][/c] Death Troopers are highly specialized and considered to be among the Galactic Empire's most elite soldiers. Outfitted with a heavily modified black suit of protective body armor and a helmet with vocal scramblers these troopers are prepared for any occasion or crisis. Death Troopers are also modified with highly classified surgical enhancements, giving them an edge on the battlefield. Experts in missions requiring stealth, involving espionage, or a precise shot, these troopers live up to their name as one of the Empire's most lethal, and loyal, soldiers.
+UNIT_LORE_DROIDEKA_DESC|[c][ffff33]Lore:[-][/c] Developed by the Colicoids, Droidekas were among the most feared battle droids in the Separatists' arsenal. Armed with massive twin-blasters and compact deflector shield generators, Droidekas were a force to be reckoned with on the battlefield, giving both Clone Troopers and Jedi cause for concern. Although severely restricted in mobility while unfolded in battle, Droidekas were able to assume a more compact form to roll quickly from place to place.
+UNIT_LORE_ECHO_DESC|[c][ffff33]Lore:[-][/c] CT-21-0408, known as "Echo," was originally a member of Domino Squad. After surviving an attack on the Republic outpost on the Rishi moon, Echo was recruited into the 501st by Clone Captain Rex. Later, for his efforts to defend Tipoca City during the Battle of Kamino, he was promoted to the elite rank of ARC trooper by Rex.
+UNIT_LORE_EETHKOTH_DESC|[c][ffff33]Lore:[-][/c] A Zabrak Jedi Master, Eeth Koth served as a General of the Clone Army and as a member of the Jedi Council for a portion of the Clone Wars. Eeth was present during the Battle of Geonosis before being captured by General Grievous to set a trap for the Jedi.
+UNIT_LORE_EMPERORPALPATINE_DESC|[c][ffff33]Lore:[-][/c] Rising from the position of Chancellor after successfully deceiving the galaxy about the betrayal of the Jedi Order, Emperor Sheev Palpatine used the might of the first Galactic Empire to rule with an iron fist. The galaxy at large was unaware of his alternate persona: Darth Sidious, the Sith Lord who was master to Darth Vader and who would attempt to seduce Luke Skywalker to fall to the dark side, replacing Luke's own father as his apprentice.
+UNIT_LORE_ENDURANCE_DESC|[c][ffff33]Lore:[-][/c] The Endurance was a Venator-class Star Destroyer during the Clone Wars, with Mace Windu serving onboard for a portion of the conflict. During this time, the Endurance was destroyed by a young Boba Fett in an attempt to kill the Jedi Master and seek vengeance for his father's death.
+UNIT_LORE_EPIXFINN_DESC|[c][ffff33]Lore:[-][/c] FN-2187 was raised to be an obedient soldier whose loyalty to the First Order was unquestioned. In contradiction to this upbringing, his conscience could not abide the despicable acts he was tasked with carrying out for the First Order and he left his life as a stormtrooper behind by saving Poe Dameron, defecting to the Resistance, and taking on the new name of Finn. Through his actions on Starkiller Base and during the Battle of Crait, Finn became a hero among the Resistance forces.
+UNIT_LORE_EPIXPOE_DESC|[c][ffff33]Lore:[-][/c] Once a member of the Spice Runners of Kijimi, Poe chose to leave his past behind and enlisted as a pilot within the New Republic, following in the footsteps of his mother. As the war escalated, he placed his loyalties with the Resistance, earning the trust of Leia Organa and becoming acting general alongside Finn after her passing. His deeds as both a pilot and a commander during several battles, including the Battle of Exegol, secured Poe’s status as one of the most renowned heroes of the Resistance.
+UNIT_LORE_FALLENBASTILA_DESC|[c][ffff33]Lore:[-][/c] Bastila was a Jedi Padawan gifted in the art of Battle Meditation. During a confrontation with Darth Revan, Bastila used the Force to preserve Revan's life, creating a powerful bond between them in the process. When Revan's mission to find the star forge and defeat Malak was put into action, Bastila was sent along by the Jedi Council.
+UNIT_LORE_FALLENBASTILA_NAME|Bastila Shan
+UNIT_LORE_FALLENBASTILA02_DESC|[c][ffff33]Lore:[-][/c] During their journey Revan and Bastila encountered Darth Malak, who abducted Bastila. Through nefarious Sith means, Malak turned Bastila to the dark side and made her his apprentice. He then sent her to guard an important temple that was the only way to access Malak's secret weapon, the star forge. However Revan and Bastila remained bonded through the Force, and a confrontation was inevitable.
+UNIT_LORE_FALLENBASTILA02_NAME|Bastila Shan (Fallen)
+UNIT_LORE_FIVES_DESC|[c][ffff33]Lore:[-][/c] CT-27-5555, known as "Fives," was originally a member of Domino Squad. After surviving an attack on the Republic outpost on the Rishi moon, Fives was recruited into the 501st by Clone Captain Rex. Later, for his efforts to defend Tipoca City during the Battle of Kamino, he was promoted to the elite rank of ARC trooper by Rex.
+UNIT_LORE_FOEXECUTIONER_DESC|[c][ffff33]Lore:[-][/c] The First Order used specially-armed troopers to execute anyone suspected to be even the slightest bit treasonous within their ranks. They believed this to be an effective method of instilling loyalty within the Stormtrooper Corps and utilized it as a means of training by randomly rotating which troopers would act as executioners every cycle. They were equipped with specialized armor to keep their identities hidden from their fellow troopers and wielded the BL-155 laser ax to deadly effect.
+UNIT_LORE_FORAIDER_DESC|[c][ffff33]Lore:[-][/c] First Order Raiders were a specialized stormtrooper variant utilized by the First Order during their conflict against the Resistance. Their skills were highly focused on hunting down and recovering ancient Sith relics, a skill set highly valued and employed by Supreme Leader Kylo Ren. First Order Raiders under the command of Agent Raith pursued one such relic on the planet Ashas Ree.
+UNIT_LORE_FOSNOWTROOPER_DESC|[c][ffff33]Lore:[-][/c] Snowtroopers were a stormtrooper variant deployed by the First Order during their occupation of frigid locales such as Starkiller Base and Kijimi. Their insulated battle armor kept them equally protected from both blasters and the elements, and their modified F-11D blaster rifles contained heating filaments and anti-fogging optics to ensure they were always ready for battle despite the harsh conditions of their environment.
+UNIT_LORE_FOSNOWTROOPEROFFICER_DESC|[c][ffff33]Lore:[-][/c] Wearing insulated armor similar to that of their subordinate snowtroopers and wielding modified F-11D blaster rifles, snowtrooper officers also wore a specially-insulated cloak for additional protection against the elements. These cloaks had the added benefit of allowing ground forces to quickly identify their commanding officers, further demonstrating the brutal efficiency of the First Order.
+UNIT_LORE_FOSTORMTROOPER_DESC|[c][ffff33]Lore:[-][/c] Forming the backbone of the First Order military machine, First Order Stormtroopers were clad in white armor reminiscent of the Republic and Imperial troopers that came before them. These First Order troopers were trained from birth, given number designations rather than real names, and constantly bombarded by First Order propaganda to ensure unwavering loyalty. Unlike the Empire's routine-based training, First Order troopers were trained using simulations and live exercises in order to foster improvisational abilities on the battlefield.
+UNIT_LORE_FOTIEPILOT_DESC|[c][ffff33]Lore:[-][/c] Highly-trained pilots in the service of the First Order were tasked with maintaining air superiority over the Resistance. Building on the legacy of the Galactic Empire, First Order TIE pilots underwent more rigorous training than their Imperial predecessors. Without the use of the extensive training facilities of the Empire, the First Order outfitted each of its star destroyers with the means for pilot training, allowing them to continue instructing new cadets from anywhere in the galaxy.
+UNIT_LORE_GAMORREANGUARD_DESC|[c][ffff33]Lore:[-][/c] The hulking Gamorreans hail from the Outer Rim planet of Gamorr. Jabba the Hutt employed a number of Gamorreans as guards, both in his palace and on his sail barge.
+UNIT_LORE_GENERALHUX_DESC|[c][ffff33]Lore:[-][/c] The son of Imperial Commandant Brendol Hux, Armitage Hux served as a general within the First Order. He was in command of Starkiller Base and was responsible for promoting important technological advancements for the First Order, including the ability for their ships to track targets through hyperspace. Hux’s ambition was insatiable and often challenged by Kylo Ren, which led to the two forming a bitter, long-term rivalry.
+UNIT_LORE_GENERALSKYWALKER_DESC|[c][ffff33]Lore:[-][/c] Once serving as Jedi Padawan to Obi-Wan Kenobi, Anakin Skywalker would become a legendary Jedi Knight, serving as a General of the Clone Army during the Clone Wars where he would lead the 501st Legion with Clone Captain Rex serving at his side. Thought to be the prophesized Chosen One, Anakin's growth in power and skill as a Jedi was second-to-none.
+UNIT_LORE_GENERIC_BOUNTYHUNTER01_DESC|[c][ffff33]Lore:[-][/c] The Bounty Hunters Guild on Nevarro hired expert Bounty Hunters from across the galaxy. They were proficient in capturing their targets through any means necessary.
+UNIT_LORE_GENERIC_BOUNTYHUNTER02_DESC|[c][ffff33]Lore:[-][/c] A member of the Bounty Hunters Guild. An expert hunter willing to take on the most dangerous of tasks.
+UNIT_LORE_GEONOSIANBROODALPHA_DESC|[c][ffff33]Lore:[-][/c] Geonosian Brood Alphas commanded Geonosians in the field, relaying and carrying out the orders of the Archduke, or more importantly, the queen herself. Displaying higher-than-average intelligence and cunning, these elite Geonosians represented some of the most fearsome warriors the species had to offer, with some of them even capable of calming and controlling the ferocious acklays.
+UNIT_LORE_GEONOSIANSOLDIER_DESC|[c][ffff33]Lore:[-][/c] Geonosians of the industrious species’ warrior-caste were tasked with defending their hives against adversaries. During the Clone Wars, Geonosis, under the leadership of Archduke Poggle the Lesser, pledged itself to the Separatist cause, and Geonosian soldiers were present fighting alongside their own battle droids during both the first and second battles of Geonosis.
+UNIT_LORE_GEONOSIANSPY_DESC|[c][ffff33]Lore:[-][/c] A subset of the warrior-caste, Geonosian spies were tasked with identifying and intercepting enemy intel to report back to their hive leaders in an attempt to prevent attacks on their hives and manufacturing efforts. One such spy intercepted Padawans Ahsoka Tano and Barriss Offee on their mission to destroy the droid foundry during the Second Battle of Geonosis, but his efforts to thwart them were unsuccessful.
+UNIT_LORE_GEONOSIANSTARFIGHTER_DESC|[c][ffff33]Lore:[-][/c] The [i]Nantex-class[/i] starfighter, commonly referred to as the Geonosian starfighter, was the fighter of choice for the Geonosians during the Clone Wars. Although relatively small and lightly armed, the nimble ship offered excellent visibility, and its single laser cannon could pivot to attack from multiple angles. This gave the Geonosians a highly capable dogfighter both in atmosphere and in space.
+UNIT_LORE_GRANDMASTERYODA_DESC|[c][ffff33]Lore:[-][/c] A legendary Jedi Master of an unknown species, Yoda served as a Grand Master of the Jedi Order after generations of training Jedi. He would eventually serve as a leading member of the Jedi Council and as a General of the Clone Army during the Clone Wars. Yoda would act both in the field and from afar during the conflict, but ultimately exiled himself on the remote planet of Dagobah after escaping a final confrontation with Darth Sidious.
+UNIT_LORE_GREEF_KARGA_DESC|[c][ffff33]Lore:[-][/c] Greef Karga was an agent of the Bounty Hunters Guild and formerly a disgraced magistrate member. Greef offered contracts to Bounty Hunters and supplied them with a tracking fob and bounty puck for the job. Greef offered the Mandalorian a job on behalf of the Client to search for "the Asset."
+UNIT_LORE_GRIEVOUS_DESC|[c][ffff33]Lore:[-][/c] Grievous was a former Kaleesh warlord who served as the Supreme Commander of the droid army during the Clone Wars. By the time of the Clone Wars, he was more cybernetic than organic, and he used this to his advantage in combat, taking pride in defeating Jedi and taking their lightsabers as trophies. Adding insult to injury, Grievous was trained by Count Dooku in lightsaber combat and his collection of trophies doubled as his arsenal.
+UNIT_LORE_HK47_DESC|[c][ffff33]Lore:[-][/c] Found in a shop on Tatooine, HK-47 was supposedly a Protocol Droid. In reality he was a deadly Assassin Droid who had been built by Darth Revan to strategically eliminate important targets across the galaxy. However as both HK-47 and Revan had lost their memories, they would be well into their journey before their true relationship was realized.
+UNIT_LORE_HK47_NAME|HK-47
+UNIT_LORE_HMPDROIDGUNSHIP_DESC|[c][ffff33]Lore:[-][/c] Heavy Missile Platform Droid Gunships, commonly referred to as HMP Droid Gunships, were automated anti-armor platforms used during the Clone Wars. An advanced droid brain controlled the HMP Droid Gunship, which offered it more independence and battlefield awareness. Armed with several laser batteries and two large missile racks mounted to the lower hull, the HMP Droid Gunship was capable of absolute devastation.
+UNIT_LORE_HOUNDSTOOTH_DESC|[c][ffff33]Lore:[-][/c] Associated with the Trandoshan bounty hunter Bossk, the [i]Hound's Tooth[/i] was a modified YV-666 light freighter that had its cargo bays retrofitted into secure prison cells. With a hull of reinforced armor plating and armed with a quad laser cannon, ion cannon, and concussion missiles, the [i]Hound's Tooth[/i] could dish as much damage as it could take.
+UNIT_LORE_HYENABOMBER_DESC|[c][ffff33]Lore:[-][/c] [i]Hyena-class[/i] bombers, commonly referred to as Hyena Bombers, were heavy droid starfighters used by the Separatists during the Clone Wars. While based on the same designs as Vulture Droids, Hyena Bombers were larger and more resilient, requiring larger wings for more stability in flight. Hyenas were equipped with heavy ordinance, including proton torpedoes, concussion missiles, and proton bombs, and four wing-mounted laser cannons used to engage smaller ships.
+UNIT_LORE_IG2000_DESC|[c][ffff33]Lore:[-][/c] Associated with the assassin droid IG-88, the [i]IG-2000[/i] was a modified Aggressor assault fighter. Without the same physical limitations as an organic pilot, IG-88 could push the ship to perform extreme maneuvers that would otherwise be fatal. This in combination with the ship's arsenal of laser cannons and a long-range ion cannon made the [i]IG-2000[/i] a match even for the Fetts' [i]Slave I[/i].
+UNIT_LORE_IMAGUNDI_DESC|[c][ffff33]Lore:[-][/c] A Nikto Jedi Master, Ima-Gun Di served as a General of the Clone Army during the Clone Wars, eventually giving his life defending the native Twi'lek people during the Battle of Ryloth. Although the battle would continue long after his death, victory was assured thanks in part to his sacrifice.
+UNIT_LORE_IMPERIAL_OFFICER_DESC|[c][ffff33]Lore:[-][/c] Imperial officers comprised the higher ranks of the Imperial war machine. Officers' duties ranged from leading Stormtroopers, commanding starships, and identifying and removing those within the Empire deemed disloyal to the Emperor. Officers were often characterized by a similar ruthlessness and ambition to that of the Emperor himself.
+UNIT_LORE_IMPERIAL_REMNANT_TROOPER_DESC|[c][ffff33]Lore:[-][/c] Ragtag Stormtroopers assigned to bodyguard high ranking officers in the Imperial Remnant. The Imperial Remnant occupied the planet Nevarro, a volcanic planet located in the Outer Rim Territories.
+UNIT_LORE_INCINERATORTROOPER_DESC|[c][ffff33]Lore:[-][/c] A class of stormtrooper that wielded powerful flamethrower weaponry. Donning heat resistant armor identified with red markings and a flamethrower with a backpack, the incinerator trooper could withstand intensely hot temperatures. These troopers were the most devastating of the specialized Stormtrooper Corps.
+UNIT_LORE_JABBAENFORCER_DESC|[c][ffff33]Lore:[-][/c] Jabba the Hutt's criminal empire employed scum and villainy from across the galaxy. Weequay enforcers were some of his most elite guards.
+UNIT_LORE_JABBAPIRATE_DESC|[c][ffff33]Lore:[-][/c] Jabba the Hutt's criminal empire employed scum and villainy from across the galaxy. Here on Tatooine, he kept many different races as his guards and enforcers.
+UNIT_LORE_JANGOFETT_DESC|[c][ffff33]Lore:[-][/c] Jango Fett was notorious for being the best bounty hunter in the galaxy during the final years of the Republic. He was an expert marksman who hosted an array of weaponry in his arsenal such as dual blaster pistols, a flamethrower, and an explosive rocket which he launched from his Z-6 Jetpack.
+UNIT_LORE_JEDI_CAGE_DESC|[c][ffff33]Lore:[-][/c] This Stasis Field holds one of the many Jedi who were killed when Darth Malak attacked the Jedi Enclave on Dantooine. Malak used the star forge to prevent the Jedi from becoming one with the Force and corrupt what remained of their power so he could absorb it.
+UNIT_LORE_JEDIKNIGHTCONSULAR_DESC|[c][ffff33]Lore:[-][/c] A Jedi class dating back to the days of the Old Republic, Consulars held more nonviolent ideals, assuming more conflict-averse roles within the Order.
+UNIT_LORE_JEDIKNIGHTGUARDIAN_DESC|[c][ffff33]Lore:[-][/c] A Jedi class dating back to the days of the Old Republic, Guardians held more martial ideals, assuming more combat-focused roles within the Order.
+UNIT_LORE_JEDIKNIGHTLUKESKYWALKER_DESC|[c][ffff33]Lore:[-][/c] Following the path laid before him by Obi-Wan Kenobi and Yoda, Luke Skywalker would face off against Darth Vader on the Cloud City on Bespin. During this battle he would lose his hand and learn the truth about his father. Luke went on to claim the title of Jedi Knight after this battle and would attempt to use his position to influence Jabba the Hutt to release Han Solo. Eventually Luke Skywalker would surrender himself to Darth Vader and find himself brought before the Emperor himself in an attempt to redeem Anakin Skywalker and bring him back from the dark side.
+UNIT_LORE_JEDIKNIGHTSENTINEL_DESC|[c][ffff33]Lore:[-][/c] A Jedi class dating back to the days of the Old Republic, Sentinels incorporated the ideals of both Guardians and Consulars, assuming more balanced roles within the Order.
+UNIT_LORE_JEDIMASTERVANGUARD_DESC|[c][ffff33]Lore:[-][/c] Serving under the Jedi Generals, the Vanguard were veteran Jedi warriors often among the first into battle against enemy forces in times of conflict.
+UNIT_LORE_JEDISTARFIGHTER_DESC|[c][ffff33]Lore:[-][/c] Designed to be piloted by Jedi, the Delta-7 Aethersprite-class interceptor was a highly advanced fighter created shortly before the outbreak of the Clone Wars. Although most commonly seen with the red and white paint scheme previously used by the Republic's Judicial Department, some Jedi pilots would customize their fighters with unique liveries and equipment.
+UNIT_LORE_JEDISTARFIGHTERPLOKOON_DESC|[c][ffff33]Lore:[-][/c] Plo Koon's Delta-7 starfighter was distinguishable by its radiant blue and white paint scheme, similar to that of the Delta-7B variant he piloted extensively throughout the Clone Wars. Despite the creation of the smaller, more advanced Eta-2 interceptor, Plo preferred the older Delta-7 models.
+UNIT_LORE_JOLEE_DESC|[c][ffff33]Lore:[-][/c] Jolee joined Revan on Kashyyyk, and was a constant source of "wisdom" during the journey. When confronted with a temple that only allowed those who were Force-sensitive inside, Jolee joined Revan and Juhani in the search for Bastila and the secret to accessing the star forge.
+UNIT_LORE_JOLEE_NAME|Jolee
+UNIT_LORE_JUHANI_DESC|[c][ffff33]Lore:[-][/c] Revan found Juhani in a quiet grove suffused with dark side energy and knew a battle was imminent. Juhani may have thought herself strong, but she knew nothing of true power.
+UNIT_LORE_JUHANI_NAME|Juhani
+UNIT_LORE_JUHANI02_DESC|[c][ffff33]Lore:[-][/c] After Revan defeated Juhani, she learned that her master was alive and well and her brief flirtation with the dark side had been forgiven by the Jedi Council. When Revan left Dantooine, Juhani joined the journey as a way to further her training and atone for her previous actions.
+UNIT_LORE_JUHANI02_NAME|Juhani
+UNIT_LORE_KALANI_DESC|[c][ffff33]Lore:[-][/c] General Kalani was a Super Tactical Droid that served the Separatists during the Clone Wars. His service was notable during the Onderonian Civil War. Ultimately, Kalani and Dooku decided to abandon the planet and Kalani was ordered to occupy a Separatist base on Agamar. There, he would avoid the shut-down order sent at the end of the Clone Wars and remain with the last of his army for nearly two decades.
+UNIT_LORE_KENOBI_DESC|[c][ffff33]Lore:[-][/c] The legendary Jedi Master serves upon the Jedi Council and as a General during the Clone Wars. After discovering Anakin's horrific betrayal at the Jedi Temple, has Padmé betrayed Lord Vader by bringing Jedi Master Kenobi to Mustafar? Once upon the volatile volcanic planet, Kenobi must challenge his former padawan, now known as Lord Vader.
+UNIT_LORE_KIADIMUNDI_DESC|[c][ffff33]Lore:[-][/c] A Cerean Jedi Master, Ki-Adi-Mundi served as a General of the Clone Army and as a member of the Jedi Council throughout the Clone Wars. Ki-Adi-Mundi served in several battles against the Separatists, eventually overseeing the invasion of Mygeeto near the close of the conflict.
+UNIT_LORE_KITFISTO_DESC|[c][ffff33]Lore:[-][/c] A Nautolan Jedi Master, Kit Fisto served as both a General of the Clone Army and later as a member of the Jedi Council during the Clone Wars. Kit Fisto was present during the mission to Vassek 3 to capture Nute Gunray, where he nearly bested General Grievous in combat, and later the Battle of Mon Cala.
+UNIT_LORE_KLATOOINIAN_CAPTAIN_DESC|[c][ffff33]Lore:[-][/c] A fierce veteran of many raids, the captain of the Klatooinian raiders on the planet Sorgan was well known for his ruthless tactics, often targeting isolated and defenseless villages for supplies. 
+UNIT_LORE_KLATOOINIAN_DESC|[c][ffff33]Lore:[-][/c] A member of the Klatooinian raiders on the planet Sorgan. The Klatooinian raiders often attacked remote villages to rob them of their goods.
+UNIT_LORE_KOTORTURRET_DESC|[c][ffff33]Lore:[-][/c] Turrets of various configurations were widely used as point-defense security systems.
+UNIT_LORE_KOTORTURRET_NAME|Turret
+UNIT_LORE_KYLOREN_DESC|[c][ffff33]Lore:[-][/c] Ben Solo, the son of Rebellion heroes Leia Organa and Han Solo, was surrounded by legends his entire life. While training as a student to Jedi Master Luke Skywalker, Ben's connection to the dark side began to manifest to the point that Luke feared what he might become. Ben, believing his former master had tried to kill him, embraced the path of the dark side of his lineage, letting the past die in order to become Kylo Ren.
+UNIT_LORE_KYLOREN_FORCEDUEL_DESC|[c][ffff33]Lore:[-][/c] Kylo Ren and Rey shared a bond through the Force unlike any other. Although tasked with ending her life, Kylo Ren instead saw potential in the young scavenger and attempted to sway her to the dark side. While Rey attempted to resist, clinging to the teachings passed on to her by Luke Skywalker, Kylo's persistence and the lure of knowledge of her past eventually started to break through her will and sow the seeds of doubt in her mind.
+UNIT_LORE_KYLOREN_KEFBIR_DESC|[c][ffff33]Lore:[-][/c] After their duel on Kijimi, Kylo Ren hunted Rey and her companions to Kef Bir, a moon of Endor that contained a frightening reminder of the past. Kylo sensed the conflict within Rey, conflict that he sought to exploit in order to convince her to finally join him to defeat their common enemy, the once-dead Emperor, and rule the galaxy together.
+UNIT_LORE_LIEUTENANTCOWELL_DESC|[c][ffff33]Lore:[-][/c] Near the end of the war, the First Order occupied the Mid Rim planet, Kijimi. Within Kijimi City, they divided command of occupational forces into multiple zones, each under the watchful eye of a First Order Lieutenant. Clad in white field jackets and projecting authority, these ruthless officers instilled fear across the city with brutal effect. Lieutenant Lodent Cowell was one such officer serving under Captain Athewn Ozi.
+UNIT_LORE_LORDVADER_DESC|[c][ffff33]Lore:[-][/c] Once a legendary hero of the Galactic Republic, Anakin Skywalker betrayed the Republic and the Jedi Order he once served at the behest of Darth Sidious and rose to become the terrifying Lord Vader. He would continue on to Mustafar and personally executed the remaining Separatist leaders before crossing lightsabers with his former Master, Obi-Wan Kenobi, across the lava-planet.
+UNIT_LORE_LUMINARAUNDULI_DESC|[c][ffff33]Lore:[-][/c] A Mirialan Jedi Master, Luminara Unduli served as a General of the Clone Army during the Clone Wars, leading the 41st Elite Corps. Luminara fought on many battlefields during the Clone Wars, often serving with her Padawan, Barriss Offee.
+UNIT_LORE_MACEWINDU_DESC|[c][ffff33]Lore:[-][/c] As a Jedi Master, Mace Windu served as a General of the Clone Army and as a member of the Jedi Council throughout the Clone Wars. Mace served on multiple fronts and in multiple roles during the conflict.
+UNIT_LORE_MAGNAGUARD_DESC|[c][ffff33]Lore:[-][/c] IG-100 MagnaGuard droids were fearsome melee specialists, equipped with Vibrostaffs that could stand up to a Jedi's lightsaber. They were built such that they could continue to fight even after losing limbs, or even their heads. Although they were most notably used by General Grievous as personal bodyguards, they were occasionally seen fulfilling the same role for other important Separatist leaders as well.
+UNIT_LORE_MANDALORIAN_JOURNEY_ATST_DESC|[c][ffff33]Lore:[-][/c] The AT-ST served as a highly mobile, anti infantry machine of war for Imperial forces. The Klatooinian raiders on the planet Sorgan acquired one such walker and modified it and gave it a custom paint job to inspire fear in all who saw it. The Klatooinian's employed this powerful weapon with devastating effect during their raiding parties on Sorgan.
+UNIT_LORE_MOFFGIDEONS1_DESC|[c][ffff33]Lore:[-][/c] Moff Gideon led Imperial Remnant forces and desired the Force-sensitive being known as "the Child". During the reign of the Galactic Empire, Gideon took part in the Great Purge of the Mandalorians. Gideon was a skilled tactician and often used coercion on his enemies.
+UNIT_LORE_MUDHORN_DESC|[c][ffff33]Lore:[-][/c] Mudhorns are large, temperamental creatures native to the remote desert planet Arvala-7. The Mudhorns have flat teeth and dense woolly fur capable of shrugging off blaster fire even at close range. Jawas sought the eggs of Mudhorns as a delicious treat.
+UNIT_LORE_NEGOTIATOR_DESC|[c][ffff33]Lore:[-][/c] The Negotiator was a Venator-class Star Destroyer that served as General Obi-Wan Kenobi's flagship during the Clone Wars. Amidst a rescue operation in deep space, General Grievous attacked and ultimately captured the Negotiator, forcing Obi-Wan to set the ship to self-destruct in order to stave off the attack and escape.
+UNIT_LORE_NEXU_DESC|[c][ffff33]Lore:[-][/c] Nexu are feline predators native to the planet Cholganna. With a broad mouth full of sharp teeth, spiky quills lining its spine, large claws, and a long prehensile tail, these beasts are fast and deadly, able to make short work of most prey. At least one nexu was used by the Geonosians in the Petranaki arena, where it was unleashed in the attempted execution of Anakin Skywalker, Padmé Amidala, and Obi-Wan Kenobi at the onset of the Clone Wars.
+UNIT_LORE_NIKTO_THUGS_DESC|[c][ffff33]Lore:[-][/c] An active gang on Arvala-7 consisting of guns for hire that caused an endless stream of criminal activity and violence on the planet. These Nikto gangsters were in possession of a highly coveted asset and fended off multiple hunters that sought it.
+UNIT_LORE_NUTEGUNRAY_DESC|[c][ffff33]Lore:[-][/c] Viceroy of the Trade Federation, Nute Gunray made a deal with Darth Sidious a decade before the start of the Clone Wars and attempted to invade and occupy Naboo. Although the attempt was foiled and Gunray was to be arrested, he avoided imprisonment. He kept his post in the years leading up to and during the Clone Wars, becoming a member of the Separatist Council and helping the Separatist cause, despite claiming the Trade Federation’s neutrality.
+UNIT_LORE_OBIWANKENOBI_DESC|[c][ffff33]Lore:[-][/c] A legendary Jedi Master and the teacher of Anakin Skywalker, Obi-Wan Kenobi served as a General of the Clone Army and as a member of the Jedi Council throughout the Clone Wars. Leading the 212th Attack Battalion with Clone Commander Cody serving at his side, Obi-Wan would become a veteran of most major battles throughout the conflict. He would eventually go into hiding on Tatooine after Order 66, looking after the young Luke Skywalker from afar.
+UNIT_LORE_PADMEAMIDALA_DESC|[c][ffff33]Lore:[-][/c] Previously the Queen of Naboo, Padmé became a senator of the Galactic Republic, representing the planet throughout the Clone Wars. Padmé remained an advocate for peace, despite finding herself the target of multiple assassination attempts and in the middle of countless skirmishes throughout the conflict.
+UNIT_LORE_POGGLETHELESSER_DESC|[c][ffff33]Lore:[-][/c] Poggle the Lesser was the public leader of the Geonosians during the Clone Wars era, serving the will of the Geonosian Queen, Karina the Great. He had great power within the Separatist Council due to the massive droid factories the Geonosians operated, which provided so much of the Separatist military force. Poggle also commanded battle droids during both battles of Geonosis and even briefly served the Republic Special Weapons Group after being in Republic custody before returning to the Confederacy near the end of the war.
+UNIT_LORE_PONDS_DESC|[c][ffff33]Lore:[-][/c] Serving under Mace Windu during the Clone Wars, CT-411, known as "Ponds,” was a veteran of several battles during the conflict, including the Battle of Geonosis, the Battle of Ryloth, and the Battle of Malastare.
+UNIT_LORE_REEK_DESC|[c][ffff33]Lore:[-][/c] Reeks are four-legged beasts native to the planet Ylesia. Although typically herbivores, a reek can be starved into becoming a carnivore, leading to more aggressive tendencies. At least one meat-fed reek was used by the Geonosians in the Petranaki arena, where it was unleashed in the attempted execution of Anakin Skywalker, Padmé Amidala, and Obi-Wan Kenobi at the onset of the Clone Wars.
+UNIT_LORE_REY_DESC|[c][ffff33]Lore:[-][/c] Growing up as a scavenger on the desert-planet of Jakku, Rey seemed content with her lifestyle as she awaited the return of her parents. The Force intervened when the war between the Resistance and the First Order found its way to Jakku, leading her on a journey across the galaxy to search for legendary Jedi Master, Luke Skywalker, and unlock her full potential by becoming a Jedi. Luke initially refused, but Rey’s persistence won, and he began instructing her in the ways of the Force until she left to help her friends before completing her training.
+UNIT_LORE_REY_FORCEDUEL_DESC|[c][ffff33]Lore:[-][/c] General Leia Organa, Luke Skywalker's sister, took up the mantle of mentorship after Luke's death, revealing that he had previously trained Leia in the ways of the Jedi. Although she had a teacher once again, Rey felt unworthy of her inherited lightsaber, and carried this doubt within. Kylo Ren sensed Rey's uncertainty and readily exploited it, using Rey's lack of training and troubled past against her.
+UNIT_LORE_REY_KEFBIR_DESC|[c][ffff33]Lore:[-][/c] Struggling to come to terms with who she was after Kylo Ren revealed the truth of her lineage, Rey sought answers on Kef Bir, a moon of Endor with a frightening link to the past. Although she believed in her friends and the Resistance, the truth weighed heavily upon her as she questioned her place in the galaxy and once again clashed with Kylo Ren.
+UNIT_LORE_SAESEETIIN_DESC|[c][ffff33]Lore:[-][/c] Iktotchi Jedi Master Saesee Tiin was an ace starfighter pilot and a renowned duelist with a lightsaber. He was chosen by Mace Windu to accompany him to arrest Chancellor Palpatine on the suspicion of being a Sith Lord. 
+UNIT_LORE_SCOUTTROOPER_AP_1982_DESC|[c][ffff33]Lore:[-][/c] An inquisitive trooper in the employ of the Imperial Remnant led by Moff Gideon. He only wanted to catch a glimpse of a treasure most rare, but his curiosity cost him his life.
+UNIT_LORE_SCOUTTROOPER_DESC|[c][ffff33]Lore:[-][/c] Scout Troopers used lighter armor than their stormtrooper counterparts and were used by the Empire as snipers and fast attack units on planets throughout the galaxy.
+UNIT_LORE_SCOUTTROOPER_JS_1975_DESC|[c][ffff33]Lore:[-][/c] A no-nonsense trooper in the employ of the Imperial Remnant led by Moff Gideon. This trooper approached life's problems with a heavy, authoritative hand regardless of the subject; an unwavering disposition that ultimately led to his demise.
+UNIT_LORE_SHAAKTI_DESC|[c][ffff33]Lore:[-][/c] A Togrutan Jedi Master, Shaak Ti served as a General of the Clone Army and as a member of the Jedi Council throughout the Clone Wars. Shaak Ti served in the battles of Geonosis, Kamino, and Coruscant, but was best known for her role in overseeing the training of the clone forces on Kamino.
+UNIT_LORE_SITHCOMMANDO_DESC|[c][ffff33]Lore:[-][/c] The elite combat forces of the Sith Empire were given special training and striking red armor. They often worked with larger numbers of standard troops to achieve objectives important to the Empire.
+UNIT_LORE_SITHCOMMANDO_NAME|Sith Commando
+UNIT_LORE_SITHSOLDIER_DESC|[c][ffff33]Lore:[-][/c] The rank and file of the Sith forces were drawn from across the galaxy. Many had been former Republic forces who fought in previous wars and readily joined when the call to war came once again.
+UNIT_LORE_SITHSOLDIER_NAME|Sith Soldier
+UNIT_LORE_SLAVE1_DESC|[c][ffff33]Lore:[-][/c] First associated with the notorious bounty hunter Jango Fett, the [i]Slave I[/i] was a heavily modified [i]Firespray-class[/i] interceptor armed with laser cannons, missile launchers, and seismic charges. The [i]Slave I[/i] would change hands a number of times during the Clone Wars before finally being reclaimed by Jango's son, Boba Fett. The young Fett would go on to become one of the best bounty hunters in the galaxy, thereby maintaining the infamy of the craft.
+UNIT_LORE_SMUGGLERCHEWBACCA_DESC|[c][ffff33]Lore:[-][/c] Chewbacca was a long-time companion and smuggling partner to Han Solo, accompanying him in the Millennium Falcon as a gunner and co-pilot for decades. In addition to being a capable pilot, he was also a fearsome Wookiee warrior who always kept his customized bowcaster close at hand. He remained a loyal friend to Leia Organa and the Resistance after Han Solo’s death, continuing to assist Finn, Poe, and Rey in their battle against the First Order.
+UNIT_LORE_SNIPERDROID_DESC|[c][ffff33]Lore:[-][/c] Sniper Droids were a highly lethal variant of Droideka battle droids, equipped with a single long-barreled blaster rifle instead of arm-mounted twin blasters and lacking the compact shield generator found on the standard models. Instead, the rear armored shell of the Sniper Droid would flip forward while in combat mode to provide protection.
+UNIT_LORE_SNOWTROOPER_DESC|[c][ffff33]Lore:[-][/c] Snowtroopers were a specialized variant of Stormtroopers employed by the Galactic Empire during the Galactic Civil War. Trained for operations in extreme cold, Snowtroopers relied on specialized equipment to protect them from the harsh conditions. Snowtroopers commanded by Darth Vader were able to take over Echo Base during the Battle of Hoth, forcing the rebels to flee the planet after considerable losses.
+UNIT_LORE_SNOWTROOPERCOMMANDER_DESC|[c][ffff33]Lore:[-][/c] Identifiable by a small red & blue insignia on their chestplate, Snowtrooper commanders otherwise appeared identical to their subordinates. Commanders in the Stormtrooper Corps were responsible for commanding rank & file troopers and were integral to allowing coordinated attacks while on the ground and in the heat of battle.
+UNIT_LORE_SNOWTROOPEROPS_DESC|[c][ffff33]Lore:[-][/c] Elite Stormtroopers selected for special operations, Stormtrooper Black Ops operatives were deployed on particularly dangerous or important missions for the Empire, often off the record. Equipped with specialized equipment tailored to their assignment, these troopers were trained for every eventuality.
+UNIT_LORE_SOULLESSONE_DESC|[c][ffff33]Lore:[-][/c] General Grievous' customized Belbullab-22 starfighter, the [i]Soulless One[/i], served as his personal starfighter throughout the Clone Wars. With remarkable speed, maneuverability, and a pair of triple laser cannons, the [i]Soulless One[/i] proved to be a close match for even Anakin Skywalker's customized Jedi starfighters.
+UNIT_LORE_STORMTROOPER_DESC|[c][ffff33]Lore:[-][/c] Donning imposing white armor, Stormtroopers were the Empire's elite soldiers and could be found in almost all corners of the galaxy during the Empire's reign. Loyal to the point of fanaticism, Stormtroopers utilized all manner of ordnance to great effect against the Empire's enemies, but were most commonly equipped with the E-11 blaster rifle.
+UNIT_LORE_STORMTROOPERCOMMANDER_DESC|[c][ffff33]Lore:[-][/c] Wearing the same imposing white armor as their subordinates, stormtrooper commanders were the Empire's elite leaders, commanding fire-teams of Imperial stormtroopers in battle. 
+UNIT_LORE_SUNFAC_DESC|[c][ffff33]Lore:[-][/c] Sun Fac served as Poggle the Lesser's chief lieutenant in the days of the Galactic Republic. Just prior to the outbreak of the Clone Wars on Geonosis, Sun Fac sentenced Anakin Skywalker and Padmé Amidala to death as they attempted to rescue Obi-Wan Kenobi, and the three were sent to the Petranaki arena. His plan was thwarted when they managed to survive long enough for their Jedi and Clone Trooper reinforcements to arrive, thus starting the Clone Wars.
+UNIT_LORE_SUNFACGEONOSIANSTARFIGHTER_DESC|[c][ffff33]Lore:[-][/c] The [i]Nantex-class[/i] Geonosian starfighter was the fighter of choice for the Geonosians during the Clone Wars. Although relatively small and lightly armed, the nimble ship offered excellent visibility, and its single laser cannon could pivot to attack from multiple angles. This gave the Geonosians a highly capable dogfighter both in atmosphere and in space. Sun Fac’s personal starfighter was distinguishable by orange accents along its needle-shaped hull.
+UNIT_LORE_SUPERTACTICALDROID_DESC|[c][ffff33]Lore:[-][/c] Super Tactical Droids were upgraded versions of the older T-series Tactical Droids seen in the early conflicts of the Clone Wars. Super Tactical Droids were better able to react to the improvisational tactics of the Republic’s Clone Troopers and Jedi warriors, thus making them far superior to the T-series droids, which were proven ineffective against the Republic’s ability to make unexpected and unorthodox decisions in battle.
+UNIT_LORE_TIE_ADVANCED_DESC|[c][ffff33]Lore:[-][/c] The TIE Advanced x1, was a prototype starfighter used by Darth Vader during the Galactic Civil War. Unlike standard TIE models, the TIE Advanced x1 was equipped with both a deflector shield generator and a hyperdrive. Vader's personal TIE Advanced x1 was customized to his specifications, including a cluster missile launcher in addition to the standard laser cannons.
+UNIT_LORE_TIE_BOMBER_DESC|[c][ffff33]Lore:[-][/c] The TIE/sa, or TIE bomber, was a light bomber variant of the TIE line of starfighters distinguished by its unique shape that included two central pods; one for the pilot and one for the ordnance load. TIE bombers were primarily used in air support roles and could be outfitted with a number of munitions including bombs, missiles, torpedoes, and mines.
+UNIT_LORE_TIE_FIGHTER_DESC|[c][ffff33]Lore:[-][/c] The TIE/ln space superiority starfighter, or TIE fighter, was one of the Empire's most prolific symbols during the Galactic Civil War. Lightly armed and without deflector shields, TIE fighters used their superior speed, maneuverability, and sheer numbers to defeat their rebel adversaries throughout the conflict.
+UNIT_LORE_TRENCH_DESC|[c][ffff33]Lore:[-][/c] Admiral Trench was known throughout the Clone Wars for his ruthless tactical brilliance in service to the Separatist cause. Following his initial defeat at the hands of Anakin Skywalker, Trench was fitted with impressive new cybernetics, giving the Harch Admiral even more tricks at his disposal.  Now he once again leads the Separatist forces during the Battle for Anaxes, leveraging new strategies in order to attack the planet's vitally important shipyards.
+UNIT_LORE_TSERIESTACTICALDROID_DESC|[c][ffff33]Lore:[-][/c] T-series Tactical Droids were used throughout the Clone Wars to give the mechanical legions of the Separatist alliance the upper hand in battle. With intelligence higher than standard battle droids, T-series Tactical Droids often served from well-protected positions far away from the battlefield in order to coordinate and observe the battle from afar. Eventually, the Super Tactical Droid would prove more effective, though the T-series models would still see common use.
+UNIT_LORE_UMBARANSTARFIGHTER_DESC|[c][ffff33]Lore:[-][/c] The Zenuas 33 starfighter was used by the Umbarans to fight the Republic during the Battle of Umbara. There were at least three Umbaran starfighters used in combat by Republic forces, one of them having been stolen by Fives during the battle.
+UNIT_LORE_V19TORRENTSTARFIGHTER_DESC|[c][ffff33]Lore:[-][/c] The V-19 Torrent starfighter saw heavy action in the early years of the Clone Wars. The single-seat fighter was used as late as the Battle of Sullust before being completely phased out in favor of the new ARC-170 starfighter.
+UNIT_LORE_VADER_DESC|[c][ffff33]Lore:[-][/c] Once one of the most powerful and heroic Jedi Knights, Darth Vader's quest for power led him to the dark side of the Force. Through his training as apprentice to Darth Sidious, Vader became the infamous Dark Lord of the Sith. Serving his dark master for decades, Vader hunted down the remnants of the Jedi Order and attempted to crush the growing rebellion against the Empire, before a secret from his past threatened his Master's grand plan.
+UNIT_LORE_VEERS_DESC|[c][ffff33]Lore:[-][/c] A ruthless general in the Galactic Empire, Maximillian Veers is most known for the integral part he played in the Battle of Hoth. Leading the ground assault on the planet Hoth, Veers deployed fearsome AT-AT walkers to destroy the Rebel Alliance's shield generator and transport legions of Snowtroopers to the surface, forcing the rebels to flee the planet, right into an Imperial blockade in the space above.
+UNIT_LORE_VULTUREDROID_DESC|[c][ffff33]Lore:[-][/c] [i]Vulture-class[/i] starfighters, commonly referred to as Vulture Droids, were droid starfighters used extensively by the Separatist faction leading up to and during the Clone Wars. While early Vulture Droids required a central command signal to operate, later models were able to operate independently and communicate with one another. Just like their grounded B1 counterparts, they operated most effectively in swarms large enough to overwhelm their enemies.
+UNIT_LORE_WAMPA_DESC|[c][ffff33]Lore:[-][/c] Wampas are fearsome, furred beasts native to the ice planet Hoth. Sporting sharp fangs and large claws, these lumbering bipeds make short work of prey such as tauntauns. Despite their size, their white fur allows them to blend into the icy terrain and remain stealthy. One such wampa was able to get the drop on Luke Skywalker while he was out investigating a disturbance just prior to the Battle of Hoth.
+UNIT_LORE_WATTAMBOR_DESC|[c][ffff33]Lore:[-][/c] A member of the Separatist Council, Wat Tambor was the leader of the Techno Union, which struck a deal with the Geonosians to mass-produce the battle droids needed by the Separatists in their war effort against the Republic. He later became the ruler of the planet Ryloth, in which his oppressive governance led to the pillaging of Twi’lek valuables and the bombing of their villages.
+UNIT_LORE_WEEQUAYFEMALE_DESC|[c][ffff33]Lore:[-][/c] Jabba the Hutt's criminal empire employed scum and villainy from across the galaxy. Weequay criminals found themselves working off debts to Jabba in the most dangerous of situations.
+UNIT_LORE_XANADUBLOOD_DESC|[c][ffff33]Lore:[-][/c] Associated with the Duros bounty hunter Cad Bane, the [i]Xanadu Blood[/i] was a heavily-modified [i]Rogue-class[/i] starfighter. Given to Bane by Darth Sidious as the reward for stealing a holocron and kyber crystal for the Dark Lord, the [i]Xanadu Blood[/i] was used extensively by the bounty hunter throughout the Clone Wars. Armed with only a pair of laser cannons, Bane relied on the ship's speed and cloaking device to best his opponents.
+UNIT_LORE_ZORIIBLISS_DESC|[c][ffff33]Lore:[-][/c] Zorii was the cunning leader of the Spice Runners of Kijimi. During the war between the Resistance and the First Order, Zorii remained neutral and continued leading the Spice Runners. As the First Order tightened its grip on Kijimi, Zorii was forced to confront her loyalties and ultimately aided ex-Spice Runner Poe Dameron and the Resistance when they came seeking assistance. An experienced pilot from her many years of illegal activities, she fought in the Battle of Exegol alongside Resistance forces.
+UNIT_LUCE_DESC|Multiple Attacker with death-cycled ATK generation; moderate survivability
+UNIT_LUCE_NAME|Luce
+UNIT_LUKE_BESPIN_DESC|
+UNIT_LUKE_BESPIN_NAME|Bespin Luke
+UNIT_LUKESKYWALKER_DESC|Attacker that can boost his own Critical Rate, then disable enemies with Critical Hits
+UNIT_LUKESKYWALKER_NAME|Luke Skywalker
+UNIT_LUKESKYWALKER_NAME_V2|Luke Skywalker (Farmboy)
+UNIT_LUMINARAUNDULI_DESC|Versatile attacker with ability block and powerful party heal.
+UNIT_LUMINARAUNDULI_NAME|Luminara Unduli
+UNIT_MACEWINDU_DESC|Aggressive Jedi tank with devastating damage if left unchecked
+UNIT_MACEWINDU_NAME|Mace Windu
+UNIT_MAGMATROOPER_DESC|Resilient Attacker that recovers quickly from debuffs and deals potent AoE damage
+UNIT_MAGMATROOPER_NAME|Magmatrooper
+UNIT_MAGNAGUARD_DESC|Anti Jedi Tank character with some control ability.
+UNIT_MAGNAGUARD_DESC_V2|Disruptive Droid Tank that becomes deadly if ignored
+UNIT_MAGNAGUARD_DESC_V3|Disruptive Droid Tank that Taunts and takes an extra turn before it is defeated
+UNIT_MAGNAGUARD_NAME|IG-100 MagnaGuard
+UNIT_MANDALORIAN_JOURNEY_ATST_NAME|AT-ST Raider
+UNIT_MARAJADE_DESC|Dark Side force user Attacker who uses her allies to boost her own power and supports Emperor Palpatine
+UNIT_MARAJADE_NAME|Mara Jade, The Emperor's Hand
+UNIT_MAUL_DESC|Deadly Attacker that gains power and extra turns as enemies are defeated
+UNIT_MAUL_NAME|Darth Maul
+UNIT_MAULS7_DESC|Unrelenting attacker that uses his anguish to crush his foes
+UNIT_MAULS7_NAME|Maul
+UNIT_MERCENARY_NAME|Mercenary
+UNIT_MERCENARYCOMMANDER_DESC|Tenacious leader who directs Mercenary battle strategy
+UNIT_MERCENARYCOMMANDER_NAME|Mercenary Commander
+UNIT_MERCENARYGRUNT_NAME|Mercenary Grunt
+UNIT_MERCENARYLIEUTENANT_DESC|Durable support that can debuff enemies, heal allies, and speed up allies
+UNIT_MERCENARYLIEUTENANT_NAME|Mercenary Lieutenant
+UNIT_MERCENARYRAIDER_DESC|Resilient attacker that can overwhelm opponents with ferocious attacks
+UNIT_MERCENARYRAIDER_NAME|Mercenary Raider
+UNIT_MFALCON_DESC|
+UNIT_MFALCON_DESC01|All around ship with good defense with party buffing skills and a recovery leader ability.
+UNIT_MFALCON_NAME|[i]Millennium Falcon[/i]
+UNIT_MFALCON_NAME01|[i]Millennium Falcon[/i]
+UNIT_MG100STARFORTRESSSF17_DESC|Resilient Resistance Tank that can take punishment and debilitate enemies
+UNIT_MG100STARFORTRESSSF17_NAME|MG-100 StarFortress SF-17
+UNIT_MILLENIUMFALCONEP7_DESC|Daring Resistance Attacker that can turn the tide by sacrificing buffs
+UNIT_MILLENIUMFALCONEP7_NAME|Millennium Falcon Ep. VII
+UNIT_MILLENNIUMFALCON_DESC|Highly-modified Rebel Attacker that specializes in assists and shows up at just the right time
+UNIT_MILLENNIUMFALCON_NAME|
+UNIT_MILLENNIUMFALCON_NAME_V2|Han's Millennium Falcon
+UNIT_MILLENNIUMFALCONEP7_DESC|Daring Resistance freighter that can turn the tide by sacrificing buffs
+UNIT_MILLENNIUMFALCONEP7_NAME|Millennium Falcon (Ep VII)
+UNIT_MILLENNIUMFALCONEP7_NAME_V2|Rey's Millennium Falcon
+UNIT_MILLENNIUMFALCONPRISTINE_DESC|Devastating Scoundrel attacker that becomes more threatening after each ally reinforcement
+UNIT_MILLENNIUMFALCONPRISTINE_NAME|Lando's Millennium Falcon
+UNIT_MISSIONVAO_DESC|Slippery Scoundrel Attacker who blinds her enemies
+UNIT_MISSIONVAO_NAME|Mission Vao
+UNIT_MOFFGIDEONS1_DESC|Empire Leader that can lead a fireteam into battle and punish enemies with the Leader tag
+UNIT_MOFFGIDEONS1_NAME|Moff Gideon
+UNIT_MONMOTHMA_DESC|Rebel Leader who supports and rallies her allies
+UNIT_MONMOTHMA_NAME|Mon Mothma
+UNIT_MOTHERTALZIN_DESC|
+UNIT_MOTHERTALZIN_DESC_V2|Vicious Nightsister Leader who inflicts Plague, preventing enemies from Dispelling debuffs
+UNIT_MOTHERTALZIN_NAME|Mother Talzin
+UNIT_MUDHORN_PVE_NAME|Mudhorn
+UNIT_NAALETH_DESC|
+UNIT_NAALETH_NAME|Naa'leth
+UNIT_NABOOROYALN1STARFIGHTER_DESC|
+UNIT_NABOOROYALN1STARFIGHTER_NAME|Naboo Royal N-1 Starfighter
+UNIT_NEGOTIATOR_DESC|
+UNIT_NEGOTIATOR_NAME|The Negotiator
+UNIT_NEXU_NAME|Nexu
+UNIT_NIGHTSISTERACOLYTE_DESC|Stealth attacker with some enemy debuffing and self healing ability.
+UNIT_NIGHTSISTERACOLYTE_NAME|Nightsister Acolyte
+UNIT_NIGHTSISTERINITIATE_DESC|Critical-focused Attacker that can render enemies Immune to positive status effects
+UNIT_NIGHTSISTERINITIATE_DESC_V2|Critical-focused Attacker that can render enemies immune to buffs
+UNIT_NIGHTSISTERINITIATE_NAME|Nightsister Initiate
+UNIT_NIGHTSISTERSPIRIT_DESC|Veiled Nightsister Attacker who Dispels, Stuns, and gains Foresight
+UNIT_NIGHTSISTERSPIRIT_NAME|Nightsister Spirit
+UNIT_NIGHTSISTERZOMBIE_DESC|Vile Nightsister Tank who inflicts Tenacity Down and can't be stopped from reviving endlessly
+UNIT_NIGHTSISTERZOMBIE_NAME|Nightsister Zombie
+UNIT_NIKSANT_NAME|Endor Rebel Commando
+UNIT_NIKTOBRUISER_PVE_NAME|Nikto Bruiser
+UNIT_NIKTOHEAVYGUNNER_PVE_NAME|Nikto Heavy Gunner
+UNIT_NIKTOTHUG_PVE_NAME|Nikto Thug
+UNIT_NINTHSISTER_DESC|A ruthless member of the feared Inquisitorius who will stop at nothing in her hunt for the Jedi
+UNIT_NINTHSISTER_NAME|Ninth Sister
+UNIT_NUTEGUNRAY_DESC|Attacker with powerful Stealth bonuses and a potent Thermal Detonator
+UNIT_NUTEGUNRAY_DESC_V2|Separatist Support who specializes in sabotaging enemy strategies
+UNIT_NUTEGUNRAY_NAME|Nute Gunray
+UNIT_OBJECT_ALTAR_DESC|Summons Nightsister Spirits and is immune to damage as long as they are present
+UNIT_OBJECT_ALTAR_NAME|Spirit Altar
+UNIT_OBJECT_CAPTIVE_JEDI_NAME|Captive Jedi
+UNIT_OBJECT_CRATE_DESC|Supply Crate
+UNIT_OBJECT_CRATE_NAME|Supply Crate
+UNIT_OBJECT_FLAME_DESC|
+UNIT_OBJECT_FLAME_NAME|Spirit Flame
+UNIT_OBJECT_IMP_EXPLOSIVES_CRATE_NAME|Imperial Explosives Crate
+UNIT_OBJECT_IMP_SUPPLY_CRATE_NAME|Imperial Supply Crate
+UNIT_OBJECT_IMP_WEAPONS_CRATE_NAME|Imperial Weapons Crate
+UNIT_OBJECT_JEDI_CAGE_NAME|Stasis Field
+UNIT_OBJECT_PROP_CONDUIT_NAME|Conduit
+UNIT_OBJECT_PROP_CRATE_NAME|Crate
+UNIT_OBJECT_TIEFIMP_NAME|Parked TIE Fighter
+UNIT_OFFENSE_NAME|OFFENSE
+UNIT_OLDBENKENOBI_DESC|Durable Jedi Tank able to shut down enemy offense with multiple debuffs
+UNIT_OLDBENKENOBI_NAME|Obi-Wan Kenobi (Old Ben)
+UNIT_OOMCOMMANDBATTLEDROID_DESC|
+UNIT_OOMCOMMANDBATTLEDROID_NAME|OOM Command Battle Droid
+UNIT_OOMCOMMANDBATTLEDROID_NAME_V2|Command Battle Droid
+UNIT_OOMCOMMANDSNOWDROID_NAME|OOM Command Snow Droid
+UNIT_OOMCOMMANDSNOWDROID_NAME_V2|Command Snow Droid
+UNIT_OOMPILOTBATTLEDROID_DESC|
+UNIT_OOMPILOTBATTLEDROID_NAME|OOM Pilot Battle Droid
+UNIT_OOMPILOTBATTLEDROID_NAME_V2|Pilot Battle Droid
+UNIT_OOMPILOTSNOWDROID_NAME|OOM Pilot Snow Droid
+UNIT_OOMPILOTSNOWDROID_NAME_V2|Pilot Snow Droid
+UNIT_OOMSECURITYBATTLEDROID_DESC|
+UNIT_OOMSECURITYBATTLEDROID_NAME|OOM Battle Droid
+UNIT_OOMSECURITYBATTLEDROID_NAME_V2|Security Battle Droid
+UNIT_OOMSECURITYSNOWDROID_NAME|OOM Security Snow Droid
+UNIT_OOMSECURITYSNOWDROID_NAME_V2|Security Snow Droid
+UNIT_OUTRIDER_DESC|A daring Rebel Support that increases the Download of allied ships
+UNIT_OUTRIDER_NAME|Outrider
+UNIT_P38FIGHTER_DESC|
+UNIT_P38FIGHTER_NAME|P-38 Fighter
+UNIT_PADAWANANAKIN_DESC|
+UNIT_PADAWANANAKIN_NAME|Padawan Anakin
+UNIT_PADME_GEONOSIS_DESC|
+UNIT_PADME_GEONOSIS_NAME|Geonosis Padmé
+UNIT_PADMEAMIDALA_DESC|Courageous leader who continuously helps her allies and adapts to any circumstance
+UNIT_PADMEAMIDALA_NAME|Padmé Amidala
+UNIT_PADMEGEONOSIS_NAME|
+UNIT_PAO_DESC|Unrelenting Rebel Attacker with a mighty battle cry
+UNIT_PAO_NAME|Pao
+UNIT_PAPLOO_DESC|
+UNIT_PAPLOO_DESC_V2|Resourceful Ewok Tank with assist and buff synergies
+UNIT_PAPLOO_NAME|Paploo
+UNIT_PHANTOM2_DESC|Evasive Rebel attacker that provides as a decoy for the Ghost while applying multiple buffs to allies
+UNIT_PHANTOM2_DESC_V2|Evasive Rebel attacker that provides as a decoy for the Ghost while applying buffs to allies
+UNIT_PHANTOM2_NAME|Phantom II
+UNIT_PHASMA_DESC|High-damage First Order support that can grant allies many extra attacks
+UNIT_PHASMA_NAME|Captain Phasma
+UNIT_PIRATEBRUISER_DESC|
+UNIT_PIRATEBRUISER_NAME|Pirate Bruiser
+UNIT_PIRATEENFORCER_DESC|
+UNIT_PIRATEENFORCER_NAME|Pirate Enforcer
+UNIT_PIRATELEADER_DESC|
+UNIT_PIRATELEADER_NAME|Pirate Leader
+UNIT_PIRATESABOTEUR_DESC|
+UNIT_PIRATESABOTEUR_NAME|Pirate Saboteur
+UNIT_PIRATESPY_DESC|
+UNIT_PIRATESPY_NAME|Pirate Spy
+UNIT_PLOKOON_DESC|Jedi Tank with Clone synergy, reliable enemy Dispel and anti-Stealth
+UNIT_PLOKOON_NAME|Plo Koon
+UNIT_POE_DESC|Resistance Tank with a Taunt that inflicts Expose for big reversals
+UNIT_POE_NAME|Poe Dameron
+UNIT_POGGLETHELESSER_DESC|Support character with strong droid synergies.
+UNIT_POGGLETHELESSER_DESC_V2|Support for Geonosian and Separatist allies, with strong offensive synergies
+UNIT_POGGLETHELESSER_NAME|Poggle the Lesser
+UNIT_PONDOBABA_DESC|
+UNIT_PONDOBABA_NAME|Pondo Baba
+UNIT_PONDS_DESC|
+UNIT_PONDS_NAME|CT-411 "Ponds"
+UNIT_POTENCY_NAME|POTENCY
+UNIT_PRINCESSLEIA_DESC|Well-rounded Rebel Attacker with extra attacks, Stealth, and team Critical bonuses.
+UNIT_PRINCESSLEIA_NAME|Princess Leia
+UNIT_PROMOBOTCUNNING_DESC|
+UNIT_PROMOBOTCUNNING_FIVESTAR_NAME|T-V Red Promotion Droid
+UNIT_PROMOBOTCUNNING_FOURSTAR_NAME|T-IV Red Promotion Droid
+UNIT_PROMOBOTCUNNING_SEVENSTAR_NAME|
+UNIT_PROMOBOTCUNNING_SIXSTAR_NAME|T-VI Red Promotion Droid
+UNIT_PROMOBOTCUNNING_THREESTAR_NAME|T-III Red Promotion Droid
+UNIT_PROMOBOTCUNNING_TWOSTAR_NAME|T-II Red Promotion Droid
+UNIT_PROMOBOTFOCUS_DESC|
+UNIT_PROMOBOTFOCUS_FIVESTAR_NAME|T-V Yellow Promotion Droid
+UNIT_PROMOBOTFOCUS_FOURSTAR_NAME|T-IV Yellow Promotion Droid
+UNIT_PROMOBOTFOCUS_SEVENSTAR_NAME|
+UNIT_PROMOBOTFOCUS_SIXSTAR_NAME|T-VI Yellow Promotion Droid
+UNIT_PROMOBOTFOCUS_THREESTAR_NAME|T-III Yellow Promotion Droid
+UNIT_PROMOBOTFOCUS_TWOSTAR_NAME|T-II Yellow Promotion Droid
+UNIT_PROMOBOTMIGHT_DESC|
+UNIT_PROMOBOTMIGHT_FIVESTAR_NAME|T-V Blue Promotion Droid
+UNIT_PROMOBOTMIGHT_FOURSTAR_NAME|T-IV Blue Promotion Droid
+UNIT_PROMOBOTMIGHT_SEVENSTAR_NAME|
+UNIT_PROMOBOTMIGHT_SIXSTAR_NAME|T-VI Blue Promotion Droid
+UNIT_PROMOBOTMIGHT_THREESTAR_NAME|T-III Blue Promotion Droid
+UNIT_PROMOBOTMIGHT_TWOSTAR_NAME|T-II Blue Promotion Droid
+UNIT_PROMOBOTTOUGH_DESC|
+UNIT_PROMOBOTTOUGH_FIVESTAR_NAME|T-V Green Promotion Droid
+UNIT_PROMOBOTTOUGH_FOURSTAR_NAME|T-IV Green Promotion Droid
+UNIT_PROMOBOTTOUGH_SEVENSTAR_NAME|
+UNIT_PROMOBOTTOUGH_SIXSTAR_NAME|T-VI Green Promotion Droid
+UNIT_PROMOBOTTOUGH_THREESTAR_NAME|T-III Green Promotion Droid
+UNIT_PROMOBOTTOUGH_TWOSTAR_NAME|T-II Green Promotion Droid
+UNIT_PROMOBOTWISDOM_DESC|
+UNIT_PROMOBOTWISDOM_FIVESTAR_NAME|T-V Purple Promotion Droid
+UNIT_PROMOBOTWISDOM_FOURSTAR_NAME|T-IV Purple Promotion Droid
+UNIT_PROMOBOTWISDOM_SEVENSTAR_NAME|
+UNIT_PROMOBOTWISDOM_SIXSTAR_NAME|T-VI Purple Promotion Droid
+UNIT_PROMOBOTWISDOM_THREESTAR_NAME|T-III Purple Promotion Droid
+UNIT_PROMOBOTWISDOM_TWOSTAR_NAME|T-III Purple Promotion Droid
+UNIT_PROMOTION_01_NAME|EVO-01
+UNIT_PROMOTION_02_NAME|EVO-02
+UNIT_PROMOTION_03_NAME|EVO-03
+UNIT_PYKESARISACLASSGUNSHIP_DESC|
+UNIT_PYKESARISACLASSGUNSHIP_DESC01|Ability Block focused ship that capitalizes on disabled units.
+UNIT_PYKESARISACLASSGUNSHIP_NAME|Pyke Sarisa-Class Gunship
+UNIT_PYKESARISACLASSGUNSHIP_NAME01|Pyke Sarisa-Class Gunship
+UNIT_QIRA_DESC|High-utility Support that uses Prepared, debuffs, and an adaptable Leader ability to overwhelm enemies
+UNIT_QIRA_NAME|Qi'ra
+UNIT_QUIGONJINN_DESC|Versatile attacker focused on generating extra attacks.
+UNIT_QUIGONJINN_NAME|Qui-Gon Jinn
+UNIT_R2D2_DESC|
+UNIT_R2D2_DESC_V2|Versatile Support Droid that protects allies by improving both their buffs and debuffs
+UNIT_R2D2_LEGENDARY_DESC|Versatile Support Droid that inflicts Burning and grants allies Stealth
+UNIT_R2D2_NAME|R2-D2
+UNIT_RAIDER_NAME|Raider
+UNIT_RAIDERBOSS_NAME|Raider Boss
+UNIT_RAIDERCMDR_NAME|Raider Commander
+UNIT_RAIDERELITE_NAME|Raider Elite
+UNIT_RAIDERLT_NAME|Raider Lieutenant
+UNIT_RAIDERMARSHALL_NAME|Raider Marshal
+UNIT_RAIDERRALLYMASTER_NAME|Raider Rally Master
+UNIT_RANCOR_NAME|Rancor
+UNIT_RANGETROOPER_DESC|Aggressive Empire Support that provides other Imperial Trooper allies with Assist chance
+UNIT_RANGETROOPER_NAME|Range Trooper
+UNIT_RAZORCREST_DESC|Tenacious Bounty Hunter attacker with Breach synergy.
+UNIT_RAZORCREST_NAME|Razor Crest
+UNIT_REBELMERCSPY_DESC|
+UNIT_REBELMERCSPY_NAME|Rebel Merc Spy
+UNIT_REBELMERCSPY_NAME_V2|Rebel Spy
+UNIT_REBELOFFICER_DESC|
+UNIT_REBELOFFICER_NAME|Rebel Officer
+UNIT_REBELPILOT_DESC|
+UNIT_REBELPILOT_NAME|Rebel Pilot
+UNIT_REBELSOLDIER_DESC|
+UNIT_REBELSOLDIER_NAME|Rebel Soldier
+UNIT_REBELTROOPER_NAME|Rebel Trooper
+UNIT_REEK_DESC|
+UNIT_REEK_NAME|Reek
+UNIT_REMNANT_STORMTROOPER_COMMANDER_NAME|Remnant Stormtrooper Commander
+UNIT_REMNANT_STORMTROOPER_NAME|Remnant Stormtrooper
+UNIT_REMNANT_STORMTROOPER_SCOUT_NAME|Recon Remnant Stormtrooper
+UNIT_REPUBLICMERCENFORCER_DESC|
+UNIT_REPUBLICMERCENFORCER_NAME|Republic Merc Enforcer
+UNIT_RESISTANCEPILOT_DESC|Resistance attacker that can use Expose, Foresight, and Turn Meter gains to surprise enemies
+UNIT_RESISTANCEPILOT_NAME|Resistance Pilot
+UNIT_RESISTANCETROOPER_DESC|Opportunistic Resistance attacker that can deal heavy damage to debuffed enemies
+UNIT_RESISTANCETROOPER_NAME|Resistance Trooper
+UNIT_REVAN_NAME|Revan
+UNIT_REX_DESC|Clone leader with a variety of abilities to support and protect Clone allies.
+UNIT_REX_DESC_V2|Clone Leader who fiercely supports and protects his 501st and Clone Trooper allies
+UNIT_REX_NAME|CT-7567 "Rex"
+UNIT_REY_DESC|Risky Attacker that has high damage and evasion, but is vulnerable to debuffs
+UNIT_REY_FORCEDUEL_NAME|Rey (Force Duel)
+UNIT_REY_KEFBIR_NAME|Rey (Kef Bir)
+UNIT_REY_NAME|Rey
+UNIT_REY_NAME_V2|Rey (Scavenger)
+UNIT_REYEXEGOL_NAME|Rey
+UNIT_REYJEDITRAINING_DESC|Resilient Resistance Tank who avenges debuffed allies and controls the battlefield
+UNIT_REYJEDITRAINING_NAME|Rey (Jedi Training)
+UNIT_REYLIGHTSABER_NAME|Rey (Starkiller Base)
+UNIT_ROSETICO_DESC|A brave Resistance Attacker who can Stun and grant allies buffs.
+UNIT_ROSETICO_NAME|Rose Tico
+UNIT_ROYALGUARD_DESC|Versatile attacker focused on generating extra attacks.
+UNIT_ROYALGUARD_DESC_V2|Versatile Empire Tank that punishes enemies for attacking other allies
+UNIT_ROYALGUARD_NAME|Royal Guard
+UNIT_SABINEWREN_DESC|
+UNIT_SABINEWREN_NAME|Sabine Wren
+UNIT_SABINEWRENS3_DESC|Aggressive Phoenix Attacker that permanently strips Defense and punishes slower enemies
+UNIT_SABINEWRENS3_NAME|Sabine Wren
+UNIT_SAESEETIIN_NAME|Saesee Tiin
+UNIT_SALVAGED_DROID_NAME|Salvaged Droid
+UNIT_SANDTROOPER_DESC|
+UNIT_SANDTROOPER_NAME|Sandtrooper
+UNIT_SANDTROOPERCAPTAIN_NAME|Sandtrooper Captain
+UNIT_SANDTROOPERCOMMANDER_DESC|
+UNIT_SANDTROOPERCOMMANDER_NAME|Sandtrooper Commander
+UNIT_SANDTROOPERSCOUT_DESC|
+UNIT_SANDTROOPERSCOUT_NAME|Sandtrooper Scout
+UNIT_SAVAGEOPRESS_DESC|Durable Attacker that crushes low-health units and becomes stronger when attacked
+UNIT_SAVAGEOPRESS_NAME|Savage Opress
+UNIT_SCARIFREBEL_DESC|Steadfast Rebel Tank who debuffs, Taunts, and self-revives
+UNIT_SCARIFREBEL_NAME|Scarif Rebel Pathfinder
+UNIT_SCOUTTROOPER_AP_1982_NAME|Scout Trooper (AP-1982)
+UNIT_SCOUTTROOPER_DESC|
+UNIT_SCOUTTROOPER_JS_1975_NAME|Scout Trooper (JS-1975)
+UNIT_SCOUTTROOPER_NAME|Scout Trooper
+UNIT_SCOUTTROOPERSPOTTER_NAME|Scout Trooper (Spotter)
+UNIT_SECONDSISTER_DESC|Ruthless Inquisitor Attacker that specializes in eliminating Jedi
+UNIT_SECONDSISTER_NAME|Second Sister
+UNIT_SEPERATISTMERCSPY_DESC|
+UNIT_SEPERATISTMERCSPY_NAME|Separatist Merc Spy
+UNIT_SEVENTHSISTER_DESC|Inquisitorius Healer that helps her squad eliminate the Jedi
+UNIT_SEVENTHSISTER_NAME|Seventh Sister
+UNIT_SHAAKTI_DESC|
+UNIT_SHAAKTI_DESC_V2|Inspiring Jedi Leader with heightened reflexes
+UNIT_SHAAKTI_NAME|Shaak Ti
+UNIT_SHAAKTI_NAME_V2|Shaak Ti
+UNIT_SHAHANALAMA_DESC|
+UNIT_SHAHANALAMA_NAME|Shahan Alama
+UNIT_SHIELDDROID_MK1_NAME|Shield Generator Droid MK1
+UNIT_SHIELDDROID_MK2_NAME|Shield Generator Droid MK2
+UNIT_SHIELDDROID_MK3_NAME|Shield Generator Droid MK3
+UNIT_SHIELDDROID_MK4_NAME|Shield Generator Droid MK4
+UNIT_SHIELDDROID_MK5_NAME|Shield Generator Droid MK5
+UNIT_SHORETROOPER_DESC|Empire Tank who enters battle with Taunt, heals allies, and grants them Critical Hit Immunity
+UNIT_SHORETROOPER_NAME|Shoretrooper
+UNIT_SITHASSASSIN_DESC|Elusive Sith Attacker with Stealth synergy 
+UNIT_SITHASSASSIN_NAME|Sith Assassin
+UNIT_SITHBOMBER_DESC|Aggressive Sith Tank with a passive Taunt and self-preservation tactics
+UNIT_SITHBOMBER_NAME|B-28 Extinction-class Bomber
+UNIT_SITHBOMBER_NAME_SHORT|B-28 Bomber
+UNIT_SITHCOMMANDO_DESC|Versatile Sith Attacker who can heal allies and starts stealthed
+UNIT_SITHCOMMANDO_NAME|Sith Commando
+UNIT_SITHFIGHTER_DESC|Agile Sith Attacker that bypasses enemy defenses
+UNIT_SITHFIGHTER_NAME|Sith Fighter
+UNIT_SITHGHOST_NAME|Ancient Sith Spirit
+UNIT_SITHINFILTRATOR_DESC|Deadly Sith Support that can Stealth allies to set up deadly attacks
+UNIT_SITHINFILTRATOR_DESC_V2|Deadly Sith Support that can Stealth allies to set up devastating attacks
+UNIT_SITHINFILTRATOR_NAME|Scimitar
+UNIT_SITHMARAUDER_DESC|Destructive Sith Attacker that takes advantage of all buffs and debuffs in battle
+UNIT_SITHMARAUDER_NAME|Sith Marauder
+UNIT_SITHMARAUDER_SITHRAID_NAME|Sith Marauder
+UNIT_SITHPALPATINE_DESC|Cunning Emperor of the Sith that eliminates his enemies with the overwhelming power of the dark side
+UNIT_SITHPALPATINE_NAME|Sith Eternal Emperor
+UNIT_SITHPALPATINEFP_NAME|Sith Eternal Emperor (Restored)
+UNIT_SITHPLUNDERER_NAME|Sith Plunderer
+UNIT_SITHSOLDIER_NAME|Sith Soldier
+UNIT_SITHTROOPER_DESC|Sith Tank who Taunts and ignores enemy Protection
+UNIT_SITHTROOPER_NAME|Sith Empire Trooper
+UNIT_SITHTROOPER_NAME_V2|Sith Empire Trooper
+UNIT_SLAVE1_DESC|Offensive and control based kit. Stun synergy allows for a targeted shut down of problem enemies.
+UNIT_SLAVE1_DESC_V2|Deadly Bounty Hunter Attacker that inflicts and exploits Target Lock for high area-of-effect damage
+UNIT_SLAVE1_DESC01|Offensive and control based kit. Stun synergy allows for a targeted shut down of problem enemies.
+UNIT_SLAVE1_DESCV2|Deadly Bounty Hunter Attacker that inflicts and exploits Target Lock for high area-of-effect damage
+UNIT_SLAVE1_NAME|Slave I
+UNIT_SLAVE1_NAME_V2|Slave 1
+UNIT_SLAVE1_NAME01|[i]Slave I[/i]
+UNIT_SLAVE1_NAMEV2|Slave I
+UNIT_SMUGGLERCHEWBACCA_DESC|Lumbering attacker who accumulates Offensive capabilities as enemies take actions
+UNIT_SMUGGLERCHEWBACCA_NAME|Veteran Smuggler Chewbacca
+UNIT_SMUGGLERHAN_DESC|Scoundrel Attacker with multi-attack and multiple devastating debuffs
+UNIT_SMUGGLERHAN_NAME|Veteran Smuggler Han Solo
+UNIT_SNIPERDROID_NAME|Sniper Droid
+UNIT_SNOWTROOPER_DESC|Empire Attacker that becomes faster and stronger as enemies are defeated
+UNIT_SNOWTROOPER_NAME|Snowtrooper
+UNIT_SNOWTROOPERCOMMANDER_DESC|
+UNIT_SNOWTROOPERCOMMANDER_NAME|Snowtrooper Commander
+UNIT_SNOWTROOPERCOMMANDERTB_DESC|Versatile Empire Support that can boost allies offensively and defensively
+UNIT_SNOWTROOPEROPERATIVE_NAME|Snowtrooper Operative
+UNIT_SNOWTROOPEROPS_DESC|Unpredictable Empire Attacker that can Stealth, Stun, and Dispel
+UNIT_SNOWTROOPEROPS_NAME|Snowtrooper Ops
+UNIT_SNOWTROOPERSCOUT_DESC|
+UNIT_SNOWTROOPERSCOUT_NAME|Snowtrooper Scout
+UNIT_SOULLESSONE_NAME|Soulless One
+UNIT_SPEED_NAME|SPEED
+UNIT_SPOTTER_NAME|Scout Trooper (Spotter)
+UNIT_SS54ASSAULTSHIP_DESC|
+UNIT_SS54ASSAULTSHIP_DESC01|High Defense and Hit Point assault ship.  Counter to teams that over-index on status effects instead of damage.
+UNIT_SS54ASSAULTSHIP_NAME|SS-51 Assault Ship
+UNIT_SS54ASSAULTSHIP_NAME01|SS-54 Assault Ship
+UNIT_STARKILLER_DESC|A powerful Dark Side Force User whose inner conflict lifts up other Force Users
+UNIT_STARKILLER_NAME|Starkiller
+UNIT_STAT_ABILITY_CRITICAL_NEGATE_RATING_ABBREVIATED|Crit Avoidance
+UNIT_STAT_ABILITY_CRITICAL_RATING_ABBREVIATED|Crit Chance
+UNIT_STAT_ABILITY_POWER_ABBREVIATED|Damage
+UNIT_STAT_AGILITY_TU17|Agility (AGI)
+UNIT_STAT_ARMOR_PENETRATION_ABBREVIATED|Armor Pen
+UNIT_STAT_ATTACK_CRITICAL_NEGATE_RATING_ABBREVIATED|Crit Avoidance
+UNIT_STAT_ATTACK_CRITICAL_RATING_ABBREVIATED|Crit Chance
+UNIT_STAT_ATTACK_DAMAGE_ABBREVIATED|Damage
+UNIT_STAT_CRITICAL_CHANCE_PERCENT_ADDITIVE_ABBREVIATED|Crit Chance
+UNIT_STAT_CRITICAL_DAMAGE_ABBREVIATED|Crit Damage
+UNIT_STAT_CRITICAL_NEGATE_CHANCE_PERCENT_ADDITIVE_ABBREVIATED|Crit Avoidance
+UNIT_STAT_DEFAULT_FORMAT|[c][BFBFBF]{0}[-][/c]
+UNIT_STAT_DEFENSE_PENETRATION_TARGET_PERCENT_ADDITIVE_ABBREVIATED|Defense Pen
+UNIT_STAT_DEFLECTION_NEGATE_RATING_ABBREVIATED|Accuracy
+UNIT_STAT_DESCRIPTION_ABILITY_POWER_TU17|Used to calculate damage dealt by abilities that deal Special Damage. Reduced by opponent(s) Resistance.
+UNIT_STAT_DESCRIPTION_DEFLECTION_RATING_TU17|Determines the chance to evade abilities that deal Special Damage.
+UNIT_STAT_DESCRIPTION_MASTERY|Grants a variety of stats based this unit's Primary Attribute and role.
+UNIT_STAT_DODGE_NEGATE_RATING_ABBREVIATED|Accuracy
+UNIT_STAT_INTELLIGENCE_TU17|Tactics (TAC)
+UNIT_STAT_MASTERY_AGILITY_ATTACKER_DESCRIPTION|Increases Critical Chance, Critical Damage, and Damage.
+UNIT_STAT_MASTERY_AGILITY_HEALER_DESCRIPTION|Increases Critical Chance, Deflection Chance, Dodge Chance, and Health.
+UNIT_STAT_MASTERY_AGILITY_SUPPORT_DESCRIPTION|Increases Critical Chance, Critical Damage, Deflection Chance, and Dodge Chance.
+UNIT_STAT_MASTERY_AGILITY_TANK_DESCRIPTION|Increases Deflection Chance, Dodge Chance, Health, and Protection.
+UNIT_STAT_MASTERY_INTELLIGENCE_ATTACKER_DESCRIPTION|Increases Accuracy, Critical Chance, and Damage.
+UNIT_STAT_MASTERY_INTELLIGENCE_HEALER_DESCRIPTION|Increases Critical Avoidance, Health, and Resistance.
+UNIT_STAT_MASTERY_INTELLIGENCE_SUPPORT_DESCRIPTION|Increases Accuracy, Critical Avoidance, and Damage.
+UNIT_STAT_MASTERY_INTELLIGENCE_TANK_DESCRIPTION|Increases Critical Avoidance, Protection, and Resistance.
+UNIT_STAT_MASTERY_STRENGTH_ATTACKER_DESCRIPTION|Increases Accuracy, Damage, and Defense Penetration.
+UNIT_STAT_MASTERY_STRENGTH_HEALER_DESCRIPTION|Increases Armor, Health, and Health Steal.
+UNIT_STAT_MASTERY_STRENGTH_SUPPORT_DESCRIPTION|Increases Accuracy, Defense Penetration, and Health Steal.
+UNIT_STAT_MASTERY_STRENGTH_TANK_DESCRIPTION|Increases Armor, Health Steal, and Protection.
+UNIT_STAT_MOD_DETAILS_ABILITY_CRITICAL_NEGATE_PERCENT_ADDITIVE_ABBREVIATED|Crit Avoidance %
+UNIT_STAT_MOD_DETAILS_ABILITY_CRITICAL_PERCENT_ADDITIVE_ABBREVIATED|Crit Chance %
+UNIT_STAT_MOD_DETAILS_ARMOR_PENETRATION_PERCENT_ADDITIVE_ABBREVIATED|Armor Pen %
+UNIT_STAT_MOD_DETAILS_ATTACK_CRITICAL_NEGATE_CHANCE_PERCENT_ADDITIVE_ABBREVIATED|Crit Avoidance %
+UNIT_STAT_MOD_DETAILS_ATTACK_CRITICAL_NEGATE_PERCENT_ADDITIVE_ABBREVIATED|Crit Avoidance %
+UNIT_STAT_MOD_DETAILS_ATTACK_CRITICAL_PERCENT_ADDITIVE_ABBREVIATED|Crit Chance %
+UNIT_STAT_MOD_DETAILS_CRITICAL_CHANCE_PERCENT_ADDITIVE_ABBREVIATED|Crit Chance %
+UNIT_STAT_MOD_DETAILS_CRITICAL_DAMAGE_ABBREVIATED|Crit Damage
+UNIT_STAT_MOD_DETAILS_SUPPRESSION_PENETRATION_ABBREVIATED|Suppresion Pen %
+UNIT_STAT_PRIMARY_FORMAT|[c][00FF4B]{0}[-][/c]
+UNIT_STAT_RELIC_ADDITIONAL|Additional Stats:
+UNIT_STAT_RELIC_GROWTH_ABILITY_POWER|Special Damage:
+UNIT_STAT_RELIC_GROWTH_AGI_ATTACKER_MASTERY|Agility Attacker Mastery:
+UNIT_STAT_RELIC_GROWTH_AGI_HEALER_MASTERY|Agility Healer Mastery:
+UNIT_STAT_RELIC_GROWTH_AGI_SUPPORT_MASTERY|Agility Support Mastery:
+UNIT_STAT_RELIC_GROWTH_AGI_TANK_MASTERY|Agility Tank Mastery:
+UNIT_STAT_RELIC_GROWTH_AGILITY|Agility Growth:
+UNIT_STAT_RELIC_GROWTH_ATTACK_DAMAGE|Physical Damage:
+UNIT_STAT_RELIC_GROWTH_CRITICAL_CHANCE|Physical Critical Chance:
+UNIT_STAT_RELIC_GROWTH_DODGE|Evasion Chance
+UNIT_STAT_RELIC_GROWTH_FORMAT|{0}:
+UNIT_STAT_RELIC_GROWTH_FORMAT_PLUS|+{0}
+UNIT_STAT_RELIC_GROWTH_PENETRATION|Armor/Res. Penetration
+UNIT_STAT_RELIC_GROWTH_STR_ATTACKER_MASTERY|Strength Attacker Mastery:
+UNIT_STAT_RELIC_GROWTH_STR_HEALER_MASTERY|Strength Healer Mastery:
+UNIT_STAT_RELIC_GROWTH_STR_SUPPORT_MASTERY|Strength Support Mastery:
+UNIT_STAT_RELIC_GROWTH_STR_TANK_MASTERY|Strength Tank Mastery:
+UNIT_STAT_RELIC_GROWTH_STRENGTH|Strength Growth:
+UNIT_STAT_RELIC_GROWTH_TAC_ATTACKER_MASTERY|Tactics Attacker Mastery:
+UNIT_STAT_RELIC_GROWTH_TAC_HEALER_MASTERY|Tactics Healer Mastery:
+UNIT_STAT_RELIC_GROWTH_TAC_SUPPORT_MASTERY|Tactics Support Mastery:
+UNIT_STAT_RELIC_GROWTH_TAC_TANK_MASTERY|Tactics Tank Mastery:
+UNIT_STAT_RELIC_GROWTH_TACTICS|Tactics Growth:
+UNIT_STAT_STAT_VIEW_MASTERY|Mastery
+UNIT_STAT_STATS_VIEW_ABILITY_CRITICAL_NEGATE_RATING_ABBREVIATED|Critical Avoidance
+UNIT_STAT_STATS_VIEW_ABILITY_CRITICAL_RATING_ABBREVIATED|Critical Chance
+UNIT_STAT_STATS_VIEW_ABILITY_POWER_ABBREVIATED|Damage
+UNIT_STAT_STATS_VIEW_ATTACK_CRITICAL_NEGATE_RATING_ABBREVIATED|Critical Avoidance
+UNIT_STAT_STATS_VIEW_ATTACK_CRITICAL_RATING_ABBREVIATED|Critical Chance
+UNIT_STAT_STATS_VIEW_ATTACK_DAMAGE_ABBREVIATED|Damage
+UNIT_STAT_STATS_VIEW_DEFLECTION_NEGATE_RATING_ABBREVIATED|Accuracy
+UNIT_STAT_STATS_VIEW_DODGE_NEGATE_RATING_ABBREVIATED|Accuracy
+UNIT_STAT_STRENGTH_TU17|Strength (STR)
+UNIT_STAT_SUPPRESSION_PENETRATION_ABBREVIATED|Resistance Pen
+UNIT_STATS_TABLE_NAME_VALUE_WITHOUT_EQUIPMENT|NAME/VALUE
+UNIT_STORMTROOPER_DESC|Empire Tank that can Taunt and surprise enemies with unpredictable damage
+UNIT_STORMTROOPER_NAME|Stormtrooper
+UNIT_STORMTROOPERCOMMANDER_DESC|
+UNIT_STORMTROOPERCOMMANDER_NAME|Stormtrooper Commander
+UNIT_STORMTROOPERHAN_DESC|Versatile tank able to surprise enemies with sudden Turn Meter changes and Offense boosts
+UNIT_STORMTROOPERHAN_NAME|Stormtrooper Han
+UNIT_STORMTROOPERSCOUT_DESC|
+UNIT_STORMTROOPERSCOUT_NAME|Recon Stormtrooper
+UNIT_SUGI_DESC|
+UNIT_SUGI_NAME|Sugi
+UNIT_SUNFAC_DESC|Geonosian leader fueled by Turn Meter accumulation
+UNIT_SUNFAC_DESC_V2|Geonosian Tank that punishes attackers with a variety of negative status effects
+UNIT_SUNFAC_DESC_V3|Geonosian Tank who punishes attackers with a variety of negative effects
+UNIT_SUNFAC_NAME|Sun Fac
+UNIT_SUPERTACTICALDROID_NAME|Super Tactical Droid
+UNIT_SUPPORTBOT_NAME|Support Bot
+UNIT_SUPPORTDROID_MK5_NAME|Support Droid MK5
+UNIT_SUPPORTDROID_NAME|Support Droid
+UNIT_SUPPORTDROIDBLUE_NAME|Reinforcing Support Droid
+UNIT_SUPPORTDROIDGREEN_NAME|Healing Support Droid
+UNIT_SUPPORTDROIDPURPLE_NAME|Enhancing Support Droid
+UNIT_SUPPORTDROIDRED_NAME|Combat Support Droid
+UNIT_SUPPORTDROIDYELLOW_NAME|Restraining Support Droid
+UNIT_SUPREMELEADERKYLOREN_DESC|Destructive Leader of the First Order who overpowers his enemies with brutal attacks
+UNIT_SUPREMELEADERKYLOREN_NAME|Supreme Leader Kylo Ren
+UNIT_T3_M4_DESC|Offensive Droid who supports a Droid team with extra stats and debuffs the enemy team
+UNIT_T3_M4_NAME|T3-M4
+UNIT_T65XWING_NAME|T-65 X-wing
+UNIT_TALIA_DESC|Aggressive Healer that sacrifices Health so allies can recover Health and Turn Meter
+UNIT_TALIA_NAME|Talia
+UNIT_TARENTATEK_NAME|Terentatek
+UNIT_TARISGANG_NAME|Gang Member
+UNIT_TB_ANAKINSKYWALKER|Anakin Skywalker
+UNIT_TB_CLONECAPTAIN_NAME|Clone Captain
+UNIT_TB_CLONECOMMANDER_DESC|
+UNIT_TB_CLONECOMMANDER_NAME|Clone Commander
+UNIT_TB_CLONELIEUTENANT_NAME|Clone Lieutenant
+UNIT_TB_CLONESERGEANT_NAME|Clone Sergeant
+UNIT_TB_CLONESHARPSHOOTER_DESC|
+UNIT_TB_CLONESHARPSHOOTER_NAME|Clone Sharpshooter
+UNIT_TB_CLONETROOPER_DESC|
+UNIT_TB_CLONETROOPER_NAME|Clone Trooper
+UNIT_TB_CLONETROOPERS_NAMES_DETAILS|Clone Trooper, Clone Lieutenant, Clone Captain
+UNIT_TB_FIVES_NAME|CT-27-5555 "Fives"
+UNIT_TB_JEDIGUARDIAN_NAME|Jedi Guardian
+UNIT_TB_OBIWANKENOBI_NAME|Obi-Wan Kenobi
+UNIT_TEEBO_DESC|Ewok stealth character with stealth synergies and some control ability.
+UNIT_TEEBO_NAME|Teebo
+UNIT_TEMPLEGUARD_NAME|
+UNIT_TENACITY_NAME|TENACITY
+UNIT_TERENTATEK_DESC|Legendary monster that hunts Force wielders and is very difficult to kill
+UNIT_THEMANDALORIAN_DESC|Powerful Mandalorian bounty hunter who relies on critical hits to overwhelm his enemies
+UNIT_THEMANDALORIAN_NAME|The Mandalorian
+UNIT_THEMANDALORIANBESKARARMOR_DESC|Fearless Scoundrel leader who hunts down enemies to protect his allies
+UNIT_THEMANDALORIANBESKARARMOR_NAME|The Mandalorian (Beskar Armor)
+UNIT_THETACLASST2C_DESC|
+UNIT_THETACLASST2C_NAME|Theta Class T-2C
+UNIT_TIE_ADVANCED_DESC|
+UNIT_TIE_ADVANCED_NAME|TIE Advanced x1
+UNIT_TIE_FIGHTER_DESC|
+UNIT_TIE_FIGHTER_DESC01|Known for speed/offence but lacking in defence. Focuses on pushing its advantages and getting in more turns quickly before being overwhelmed by superior firepower.
+UNIT_TIE_FIGHTER_NAME|TIE Fighter
+UNIT_TIE_FIGHTER_NAME01|TIE Fighter
+UNIT_TIE_INTERCEPTOR_DESC|
+UNIT_TIE_INTERCEPTOR_NAME|TIE Interceptor
+UNIT_TIEADVANCED_DESC|Fearsome Empire Attacker that shuts enemies down with stacking debuffs and permanent Target Locks
+UNIT_TIEADVANCED_NAME|
+UNIT_TIEADVANCED_NAME_V2|TIE Advanced x1
+UNIT_TIEBOMBER_DESC|
+UNIT_TIEBOMBER_DESC01|Heavy hitting ship with AOE.
+UNIT_TIEBOMBER_NAME|TIE Bomber
+UNIT_TIEBOMBER_NAME01|TIE Bomber
+UNIT_TIEBOMBERIMPERIAL_DESC|Debilitating Empire Tank that inflicts Burning, cripples enemies' Offense, and provides heavy defensive capability.
+UNIT_TIEBOMBERIMPERIAL_NAME|Imperial TIE Bomber
+UNIT_TIEFIGHTER_NAME|
+UNIT_TIEFIGHTERFIRSTORDER_DESC|Aggressive First Order Attacker with reliable Target Lock and rapid-fire Special ability
+UNIT_TIEFIGHTERFIRSTORDER_NAME|First Order TIE Fighter
+UNIT_TIEFIGHTERFOSF_DESC|Superior First Order Attacker that has multiple offensive capabilities and inflicts multiple debuffs
+UNIT_TIEFIGHTERFOSF_NAME|First Order SF TIE Fighter
+UNIT_TIEFIGHTERIMPERIAL_DESC|Evasive Empire Attacker that both inflicts and exploits Target Lock while gaining speed each turn
+UNIT_TIEFIGHTERIMPERIAL_DESC_V2|Evasive Empire Attacker that both inflicts and exploits Target Lock
+UNIT_TIEFIGHTERIMPERIAL_NAME|Imperial TIE Fighter
+UNIT_TIEFIGHTERPILOT_DESC|
+UNIT_TIEFIGHTERPILOT_DESC_V2|Empire Attacker who inflicts Buff Immunity and gains Foresight
+UNIT_TIEFIGHTERPILOT_NAME|TIE Fighter Pilot
+UNIT_TIEINTERCEPTOR_DESC|Imperial fast-attack craft that is as nimble as it is deadly. Second Sister's force powers allow her to perform maneuvers many would consider unnatural.
+UNIT_TIEINTERCEPTOR_NAME|
+UNIT_TIEINTERCEPTOR_NAME_V2|TIE/IN Interceptor Prototype
+UNIT_TIEREAPER_DESC|Defensive Empire Support that Dispels, delays cooldowns, and removes Turn Meter from the enemy Capital Ship
+UNIT_TIEREAPER_NAME|TIE Reaper
+UNIT_TIESILENCER_DESC|Superior First Order Attacker that gains unlimited speed and deals massive damage
+UNIT_TIESILENCER_NAME|TIE Silencer
+UNIT_TIONMEDON_DESC|
+UNIT_TIONMEDON_NAME|Tion Medon
+UNIT_TPMJEDIKNIGHTLUKESKYWALKER_NAME|Jedi Knight Luke Skywalker
+UNIT_TRAINING_DROID_NAME|Training Droid
+UNIT_TRENCH_DESC|Separatist leader
+UNIT_TRENCH_NAME|Admiral Trench
+UNIT_TSERIESTACTICALDROID_DESC|
+UNIT_TSERIESTACTICALDROID_NAME|T-Series Tactical Droid
+UNIT_TUSKENBRUTE_DESC|
+UNIT_TUSKENBRUTE_NAME|Tusken Brute
+UNIT_TUSKENCHAMPION_NAME|Tusken Champion
+UNIT_TUSKENELDER_DESC|
+UNIT_TUSKENELDER_NAME|Tusken Elder
+UNIT_TUSKENRAIDER_DESC|Durable Attacker with Tusken Synergy and a strong Assist attack
+UNIT_TUSKENRAIDER_NAME|Tusken Raider
+UNIT_TUSKENSHAMAN_DESC|Offensive Healer that can also boost Offense and rapidly stack Damage Over Time effects
+UNIT_TUSKENSHAMAN_NAME|Tusken Shaman
+UNIT_UGNAUGHT_DESC|Anti-Droid Support with AoE damage and high Evasion against Droids
+UNIT_UGNAUGHT_NAME|Ugnaught
+UNIT_UMBARANSTARFIGHTER_DESC|Risky Clone Tank that inflicts great damage and debuffs, but grants Turn Meter to enemies
+UNIT_UMBARANSTARFIGHTER_NAME|Umbaran Starfighter
+UNIT_UNSTABLEBOMBDROID_NAME|Unstable Bomb Droid
+UNIT_URORRURRR_DESC|Tusken Support that can Stun frequently and speed up Tuskens for surprise attacks
+UNIT_URORRURRR_NAME|URoRRuR'R'R
+UNIT_UWINGROGUEONE_DESC|Evasive Rebel Support ship that turns the tide of battle with Stealth and Turn Meter manipulation
+UNIT_UWINGROGUEONE_NAME|Cassian's U-wing
+UNIT_UWINGSCARIF_DESC|Elusive Rebel Support that boosts ally Turn Meter while using Stealth and Target Lock
+UNIT_UWINGSCARIF_NAME|Bistan's U-wing
+UNIT_V19_V19TORRENTFIGHTER_DESC|
+UNIT_V19_V19TORRENTFIGHTER_NAME|
+UNIT_V19TORRENTFIGHTER_DESC|
+UNIT_V19TORRENTFIGHTER_DESC01|Light Resistance fighter with multi attack capabilities, Republic fleet synergies, and CC.
+UNIT_V19TORRENTFIGHTER_NAME|V-19 Torrent Fighter
+UNIT_V19TORRENTFIGHTER_NAME01|V-19 Torrent Fighter
+UNIT_V19TORRENTSTARFIGHTER_DESC|
+UNIT_V19TORRENTSTARFIGHTER_NAME|V-19 Torrent Starfighter
+UNIT_VADER_DESC|Fearsome Attacker that applies AoE Damage Over Time, and crushes debuffed targets for extra turns
+UNIT_VADER_NAME|Darth Vader
+UNIT_VCX100GHOST_DESC|
+UNIT_VCX100GHOST_NAME|VCX-100 Ghost
+UNIT_VEERS_GENERAL_DESC|Aggressive Empire Support that becomes stronger as enemies are defeated
+UNIT_VEERS_GENERAL_NAME|General Veers
+UNIT_VEERS_NAME|
+UNIT_VISASMARR_DESC|Offensive Healer with strong anti-Sith synergy
+UNIT_VISASMARR_NAME|Visas Marr
+UNIT_VULTURECLASSDROIDSTARFIGHTER_DESC|
+UNIT_VULTURECLASSDROIDSTARFIGHTER_NAME|Vulture Class Droid Starfighter
+UNIT_VULTUREDROID_DESC|Simple but persistent Separatist fighter that is always replaced when defeated
+UNIT_VULTUREDROID_DESC_V2|A crewless Separatist Attacker that cripples it's enemies with Buzz Droids
+UNIT_VULTUREDROID_DESC_V3|Persistent Separatist Attacker that inflicts Buzz Droids and is replaced when defeated
+UNIT_VULTUREDROID_NAME|Vulture Droid
+UNIT_WAMPA_DESC|Fearsome predator from Hoth that attacks constantly with increasing strength
+UNIT_WAMPA_NAME|Wampa
+UNIT_WATTAMBOR_DESC|Separatist Support who distributes powerful Tech to his allies
+UNIT_WATTAMBOR_NAME|Wat Tambor
+UNIT_WATTAMBOR_SPECIAL_NAME|[99FF33]Wat Tambor Shards[-]
+UNIT_WEDGEANTILLES_DESC|
+UNIT_WEDGEANTILLES_DESC_V2|Rebel Attacker with a strong offensive opening
+UNIT_WEDGEANTILLES_NAME|Wedge Antilles
+UNIT_WICKET_DESC|
+UNIT_WICKET_DESC_V2|Jittery Ewok Attacker with Critical Hit and Stealth synergies
+UNIT_WICKET_NAME|Wicket
+UNIT_XANADUBLOOD_DESC|
+UNIT_XANADUBLOOD_DESC_V3|Debilitating Bounty Hunter Support that shuts down enemy offenses
+UNIT_XANADUBLOOD_DESCv2|Bounty Hunter fighter that can manipulate enemies with Stealth and forced Withdrawal
+UNIT_XANADUBLOOD_NAME|[i]Xanadu Blood[/i]
+UNIT_XANADUBLOOD_NAME_V3|Xanadu Blood
+UNIT_XANADUBLOOD_NAMEv2|Xanadu Blood
+UNIT_XPBOTCUNNING_DESC|
+UNIT_XPBOTCUNNING_FIVESTAR_NAME|T5 Red Training Droid
+UNIT_XPBOTCUNNING_FOURSTAR_NAME|T4 Red Training Droid
+UNIT_XPBOTCUNNING_ONESTAR_NAME|T1 Red Training Droid
+UNIT_XPBOTCUNNING_SEVENSTAR_NAME|T7 Red Training Droid
+UNIT_XPBOTCUNNING_SIXSTAR_NAME|T6 Red Training Droid
+UNIT_XPBOTCUNNING_THREESTAR_NAME|T3 Red Training Droid
+UNIT_XPBOTCUNNING_TWOSTAR_NAME|T2 Red Training Droid
+UNIT_XPBOTFOCUS_DESC|
+UNIT_XPBOTFOCUS_FIVESTAR_NAME|T5 Yellow Training Droid
+UNIT_XPBOTFOCUS_FOURSTAR_NAME|T4 Yellow Training Droid
+UNIT_XPBOTFOCUS_ONESTAR_NAME|T1 Yellow Training Droid
+UNIT_XPBOTFOCUS_SEVENSTAR_NAME|T7 Yellow Training Droid
+UNIT_XPBOTFOCUS_SIXSTAR_NAME|T6 Yellow Training Droid
+UNIT_XPBOTFOCUS_THREESTAR_NAME|T3 Yellow Training Droid
+UNIT_XPBOTFOCUS_TWOSTAR_NAME|T2 Yellow Training Droid
+UNIT_XPBOTMIGHT_DESC|
+UNIT_XPBOTMIGHT_FIVESTAR_NAME|T5 Blue Training Droid
+UNIT_XPBOTMIGHT_FOURSTAR_NAME|T4 Blue Training Droid
+UNIT_XPBOTMIGHT_ONESTAR_NAME|T1 Blue Training Droid
+UNIT_XPBOTMIGHT_SEVENSTAR_NAME|T7 Blue Training Droid
+UNIT_XPBOTMIGHT_SIXSTAR_NAME|T6 Blue Training Droid
+UNIT_XPBOTMIGHT_THREESTAR_NAME|T3 Blue Training Droid
+UNIT_XPBOTMIGHT_TWOSTAR_NAME|T2 Blue Training Droid
+UNIT_XPBOTTOUGH_DESC|
+UNIT_XPBOTTOUGH_FIVESTAR_NAME|T5 Green Training Droid
+UNIT_XPBOTTOUGH_FOURSTAR_NAME|T4 Green Training Droid
+UNIT_XPBOTTOUGH_ONESTAR_NAME|T1 Green Training Droid
+UNIT_XPBOTTOUGH_SEVENSTAR_NAME|T7 Green Training Droid
+UNIT_XPBOTTOUGH_SIXSTAR_NAME|T6 Green Training Droid
+UNIT_XPBOTTOUGH_THREESTAR_NAME|T3 Green Training Droid
+UNIT_XPBOTTOUGH_TWOSTAR_NAME|T2 Green Training Droid
+UNIT_XPBOTWISDOM_DESC|
+UNIT_XPBOTWISDOM_FIVESTAR_NAME|T5 Purple Training Droid
+UNIT_XPBOTWISDOM_FOURSTAR_NAME|T4 Purple Training Droid
+UNIT_XPBOTWISDOM_ONESTAR_NAME|T1 Purple Training Droid
+UNIT_XPBOTWISDOM_SEVENSTAR_NAME|T7 Purple Training Droid
+UNIT_XPBOTWISDOM_SIXSTAR_NAME|T6 Purple Training Droid
+UNIT_XPBOTWISDOM_THREESTAR_NAME|T3 Purple Training Droid
+UNIT_XPBOTWISDOM_TWOSTAR_NAME|T2 Purple Training Droid
+UNIT_XWING_DESC|
+UNIT_XWING_DESC01|Rebel leader with focused, increased effectiveness in Rebel heavy teams.
+UNIT_XWING_NAME|X-wing
+UNIT_XWING_NAME01|X-wing
+UNIT_XWING_OTFALCON_NAME|X-wing Starfighter
+UNIT_XWINGBLACKONE_DESC|Heroic Resistance Attacker that can exploit Turn Meter and punish enemies without Protection
+UNIT_XWINGBLACKONE_NAME|Poe Dameron's X-wing
+UNIT_XWINGRED2_DESC|Aggressive Rebel Attacker that overwhelms enemies with debuffs
+UNIT_XWINGRED2_NAME|Wedge Antilles's X-wing
+UNIT_XWINGRED3_DESC|Heroic Rebel Tank that can exploit Target Lock for Taunts and Assists
+UNIT_XWINGRED3_NAME|Biggs Darklighter's X-wing
+UNIT_XWINGREDTWO_DESC|Powerful Rebel fighter that accelerates teammates on entering battle, then overpowers Target Locked enemies
+UNIT_XWINGREDTWO_NAME|Red Two: X-wing
+UNIT_XWINGRESISTANCE_DESC|Aggressive Resistance Support that shuts down enemies with Expose, Target Lock, and Daze
+UNIT_XWINGRESISTANCE_NAME|Resistance X-wing
+UNIT_YOUNGCHEWBACCA_DESC|Aggressive Scoundrel Tank that provides Protection Recovery for his allies when they are attacked
+UNIT_YOUNGCHEWBACCA_NAME|Vandor Chewbacca
+UNIT_YOUNGHAN_DESC|Scoundrel Attacker who becomes more deadly over time
+UNIT_YOUNGHAN_NAME|Young Han Solo
+UNIT_YOUNGLANDO_DESC|Scoundrel Attacker that takes advantage of debuffed enemies and deals ever-increasing damage
+UNIT_YOUNGLANDO_NAME|Young Lando Calrissian
+UNIT_YWING_DESC|
+UNIT_YWING_DESC01|Slow, well shielded bomber. Uses Bomb mechanics, giving it higher potential over time and soaks damage with Taunt.
+UNIT_YWING_NAME|Y-wing
+UNIT_YWING_NAME01|Y-wing
+UNIT_YWING_OTFALCON_NAME|Y-wing Starfighter
+UNIT_YWINGCLONEWARS_DESC|Galactic Republic Tank that can withstand significant damage and Taunts when its allies are in need
+UNIT_YWINGCLONEWARS_NAME|BTL-B Y-wing Starfighter
+UNIT_YWINGREBEL_DESC|Sturdy Rebel Tank that can disable enemy Protection
+UNIT_YWINGREBEL_NAME|Rebel Y-wing
+UNIT_Z95HEADHUNTER_DESC|
+UNIT_Z95HEADHUNTER_NAME|Z-95 Headhunter
+UNIT_ZAALBAR_DESC|Versatile Scoundrel Tank with a powerful AoE attack and reactive Taunt
+UNIT_ZAALBAR_NAME|Zaalbar
+UNIT_ZAMWESELL_DESC|Lightning fast Scoundrel attacker that inflicts Evasion Down and detonates bombs.
+UNIT_ZAMWESELL_NAME|Zam Wesell
+UNIT_ZEBS3_DESC|Versatile Phoenix Tank with wide variety of effects for allies or enemies with or without debuffs
+UNIT_ZEBS3_NAME|Garazeb "Zeb" Orrelios
+UNIT_ZORIIBLISS_NAME|Zorii Bliss
+UNIT_FIFTHBROTHER_DESC|A powerful Inquisitor that specializes in supporting the purge of all Jedi by applying devastating debuffs.
+UNIT_FIFTHBROTHER_NAME|Fifth Brother
+UNIT_FIFTHBROTHER_TIER_07_DESC|A powerful Inquisitor that specializes in supporting the purge of all Jedi by applying devastating debuffs.
+UNIT_CARTELSABOTEUR_GERLON_NAME|Gerlon Two-Fingers
+UNIT_CARTELSPY_DEADEYE_DUNCAN_NAME|Deadeye Duncan
+UNIT_DARTHMALGUS_DESC|Legendary Sith Lord who causes doubt among his foes and heralds the return of the Sith Empire
+UNIT_DARTHMALGUS_NAME|Darth Malgus
+UNIT_HUMANTHUG_ICE_NAME|Ice
+UNIT_PIRATEENFORCER_TWITCH_NAME|Twitch
+UNIT_50RT_DESC|A highly intelligent Droid who can quickly calculate the odds and determine how to defy them
+UNIT_50RT_NAME|50R-T
+UNIT_ADMIRALRADDUS_DESC|A brilliant Rebel tactician who supports his allies by buying time for them to carry out their mission
+UNIT_ADMIRALRADDUS_NAME|Admiral Raddus
+UNIT_STATS_VIEW_VALUE_AND_DATACRON|{0} [ffe699]({1})[-]
+UNIT_GRANDINQUISITOR_DESC|The calculating and relentless master of the Inquisitorius who specializes in dealing with Jedi
+UNIT_GRANDINQUISITOR_NAME|Grand Inquisitor
+UNIT_LORE_GRANDINQUISITOR_EZRABRIDGERS3_DESC|[c][ffff33]Lore:[-][/c] Ezra Bridger lived in the streets of Lothal until he was taken in by Kanan Jarrus to be his Jedi apprentice.
+UNIT_LORE_GRANDINQUISITOR_FULCRUMAHSOKA_DESC|[c][ffff33]Lore:[-][/c] After faking her death, Ahsoka went into hiding and became a Rebel spy under the name "Fulcrum."
+UNIT_LORE_GRANDINQUISITOR_GENERALKENOBI_DESC|[c][ffff33]Lore:[-][/c] A legendary Jedi Master who served in the Jedi Council and as a General during the Clone Wars.
+UNIT_LORE_GRANDINQUISITOR_GRANDINQUISITOR_DESC|[c][ffff33]Lore:[-][/c] A former Jedi Temple Guard who is now the highest ranking member of the Inquisitorius.
+UNIT_LORE_GRANDINQUISITOR_GRANDINQUISITOR_T01_DESC|[c][ffff33]Lore:[-][/c] A former Jedi Temple Guard who is now the highest ranking member of the Inquisitorius.\n\n[c][ffff33]Boss Battle:[-][/c] This boss gains Turn Meter at the end of each enemy turn, which can't be prevented.
+UNIT_LORE_GRANDINQUISITOR_GRANDINQUISITOR_T02_DESC|[c][ffff33]Lore:[-][/c] A former Jedi Temple Guard who is now the highest ranking member of the Inquisitorius.\n\n[c][ffff33]Boss Battle:[-][/c] This Boss inflicts 1 stack of [c][ffff33]Purge[-][/c] to all enemies at the start of battle, which can't be resisted. This boss will also gain Turn Meter at the end of each enemy turn, which can't be prevented.
+UNIT_LORE_GRANDINQUISITOR_GRANDINQUISITOR_T03_DESC|[c][ffff33]Lore:[-][/c] A former Jedi Temple Guard who is now the highest ranking member of the Inquisitorius.\n\n[c][ffff33]Boss Battle:[-][/c] This Boss inflicts 2 stacks of [c][ffff33]Purge[-][/c] to all enemies at the start of battle, which can't be resisted. This boss will also gain Turn Meter at the end of each enemy turn, which can't be prevented.
+UNIT_LORE_GRANDINQUISITOR_GRANDINQUISITOR_T04_DESC|[c][ffff33]Lore:[-][/c] A former Jedi Temple Guard who is now the highest ranking member of the Inquisitorius.\n\n[c][ffff33]Boss Battle:[-][/c] This Boss inflicts 3 stacks of [c][ffff33]Purge[-][/c] to all enemies at the start of battle, which can't be resisted. This boss will also gain Turn Meter at the end of each enemy turn, which can't be prevented.
+UNIT_LORE_GRANDINQUISITOR_GRANDINQUISITOR_T05_DESC|[c][ffff33]Lore:[-][/c] A former Jedi Temple Guard who is now the highest ranking member of the Inquisitorius.\n\n[c][ffff33]Boss Battle:[-][/c] This Boss inflicts 4 stacks of [c][ffff33]Purge[-][/c] to all enemies at the start of battle, which can't be resisted. This boss will also gain Turn Meter at the end of each enemy turn, which can't be prevented.
+UNIT_LORE_GRANDINQUISITOR_GRANDINQUISITOR_T06_DESC|[c][ffff33]Lore:[-][/c] A former Jedi Temple Guard who is now the highest ranking member of the Inquisitorius.\n\n[c][ffff33]Boss Battle:[-][/c] This Boss inflicts 5 stacks of [c][ffff33]Purge[-][/c] to all enemies at the start of battle, which can't be resisted. This boss will also gain Turn Meter at the end of each enemy turn, which can't be prevented.
+UNIT_LORE_GRANDINQUISITOR_GRANDINQUISITOR_T07_DESC|[c][ffff33]Lore:[-][/c] A former Jedi Temple Guard who is now the highest ranking member of the Inquisitorius.\n\n[c][ffff33]Boss Battle:[-][/c] This Boss inflicts 6 stacks of [c][ffff33]Purge[-][/c] to all enemies at the start of battle, which can't be resisted. This boss will also gain Turn Meter at the end of each enemy turn, which can't be prevented.
+UNIT_LORE_GRANDINQUISITOR_GRANDMASTERYODA_DESC|[c][ffff33]Lore:[-][/c] A legendary Jedi Master of an unknown species, Yoda served as a Grand Master of the Jedi Order after generations of training Jedi.
+UNIT_LORE_GRANDINQUISITOR_KANANJARRUSS3_DESC|[c][ffff33]Lore:[-][/c] A human Jedi who survived Order 66 and went into hiding. He would eventually become Ezra Bridger's Jedi mentor.
+UNIT_LORE_GRANDINQUISITOR_LUMINARAUNDULI_DESC|[c][ffff33]Lore:[-][/c] A Mirialan Jedi Master, Luminara Unduli served as a General of the Clone Army during the Clone Wars, leading the 41st Elite Corps.
+UNIT_LORE_GRANDINQUISITOR_MAULS7_DESC|[c][ffff33]Lore:[-][/c] A former Zabrak Sith lord who seeks revenge after being betrayed by Darth Sidious.
+UNIT_RAVENSCLAW_DESC|A Rebel ship crewed by Kyle Katarn that is able to dictate the flow of battle
+UNIT_RAVENSCLAW_NAME|Raven's Claw
+UNIT_KRRSANTAN_DESC|Infamous Bounty Hunter Tank with an intimidating presence and unstoppable raw strength
+UNIT_KRRSANTAN_NAME|Krrsantan
+UNIT_BENSOLO_DESC|A powerful Force user whose internal struggles have long placed him on the edge of light and dark
+UNIT_BENSOLO_NAME|Ben Solo
+UNIT_UNDERCOVER_DESC|Cunning Scoundrel Attacker who assists his allies and gains ramping damage by proving his loyalty
+UNIT_UNDERCOVERLANDO_DESC|Cunning Scoundrel Attacker who assists his allies and gains ramping damage the longer he stays undercover
+UNIT_UNDERCOVERLANDO_NAME|Skiff Guard (Lando Calrissian)
+UNIT_CAPITALPROFUNDITY_DESC|Rebel Capital Ship that uses tactical synergy to acquire stolen plans
+UNIT_CAPITALPROFUNDITY_NAME|Profundity
+UNIT_BOUSHH_DESC|A princess in disguise, fooling Jabba's court with strong Thermal Detonator synergy
+UNIT_BOUSHH_NAME|Boushh (Leia Organa)
+UNIT_HUMANTHUG_DESC_V2|Scoundrel Support with enemy debuff ability and a thermal detonator.
+UNIT_CASSIANANDOR_TRANSFORM_SNOWTROOPEROPS_NAME|Snowtrooper Ops (Cassian Andor)
+UNIT_CASSIANANDOR_TRANSFORM_WATTAMBOR_NAME|Wat Tambor (Cassian Andor)
+UNIT_HUTTSLAYERLEIA_NAME|Huttslayer Leia
+UNIT_JABBATHEHUTT_DESC|A ruthless crime boss who exerts his influence on others to control the flow of battle to support his criminal underworld and Hutt Cartel enforcers
+UNIT_JABBATHEHUTT_NAME|Jabba the Hutt
+UNIT_GAMORREAN_HONDO_MARQUEE_NAME|[c][/c]"Jabba the Hutt"
+UNIT_GREEDO_HONDO_MARQUEE_NAME|[c][/c]"Boba Fett, I Think"
+UNIT_HONDO_DESC|The unparalleled Scoundrel willing to play all angles for his own gains
+UNIT_HONDO_NAME|Hondo Ohnaka
+UNIT_HUMANTHUG_HONDO_MARQUEE_NAME|[c][/c]"Jabba's Majordomo"
+UNIT_BT1_DESC|A blastomech prototype droid who is known for destroying the Tarkin Initiative base in which he was created.
+UNIT_BT1_NAME|BT-1
+UNIT_TRIPLEZERO_DESC|A protocol droid specialized in etiquette, customs, translation, and torture.
+UNIT_TRIPLEZERO_NAME|0-0-0
+UNIT_SCYTHE_DESC|Support shuttle that boosts Empire ships by providing potent buffs and summoning TIE fighters
+UNIT_SCYTHE_NAME|Scythe
+UNIT_SANASTARROS_DESC|Scoundrel turned Rebel sympathizer that helps her team deal area of effect damage
+UNIT_SANASTARROS_NAME|Sana Starros
+UNIT_CAPITALNEGOTIATOR_TERRITORYBATTLE_MIXED_DESC|Offensive Capital Ship that uses Valor to bolster ally attacks and increase its Speed
+UNIT_CAPITALNEGOTIATOR_TERRITORYBATTLE_MIXED_NAME|Venator-class Star Destroyer
+UNIT_CASSIANANDOR_TRANSFORM_MAGMATROOPER_NAME|Magmatrooper (Cassian Andor)
+UNIT_CROSSHAIR_DESC|CT-9904 "Crosshair" was a sniper for Clone Force 99, The Bad Batch, during the Clone Wars. After Order 66, Crosshair remained loyal to the Empire despite the removal of his behavioral modification biochip.
+UNIT_CROSSHAIR_NAME|CT-9904 “Crosshair”
+UNIT_GALENERSO_DESC|The foremost expert in crystallography, Galen Erso’s work laid the foundation for the Death Star’s superweapon. Though he tried to leave the Empire behind, he was eventually captured and forced to complete the work; however, in an act of defiance, Galen left a critical flaw in the Death Star’s design and shared information on it with the Rebellion.
+UNIT_GALENERSO_NAME|Galen Erso
+UNIT_JOCASTANU_DESC|Chief librarian of the Jedi archives, Jocasta Nu was a member of the Jedi Council and a capable Force-user
+UNIT_JOCASTANU_NAME|Jocasta Nu
+UNIT_PARTISANFIGHTER_DESC|The Partisans were a militant insurgent group that fought against the Empire, and later the First Order. Though they were allies, the Partisans' extreme tactics drew criticism from the Rebel Alliance.
+UNIT_PARTISANFIGHTER_NAME|Partisan Fighter
+UNIT_PURGETROOPER_DESC|Inquisitorius shock troops that inflict Purge and deal lethal damage.
+UNIT_PURGETROOPER_NAME|Purge Trooper
+UNIT_PYKESENTINEL_DESC|Brutal enforcer that punishes enemies for attacking out of turn.
+UNIT_PYKESENTINEL_NAME|Pyke Sentinel
+UNIT_PYKESENTINELCAPTAIN_NAME|Pyke Sentinel Captain
+UNIT_THIRDSISTER_DESC|A merciless Inquisitor who will stop at nothing till she achieves her goals
+UNIT_THIRDSISTER_NAME|Third Sister
+UNIT_THIRDSISTER_SPECIAL_NAME|[99FF33]Third Sister Shards[-]
+UNIT_VCX100_NAME|VCX-100
+UNIT_VENATORCLASSDESTROYER_NAME|Venator-class Star Destroyer
+UNIT_YT2400_NAME|YT-2400
+UNIT_YV666_NAME|YV-666
+UNIT_DOCTORAPHRA_DESC|An inventive and chaotic Support who employs dangerous treasures and technology to empower her team and unravel her foes
+UNIT_DOCTORAPHRA_NAME|Doctor Aphra
+UNIT_HACKEDCOMMANDODROID_NAME|Hacked Commando Droid
+UNIT_ZORIIBLISS_V2_DESC|An elusive Smuggler that uses her spice runner skills to help the Resistance
+UNIT_ZORIIBLISS_V2_NAME|Zorii Bliss
+UNIT_TRENCH_OBTAINABLE_DESC|A cunning Separatist admiral who supports his allies with potent buffs and ruins his foes with debilitating debuffs
+UNIT_TIEDEFENDER_DESC|Powerful reinforcement Empire Attacker capable of stunning enemies and boosting allies, specifically TIE fighters
+UNIT_TIEDEFENDER_NAME|TIE Defender
+UNIT_TUSKENCHIEFTAIN_DESC|A strong tribal leader who protects his allies with Momentum and inflicts foes with damaging effects
+UNIT_TUSKENCHIEFTAIN_NAME|Tusken Chieftain
+UNIT_TUSKENHUNTRESS_DESC|Brave and fearless Tusken warrior whose attacks become stronger with Momentum
+UNIT_TUSKENHUNTRESS_NAME|Tusken Warrior
+UNIT_CALKESTIS_DESC|A determined Force user who uses his unique abilities to support his allies and manipulate the flow of battle
+UNIT_CALKESTIS_NAME|Cal Kestis
+UNIT_CEREJUNDA_DESC|Resilient Support who aids her allies with an assortment of different buffs and punishes fast opponents
+UNIT_CEREJUNDA_NAME|Cere Junda
+UNIT_MERRIN_DESC|A Nightsister witch who proactively defends her allies and inflicts enemies with Plague
+UNIT_MERRIN_NAME|Merrin
+UNIT_FURYCLASSINTERCEPTOR_DESC|Sith Support ship that provides powerful defensive bonuses to allies while inflicting debilitating debuffs to enemies
+UNIT_FURYCLASSINTERCEPTOR_NAME|Fury-class Interceptor
+UNIT_TARFFUL_DESC|Ferocious Support that provides Defense to his allies and punishes enemies with Provoked
+UNIT_TARFFUL_NAME|Tarfful
+UNIT_GUIDE_DETAILS_CHARACTER_MIN_RARITY_SINGULAR|{0} Star
+UNIT_GUIDE_DETAILS_SHIP_MIN_RARITY_SINGULAR|{0} Star
+UNIT_BUNDLEOFEXPLOSIVES_NAME|Bundle of Explosives
+UNIT_KRAYTDRAGON_NAME|Krayt Dragon
+UNIT_SAWGERRERA_DESC|An extreme guerrilla fighter who leads his Partisans against the Empire
+UNIT_SAWGERRERA_NAME|Saw Gerrera
+UNIT_TIEDAGGER_DESC|Retaliatory Attacker that uses Vengeance to undercut enemy defenses
+UNIT_TIEDAGGER_NAME|TIE Dagger
+UNIT_SITHSUPREMACYCLASS_DESC|A reinforced Attacker ship called to swarm its enemy until it's defeated.
+UNIT_SITHSUPREMACYCLASS_NAME|Mark VI Interceptor
+UNIT_CAPTAINREX_DESC|A former Captain of the 501st Clone Battalion and veteran Support of countless conflicts
+UNIT_CAPTAINREX_NAME|Captain Rex
+UNIT_FLAMEBEETLE_DESC|The bioluminescent flame beetles were native to Kashyyyk. They digested local plants into explosive liquids and tended to spontaneously combust.
+UNIT_FLAMEBEETLE_NAME|Flame Beetle
+UNIT_HAXIONBOUNTYDROID_DESC|One of many reprogrammed load lifters used by the Haxion Brood criminal organization to assist its members in pursuing bounties.
+UNIT_HAXIONBOUNTYDROID_NAME|Haxion Brood Bounty Droid
+UNIT_HAXIONBOUNTYDROIDCAPTAIN_NAME|Haxion Brood Droid Captain
+UNIT_JEDIKNIGHTCAL_DESC|Utilizing different lightsaber masteries, Jedi Knight Cal Kestis weaves between offensive and defensive stances to claim victory over his opponents
+UNIT_JEDIKNIGHTCAL_NAME|Jedi Knight Cal Kestis
+UNIT_KXDROID_NAME|KX-series Security Droid
+UNIT_SLYYYG_DESC|Native to Kashyyyk, the slyyyg was a carnivorous gastropod with a nasty habit of emitting toxic excretions at prey.
+UNIT_SLYYYG_NAME|Slyyyg
+UNIT_TARONMALICOS_HJ_JEDIKNIGHTCAL_DESC|Taron Malicos was a former Jedi Master who fled to Dathomir after Order 66. After capture by the Nightbrothers, Malicos fell to the dark side and eventually became their leader. He was eventually defeated by Cal Kestis and the Nightsister Merrin after failing to bring them under his influence.
+UNIT_TARONMALICOS_HJ_JEDIKNIGHTCAL_NAME|Taron Malicos
+UNIT_TB3_CHIATA_DESC|A Jedi Master who served during the Clone Wars. She and her padawan, Marseph, were cut down during Order 66 after their Venator cruiser crashed on Zeffo.
+UNIT_TB3_CHIATA_NAME|Jedi General Chiata
+UNIT_TB3_MARSEPH_NAME|Padawan Marseph
+UNIT_TOMBGUARDIAN_DESC|Ancient sentinels of the Zeffo civilization programmed to destroy intruders to the tombs of the Zeffo sage Eilram.
+UNIT_TOMBGUARDIAN_MIKTRULL_DESC|Ancient sentinels of the Zeffo civilization programmed to destroy intruders to the tombs of the Zeffo sage Miktrull.
+UNIT_TOMBGUARDIAN_MIKTRULL_NAME|Miktrull Tomb Guardian
+UNIT_TOMBGUARDIAN_NAME|Eilram Tomb Guardian
+UNIT_TARONMALICOS_DESC|A formidable Attacker and former Jedi with dark ambitions who fights on the edge of madness
+UNIT_TARONMALICOS_NAME|Taron Malicos
+UNIT_PRINCESSKNEESAA_DESC|A small but mighty Attacker Ewok, here to fight for Bright Tree Village
+UNIT_PRINCESSKNEESAA_NAME|Princess Kneesaa
+UNIT_CAPITALLEVIATHAN_DESC|Sith Capital Ship that takes over the enemy Capital Ship over the course of the battle
+UNIT_CAPITALLEVIATHAN_NAME|Leviathan
+UNIT_SCOUTTROOPER_V3_DESC|A stealthy soldier from the Galactic Empire that supports her teammates from the shadows
+UNIT_SCOUTTROOPER_V3_NAME|Scout Trooper
+UNIT_CAPTAINDROGAN_DESC|Respected Rebel Captain who employs coordinated strikes to ruin enemy forces and turn the tide of battle
+UNIT_CAPTAINDROGAN_NAME|Captain Drogan
+UNIT_GLLEIA_DESC|Leia Organa, the tactical leader of the Rebellion and high priority target of the Empire, dictates the precise strikes of the battle while inspiring and defending her allies
+UNIT_GLLEIA_NAME|Leia Organa
+UNIT_MOFFGIDEONS3_DESC|Imperial Remnant Leader that sacrifices his weakest allies to stay alive and controls the battle with insight
+UNIT_MOFFGIDEONS3_NAME|Dark Trooper Moff Gideon
+UNIT_MOFFGIDEONSS3_DESC|Imperial Remnant Leader that sacrifices his weakest allies to stay alive and controls the battle with insight
+UNIT_MARAUDER_DESC|Stealthy Support ship that uses a mixture of damage and buffs to control the battlefield
+UNIT_MARAUDER_NAME|Marauder
+UNIT_PAZVIZSLA_DESC|A proud and stalwart Mandalorian Tank who upholds the Creed while laying down heavy fire from his blaster cannon
+UNIT_PAZVIZSLA_NAME|Paz Vizsla
+UNIT_IG12_DESC|A restructured assassin droid who heals allies and disrupts enemies
+UNIT_IG12_NAME|IG-12 & Grogu
+UNIT_SCOUTTROOPER_COMMANDER_NAME|Scout Trooper Commander
+UNIT_SCOUTTROOPER_RECRUIT_NAME|Scout Trooper Recruit
+UNIT_SCOUTTROOPER_SHADOW_NAME|Shadow Scout Trooper
+UNIT_KELLERANBEQ_DESC|Known as the Sabered Hand for his lightsaber mastery, Kelleran Beq used his Force knowledge to mentor younglings and rescued Grogu during Order 66
+UNIT_KELLERANBEQ_NAME|Kelleran Beq
+UNIT_DARTHBANE_DESC|Ancient Sith Lord spoken of in whispers who defeats foes through strength and cunning and believes only the strong should live to wield the power of the dark side
+UNIT_DARTHBANE_NAME|Darth Bane
+UNIT_IMPERIALARMOREDCOMMANDO_NAME|Imperial Armored Commando
+UNIT_IMPERIALARMOREDCOMMANDO_WAVE1_NAME|Imperial Armored Commando - Wave 1
+UNIT_IMPERIALARMOREDCOMMANDO_WAVE2_NAME|Imperial Armored Commando - Wave 2
+UNIT_IMPERIALARMOREDCOMMANDO_WAVE3_NAME|Imperial Armored Commando - Wave 3
+UNIT_IMPERIALARMOREDCOMMANDO_WAVE4_NAME|Imperial Armored Commando - Wave 4
+UNIT_MANDALORBOKATAN_DESC|A brave leader of the Mandalorians who wields the Darksaber and leads her allies into battle
+UNIT_MANDALORBOKATAN_NAME|Bo-Katan (Mand'alor)
+UNIT_WEEQUAYPIRATE_NAME|Weequay Pirate
+UNIT_COMEUPPANCE_DESC|Strong Support ship whose dramatic entrance empowers Resistance allies.
+UNIT_COMEUPPANCE_NAME|Comeuppance
+UNIT_STAP_DESC|Used as a reconnaissance and patrol vehicle by the Trade Federation and the Separatists, the STAP was instrumental for gathering intel, especially during the invasion of Naboo
+UNIT_STAP_NAME|STAP
+UNIT_BOSSNASS_DESC|A boisterous Leader who commands the Gungans of Otoh Gunga with pride and utilizes their unique technology to achieve victory
+UNIT_BOSSNASS_NAME|Boss Nass
+UNIT_SHIELDGENERATORGUNGAN_DESC|A Gungan Shield Generator
+UNIT_SHIELDGENERATORGUNGAN_NAME|Shield Generator
+UNIT_CAPTAINTARPALS_DESC|A powerful Gungan Attacker who crushes his foes with area damage and wrecks debuffed enemies
+UNIT_CAPTAINTARPALS_NAME|Captain Tarpals
+UNIT_NABOOSECURITY_NAME|Naboo Security Guard
+UNIT_NABOOSECURITYOFFICER_NAME|Naboo Security Officer
+UNIT_QUEENAMIDALA_DESC|Queen of Naboo who will stop at nothing to protect her people, and her people will stop at nothing to protect her
+UNIT_QUEENAMIDALA_NAME|Queen Amidala
+UNIT_QUEENAMIHANDMAIDENDECOY_NAME|Handmaiden Decoy
+# Start Category: Star_Wars_Strategy_RPG
+[UNIQUEABILITY_BOBAFETTSCION01_NAME]|Fett Legacy
+12_DAYS_OF_SPRING_DESC|Open 12 Days of Spring Data Card packs to collect 24 items
+12_DAYS_OF_SPRING_DESC_V2|Collect 24 Days of Spring items
+12_DAYS_OF_SPRING_NAME|Days of Spring
+12_DAYS_OF_SPRING_NAME_V2|12 Days of Spring
+15_DAYS_OF_SPRING_PACK_DESC|Receive up to 75,000 Credits and a chance at a droid character or character shard daily from March 16th through March 30th. \n\nCollect 12 Data Card packs to earn the Days of Spring achievement.
+15_DAYS_OF_SPRING_PACK_NAME|15 DAYS OF SPRING
+2_GEAR_PIECES_SUBTITLE|2 Gear Pieces
+21DAY_SUBSCRIPTION_TEXT|Daily Crystal Booster now available in the Store!
