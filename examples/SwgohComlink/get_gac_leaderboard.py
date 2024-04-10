@@ -59,9 +59,7 @@ on the GAC leaderboard desired. The parameters are:
 """
 
 # Get the Kyber 2 leaderboard
-gac_kyber_2_lb = comlink.get_gac_leaderboard(
-    leaderboard_type=6, league=100, division=20
-)
+gac_kyber_2_lb = comlink.get_gac_leaderboard(leaderboard_type=6, league=100, division=20)
 
 # Output the GAC leaderboard information
 name_col_width, guild_col_width, lb_entries = format_output(gac_kyber_2_lb["player"])

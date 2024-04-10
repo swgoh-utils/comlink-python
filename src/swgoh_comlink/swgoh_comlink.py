@@ -18,7 +18,7 @@ import httpx
 from sentinels import Sentinel
 
 from swgoh_comlink.Base.swgoh_comlink_base import SwgohComlinkBase
-from swgoh_comlink.constants import OPTIONAL, NotGiven, param_alias
+from swgoh_comlink.constants import REQUIRED, OPTIONAL, MISSING, NotSet, param_alias
 
 __all__ = ["SwgohComlink"]
 
@@ -79,14 +79,14 @@ class SwgohComlink(SwgohComlinkBase):
                 )
             return resp.json()
         except Exception as e:
-            self.logger.warning("%s: %s", type(e).__name__, e)
+            self.logger.exception("%s: %s", type(e).__name__, e)
             raise e
 
     @param_alias(param="request_payload", alias="roster_list")
     def get_unit_stats(
             self,
-            request_payload: dict | list[dict],
-            flags: list[str],
+            request_payload: dict | list[dict] | Sentinel = REQUIRED,
+            flags: list[str] | Sentinel = OPTIONAL,
             language: str = "eng_us",
     ) -> dict | list[dict]:
         """Calculate unit stats using swgoh-stats service interface to swgoh-comlink
@@ -105,15 +105,20 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
 
-        if not request_payload:
-            raise RuntimeError(
-                f"{self._get_function_name()}, Request payload is must be provided."
-            )
+        if request_payload is MISSING:
+            err_msg = f"{self._get_function_name()}, 'request_payload'' must be provided."
+            self.logger.error(err_msg)
+            raise ValueError(err_msg)
+
         # Convert a single character/ship object to a one item list of obj for StatCalc
         if isinstance(request_payload, dict):
             request_payload = [request_payload]
-        if flags and not isinstance(flags, list):
-            raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
+
+        if flags is not NotSet and not isinstance(flags, list):
+            err_msg = f"{self._get_function_name()}, 'flags' must be a list when it is provided. Got {type(flags)}"
+            self.logger.error(err_msg)
+            raise ValueError(err_msg)
+
         query_string = self._construct_unit_stats_query_string(flags, language)
         endpoint_string = "api" + query_string if query_string else "api"
         self.logger.info(f"{self.stats_url_base=}, {endpoint_string=}")
@@ -131,8 +136,6 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
         try:
-            # r = requests.get(f"{self.url_base}/enums")
-            # return r.json()
             resp = self.client.get(f"{self.url_base}/enums")
             return resp.json()
         except Exception as e:
@@ -179,7 +182,7 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
 
-        if version is NotGiven:
+        if isinstance(version, Sentinel):
             game_version = self._get_game_version()
         else:
             game_version = version
@@ -212,7 +215,7 @@ class SwgohComlink(SwgohComlinkBase):
             Dictionary containing each localization file in a separate element value
 
         """
-        if id is NotGiven:
+        if isinstance(id, Sentinel):
             current_game_version = self.get_latest_game_data_version()
             id = current_game_version["language"]
 
@@ -227,7 +230,7 @@ class SwgohComlink(SwgohComlinkBase):
     get_localization_bundle = get_localization
 
     def get_game_metadata(
-            self, client_specs: dict[str, str] | None = None, enums: bool = False
+            self, client_specs: dict[str, str] | Sentinel = OPTIONAL, enums: bool = False
     ) -> dict:
         """Get the game metadata. Game metadata contains the current game and localization versions.
 
@@ -249,6 +252,7 @@ class SwgohComlink(SwgohComlinkBase):
                 }
             ```
         """
+        self.logger.debug(f"{self._get_function_name()}: 'client_specs' = {client_specs} (type: {type(client_specs)})")
         return self._post(
             endpoint="metadata",
             payload=self._make_client_specs(client_specs, enums),
@@ -333,7 +337,7 @@ class SwgohComlink(SwgohComlinkBase):
     @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(
             self,
-            guild_id: str | Sentinel = OPTIONAL,
+            guild_id: str | Sentinel = REQUIRED,
             include_recent_guild_activity_info: bool = False,
             enums: bool = False,
     ) -> dict:
@@ -352,6 +356,9 @@ class SwgohComlink(SwgohComlinkBase):
             ValueError: if guild ID is not provided
 
         """
+        if isinstance(guild_id, Sentinel):
+            raise ValueError(f"{self._get_function_name()}: Guild ID must be provided.")
+
         guild = self._post(
             endpoint="guild",
             payload=self._make_guild_payload(
@@ -534,7 +541,7 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
         client_specs: dict = {}
-        if game_version:
+        if not isinstance(game_version, Sentinel):
             client_specs = {"externalVersion": game_version}
         current_metadata = self.get_metadata(client_specs=client_specs)
         return {

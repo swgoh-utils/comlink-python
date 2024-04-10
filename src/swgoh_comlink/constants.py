@@ -5,7 +5,6 @@ Constants used throughout the swgoh_comlink package
 
 from __future__ import annotations
 
-import inspect
 import logging
 import os
 from functools import wraps
@@ -15,22 +14,33 @@ from typing import Callable
 
 from sentinels import Sentinel
 
-OPTIONAL = Sentinel('NotGiven')
+OPTIONAL = Sentinel('NotSet')
 NotGiven = Sentinel('NotGiven')
 REQUIRED = Sentinel('REQUIRED')
+GIVEN = Sentinel('REQUIRED')
+MISSING = Sentinel('REQUIRED')
+NotSet = Sentinel('NotSet')
+SET = Sentinel('NotMissing')
 MutualExclusiveRequired = Sentinel('MutualExclusiveRequired')
 
 _DEFAULT_LOGGER_NAME: str = "swgoh_comlink"
 _DEFAULT_LOGGER_ENABLED: bool = False
+_LOGGER_REGISTRY = {}
 
 __all__ = [
+    GIVEN,  # Sentinel
     OPTIONAL,  # Sentinel
+    MISSING,  # Sentinel
     NotGiven,  # Sentinel
     REQUIRED,  # Sentinel
     MutualExclusiveRequired,  # Sentinel
+    NotSet,  # Sentinel
+    SET,
     "DATA_PATH",
     "DIVISIONS",  # Lookup dictionary
+    "enable_default_logger",
     "get_logger",
+    "LANGUAGES",
     "LEAGUES",  # Lookup dictionary
     "MOD_SET_IDS",  # Lookup dictionary
     "MOD_SLOTS",  # Lookup dictionary
@@ -89,6 +99,11 @@ class LoggingFormatter(logging.Formatter):
         return formatter.format(record)
 
 
+def enable_default_logger():
+    global _DEFAULT_LOGGER_ENABLED
+    _DEFAULT_LOGGER_ENABLED = True
+
+
 def param_alias(param: str, alias: str) -> Callable:
     """Decorator for aliasing function parameters"""
 
@@ -129,7 +144,7 @@ def _get_new_logger(
     tmp_logger = logging.getLogger(name)
     tmp_logger.setLevel(logging.getLevelName(log_level))
 
-    if name is NotGiven:
+    if name is NotSet:
         name = _DEFAULT_LOGGER_NAME
 
     # Console handler
@@ -149,27 +164,28 @@ def _get_new_logger(
         file_handler.setFormatter(file_handler_formatter)
         tmp_logger.addHandler(file_handler)
     tmp_logger.info(" --- [ Logging started for %s ] ---", name)
+    _LOGGER_REGISTRY[name] = tmp_logger
     return tmp_logger
 
 
 def get_logger(
         name: str = _DEFAULT_LOGGER_NAME,
         default_logger: bool = _DEFAULT_LOGGER_ENABLED,
+        **kwargs,
 ) -> logging.Logger:
     """Returns a logger"""
+    if name in _LOGGER_REGISTRY:
+        return _LOGGER_REGISTRY[name]
     if default_logger:
-        return _get_new_logger(name)
+        global _DEFAULT_LOGGER_ENABLED
+        _DEFAULT_LOGGER_ENABLED = True
+        return _get_new_logger(name, **kwargs)
     else:
         # If the default logger is disabled, log messages to NULL handler
         # This allows library users to implement their own loggers, if desired
         base_logger: logging.Logger = logging.getLogger(_DEFAULT_LOGGER_NAME)
         base_logger.addHandler(logging.NullHandler())
         return base_logger
-
-
-def _get_function_name() -> str:
-    """Return the name for the calling function"""
-    return f"{inspect.stack()[1].function}()"
 
 
 LEAGUES: dict[str, int] = {
@@ -589,3 +605,6 @@ RELIC_TIERS: dict[str, str] = {
     "9": "8",
     "10": "9",
 }
+
+LANGUAGES: list[str] = ["chs_cn", "cht_cn", "eng_us", "fre_fr", "ger_de", "ind_id", "ita_it", "jpn_jp", "kor_kr",
+                        "por_br", "rus_ru", "spa_xm", "tha_th", "tur_tr"]

@@ -23,7 +23,18 @@ from typing import Any
 
 from sentinels import Sentinel
 
-from swgoh_comlink.constants import get_logger, OPTIONAL, NotGiven
+from swgoh_comlink.constants import (
+    get_logger,
+    LANGUAGES,
+    MISSING,
+    NotGiven,
+    NotSet,
+    OPTIONAL,
+    REQUIRED,
+    SET,
+    LEAGUES,
+    DIVISIONS
+)
 from swgoh_comlink.utils import (
     sanitize_allycode,
     convert_league_to_int,
@@ -38,6 +49,14 @@ def _get_function_name() -> str:
     return f"{inspect.stack()[1].function}()"
 
 
+def _get_var_name(var) -> str:
+    """Return the name of the requested variable as a string"""
+    for fi in reversed(inspect.stack()):
+        names = [var_name for var_name, var_val in fi.frame.f_locals.items() if var_val is var]
+        if len(names) > 0:
+            return names[0]
+
+
 class SwgohComlinkBase:
     """Base class for comlink-python interface and supported methods.
 
@@ -46,16 +65,17 @@ class SwgohComlinkBase:
 
     """
 
-    url: str
-    stats_url: str
-    access_key: str | Sentinel
-    secret_key: str | Sentinel
-    host: str = "localhost"
-    protocol: str = "http"
-    port: int = 3000
-    stats_port: int = 3223
-    default_logger: bool = False
+    __access_key: str | Sentinel
+    __secret_key: str | Sentinel
+    DEFAULT_HOST: str = "localhost"
+    DEFAULT_PROTOCOL: str = "http"
+    DEFAULT_PORT: int = 3000
+    DEFAULT_STATS_PORT: int = 3223
     hmac: bool = False
+
+    ALLOWED_PROTOCOLS: tuple[str, str, ...] = ("http", "https",)
+    MINIMUM_PORT_VALUE = 1024
+    MAXIMUM_PORT_VALUE = 65535
 
     def __new__(cls, *args, **kwargs):
         """Prevent instances of this base class from being created directly"""
@@ -69,10 +89,10 @@ class SwgohComlinkBase:
             stats_url: str = "http://localhost:3223",
             access_key: str | Sentinel = OPTIONAL,
             secret_key: str | Sentinel = OPTIONAL,
-            host: str = "localhost",
-            protocol: str = "http",
-            port: int = 3000,
-            stats_port: int = 3223,
+            host: str | Sentinel = OPTIONAL,
+            protocol: str | Sentinel = OPTIONAL,
+            port: int | Sentinel = OPTIONAL,
+            stats_port: int | Sentinel = OPTIONAL,
             default_logger_enabled: bool = False,
     ):
         """
@@ -97,49 +117,94 @@ class SwgohComlinkBase:
 
         self.logger = get_logger(default_logger=default_logger_enabled)
 
-        if not url:
-            self.url_base = self.DEFAULT_URL
-            self.logger.warning(f"No URL provided. Using {self.url_base}")
-        else:
-            self.url_base = url
-            self.logger.debug("url_base= %s" % self.url_base)
-        if not stats_url:
-            self.stats_url_base = self.DEFAULT_STATS_URL
-            self.logger.warning(f"No stats URL provided. Using {self.stats_url_base}")
-        else:
-            self.stats_url_base = stats_url
-            self.logger.debug("stats_url_base= %s" % self.stats_url_base)
+        self.url_base = url
+        self.logger.debug("url_base= %s" % self.url_base)
+
+        self.stats_url_base = stats_url
+        self.logger.debug("stats_url_base= %s" % self.stats_url_base)
+
+        def verify_port(input_port: int | str | Sentinel) -> None:
+            port_name = _get_var_name(input_port)
+            self.logger.debug(f"{port_name} is not NotSet: {input_port is not NotSet}")
+            self.logger.debug(f"{port_name} ({type(input_port)}) = {input_port}")
+
+            if input_port is not NotSet and not isinstance(input_port, int):
+                err_msg = (f"{_get_function_name()}: '{port_name}' must be an integer between "
+                           f"{self.MINIMUM_PORT_VALUE} and {self.MAXIMUM_PORT_VALUE} or not provided. "
+                           f"[type={type(port)}, should be <int>]")
+                self.logger.error(err_msg)
+                raise ValueError(err_msg)
+
+            if input_port is not NotSet and not (self.MINIMUM_PORT_VALUE <= input_port <= self.MAXIMUM_PORT_VALUE):
+                err_msg = (f"'{port_name}' is between {self.MINIMUM_PORT_VALUE} and "
+                           f"{self.MAXIMUM_PORT_VALUE}: "
+                           f"{not (self.MINIMUM_PORT_VALUE <= input_port <= self.MAXIMUM_PORT_VALUE)}"
+                           )
+                self.logger.debug(err_msg)
+                raise ValueError(
+                    f"'{port_name}' must be between {self.MINIMUM_PORT_VALUE} and {self.MAXIMUM_PORT_VALUE}.")
+
+        for param in [port, stats_port]:
+            verify_port(param)
 
         # host and port parameters override defaults
-        if host:
-            self.url_base = self.construct_url_base(protocol, host, port)
+        if not all(map(lambda list_item: list_item is NotSet, [host, port, protocol, stats_port])):
+            com_host = host
+            if protocol is not OPTIONAL and protocol.lower() not in self.ALLOWED_PROTOCOLS:
+                raise ValueError(f"{_get_function_name()}: 'protocol' argument must be one of {self.ALLOWED_PROTOCOLS}")
+            com_proto = protocol
+            com_port = port
+            com_stats_port = stats_port
+
+            if host is NotSet:
+                com_host = self.DEFAULT_HOST
+
+            if port is NotSet:
+                com_port = self.DEFAULT_PORT
+
+            if protocol is NotSet:
+                com_proto = self.DEFAULT_PROTOCOL
+
+            if stats_port is NotSet:
+                com_stats_port = self.DEFAULT_STATS_PORT
+
+            self.url_base = self.construct_url_base(com_proto, com_host, com_port)
             self.logger.debug("url_base= %s" % self.url_base)
-            self.stats_url_base = self.construct_url_base(protocol, host, stats_port)
+
+            self.stats_url_base = self.construct_url_base(com_proto, com_host, com_stats_port)
             self.logger.debug("stats_url_base= %s" % self.stats_url_base)
 
         # Use values passed from client first, otherwise check for environment variables
-        if access_key:
-            self.access_key = access_key
+        if access_key is not OPTIONAL:
+            self.__access_key = access_key
         elif "ACCESS_KEY" in os.environ.keys():
-            self.access_key = os.getenv("ACCESS_KEY", "")
+            self.__access_key = os.getenv("ACCESS_KEY", "")
         else:
-            self.access_key = NotGiven
+            self.__access_key = NotSet
 
-        if secret_key:
-            self.secret_key = secret_key
+        if secret_key is not OPTIONAL:
+            self.__secret_key = secret_key
         elif "SECRET_KEY" in os.environ.keys():
-            self.secret_key = os.getenv("SECRET_KEY", "")
+            self.__secret_key = os.getenv("SECRET_KEY", "")
         else:
-            self.secret_key = NotGiven
+            self.__secret_key = NotSet
 
-        self.hmac = False if self.access_key is NotGiven and self.secret_key is NotGiven else True
+        self.hmac = False if self.__access_key is NotSet and self.__secret_key is NotSet else True
 
         self.logger.debug("url_base= %s" % self.url_base)
         self.logger.debug("stats_url_base= %s" % self.stats_url_base)
         self.logger.debug("hmac= %s" % self.hmac)
 
+    @property
+    def access_key(self) -> str:
+        return self.__access_key
+
+    @property
+    def secret_key(self) -> str:
+        return "<HIDDEN>"
+
     @staticmethod
-    def _update_hmac_obj(hmac_obj: HMAC, values: list[str]) -> HMAC:
+    def _update_hmac_obj(hmac_obj: HMAC | Sentinel = REQUIRED, values: list[str] | Sentinel = REQUIRED) -> HMAC:
         """Add encoded values to hmac object
 
         Args:
@@ -150,12 +215,22 @@ class SwgohComlinkBase:
             The updated HMAC object
 
         """
+        if hmac_obj is MISSING or values is MISSING:
+            raise ValueError(f"{_get_function_name()}: Both 'hmac_obj' and 'values' arguments are required.")
+
+        if not isinstance(hmac_obj, HMAC):
+            raise ValueError(f"{_get_function_name()}: 'hmac_obj' argument must be type <HMAC>")
+
+        if not isinstance(values, list):
+            raise ValueError(f"{_get_function_name()}: 'values' argument must be type <list>")
+
         for value in values:
             hmac_obj.update(value.encode())
         return hmac_obj
 
     @staticmethod
-    def _construct_unit_stats_query_string(flags: list[str], language: str = "eng_us") -> str | None:
+    def _construct_unit_stats_query_string(flags: list[str] | Sentinel = OPTIONAL,
+                                           language: str = "eng_us") -> str | None:
         """Constructs query string from provided flags and language to be used with the get_unit_stats() function
 
         Args:
@@ -184,25 +259,27 @@ class SwgohComlinkBase:
                 ]
             )
         )
-        language_string = f"language={language}" if language else None
-        if flags:
-            if not isinstance(flags, list):
-                raise ValueError(
-                    f"{_get_function_name()}, Invalid flags '{flags}', must be type list of strings."
-                )
-            tmp_flags: set = set(sorted(list(dict.fromkeys(flags))))
-            flag_string = (
-                f'flags={",".join(sorted(tmp_flags.intersection(allowed_flags)))}'
-                if flags
-                else str()
-            )
-            constructed_string = "&".join(filter(None, [flag_string, language_string]))
-            return f"?{constructed_string}"
-        else:
-            return None
 
-    @staticmethod
-    def construct_url_base(protocol: str, host: str, port: int) -> str:
+        if language not in LANGUAGES:
+            language = "eng_us"
+
+        language_string = f"language={language}"
+
+        if not isinstance(flags, list) and flags is not OPTIONAL:
+            raise ValueError(f"{_get_function_name()}, Invalid flags '{flags}', must be type list of strings.")
+
+        if flags is NotSet:
+            flags = []
+        tmp_flags: set = set(sorted(list(dict.fromkeys(flags))))
+        flag_string = (
+            f'flags={",".join(sorted(tmp_flags.intersection(allowed_flags)))}'
+            if flags
+            else str()
+        )
+        constructed_string = "&".join(filter(None, [flag_string, language_string]))
+        return f"?{constructed_string}"
+
+    def construct_url_base(self, protocol: str, host: str, port: int) -> str:
         """Construct a URL base string from protocol, host and port inputs
 
         Args:
@@ -217,20 +294,11 @@ class SwgohComlinkBase:
             ValueError: If protocol is not 'http' or 'https' or port is not between 1024 and 65535.
 
         """
-        if protocol not in ["http", "https"]:
+        if protocol not in self.ALLOWED_PROTOCOLS:
             raise ValueError(f"Protocol must be http or https.")
-        if 65535 < port < 1024:
-            raise ValueError(f"Port number must be between 1024 and 65535.")
+        if self.MAXIMUM_PORT_VALUE < port < self.MINIMUM_PORT_VALUE:
+            raise ValueError(f"Port number must be between {self.MINIMUM_PORT_VALUE} and {self.MAXIMUM_PORT_VALUE}.")
         return f"{protocol}://{host}:{port}"
-
-    DEFAULT_URL: str = construct_url_base(host=host, port=port, protocol=protocol)
-    # str: The URL of the swgoh-comlink service. Defaults to http://localhost:3000
-
-    DEFAULT_STATS_URL: str = construct_url_base(
-        host=host, port=stats_port, protocol=protocol
-    )
-
-    # str: The URL of the swgoh-stats service. Defaults to http://localhost:3223
 
     @staticmethod
     def _get_player_payload(
@@ -254,7 +322,7 @@ class SwgohComlinkBase:
             Dict: swgoh-comlink payload object
 
         """
-        if allycode is NotGiven and player_id is NotGiven:
+        if allycode is NotSet and player_id is NotSet:
             raise ValueError("Either allycode or player_id must be provided.")
         if isinstance(allycode, int):
             allycode = str(allycode)
@@ -277,9 +345,11 @@ class SwgohComlinkBase:
             client_specs: dict | Sentinel = OPTIONAL, enums: bool = False
     ) -> dict:
         """Create client_spec dictionary for get_metadata() method"""
-        payload = {}
-        if client_specs:
-            payload = {"payload": {"clientSpecs": client_specs}, "enums": enums}
+        get_logger().debug(f"{_get_function_name()}, client_specs={client_specs}, enums={enums}")
+        payload = {"payload": {}, "enums": enums}
+        if isinstance(client_specs, dict):
+            payload["payload"]["clientSpecs"] = client_specs
+        get_logger().debug(f"{_get_function_name()}, payload={payload}")
         return payload
 
     @staticmethod
@@ -290,7 +360,7 @@ class SwgohComlinkBase:
             enums: bool = False,
     ) -> dict:
         """Create game_data payload object and return"""
-        if version is NotGiven:
+        if version is OPTIONAL and version is not SET:
             return {}
         return {
             "payload": {
@@ -303,10 +373,10 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _make_guild_payload(
-            guild_id: str | Sentinel = OPTIONAL, include_recent_activity: bool = False, enums: bool = False
+            guild_id: str | Sentinel = REQUIRED, include_recent_activity: bool = False, enums: bool = False
     ) -> dict:
         """Create get_guild() method payload object"""
-        if guild_id is NotGiven:
+        if guild_id is REQUIRED and guild_id is not SET:
             raise ValueError(f"{_get_function_name()}, 'guild_id' must be provided.")
 
         return {
@@ -319,10 +389,10 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _make_guilds_by_name_payload(
-            guild_name: str | Sentinel = OPTIONAL, index: int = 0, count: int = 10, enums: bool = False
+            guild_name: str | Sentinel = REQUIRED, index: int = 0, count: int = 10, enums: bool = False
     ) -> dict:
         """Create get_builds_by_name() method payload object"""
-        if guild_name is NotGiven:
+        if guild_name is REQUIRED and guild_name is not SET:
             raise ValueError(f"{_get_function_name()}, 'guild_name' must be provided.")
 
         return {
@@ -337,10 +407,10 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _make_guilds_by_criteria_payload(
-            criteria: dict, index: int = 0, count: int = 10, enums: bool = False
+            criteria: dict | Sentinel = REQUIRED, index: int = 0, count: int = 10, enums: bool = False
     ) -> dict:
         """Create get_builds_by_name() method payload object"""
-        if not criteria:
+        if criteria is REQUIRED and criteria is not SET:
             raise ValueError(f"{_get_function_name()}, 'criteria' must be provided.")
 
         return {
@@ -355,15 +425,18 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _make_get_leaderboards_payload(
-            lb_type: int = 0,
-            league: int | str | Sentinel = OPTIONAL,
-            division: int | str | Sentinel = OPTIONAL,
-            event_instance_id: str | Sentinel = OPTIONAL,
-            group_id: str | Sentinel = OPTIONAL,
+            lb_type: int | Sentinel = REQUIRED,
+            league: int | str | Sentinel = NotGiven,
+            division: int | str | Sentinel = NotGiven,
+            event_instance_id: str | Sentinel = NotGiven,
+            group_id: str | Sentinel = NotGiven,
             enums: bool = False,
     ) -> dict:
         """Create get_leaderboards() method payload"""
-        if lb_type != 4 and lb_type != 6:
+        if lb_type is REQUIRED and lb_type is not SET:
+            raise ValueError(f"{_get_function_name()}, 'lb_type' must be provided.")
+
+        if lb_type not in (4, 6):
             raise ValueError(
                 f"{_get_function_name()}, 'leaderboard_type' must be either 4 (GAC brackets) or 6 (Global "
                 f"Leaderboards"
@@ -376,11 +449,28 @@ class SwgohComlinkBase:
             "enums": enums,
         }
         if lb_type == 4:
+            if ((event_instance_id is NotGiven and event_instance_id is not SET) or
+                    not isinstance(event_instance_id, str)):
+                raise ValueError(f"{_get_function_name()}, 'event_instance_id' string must be provided.")
+
+            if (group_id is NotGiven and group_id is not SET) or not isinstance(group_id, str):
+                raise ValueError(f"{_get_function_name()}, 'group_id' string must be provided.")
             payload["payload"]["eventInstanceId"] = event_instance_id
             payload["payload"]["groupId"] = group_id
         elif lb_type == 6:
+            if league is NotGiven and league is not SET:
+                raise ValueError(f"{_get_function_name()}, 'league' must be provided.")
+            if division is NotGiven and division is not SET:
+                raise ValueError(f"{_get_function_name()}, 'division' must be provided.")
+
             league = convert_league_to_int(league) if isinstance(league, str) else league
+            if league not in LEAGUES.values():
+                raise ValueError(f"{_get_function_name()}: Invalid league {league}.")
+
             division = convert_divisions_to_int(division) if isinstance(division, str) else division
+            if division not in DIVISIONS.values():
+                raise ValueError(f"{_get_function_name()}: Invalid division {division}.")
+
             payload["payload"]["league"] = league
             payload["payload"]["division"] = division
         return payload
@@ -418,14 +508,14 @@ class SwgohComlinkBase:
             payload_string = dumps(payload or {}, separators=(",", ":"))
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
 
-            hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
+            hmac_obj = hmac.new(key=self.__secret_key.encode(), digestmod=hashlib.sha256)
             hmac_obj = self._update_hmac_obj(
                 hmac_obj, [req_time, "POST", f"/{endpoint}", payload_hash_digest]
             )
 
             hmac_digest = hmac_obj.hexdigest()
             headers["Authorization"] = (
-                f"HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}"
+                f"HMAC-SHA256 Credential={self.__access_key},Signature={hmac_digest}"
             )
         return headers
 

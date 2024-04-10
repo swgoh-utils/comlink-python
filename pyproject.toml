@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "httpx"]
+requires = ["hatchling", "httpx", "sentinels"]
 build-backend = "hatchling.build"
 
 [project]
@@ -10,14 +10,24 @@ authors = [
 ]
 description = "Python 3 interface library for the swgoh-comlink data proxy container (https://github.com/swgoh-utils/swgoh-comlink)"
 readme = "docs/index.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
 ]
 dependencies = [
     "httpx",
+    "sentinels",
     "mkdocstrings-python",
     "mkdocs-material",
     "mkdocs-material-extensions",
