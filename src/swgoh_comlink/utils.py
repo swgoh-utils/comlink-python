@@ -23,26 +23,33 @@ from .constants import (
     RELIC_TIERS,
     DATA_PATH,
     GIVEN,
+    MISSING,
+    NotSet,
+    OPTIONAL,
     REQUIRED,
     MutualExclusiveRequired,
 )
 
 if TYPE_CHECKING:
-    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
+    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: ignore
 
-logger = get_logger()
+print(f"Getting logger for utils...")
+default_logger = get_logger(default_logger=True)
+default_logger.debug(f"Utils logging is set to {default_logger.name}...")
 
 __all__ = [
     "convert_divisions_to_int",
     "convert_league_to_int",
     "convert_relic_tier",
     "create_localized_unit_name_dictionary",
+    "default_logger",
     "func_debug_logger",
     "func_timer",
     "get_async_player",
     "get_async_events",
     "get_current_datacron_sets",
     "get_current_gac_event",
+    "get_function_name",
     "get_gac_brackets",
     "get_guild_members",
     "get_tw_omicrons",
@@ -54,21 +61,18 @@ __all__ = [
 ]
 
 
-def _get_function_name() -> str:
-    """Return the name for the calling function"""
+def get_function_name() -> str:
     return f"{inspect.stack()[1].function}()"
 
 
 def func_timer(f):
-    """Decorator for timing function calls"""
-
     @wraps(f)
     def wrap(*args, **kw):
         """Wrapper function"""
         ts = time.time()
         result = f(*args, **kw)
         te = time.time()
-        logger.debug(f"func:{f.__name__} took: {te - ts:.6f} sec")
+        default_logger.debug(f"func:{f.__name__} took: {te - ts:.6f} sec")
         return result
 
     return wrap
@@ -80,7 +84,7 @@ def func_debug_logger(f):
     @wraps(f)
     def wrap(*args, **kw):
         """Wrapper function"""
-        logger.debug(
+        default_logger.debug(
             "  [ function %s ] called with args: %s and kwargs: %s",
             f.__name__,
             args,
@@ -102,9 +106,9 @@ def validate_file_path(path: str | Path | PathLike | Sentinel = REQUIRED) -> boo
         True if exists, False otherwise.
 
     """
-    if path is not GIVEN and not path:
-        err_msg = f"{_get_function_name()}: 'path' argument is required."
-        logger.error(err_msg)
+    if path is MISSING or not path:
+        err_msg = f"{get_function_name()}: 'path' argument is required."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
     return os.path.exists(path) and os.path.isfile(path)
 
@@ -126,17 +130,17 @@ def sanitize_allycode(allycode: str | int | Sentinel = REQUIRED) -> str:
     """
     _orig_ac = allycode
     if not allycode and allycode is not GIVEN:
-        logger.warning(f"{_get_function_name()}: no allycode input provided. Returning empty string.")
+        default_logger.warning(f"{get_function_name()}: no allycode input provided. Returning empty string.")
         return str()
     if isinstance(allycode, int):
         allycode = str(allycode)
     if "-" in str(allycode):
         allycode = allycode.replace("-", "")
     if not allycode.isdigit() or len(allycode) != 9:
-        err_msg = f"{_get_function_name()}: Invalid ally code: {allycode}"
-        logger.error(err_msg)
+        err_msg = f"{get_function_name()}: Invalid ally code: {allycode}"
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
-    logger.debug(f"{_get_function_name()}: {_orig_ac} allycode sanitized to: {allycode}")
+    default_logger.debug(f"{get_function_name()}: {_orig_ac} allycode sanitized to: {allycode}")
     return allycode
 
 
@@ -155,9 +159,9 @@ def human_time(unix_time: int | float | Sentinel = REQUIRED) -> str:
 
     """
     print(f"unix_time: {unix_time}")
-    if unix_time is not GIVEN and not str(unix_time):
-        err_msg = f"{_get_function_name()}: The 'unix_time' argument is required."
-        logger.error(err_msg)
+    if unix_time is MISSING or not str(unix_time):
+        err_msg = f"{get_function_name()}: The 'unix_time' argument is required."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
     from datetime import datetime, timezone
     if isinstance(unix_time, float):
@@ -165,11 +169,10 @@ def human_time(unix_time: int | float | Sentinel = REQUIRED) -> str:
     if isinstance(unix_time, str):
         try:
             unix_time = int(unix_time)
-        except Exception as exc:
-            logger.exception(f"Exception caught: [{exc}]")
-            return datetime.fromtimestamp(0, tz=timezone.utc).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+        except ValueError:
+            err_msg = f"{get_function_name()}: Unable to convert unix time from {type(unix_time)} to type <int>"
+            default_logger.exception(err_msg)
+            raise ValueError(err_msg)
     if len(str(unix_time)) >= 13:
         unix_time /= 1000
     return datetime.fromtimestamp(unix_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -185,9 +188,9 @@ def convert_league_to_int(league: str | Sentinel = REQUIRED) -> int | None:
         GAC league identifier as used in game data
 
     """
-    if league is not GIVEN and not league:
-        err_msg = f"{_get_function_name()}: The 'league' argument is required."
-        logger.error(err_msg)
+    if league is MISSING or not league:
+        err_msg = f"{get_function_name()}: The 'league' argument is required."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
 
     if isinstance(league, str) and league.lower() in LEAGUES:
@@ -206,9 +209,9 @@ def convert_divisions_to_int(division: int | str | Sentinel = REQUIRED) -> int |
         GAC division identifier as used within game data
 
     """
-    if division is not GIVEN and not division:
-        err_msg = f"{_get_function_name()}: The 'division' argument is required."
-        logger.error(err_msg)
+    if division is MISSING or not division:
+        err_msg = f"{get_function_name()}: The 'division' argument is required."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
 
     if isinstance(division, str):
@@ -242,8 +245,8 @@ def convert_relic_tier(relic_tier: str | int | Sentinel = REQUIRED) -> str | Non
             but has not yet upgraded to the first level.
     """
     if not isinstance(relic_tier, str) and not isinstance(relic_tier, int):
-        err_msg = f"{_get_function_name()}: 'relic_tier' argument is required for conversion."
-        logger.error(err_msg)
+        err_msg = f"{get_function_name()}: 'relic_tier' argument is required for conversion."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
     relic_value = None
     if isinstance(relic_tier, int):
@@ -269,8 +272,8 @@ def create_localized_unit_name_dictionary(locale: str | list | Sentinel = REQUIR
 
     """
     if not isinstance(locale, list) and not isinstance(locale, str):
-        err_msg = f"{_get_function_name()}: locale must be a list of strings or string containing newlines."
-        logger.error(err_msg)
+        err_msg = f"{get_function_name()}: locale must be a list of strings or string containing newlines."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
 
     unit_name_map = {}
@@ -292,34 +295,51 @@ def create_localized_unit_name_dictionary(locale: str | list | Sentinel = REQUIR
     return unit_name_map
 
 
-async def get_async_player(comlink: SwgohComlinkAsync,
+@func_debug_logger
+async def get_async_player(comlink: SwgohComlinkAsync | Sentinel = REQUIRED,
                            *,
                            player_id: str | Sentinel = MutualExclusiveRequired,
-                           allycode: str | Sentinel = MutualExclusiveRequired) -> dict | None:
-    if not isinstance(comlink, SwgohComlinkAsync):
-        err_msg = (f"{_get_function_name()}: The 'comlink' argument is required and must be an "
+                           allycode: str | int | Sentinel = MutualExclusiveRequired) -> dict:
+    log_msg = f"Beginning async player call with arguments: {comlink=}, {player_id=}, {allycode=}"
+    default_logger.debug('[DEFAULT_LOGGER]  ' + log_msg)
+
+    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
+    if comlink is MISSING or comlink_type != 'SwgohComlinkAsync':
+        err_msg = (f"{get_function_name()}: The 'comlink' argument is required and must be an "
                    f"instance of SwgohComlinkAsync.")
-        logger.error(err_msg)
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
 
-    if player_id is not MutualExclusiveRequired and allycode is not MutualExclusiveRequired:
-        err_msg = f"{_get_function_name()}: Either 'player_id' or 'allycode' are allowed arguments, not both."
-        logger.error(err_msg)
+    default_logger.warning(f"player_id is not MutualExclusiveRequired: {player_id is not MutualExclusiveRequired}")
+    default_logger.warning(f"allycode is not MutualExclusiveRequired: {allycode is not MutualExclusiveRequired}")
+    if isinstance(player_id, str) and (isinstance(allycode, str) or isinstance(allycode, int)):
+        err_msg = f"{get_function_name()}: Either 'player_id' or 'allycode' are allowed arguments, not both."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
 
+    default_logger.warning(f"player_id is MutualExclusiveRequired: {player_id is MutualExclusiveRequired}")
+    default_logger.warning(f"allycode is MutualExclusiveRequired: {allycode is MutualExclusiveRequired}")
     if player_id is MutualExclusiveRequired and allycode is MutualExclusiveRequired:
-        err_msg = f"{_get_function_name()}: One of either 'player_id' or 'allycode' is required."
-        logger.error(err_msg)
+        err_msg = f"{get_function_name()}: One of either 'player_id' or 'allycode' is required."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
+
+    if allycode is not MutualExclusiveRequired:
+        if isinstance(allycode, int):
+            allycode = str(allycode)
+        if not isinstance(allycode, str):
+            err_msg = f"{get_function_name()}: 'allycode' must be a string or integer value."
+            default_logger.error(err_msg)
+            raise ValueError(err_msg)
 
     if player_id is not MutualExclusiveRequired and isinstance(player_id, str):
         return await comlink.get_player(player_id=player_id)
     elif allycode is not MutualExclusiveRequired and isinstance(allycode, str):
         return await comlink.get_player(allycode=allycode)
     else:
-        logger.error(f"{_get_function_name()}: Unexpected condition encountered. Returning <None>")
-        logger.debug(f"{_get_function_name()}: {player_id=}, {allycode=}")
-        return None
+        default_logger.error(f"{get_function_name()}: Unexpected condition encountered. Returning <None>")
+        default_logger.debug(f"{get_function_name()}: {player_id=}, {allycode=}")
+        return {}
 
 
 def get_guild_members(
@@ -341,47 +361,81 @@ def get_guild_members(
         A player_id or allycode argument is REQUIRED
 
     """
-    if not isinstance(comlink, SwgohComlinkAsync) and not isinstance(comlink, SwgohComlink):
-        err_msg = (f"{_get_function_name()}: The 'comlink' argument is required and must be an "
+    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
+    if comlink is MISSING or (comlink_type != 'SwgohComlinkAsync' and comlink_type != 'SwgohComlink'):
+        err_msg = (f"{get_function_name()}: The 'comlink' argument is required and must be an "
                    f"instance of SwgohComlinkAsync.")
-        logger.error(err_msg)
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
 
     if player_id is not MutualExclusiveRequired and allycode is not MutualExclusiveRequired:
-        err_msg = f"{_get_function_name()}: Either 'player_id' or 'allycode' are allowed arguments, not both."
-        logger.error(err_msg)
+        err_msg = f"{get_function_name()}: Either 'player_id' or 'allycode' are allowed arguments, not both."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
 
     if player_id is MutualExclusiveRequired and allycode is MutualExclusiveRequired:
-        err_msg = f"{_get_function_name()}: One of either 'player_id' or 'allycode' is required."
-        logger.error(err_msg)
+        err_msg = f"{get_function_name()}: One of either 'player_id' or 'allycode' is required."
+        default_logger.error(err_msg)
         raise ValueError(err_msg)
 
-    if isinstance(comlink, SwgohComlink):  # noqa: type
+    guild = {"member": []}
+    player = {}
+    if comlink_type == 'SwgohComlink':  # noqa: type
         if isinstance(player_id, str):
             player = comlink.get_player(player_id=player_id)
         else:
             player = comlink.get_player(allycode=sanitize_allycode(allycode))
         guild = comlink.get_guild(guild_id=player["guildId"])
-    elif isinstance(comlink, SwgohComlinkAsync):  # noqa: type
+    elif comlink_type == 'SwgohComlinkAsync':  # noqa: type
+        loop = asyncio.get_event_loop()
         if isinstance(player_id, str):
-            player = asyncio.run(get_async_player(comlink=comlink, player_id=player_id))
+            try:
+                if not loop.is_running():
+                    player = loop.run_until_complete(get_async_player(comlink=comlink, player_id=player_id))
+                else:
+                    loop.stop()
+                    while loop.is_running():
+                        time.sleep(0.1)
+                    player = loop.run_until_complete(get_async_player(comlink=comlink, player_id=player_id))
+            except RuntimeError as async_exc:
+                async_exc = str(async_exc).replace("\n", "-")
+                default_logger.warning(f"{get_function_name()}: {async_exc}")
         else:
-            player = asyncio.run(get_async_player(comlink=comlink, allycode=allycode))
-        guild = asyncio.run(comlink.get_guild(guild_id=player["guildId"]))
-    else:
-        logger.error(f"{_get_function_name()}: Invalid comlink instance.")
-        raise ValueError(f"{_get_function_name()}: Invalid comlink instance")
+            try:
+                if not loop.is_running():
+                    player = loop.run_until_complete(get_async_player(comlink=comlink, allycode=allycode))
+                else:
+                    loop.stop()
+                    while loop.is_running():
+                        time.sleep(0.1)
+                    player = loop.run_until_complete(get_async_player(comlink=comlink, allycode=allycode))
+            except RuntimeError as async_exc:
+                async_exc = str(async_exc).replace("\n", "-")
+                default_logger.warning(f"{get_function_name()}: {async_exc}")
+        try:
+            if not loop.is_running():
+                guild = loop.run_until_complete(comlink.get_guild(guild_id=player["guildId"]))
+            else:
+                loop.stop()
+                while loop.is_running():
+                    time.sleep(0.1)
+                guild = loop.run_until_complete(comlink.get_guild(guild_id=player["guildId"]))
+        except RuntimeError as async_exc:
+            async_exc = str(async_exc).replace("\n", "-")
+            default_logger.warning(f"{get_function_name()}: {async_exc}")
     return guild["member"]
 
 
 async def get_async_events(comlink: SwgohComlinkAsync | Sentinel = REQUIRED) -> dict:
-    if isinstance(comlink, Sentinel) or isinstance(comlink, SwgohComlink):
-        raise ValueError(f"{_get_function_name()}: async comlink instance must be provided.")
-    return await comlink.get_events()
+    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
+    if isinstance(comlink, Sentinel) or comlink_type == 'SwgohComlink':
+        raise ValueError(f"{get_function_name()}: async comlink instance must be provided.")
+    elif comlink_type == 'SwgohComlinkAsync':
+        return await comlink.get_events()
 
 
-def get_current_gac_event(comlink: SwgohComlink | SwgohComlinkAsync | Sentinel = REQUIRED) -> dict:
+def get_current_gac_event(
+        comlink: SwgohComlink | SwgohComlinkAsync | Sentinel = REQUIRED) -> dict:
     """Return the event object for the current gac season
 
     Args:
@@ -391,16 +445,25 @@ def get_current_gac_event(comlink: SwgohComlink | SwgohComlinkAsync | Sentinel =
         Current GAC event object or empty if no event is running
 
     """
-    if isinstance(comlink, Sentinel):
-        raise ValueError(f"{_get_function_name()}: comlink instance must be provided.")
+    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
+    default_logger.debug(f"{get_function_name()}: Getting current gac event. {comlink=}")
+    default_logger.debug(f"{get_function_name()}: 'comlink' argument is instance of SwgohComlink:  "
+                         f"{comlink_type == 'SwgohComlink'}")
+
+    if comlink is MISSING or (comlink_type != 'SwgohComlink' and
+                              comlink_type != 'SwgohComlinkAsync'):
+        err_str = f"{get_function_name()}: comlink instance must be provided."
+        default_logger.error(err_str)
+        raise ValueError(err_str)
 
     current_gac_event: dict = {}
-    if isinstance(comlink, SwgohComlink):  # type: ignore
-        current_events: dict[str, list] = comlink.get_events()
-    elif isinstance(comlink, SwgohComlinkAsync):
-        current_events: dict[str, list] = asyncio.run(get_async_events(comlink))
+    if comlink_type == 'SwgohComlink':  # type: ignore
+        current_events = comlink.get_events()
+    elif comlink_type == 'SwgohComlinkAsync':
+        current_events = asyncio.run(get_async_events(comlink))
     else:
-        raise ValueError(f"{_get_function_name()} Invalid comlink instance")
+        return current_gac_event
+
     for event in current_events["gameEvent"]:
         if event["type"] == 10:
             current_gac_event = event
@@ -408,31 +471,50 @@ def get_current_gac_event(comlink: SwgohComlink | SwgohComlinkAsync | Sentinel =
     return current_gac_event
 
 
-def get_gac_brackets(comlink: SwgohComlink, league: str) -> dict | None:
+def get_gac_brackets(comlink: SwgohComlink | Sentinel = REQUIRED,
+                     league: str | Sentinel = REQUIRED,
+                     limit: int | Sentinel = OPTIONAL) -> dict | None:
     """Scan currently running GAC brackets for the requested league and return them as a dictionary
 
     Args:
         comlink: Instance of SwgohComlink
         league: League to scan
+        limit: Number of brackets to return
 
     Returns:
         Dictionary containing each GAC bracket as a key
 
     """
+    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
+    if comlink is MISSING or comlink_type != 'SwgohComlink':
+        err_msg = f"{get_function_name()}: Invalid comlink instance."
+        default_logger.error(err_msg)
+        raise ValueError(err_msg)
+
+    if league is MISSING or not isinstance(league, str):
+        err_msg = f"{get_function_name()}: 'league' type <str> argument is required."
+        default_logger.error(err_msg)
+        raise ValueError(err_msg)
+
+    bracket_iteration_limit: int | None = None if limit is NotSet else int(limit)
+    default_logger.debug(f"{get_function_name()}: Bracket iteration limit is {bracket_iteration_limit}")
+
     current_gac_event = get_current_gac_event(comlink)
+
     if current_gac_event:
         current_event_instance = (
             f"{current_gac_event['id']}:{current_gac_event['instance'][0]['id']}"
         )
+        default_logger.debug(f"{get_function_name()}: Current GAC event instance is {current_event_instance}")
     else:
         # No current GAC season running
-        logger.warning("There is no GAC season currently active in game events.")
+        default_logger.warning("There is no GAC season currently active in game events.")
         return None
     bracket = 0
     # Use brackets to store the results for each bracket for processing once all brackets have been scanned
     brackets: dict = {}
     number_of_players_in_bracket = 8
-    while number_of_players_in_bracket > 0:
+    while number_of_players_in_bracket > 0 and bracket_iteration_limit != bracket:
         group_id = f"{current_event_instance}:{league}:{bracket}"
         group_of_8_players = comlink.get_gac_leaderboard(
             leaderboard_type=4,
@@ -442,6 +524,7 @@ def get_gac_brackets(comlink: SwgohComlink, league: str) -> dict | None:
         brackets[bracket] = brackets.get(bracket, group_of_8_players["player"])
         bracket += 1
         number_of_players_in_bracket = len(group_of_8_players["player"])
+    default_logger.debug(f"{get_function_name()}: Returning {len(brackets)} GAC brackets.")
     return brackets
 
 
@@ -484,7 +567,7 @@ def load_master_map(
         with open(full_path) as fn:
             return json.load(fn)
     except FileNotFoundError as e_str:
-        logger.error(f"Unable to open {full_path}: {e_str}")
+        default_logger.error(f"Unable to open {full_path}: {e_str}")
         return None
 
 
@@ -503,7 +586,7 @@ def get_current_datacron_sets(datacron_list: list) -> list:
     """
     if not isinstance(datacron_list, list):
         raise ValueError(
-            f"{_get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}"
+            f"{get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}"
         )
     import math
     current_datacron_sets = []
@@ -528,7 +611,7 @@ def get_tw_omicrons(skill_list: list) -> list:
     """
     if not isinstance(skill_list, list):
         raise ValueError(
-            f"{_get_function_name()}, 'skill_list' must be a list, not {type(skill_list)}"
+            f"{get_function_name()}, 'skill_list' must be a list, not {type(skill_list)}"
         )
     tw_omicrons = []
     for skill in skill_list:

@@ -18,7 +18,15 @@ import httpx
 from sentinels import Sentinel
 
 from swgoh_comlink.Base.swgoh_comlink_base import SwgohComlinkBase
-from swgoh_comlink.constants import REQUIRED, OPTIONAL, MISSING, NotSet, param_alias
+from swgoh_comlink.constants import (
+    REQUIRED,
+    OPTIONAL,
+    MISSING,
+    MutualExclusiveRequired,
+    MutualRequiredNotSet,
+    NotSet,
+    param_alias
+)
 
 __all__ = ["SwgohComlink"]
 
@@ -78,9 +86,10 @@ class SwgohComlink(SwgohComlinkBase):
                     f"/{endpoint}", json=payload, headers=req_headers
                 )
             return resp.json()
-        except Exception as e:
-            self.logger.exception("%s: %s", type(e).__name__, e)
-            raise e
+        except httpx.RequestError as exc:
+            exc_str = str(exc).replace("\n", "-")
+            self.logger.exception("%s: %s", type(exc).__name__, exc_str)
+            raise exc
 
     @param_alias(param="request_payload", alias="roster_list")
     def get_unit_stats(
@@ -138,8 +147,10 @@ class SwgohComlink(SwgohComlinkBase):
         try:
             resp = self.client.get(f"{self.url_base}/enums")
             return resp.json()
-        except Exception as e:
-            raise e
+        except httpx.RequestError as exc:
+            exc_str = str(exc).replace("\n", "-")
+            self.logger.exception("%s: %s", type(exc).__name__, exc_str)
+            raise exc
 
     # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums
@@ -264,7 +275,9 @@ class SwgohComlink(SwgohComlinkBase):
     get_metadata = get_game_metadata
 
     def get_player(
-            self, allycode: str | int | Sentinel = OPTIONAL, *, player_id: str | Sentinel = OPTIONAL,
+            self, allycode: str | int | Sentinel = MutualExclusiveRequired,
+            *,
+            player_id: str | Sentinel = MutualExclusiveRequired,
             enums: bool = False
     ) -> dict:
         """Get player information from game
@@ -281,6 +294,16 @@ class SwgohComlink(SwgohComlinkBase):
             ValueError: if neither an allycode nor player_id is provided
 
         """
+        if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
+            err_msg = f"{self._get_function_name()}: Either allycode or player_id must be provided."
+            self.logger.debug(err_msg)
+            raise ValueError(err_msg)
+
+        if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
+            err_msg = f"{self._get_function_name()}: Only one of allycode or player_id can be provided."
+            self.logger.debug(err_msg)
+            raise ValueError(err_msg)
+
         payload = self._get_player_payload(
             allycode=allycode, player_id=player_id, enums=enums
         )
@@ -295,9 +318,9 @@ class SwgohComlink(SwgohComlinkBase):
     @param_alias(param="player_details_only", alias="playerDetailsOnly")
     def get_player_arena(
             self,
-            allycode: str | int | Sentinel = OPTIONAL,
+            allycode: str | int | Sentinel = MutualExclusiveRequired,
             *,
-            player_id: str | Sentinel = OPTIONAL,
+            player_id: str | Sentinel = MutualExclusiveRequired,
             player_details_only: bool = False,
             enums: bool = False,
     ) -> dict:
@@ -317,6 +340,16 @@ class SwgohComlink(SwgohComlinkBase):
             ValueError: if neither a player_id nor allycode is provided
 
         """
+        if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
+            err_msg = f"{self._get_function_name()}: Either allycode or player_id must be provided."
+            self.logger.debug(err_msg)
+            raise ValueError(err_msg)
+
+        if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
+            err_msg = f"{self._get_function_name()}: Only one of allycode or player_id can be provided."
+            self.logger.debug(err_msg)
+            raise ValueError(err_msg)
+
         return self._post(
             endpoint="playerArena",
             payload=self._get_player_payload(
@@ -502,8 +535,8 @@ class SwgohComlink(SwgohComlinkBase):
     getGacLeaderboard = get_leaderboard
 
     def get_guild_leaderboard(
-            self, leaderboard_id: list, count: int = 200, enums: bool = False
-    ) -> list[dict]:
+            self, leaderboard_id: list | Sentinel = REQUIRED, count: int = 200, enums: bool = False
+    ) -> dict:
         """Retrieve leaderboard information from SWGOH game servers.
 
         Args:
@@ -514,12 +547,17 @@ class SwgohComlink(SwgohComlinkBase):
             enums: Convert enums to strings [Default: False]
 
         Returns:
-            List of the leaderboard objects
+            Dictionary of the leaderboard query results under a single top level key named 'leaderboard'
 
         Raises:
             ValueError: If leaderboard_id is not a list object
 
         """
+        if leaderboard_id is MISSING or not isinstance(leaderboard_id, list):
+            err_msg = f"{self._get_function_name()}: 'leaderboard_id' argument is required."
+            self.logger.error(err_msg)
+            raise ValueError(err_msg)
+
         return self._post(
             endpoint="getGuildLeaderboard",
             payload=self._make_get_guild_leaderboard_payload(

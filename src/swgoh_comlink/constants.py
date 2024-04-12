@@ -5,6 +5,7 @@ Constants used throughout the swgoh_comlink package
 
 from __future__ import annotations
 
+import inspect
 import logging
 import os
 from functools import wraps
@@ -22,6 +23,7 @@ MISSING = Sentinel('REQUIRED')
 NotSet = Sentinel('NotSet')
 SET = Sentinel('NotMissing')
 MutualExclusiveRequired = Sentinel('MutualExclusiveRequired')
+MutualRequiredNotSet = Sentinel('MutualExclusiveRequired')
 
 _DEFAULT_LOGGER_NAME: str = "swgoh_comlink"
 _DEFAULT_LOGGER_ENABLED: bool = False
@@ -34,6 +36,7 @@ __all__ = [
     NotGiven,  # Sentinel
     REQUIRED,  # Sentinel
     MutualExclusiveRequired,  # Sentinel
+    MutualRequiredNotSet,
     NotSet,  # Sentinel
     SET,
     "DATA_PATH",
@@ -99,8 +102,14 @@ class LoggingFormatter(logging.Formatter):
         return formatter.format(record)
 
 
+def _get_function_name() -> str:
+    """Return the name for the calling function"""
+    return f"{inspect.stack()[1].function}()"
+
+
 def enable_default_logger():
     global _DEFAULT_LOGGER_ENABLED
+    get_logger().debug("Enabled default default_logger")
     _DEFAULT_LOGGER_ENABLED = True
 
 
@@ -126,26 +135,26 @@ def _get_new_logger(
         name: str | Sentinel = OPTIONAL,
         *,
         log_level: str = "DEBUG",
-        log_to_console: bool = False,
+        log_to_console: bool = True,
         log_to_file: bool = True,
 ) -> logging.Logger:
-    """Get logger instance
+    """Get default_logger instance
 
     Args:
-        name: Name of the logger instance to create or retrieve
-        log_level: The message severity level to assign to the new logger instance
+        name: Name of the default_logger instance to create or retrieve
+        log_level: The message severity level to assign to the new default_logger instance
         log_to_console: Flag to enable console logging
         log_to_file: Flag to enable file logging
 
     Returns:
-        logger instance
+        default_logger instance
 
     """
-    tmp_logger = logging.getLogger(name)
-    tmp_logger.setLevel(logging.getLevelName(log_level))
-
     if name is NotSet:
         name = _DEFAULT_LOGGER_NAME
+
+    tmp_logger: logging.Logger = logging.getLogger(name)
+    tmp_logger.setLevel(logging.getLevelName(log_level))
 
     # Console handler
     if log_to_console:
@@ -153,6 +162,7 @@ def _get_new_logger(
         console_handler.setFormatter(LoggingFormatter())
         tmp_logger.addHandler(console_handler)
 
+    log_path = NotSet
     # File handler
     if log_to_file:
         logfile_name = name + ".log"
@@ -163,8 +173,13 @@ def _get_new_logger(
         file_handler_formatter = LoggingFormatter()
         file_handler.setFormatter(file_handler_formatter)
         tmp_logger.addHandler(file_handler)
+    tmp_logger.info("")
     tmp_logger.info(" --- [ Logging started for %s ] ---", name)
+    tmp_logger.info(" Log file path: %s", log_path)
+    global _LOGGER_REGISTRY
     _LOGGER_REGISTRY[name] = tmp_logger
+    tmp_logger.debug(f"{_LOGGER_REGISTRY[name]} added to the global default_logger registry under the key '{name}'.")
+    tmp_logger.debug(f"New default_logger name: {name} - Instance: {tmp_logger}")
     return tmp_logger
 
 
@@ -173,18 +188,22 @@ def get_logger(
         default_logger: bool = _DEFAULT_LOGGER_ENABLED,
         **kwargs,
 ) -> logging.Logger:
-    """Returns a logger"""
+    """Returns a default_logger"""
+    print(f"\nReceived default_logger request from {_get_function_name()}\n")
     if name in _LOGGER_REGISTRY:
+        print(f"\nFound default_logger in registry. Returning {_LOGGER_REGISTRY[name]}\n")
         return _LOGGER_REGISTRY[name]
     if default_logger:
         global _DEFAULT_LOGGER_ENABLED
         _DEFAULT_LOGGER_ENABLED = True
+        print(f"\nCreating new default_logger with {name=} {default_logger=}\n")
         return _get_new_logger(name, **kwargs)
     else:
-        # If the default logger is disabled, log messages to NULL handler
+        # If the default default_logger is disabled, log messages to NULL handler
         # This allows library users to implement their own loggers, if desired
         base_logger: logging.Logger = logging.getLogger(_DEFAULT_LOGGER_NAME)
         base_logger.addHandler(logging.NullHandler())
+        print(f"\nReturn base NULL default_logger instance.\n")
         return base_logger
 
 

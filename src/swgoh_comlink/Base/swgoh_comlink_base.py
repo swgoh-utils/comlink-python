@@ -23,10 +23,13 @@ from typing import Any
 
 from sentinels import Sentinel
 
+import swgoh_comlink.utils as utils
 from swgoh_comlink.constants import (
     get_logger,
     LANGUAGES,
     MISSING,
+    MutualExclusiveRequired,
+    MutualRequiredNotSet,
     NotGiven,
     NotSet,
     OPTIONAL,
@@ -35,11 +38,6 @@ from swgoh_comlink.constants import (
     LEAGUES,
     DIVISIONS
 )
-from swgoh_comlink.utils import (
-    sanitize_allycode,
-    convert_league_to_int,
-    convert_divisions_to_int,
-)
 
 __all__ = ["SwgohComlinkBase"]
 
@@ -47,14 +45,6 @@ __all__ = ["SwgohComlinkBase"]
 def _get_function_name() -> str:
     """Return the name for the calling function"""
     return f"{inspect.stack()[1].function}()"
-
-
-def _get_var_name(var) -> str:
-    """Return the name of the requested variable as a string"""
-    for fi in reversed(inspect.stack()):
-        names = [var_name for var_name, var_val in fi.frame.f_locals.items() if var_val is var]
-        if len(names) > 0:
-            return names[0]
 
 
 class SwgohComlinkBase:
@@ -114,17 +104,19 @@ class SwgohComlinkBase:
                 Either of the options should be chosen but not both.
 
         """
-
         self.logger = get_logger(default_logger=default_logger_enabled)
+        # self.logger = utils.default_logger
+        self.logger.debug("Initializing SwgohComlinkBase")
+        self.logger.debug(f"Logger is {self.logger}")
 
         self.url_base = url
-        self.logger.debug("url_base= %s" % self.url_base)
+        self.logger.debug("Initial url_base= %s" % self.url_base)
 
         self.stats_url_base = stats_url
-        self.logger.debug("stats_url_base= %s" % self.stats_url_base)
+        self.logger.debug("Initial stats_url_base= %s" % self.stats_url_base)
 
         def verify_port(input_port: int | str | Sentinel) -> None:
-            port_name = _get_var_name(input_port)
+            port_name = self._get_var_name(input_port)
             self.logger.debug(f"{port_name} is not NotSet: {input_port is not NotSet}")
             self.logger.debug(f"{port_name} ({type(input_port)}) = {input_port}")
 
@@ -151,7 +143,9 @@ class SwgohComlinkBase:
         if not all(map(lambda list_item: list_item is NotSet, [host, port, protocol, stats_port])):
             com_host = host
             if protocol is not OPTIONAL and protocol.lower() not in self.ALLOWED_PROTOCOLS:
-                raise ValueError(f"{_get_function_name()}: 'protocol' argument must be one of {self.ALLOWED_PROTOCOLS}")
+                err_msg = f"{_get_function_name()}: 'protocol' argument must be one of {self.ALLOWED_PROTOCOLS}"
+                self.logger.error(err_msg)
+                raise ValueError(err_msg)
             com_proto = protocol
             com_port = port
             com_stats_port = stats_port
@@ -169,31 +163,34 @@ class SwgohComlinkBase:
                 com_stats_port = self.DEFAULT_STATS_PORT
 
             self.url_base = self.construct_url_base(com_proto, com_host, com_port)
-            self.logger.debug("url_base= %s" % self.url_base)
+            self.logger.debug("Updated url_base= %s" % self.url_base)
 
             self.stats_url_base = self.construct_url_base(com_proto, com_host, com_stats_port)
-            self.logger.debug("stats_url_base= %s" % self.stats_url_base)
+            self.logger.debug("Updated stats_url_base= %s" % self.stats_url_base)
 
         # Use values passed from client first, otherwise check for environment variables
         if access_key is not OPTIONAL:
             self.__access_key = access_key
         elif "ACCESS_KEY" in os.environ.keys():
+            self.logger.debug(f"{_get_function_name()}: 'ACCESS_KEY' found in environment variable.")
             self.__access_key = os.getenv("ACCESS_KEY", "")
+            self.logger.debug(f"{_get_function_name()}: 'ACCESS_KEY' has been set to {self.__access_key!r}.")
         else:
             self.__access_key = NotSet
 
         if secret_key is not OPTIONAL:
             self.__secret_key = secret_key
         elif "SECRET_KEY" in os.environ.keys():
+            self.logger.debug(f"{_get_function_name()}: 'SECRET_KEY' found in environment variable.")
             self.__secret_key = os.getenv("SECRET_KEY", "")
         else:
             self.__secret_key = NotSet
 
         self.hmac = False if self.__access_key is NotSet and self.__secret_key is NotSet else True
 
-        self.logger.debug("url_base= %s" % self.url_base)
-        self.logger.debug("stats_url_base= %s" % self.stats_url_base)
-        self.logger.debug("hmac= %s" % self.hmac)
+        self.logger.debug("Final url_base= %s" % self.url_base)
+        self.logger.debug("Final stats_url_base= %s" % self.stats_url_base)
+        self.logger.debug("hmac = %s" % self.hmac)
 
     @property
     def access_key(self) -> str:
@@ -202,6 +199,30 @@ class SwgohComlinkBase:
     @property
     def secret_key(self) -> str:
         return "<HIDDEN>"
+
+    @property
+    def instance_type(self) -> str:
+        return str(self.__class__).replace("<class ", "").replace(">", "").replace("'", "")
+
+    @property
+    def is_async(self) -> bool:
+        if self.instance_type == 'SwgohComlinkAsync':
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def _get_function_name() -> str:
+        """Return the name for the calling function"""
+        return f"{inspect.stack()[1].function}()"
+
+    @staticmethod
+    def _get_var_name(var) -> str:
+        """Return the name of the requested variable as a string"""
+        for fi in reversed(inspect.stack()):
+            names = [var_name for var_name, var_val in fi.frame.f_locals.items() if var_val is var]
+            if len(names) > 0:
+                return names[0]
 
     @staticmethod
     def _update_hmac_obj(hmac_obj: HMAC | Sentinel = REQUIRED, values: list[str] | Sentinel = REQUIRED) -> HMAC:
@@ -295,15 +316,21 @@ class SwgohComlinkBase:
 
         """
         if protocol not in self.ALLOWED_PROTOCOLS:
-            raise ValueError(f"Protocol must be http or https.")
-        if self.MAXIMUM_PORT_VALUE < port < self.MINIMUM_PORT_VALUE:
-            raise ValueError(f"Port number must be between {self.MINIMUM_PORT_VALUE} and {self.MAXIMUM_PORT_VALUE}.")
+            err_msg = f"Protocol must be http or https."
+            self.logger.debug(err_msg)
+            raise ValueError(err_msg)
+
+        if not self.MAXIMUM_PORT_VALUE >= port >= self.MINIMUM_PORT_VALUE:
+            err_msg = f"Port number must be between {self.MINIMUM_PORT_VALUE} and {self.MAXIMUM_PORT_VALUE}."
+            self.logger.debug(err_msg)
+            raise ValueError(err_msg)
+
         return f"{protocol}://{host}:{port}"
 
     @staticmethod
     def _get_player_payload(
-            allycode: str | int | Sentinel = OPTIONAL,
-            player_id: str | Sentinel = OPTIONAL,
+            allycode: str | int | Sentinel = MutualExclusiveRequired,
+            player_id: str | Sentinel = MutualExclusiveRequired,
             enums: bool = False,
             include_player_details_flag: bool = False,
             player_details_only: bool = False,
@@ -322,20 +349,24 @@ class SwgohComlinkBase:
             Dict: swgoh-comlink payload object
 
         """
-        if allycode is NotSet and player_id is NotSet:
-            raise ValueError("Either allycode or player_id must be provided.")
-        if isinstance(allycode, int):
-            allycode = str(allycode)
-        if isinstance(allycode, str) and allycode != "" and isinstance(player_id, str) and player_id != "":
-            raise ValueError("Only one of allycode or player_id can be provided.")
+        if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
+            err_msg = f"{_get_function_name()}: Either allycode or player_id must be provided."
+            get_logger(default_logger=True).debug(err_msg)
+            raise ValueError(err_msg)
+
+        if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
+            err_msg = f"{_get_function_name()}: Only one of allycode or player_id can be provided."
+            get_logger(default_logger=True).debug(err_msg)
+            raise ValueError(err_msg)
+
         payload: dict[str, Any] = {"payload": {}, "enums": enums}
-        if allycode is not OPTIONAL and (isinstance(allycode, int) or isinstance(allycode, str)):
-            allycode = sanitize_allycode(allycode)
+
+        if isinstance(allycode, int) or isinstance(allycode, str):
+            allycode = utils.sanitize_allycode(allycode)
             payload["payload"]["allyCode"] = allycode
         else:
             payload["payload"]["playerId"] = player_id
-        if enums:
-            payload["enums"] = True
+
         if include_player_details_flag:
             payload["payload"]["playerDetailsOnly"] = player_details_only
         return payload
@@ -360,7 +391,7 @@ class SwgohComlinkBase:
             enums: bool = False,
     ) -> dict:
         """Create game_data payload object and return"""
-        if version is OPTIONAL and version is not SET:
+        if version is NotSet:
             return {}
         return {
             "payload": {
@@ -463,11 +494,11 @@ class SwgohComlinkBase:
             if division is NotGiven and division is not SET:
                 raise ValueError(f"{_get_function_name()}, 'division' must be provided.")
 
-            league = convert_league_to_int(league) if isinstance(league, str) else league
+            league = utils.convert_league_to_int(league) if isinstance(league, str) else league
             if league not in LEAGUES.values():
                 raise ValueError(f"{_get_function_name()}: Invalid league {league}.")
 
-            division = convert_divisions_to_int(division) if isinstance(division, str) else division
+            division = utils.convert_divisions_to_int(division) if isinstance(division, str) else division
             if division not in DIVISIONS.values():
                 raise ValueError(f"{_get_function_name()}: Invalid division {division}.")
 
@@ -477,13 +508,13 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _make_get_guild_leaderboard_payload(
-            lb_id: list, count: int, enums: bool = False
+            lb_id: list | Sentinel = REQUIRED, count: int = 5, enums: bool = False
     ) -> dict:
         """Create get_guild_leaderboards() method payload"""
-        if not isinstance(lb_id, list):
-            raise ValueError(
-                f"{_get_function_name()}, leaderboard_id argument should be type list not {type(lb_id)}."
-            )
+        if lb_id is MISSING or not isinstance(lb_id, list):
+            err_msg = f"{_get_function_name()}: 'leaderboard_id' argument is required as type <list>."
+            get_logger().error(err_msg)
+            raise ValueError(err_msg)
         return {"payload": {"leaderboardId": lb_id, "count": count}, "enums": enums}
 
     def _construct_request_headers(
@@ -518,8 +549,3 @@ class SwgohComlinkBase:
                 f"HMAC-SHA256 Credential={self.__access_key},Signature={hmac_digest}"
             )
         return headers
-
-    @staticmethod
-    def _get_function_name() -> str:
-        """Return the name for the calling function"""
-        return f"{inspect.stack()[1].function}()"

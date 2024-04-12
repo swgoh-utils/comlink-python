@@ -47,12 +47,12 @@ def test_instance_creation_protocol_host_port():
 
 def test_instance_creation_invalid_protocol():
     with pytest.raises(ValueError):
-        comlink = SwgohComlink(protocol="ftp", host="test_host.domain.lab", port=6000)
+        SwgohComlink(protocol="ftp", host="test_host.domain.lab", port=6000)
 
 
 def test_instance_creation_invalid_port():
     with pytest.raises(ValueError):
-        comlink = SwgohComlink(port=600000, default_logger_enabled=True)
+        SwgohComlink(port=600000, default_logger_enabled=True)
 
     with pytest.raises(ValueError):
-        comlink = SwgohComlink(stats_port="600000", default_logger_enabled=True)
+        SwgohComlink(stats_port="600000", default_logger_enabled=True)
