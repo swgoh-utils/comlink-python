@@ -17,7 +17,7 @@ from typing import Any
 import httpx
 from sentinels import Sentinel
 
-from swgoh_comlink.Base.swgoh_comlink_base import SwgohComlinkBase
+from swgoh_comlink._base import SwgohComlinkBase
 from swgoh_comlink.constants import (
     param_alias,
     MutualExclusiveRequired,
@@ -41,6 +41,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     """
 
     __module__ = None
+    __comlink_type__ = 'SwgohComlinkAsync'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

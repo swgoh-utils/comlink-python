@@ -65,13 +65,16 @@ if __name__ == '__main__':
 
 ## Module Details
 
-### SwgohComlinkAsync
-
-::: swgoh_comlink.swgoh_comlink.SwgohComlinkBase
+::: swgoh_comlink._base.SwgohComlinkBase
 options:
-members: [ThisClass]
-filters: ["^__"]
-::: swgoh_comlink.swgoh_comlink.SwgohComlinkAsync
+show_object_full_path: false
+show_root_full_path: false
+members:
+- __init__
+::: swgoh_comlink.swgoh_comlink_async.SwgohComlinkAsync
+options:
+show_object_full_path: false
+show_root_full_path: false
 
 #### Examples
 

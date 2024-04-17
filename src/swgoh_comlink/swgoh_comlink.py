@@ -17,7 +17,7 @@ from typing import Any
 import httpx
 from sentinels import Sentinel
 
-from swgoh_comlink.Base.swgoh_comlink_base import SwgohComlinkBase
+from swgoh_comlink._base import SwgohComlinkBase
 from swgoh_comlink.constants import (
     REQUIRED,
     OPTIONAL,
@@ -41,11 +41,13 @@ class SwgohComlink(SwgohComlinkBase):
     """
 
     __module__ = None
+    __comlink_type__ = 'SwgohComlink'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.client = httpx.Client(base_url=self.url_base, verify=False)
         self.stats_client = httpx.Client(base_url=self.stats_url_base, verify=False)
+        self.logger.debug(f"Logger for SwgohComlink is initialized to {self.logger.name}")
 
     def _get_game_version(self) -> str:
         """Get the current game version"""
@@ -101,7 +103,6 @@ class SwgohComlink(SwgohComlinkBase):
         """Calculate unit stats using swgoh-stats service interface to swgoh-comlink
 
         Args:
-
             request_payload: Single character/ship dictionary or list containing units for which to calculate stats
             flags: Flags to include in the request URI
             language: String indicating the desired localized language.

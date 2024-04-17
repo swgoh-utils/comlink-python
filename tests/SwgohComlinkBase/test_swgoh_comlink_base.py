@@ -4,7 +4,7 @@ File containing test configurations for the SwgohComlinkBase class
 """
 import pytest
 
-from swgoh_comlink.Base.swgoh_comlink_base import SwgohComlinkBase
+from swgoh_comlink._base import SwgohComlinkBase
 
 
 def test_no_instance():

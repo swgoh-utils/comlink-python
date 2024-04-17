@@ -16,11 +16,12 @@ from typing import Callable
 from sentinels import Sentinel
 
 OPTIONAL = Sentinel('NotSet')
+NotSet = Sentinel('NotSet')
+EMPTY = Sentinel('NotSet')
 NotGiven = Sentinel('NotGiven')
 REQUIRED = Sentinel('REQUIRED')
 GIVEN = Sentinel('REQUIRED')
 MISSING = Sentinel('REQUIRED')
-NotSet = Sentinel('NotSet')
 SET = Sentinel('NotMissing')
 MutualExclusiveRequired = Sentinel('MutualExclusiveRequired')
 MutualRequiredNotSet = Sentinel('MutualExclusiveRequired')
@@ -39,6 +40,7 @@ __all__ = [
     MutualRequiredNotSet,
     NotSet,  # Sentinel
     SET,
+    EMPTY,
     "DATA_PATH",
     "DIVISIONS",  # Lookup dictionary
     "enable_default_logger",
@@ -189,21 +191,27 @@ def get_logger(
         **kwargs,
 ) -> logging.Logger:
     """Returns a default_logger"""
-    print(f"\nReceived default_logger request from {_get_function_name()}\n")
+    queued_msgs = []
+    queued_msgs.append(f"Received default_logger request from {_get_function_name()}")
     if name in _LOGGER_REGISTRY:
-        print(f"\nFound default_logger in registry. Returning {_LOGGER_REGISTRY[name]}\n")
+        queued_msgs.append(f"Found default_logger in registry. Returning {_LOGGER_REGISTRY[name]}")
+        for msg in queued_msgs:
+            _LOGGER_REGISTRY[name].debug(msg)
         return _LOGGER_REGISTRY[name]
     if default_logger:
         global _DEFAULT_LOGGER_ENABLED
         _DEFAULT_LOGGER_ENABLED = True
-        print(f"\nCreating new default_logger with {name=} {default_logger=}\n")
-        return _get_new_logger(name, **kwargs)
+        queued_msgs.append(f"Creating new default_logger with {name=} {default_logger=}")
+        new_logger = _get_new_logger(name, **kwargs)
+        for msg in queued_msgs:
+            new_logger.debug(msg)
+        return new_logger
     else:
         # If the default default_logger is disabled, log messages to NULL handler
         # This allows library users to implement their own loggers, if desired
         base_logger: logging.Logger = logging.getLogger(_DEFAULT_LOGGER_NAME)
         base_logger.addHandler(logging.NullHandler())
-        print(f"\nReturn base NULL default_logger instance.\n")
+        queued_msgs.append(f"Return base NULL default_logger instance.")
         return base_logger
 
 

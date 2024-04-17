@@ -43,7 +43,7 @@ addopts = [
 ]
 
 [tool.hatch.version]
-path = 'src/swgoh_comlink/__init__.py'
+path = 'src/swgoh_comlink/version.py'
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/swgoh_comlink"]

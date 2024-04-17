@@ -33,9 +33,8 @@ from .constants import (
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: ignore
 
-print(f"Getting logger for utils...")
-default_logger = get_logger(default_logger=True)
-default_logger.debug(f"Utils logging is set to {default_logger.name}...")
+default_logger = get_logger()
+default_logger.debug("Utils logging is set to %s..." % default_logger.name)
 
 __all__ = [
     "convert_divisions_to_int",
@@ -66,20 +65,22 @@ def get_function_name() -> str:
 
 
 def func_timer(f):
+    """Decorator to record total execution time of a function to the configured logger using level DEBUG"""
+
     @wraps(f)
     def wrap(*args, **kw):
         """Wrapper function"""
         ts = time.time()
         result = f(*args, **kw)
         te = time.time()
-        default_logger.debug(f"func:{f.__name__} took: {te - ts:.6f} sec")
+        default_logger.debug("  [ function %s ] took: %s:.6f seconds" % f.__name__, te - ts)
         return result
 
     return wrap
 
 
 def func_debug_logger(f):
-    """Decorator for applying debug logging to a function"""
+    """Decorator for applying DEBUG logging to a function"""
 
     @wraps(f)
     def wrap(*args, **kw):
@@ -130,7 +131,7 @@ def sanitize_allycode(allycode: str | int | Sentinel = REQUIRED) -> str:
     """
     _orig_ac = allycode
     if not allycode and allycode is not GIVEN:
-        default_logger.warning(f"{get_function_name()}: no allycode input provided. Returning empty string.")
+        default_logger.warning("%s: no allycode input provided. Returning empty string." % get_function_name())
         return str()
     if isinstance(allycode, int):
         allycode = str(allycode)
@@ -140,7 +141,7 @@ def sanitize_allycode(allycode: str | int | Sentinel = REQUIRED) -> str:
         err_msg = f"{get_function_name()}: Invalid ally code: {allycode}"
         default_logger.error(err_msg)
         raise ValueError(err_msg)
-    default_logger.debug(f"{get_function_name()}: {_orig_ac} allycode sanitized to: {allycode}")
+    default_logger.debug("{}: {} allycode sanitized to: {}".format(get_function_name(), _orig_ac, allycode))
     return allycode
 
 
@@ -303,7 +304,10 @@ async def get_async_player(comlink: SwgohComlinkAsync | Sentinel = REQUIRED,
     log_msg = f"Beginning async player call with arguments: {comlink=}, {player_id=}, {allycode=}"
     default_logger.debug('[DEFAULT_LOGGER]  ' + log_msg)
 
-    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
+    if hasattr(comlink, '__comlink_type__'):
+        comlink_type = comlink.__comlink_type__
+    else:
+        comlink_type = MISSING
     if comlink is MISSING or comlink_type != 'SwgohComlinkAsync':
         err_msg = (f"{get_function_name()}: The 'comlink' argument is required and must be an "
                    f"instance of SwgohComlinkAsync.")
@@ -361,7 +365,10 @@ def get_guild_members(
         A player_id or allycode argument is REQUIRED
 
     """
-    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
+    if hasattr(comlink, '__comlink_type__'):
+        comlink_type = comlink.__comlink_type__
+    else:
+        comlink_type = MISSING
     if comlink is MISSING or (comlink_type != 'SwgohComlinkAsync' and comlink_type != 'SwgohComlink'):
         err_msg = (f"{get_function_name()}: The 'comlink' argument is required and must be an "
                    f"instance of SwgohComlinkAsync.")
@@ -427,11 +434,17 @@ def get_guild_members(
 
 
 async def get_async_events(comlink: SwgohComlinkAsync | Sentinel = REQUIRED) -> dict:
-    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
-    if isinstance(comlink, Sentinel) or comlink_type == 'SwgohComlink':
-        raise ValueError(f"{get_function_name()}: async comlink instance must be provided.")
-    elif comlink_type == 'SwgohComlinkAsync':
+    if isinstance(comlink, Sentinel) or (
+            hasattr(comlink, '__comlink_type__') and comlink.__comlink_type__ != 'SwgohComlinkAsync'):
+        err_msg = f"{get_function_name()}: async comlink instance must be provided."
+        default_logger.error(err_msg)
+        raise ValueError(err_msg)
+    elif hasattr(comlink, '__comlink_type__') and comlink.__comlink_type__ == 'SwgohComlinkAsync':
         return await comlink.get_events()
+    else:
+        err_msg = f"{get_function_name()}: invalid comlink instance {type(comlink)} provided."
+        default_logger.error(err_msg)
+        raise ValueError(err_msg)
 
 
 def get_current_gac_event(
@@ -445,13 +458,15 @@ def get_current_gac_event(
         Current GAC event object or empty if no event is running
 
     """
-    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
-    default_logger.debug(f"{get_function_name()}: Getting current gac event. {comlink=}")
-    default_logger.debug(f"{get_function_name()}: 'comlink' argument is instance of SwgohComlink:  "
-                         f"{comlink_type == 'SwgohComlink'}")
+    if hasattr(comlink, '__comlink_type__'):
+        comlink_type = comlink.__comlink_type__
+    else:
+        comlink_type = MISSING
+    default_logger.debug("{}: Getting current gac event. comlink={}".format(get_function_name(), comlink))
+    log_msg = f"{get_function_name()}: 'comlink' instance type: {comlink_type}"
+    default_logger.debug(log_msg)
 
-    if comlink is MISSING or (comlink_type != 'SwgohComlink' and
-                              comlink_type != 'SwgohComlinkAsync'):
+    if comlink is MISSING or comlink_type is MISSING:
         err_str = f"{get_function_name()}: comlink instance must be provided."
         default_logger.error(err_str)
         raise ValueError(err_str)
@@ -485,7 +500,10 @@ def get_gac_brackets(comlink: SwgohComlink | Sentinel = REQUIRED,
         Dictionary containing each GAC bracket as a key
 
     """
-    comlink_type = str(type(comlink)).replace("<class ", "").replace(">", "").replace("'", "")
+    if hasattr(comlink, '__comlink_type__'):
+        comlink_type = comlink.__comlink_type__
+    else:
+        comlink_type = MISSING
     if comlink is MISSING or comlink_type != 'SwgohComlink':
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         default_logger.error(err_msg)

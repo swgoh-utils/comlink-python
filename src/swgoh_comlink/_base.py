@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import inspect
+import logging
 import os
 import time
 from hmac import HMAC
@@ -26,6 +27,7 @@ from sentinels import Sentinel
 import swgoh_comlink.utils as utils
 from swgoh_comlink.constants import (
     get_logger,
+    EMPTY,
     LANGUAGES,
     MISSING,
     MutualExclusiveRequired,
@@ -36,8 +38,9 @@ from swgoh_comlink.constants import (
     REQUIRED,
     SET,
     LEAGUES,
-    DIVISIONS
+    DIVISIONS,
 )
+from swgoh_comlink.version import __version__
 
 __all__ = ["SwgohComlinkBase"]
 
@@ -67,6 +70,8 @@ class SwgohComlinkBase:
     MINIMUM_PORT_VALUE = 1024
     MAXIMUM_PORT_VALUE = 65535
 
+    __version = __version__
+
     def __new__(cls, *args, **kwargs):
         """Prevent instances of this base class from being created directly"""
         if cls is SwgohComlinkBase:
@@ -83,6 +88,7 @@ class SwgohComlinkBase:
             protocol: str | Sentinel = OPTIONAL,
             port: int | Sentinel = OPTIONAL,
             stats_port: int | Sentinel = OPTIONAL,
+            logger: logging.Logger | Sentinel = OPTIONAL,
             default_logger_enabled: bool = False,
     ):
         """
@@ -97,6 +103,8 @@ class SwgohComlinkBase:
             host (str): IP address or DNS name of server where the swgoh-comlink service is running
             port (int): TCP port number between 1024 and 65535 where the swgoh-comlink service is running.
             stats_port (int): TCP port number between 1024 and 65535 where the comlink-stats service is running.
+            logger (logging.Logger): A logger instance to use for logging messages if the default logger is
+                                    insufficient.
             default_logger_enabled (bool): Flag to enable default logging. Should only be used if testing.
 
         Note:
@@ -104,10 +112,17 @@ class SwgohComlinkBase:
                 Either of the options should be chosen but not both.
 
         """
-        self.logger = get_logger(default_logger=default_logger_enabled)
-        # self.logger = utils.default_logger
-        self.logger.debug("Initializing SwgohComlinkBase")
-        self.logger.debug(f"Logger is {self.logger}")
+        if logger is not EMPTY and isinstance(logger, logging.Logger):
+            self.logger = logger
+            for handler in logger.handlers:
+                if isinstance(handler, logging.NullHandler):
+                    logger.removeHandler(handler)
+        elif logger is not EMPTY and not isinstance(logger, logging.Logger):
+            raise ValueError("'logger' must be either 'None' or a <logging.Logger> instance")
+        else:
+            self.logger = get_logger(default_logger=default_logger_enabled)
+        self.logger.debug("Initializing %s" % self.__class__.__name__)
+        self.logger.debug("Logger is %s" % self.logger)
 
         self.url_base = url
         self.logger.debug("Initial url_base= %s" % self.url_base)
@@ -169,7 +184,7 @@ class SwgohComlinkBase:
             self.logger.debug("Updated stats_url_base= %s" % self.stats_url_base)
 
         # Use values passed from client first, otherwise check for environment variables
-        if access_key is not OPTIONAL:
+        if access_key is not EMPTY:
             self.__access_key = access_key
         elif "ACCESS_KEY" in os.environ.keys():
             self.logger.debug(f"{_get_function_name()}: 'ACCESS_KEY' found in environment variable.")
@@ -178,7 +193,7 @@ class SwgohComlinkBase:
         else:
             self.__access_key = NotSet
 
-        if secret_key is not OPTIONAL:
+        if secret_key is not EMPTY:
             self.__secret_key = secret_key
         elif "SECRET_KEY" in os.environ.keys():
             self.logger.debug(f"{_get_function_name()}: 'SECRET_KEY' found in environment variable.")
@@ -193,23 +208,17 @@ class SwgohComlinkBase:
         self.logger.debug("hmac = %s" % self.hmac)
 
     @property
+    def version(self) -> str:
+        """Return the version of the swgoh_comlink package."""
+        return self.__version
+
+    @property
     def access_key(self) -> str:
         return self.__access_key
 
     @property
     def secret_key(self) -> str:
-        return "<HIDDEN>"
-
-    @property
-    def instance_type(self) -> str:
-        return str(self.__class__).replace("<class ", "").replace(">", "").replace("'", "")
-
-    @property
-    def is_async(self) -> bool:
-        if self.instance_type == 'SwgohComlinkAsync':
-            return True
-        else:
-            return False
+        return self.__secret_key if self.__secret_key is NotSet else "<HIDDEN>"
 
     @staticmethod
     def _get_function_name() -> str:

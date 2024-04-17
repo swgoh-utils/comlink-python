@@ -45,13 +45,16 @@ guild_member_allycodes = list(
 
 ## Module Details
 
-### SwgohComlink
-
-::: swgoh_comlink.swgoh_comlink.SwgohComlinkBase
+::: swgoh_comlink._base.SwgohComlinkBase
 options:
-members: [ThisClass]
-filters: ["^__"]
+show_object_full_path: false
+show_root_full_path: false
+members:
+- __init__
 ::: swgoh_comlink.swgoh_comlink.SwgohComlink
+options:
+show_object_full_path: false
+show_root_full_path: false
 
 #### Examples
 

@@ -7,6 +7,7 @@ nav:
   - SwgohComlink: swgoh_comlink.md
   - SwgohComlinkAsync: swgoh_comlink_async.md
   - Utils: utils.md
+  - Logging: logging.md
 
 repo_name: swgoh-utils/comlink-python
 repo_url: https://github.com/swgoh-utils/comlink-python
@@ -47,6 +48,9 @@ plugins:
             inherited_members: true
             group_by_category: false
             show_category_heading: true
+            show_object_full_path: false
+            show_root_heading: true
+            show_root_toc_entry: true
             show_symbol_type_heading: true
             show_symbol_type_toc: false
             docstring_style: google
