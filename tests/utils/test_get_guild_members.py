@@ -7,7 +7,6 @@ import pytest
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 from swgoh_comlink.utils import get_guild_members
 
-async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
 comlink = SwgohComlink(default_logger_enabled=True)
 
 
@@ -18,7 +17,8 @@ def test_get_guild_members_by_allycode():
 
 
 def test_get_guild_members_by_allycode_async():
-    guild_members = get_guild_members(comlink=SwgohComlinkAsync(default_logger_enabled=True), allycode=314927874)
+    async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
+    guild_members = get_guild_members(comlink=async_comlink, allycode=314927874)
     assert isinstance(guild_members, list)
     assert "playerId" in guild_members[0].keys()
 
@@ -30,7 +30,8 @@ def test_get_guild_members_by_player_id(player_id):
 
 
 def test_get_guild_members_by_player_id_async(player_id):
-    guild_members = get_guild_members(comlink, player_id=player_id)
+    async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
+    guild_members = get_guild_members(comlink=async_comlink, player_id=player_id)
     assert isinstance(guild_members, list)
     assert "playerId" in guild_members[0].keys()
 
@@ -42,7 +43,8 @@ def test_get_guild_members_none():
 
 def test_get_guild_members_none_async():
     with pytest.raises(ValueError):
-        get_guild_members(comlink=comlink)
+        async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
+        get_guild_members(comlink=async_comlink)
 
 
 def test_get_guild_members_no_comlink(player_id):

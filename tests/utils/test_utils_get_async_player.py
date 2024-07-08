@@ -11,18 +11,17 @@ from swgoh_comlink.utils import (
 )
 
 comlink = SwgohComlink(default_logger_enabled=True)
+async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
 
 
 @pytest.mark.asyncio
 async def test_get_async_player_by_allycode(allycode):
-    async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
     p = await get_async_player(comlink=async_comlink, allycode=allycode)
     assert "name" in p.keys()
 
 
 @pytest.mark.asyncio
 async def test_get_async_player_by_player_id(player_id):
-    async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
     p = await get_async_player(comlink=async_comlink, player_id=player_id)
     assert "name" in p.keys()
 
@@ -30,7 +29,6 @@ async def test_get_async_player_by_player_id(player_id):
 @pytest.mark.asyncio
 async def test_get_async_player_both_player_id_and_allycode(player_id, allycode):
     comlink.logger.debug(f"** Starting {get_function_name()} with {player_id=} and {allycode=}")
-    async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
     with pytest.raises(ValueError):
         await get_async_player(comlink=async_comlink, player_id=player_id, allycode=allycode)
 
@@ -38,7 +36,6 @@ async def test_get_async_player_both_player_id_and_allycode(player_id, allycode)
 @pytest.mark.asyncio
 async def test_get_async_player_wrong_allycode_type(allycode):
     comlink.logger.debug(f"** Starting {get_function_name()} with {allycode=}")
-    async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
     with pytest.raises(ValueError):
         await get_async_player(comlink=async_comlink, allycode=str(allycode).encode())
 
@@ -46,7 +43,6 @@ async def test_get_async_player_wrong_allycode_type(allycode):
 @pytest.mark.asyncio
 async def test_get_async_player_both_player_id_and_allycode_wrong_types(player_id, allycode):
     comlink.logger.debug(f"** Starting {get_function_name()} with {player_id=} and {allycode=} as incorrect types.")
-    async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
     with pytest.raises(ValueError):
         await get_async_player(comlink=async_comlink, player_id=player_id.encode(), allycode=str(allycode).encode())
 
@@ -54,7 +50,6 @@ async def test_get_async_player_both_player_id_and_allycode_wrong_types(player_i
 @pytest.mark.asyncio
 async def test_get_async_player_none():
     comlink.logger.debug(f"** Starting {get_function_name()} with only comlink argument.")
-    async_comlink = SwgohComlinkAsync(default_logger_enabled=True)
     with pytest.raises(ValueError):
         await get_async_player(comlink=async_comlink)
 

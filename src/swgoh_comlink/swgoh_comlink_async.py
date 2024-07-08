@@ -45,29 +45,45 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client = httpx.AsyncClient(base_url=self.url_base, verify=False)
-        self.stats_client = httpx.AsyncClient(base_url=self.stats_url_base, verify=False)
+        connection_limit = httpx.Limits(keepalive_expiry=None)
+        self.client = httpx.AsyncClient(base_url=self.url_base, verify=False, timeout=self._DEFAULT_CONNECTION_TIMEOUT,
+                                        limits=connection_limit)
+        self.stats_client = httpx.AsyncClient(base_url=self.stats_url_base, verify=False,
+                                              timeout=self._DEFAULT_CONNECTION_TIMEOUT,
+                                              limits=connection_limit)
         self.logger.debug(f"Logger for SwgohComlinkAsync is initialized to {self.logger.name}")
 
     async def _post(self,
                     endpoint: str,
                     payload: dict | list[dict],
-                    stats: bool = False
+                    stats: bool = False,
+                    timeout: float | Sentinel = OPTIONAL
                     ) -> Any:
         req_headers = self._construct_request_headers(endpoint, payload)
+
+        timeout = self._DEFAULT_CONNECTION_TIMEOUT if timeout is NotSet else timeout
+
+        connection_limit = httpx.Limits(keepalive_expiry=None)
+        self.client = httpx.AsyncClient(base_url=self.url_base, verify=False, timeout=self._DEFAULT_CONNECTION_TIMEOUT,
+                                        limits=connection_limit)
 
         try:
             self.logger.debug(f"Sending POST, {endpoint=} {req_headers=}")
             if stats:
                 resp = await self.stats_client.post(
-                    f"/{endpoint}", json=payload, headers=req_headers
+                    f"/{endpoint}", json=payload, headers=req_headers, timeout=timeout
                 )
             else:
                 resp = await self.client.post(
-                    f"/{endpoint}", json=payload, headers=req_headers
+                    f"/{endpoint}", json=payload, headers=req_headers, timeout=timeout
                 )
+            self.logger.debug(f"Returning JSON response")
             return resp.json()
         except httpx.RequestError as exc:
+            exc_str = str(exc).replace("\n", "-")
+            self.logger.exception(f"Exception occurred: {self._get_function_name()}: {exc_str}")
+            raise exc
+        except RuntimeError as exc:
             exc_str = str(exc).replace("\n", "-")
             self.logger.exception(f"Exception occurred: {self._get_function_name()}: {exc_str}")
             raise exc
@@ -96,7 +112,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ```
         """
         return await self._post(
-            endpoint="metadata", payload=self._make_client_specs(client_specs, enums)
+            endpoint="metadata", payload=self._make_client_specs(client_specs, enums), timeout=30.0
         )
 
     # alias for non PEP usage of direct endpoint calls
@@ -386,8 +402,10 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ),
         )
         if "guild" in guild.keys():
+            self.logger.debug(f"'guild' key found in response from _post()")
             return guild["guild"]
         else:
+            self.logger.debug(f"'guild' key not found in response from _post()'")
             return {}
 
     # alias for non PEP usage of direct endpoint calls

@@ -71,11 +71,14 @@ class SwgohComlinkBase:
     MAXIMUM_PORT_VALUE = 65535
 
     __version = __version__
+    __comlink_type__ = NotSet
+
+    _DEFAULT_CONNECTION_TIMEOUT: float = 15.0
 
     def __new__(cls, *args, **kwargs):
         """Prevent instances of this base class from being created directly"""
         if cls is SwgohComlinkBase:
-            raise TypeError(f"Only children of '{cls.__name__}' may be instantiated.")
+            raise TypeError(f"Only subclasses of '{cls.__name__}' may be instantiated.")
         return object.__new__(cls)
 
     def __init__(
@@ -136,18 +139,18 @@ class SwgohComlinkBase:
             self.logger.debug(f"{port_name} ({type(input_port)}) = {input_port}")
 
             if input_port is not NotSet and not isinstance(input_port, int):
-                err_msg = (f"{_get_function_name()}: '{port_name}' must be an integer between "
-                           f"{self.MINIMUM_PORT_VALUE} and {self.MAXIMUM_PORT_VALUE} or not provided. "
-                           f"[type={type(port)}, should be <int>]")
-                self.logger.error(err_msg)
-                raise ValueError(err_msg)
+                e_msg = (f"{_get_function_name()}: '{port_name}' must be an integer between "
+                         f"{self.MINIMUM_PORT_VALUE} and {self.MAXIMUM_PORT_VALUE} or not provided. "
+                         f"[type={type(port)}, should be <int>]")
+                self.logger.error(e_msg)
+                raise ValueError(e_msg)
 
             if input_port is not NotSet and not (self.MINIMUM_PORT_VALUE <= input_port <= self.MAXIMUM_PORT_VALUE):
-                err_msg = (f"'{port_name}' is between {self.MINIMUM_PORT_VALUE} and "
-                           f"{self.MAXIMUM_PORT_VALUE}: "
-                           f"{not (self.MINIMUM_PORT_VALUE <= input_port <= self.MAXIMUM_PORT_VALUE)}"
-                           )
-                self.logger.debug(err_msg)
+                e_msg = (f"'{port_name}' is between {self.MINIMUM_PORT_VALUE} and "
+                         f"{self.MAXIMUM_PORT_VALUE}: "
+                         f"{not (self.MINIMUM_PORT_VALUE <= input_port <= self.MAXIMUM_PORT_VALUE)}"
+                         )
+                self.logger.debug(e_msg)
                 raise ValueError(
                     f"'{port_name}' must be between {self.MINIMUM_PORT_VALUE} and {self.MAXIMUM_PORT_VALUE}.")
 
@@ -213,11 +216,34 @@ class SwgohComlinkBase:
         return self.__version
 
     @property
+    def instance_type(self) -> str:
+        """
+        Return the type of SwgohComlink instance. Primarily used for determining whether the SwgohComlink instance
+        is Sync or Async from code files that may not be able to import the SwgohComlink package directly.
+        """
+        return self.__comlink_type__
+
+    @property
+    def is_async(self) -> bool:
+        """
+        Return true if the SwgohComlink instance is Async.
+        """
+        return True if self.instance_type == 'SwgohComlinkAsync' else False
+
+    @property
     def access_key(self) -> str:
+        """Retrieve the ACCESS_KEY used when the instance was created."""
         return self.__access_key
 
     @property
     def secret_key(self) -> str:
+        """
+        Retrieve the SECRET_KEY used when the instance was created.
+
+        Note:
+            The actual value returned will be masked since the SECRET_KEY is sensitive information.
+            This property is mainly intended to determine if a SECRET_KEY was used when the instance was created.
+        """
         return self.__secret_key if self.__secret_key is NotSet else "<HIDDEN>"
 
     @staticmethod

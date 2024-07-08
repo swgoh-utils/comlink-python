@@ -73,7 +73,7 @@ def func_timer(f):
         ts = time.time()
         result = f(*args, **kw)
         te = time.time()
-        default_logger.debug("  [ function %s ] took: %s:.6f seconds" % f.__name__, te - ts)
+        default_logger.debug(f"  [ function {f.__name__} ] took: {(te - ts):.5f} seconds")
         return result
 
     return wrap
@@ -336,21 +336,52 @@ async def get_async_player(comlink: SwgohComlinkAsync | Sentinel = REQUIRED,
             default_logger.error(err_msg)
             raise ValueError(err_msg)
 
+    player = {}
+
     if player_id is not MutualExclusiveRequired and isinstance(player_id, str):
-        return await comlink.get_player(player_id=player_id)
+        try:
+            default_logger.debug(f"Calling Comlink to get player by ID: {player_id}")
+            player = await comlink.get_player(player_id=player_id)
+        except RuntimeError as async_exc:
+            async_exc = str(async_exc).replace("\n", "-")
+            default_logger.warning(f"{get_function_name()}: {async_exc}")
+        return player
     elif allycode is not MutualExclusiveRequired and isinstance(allycode, str):
-        return await comlink.get_player(allycode=allycode)
+        try:
+            default_logger.debug(f"Calling Comlink to get player by allycode {allycode}")
+            player = await comlink.get_player(allycode=allycode)
+        except RuntimeError as async_exc:
+            async_exc = str(async_exc).replace("\n", "-")
+            default_logger.warning(f"{get_function_name()}: {async_exc}")
+        return player
     else:
         default_logger.error(f"{get_function_name()}: Unexpected condition encountered. Returning <None>")
         default_logger.debug(f"{get_function_name()}: {player_id=}, {allycode=}")
         return {}
 
 
+async def get_async_guild(
+        comlink: SwgohComlinkAsync | Sentinel = REQUIRED,
+        guild_id: str | Sentinel = REQUIRED,
+) -> dict:
+    """Return the SwgohComlinkAsync.get_guild() dictionary object
+
+    Args:
+        comlink ():
+        guild_id ():
+
+    Returns:
+
+    """
+    default_logger.debug(f"Calling SwgohComlinkAsync.get_guild(). {guild_id=}")
+    return await comlink.get_guild(guild_id=guild_id)
+
+
 def get_guild_members(
         comlink: SwgohComlink | SwgohComlinkAsync | Sentinel = REQUIRED,
         player_id: str | Sentinel = MutualExclusiveRequired,
         allycode: str | int | Sentinel = MutualExclusiveRequired,
-) -> list[dict] | None:
+) -> list:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
     Args:
@@ -385,7 +416,7 @@ def get_guild_members(
         default_logger.error(err_msg)
         raise ValueError(err_msg)
 
-    guild = {"member": []}
+    guild: dict = {"member": []}
     player = {}
     if comlink_type == 'SwgohComlink':  # noqa: type
         if isinstance(player_id, str):
@@ -394,43 +425,40 @@ def get_guild_members(
             player = comlink.get_player(allycode=sanitize_allycode(allycode))
         guild = comlink.get_guild(guild_id=player["guildId"])
     elif comlink_type == 'SwgohComlinkAsync':  # noqa: type
-        loop = asyncio.get_event_loop()
+        comlink_clone = comlink
+        try:
+            loop = asyncio.get_running_loop()
+            default_logger.info(f"Current event loop found: {loop}")
+        except RuntimeError as async_exc:
+            async_exc = str(async_exc).replace("\n", "-")
+            default_logger.warning(f"{get_function_name()}: {async_exc}")
+            default_logger.info(f"Creating new event loop")
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            default_logger.info(f"Event loop: {loop}")
         if isinstance(player_id, str):
             try:
-                if not loop.is_running():
-                    player = loop.run_until_complete(get_async_player(comlink=comlink, player_id=player_id))
-                else:
-                    loop.stop()
-                    while loop.is_running():
-                        time.sleep(0.1)
-                    player = loop.run_until_complete(get_async_player(comlink=comlink, player_id=player_id))
+                default_logger.debug(f"Getting async player by id: {player_id}")
+                player = asyncio.run(get_async_player(comlink=comlink, player_id=player_id), debug=True)
             except RuntimeError as async_exc:
                 async_exc = str(async_exc).replace("\n", "-")
                 default_logger.warning(f"{get_function_name()}: {async_exc}")
         else:
             try:
-                if not loop.is_running():
-                    player = loop.run_until_complete(get_async_player(comlink=comlink, allycode=allycode))
-                else:
-                    loop.stop()
-                    while loop.is_running():
-                        time.sleep(0.1)
-                    player = loop.run_until_complete(get_async_player(comlink=comlink, allycode=allycode))
+                default_logger.debug(f"Getting async player by allycode: {allycode}")
+                player = asyncio.run(get_async_player(comlink=comlink, allycode=allycode), debug=True)
             except RuntimeError as async_exc:
                 async_exc = str(async_exc).replace("\n", "-")
                 default_logger.warning(f"{get_function_name()}: {async_exc}")
+        default_logger.debug(f"player object response is type: {type(player)}")
+
         try:
-            if not loop.is_running():
-                guild = loop.run_until_complete(comlink.get_guild(guild_id=player["guildId"]))
-            else:
-                loop.stop()
-                while loop.is_running():
-                    time.sleep(0.1)
-                guild = loop.run_until_complete(comlink.get_guild(guild_id=player["guildId"]))
+            default_logger.debug(f"Getting guild members for: {player['guildId']}")
+            guild = asyncio.run(comlink.get_guild(guild_id=player["guildId"]), debug=True)
         except RuntimeError as async_exc:
             async_exc = str(async_exc).replace("\n", "-")
             default_logger.warning(f"{get_function_name()}: {async_exc}")
-    return guild["member"]
+    return guild["member"] or []
 
 
 async def get_async_events(comlink: SwgohComlinkAsync | Sentinel = REQUIRED) -> dict:

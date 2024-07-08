@@ -38,8 +38,13 @@ dependencies = [
 "Bug Tracker" = "https://github.com/swgoh-utils/comlink-python/issues"
 
 [tool.pytest.ini_options]
+minversion = "6.0"
+asyncio_mode = "auto"
 addopts = [
     "--import-mode=importlib",
+]
+testpaths = [
+    "tests",
 ]
 
 [tool.hatch.version]

@@ -45,8 +45,9 @@ class SwgohComlink(SwgohComlinkBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client = httpx.Client(base_url=self.url_base, verify=False)
-        self.stats_client = httpx.Client(base_url=self.stats_url_base, verify=False)
+        self.client = httpx.Client(base_url=self.url_base, verify=False, timeout=self._DEFAULT_CONNECTION_TIMEOUT)
+        self.stats_client = httpx.Client(base_url=self.stats_url_base, verify=False,
+                                         timeout=self._DEFAULT_CONNECTION_TIMEOUT)
         self.logger.debug(f"Logger for SwgohComlink is initialized to {self.logger.name}")
 
     def _get_game_version(self) -> str:
@@ -59,6 +60,7 @@ class SwgohComlink(SwgohComlinkBase):
             endpoint: str,
             payload: dict | list[dict],
             stats: bool = False,
+            timeout: float | Sentinel = OPTIONAL
     ) -> Any:
         """
         Execute HTTP POST operation against swgoh-comlink
@@ -77,15 +79,17 @@ class SwgohComlink(SwgohComlinkBase):
         req_headers = self._construct_request_headers(endpoint, payload)
         self.logger.info(f"Request headers: {req_headers}")
 
+        timeout = self._DEFAULT_CONNECTION_TIMEOUT if timeout is NotSet else timeout
+
         try:
             self.logger.debug(f"Sending POST, {endpoint=} {req_headers=}")
             if stats:
                 resp = self.stats_client.post(
-                    f"/{endpoint}", json=payload, headers=req_headers
+                    f"/{endpoint}", json=payload, headers=req_headers, timeout=timeout
                 )
             else:
                 resp = self.client.post(
-                    f"/{endpoint}", json=payload, headers=req_headers
+                    f"/{endpoint}", json=payload, headers=req_headers, timeout=timeout
                 )
             return resp.json()
         except httpx.RequestError as exc:

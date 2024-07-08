@@ -1,4 +1,19 @@
-# Welcome to the documentation page for the swgoh_comlink python package
+<style>
+.center {
+    display: flex;
+    justify-content: center;
+}
+</style>
+
+<h1 class="center" style="font-size: 3rem; margin: -15px 0">
+SwgohComlink
+</h1>
+<br>
+<div class="center">
+<p>
+<img src="https://github.com/swgoh-utils/comlink-python/actions/workflows/tests.yml/badge.svg?branch=1.13.0rc1">
+<a href="https://badge.fury.io/py/swgoh-comlink"><img src="https://badge.fury.io/py/swgoh-comlink.svg" alt="PyPI version" height="18"></a></p>
+</div>
 
 ---
 
