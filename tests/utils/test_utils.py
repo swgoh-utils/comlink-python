@@ -31,7 +31,7 @@ from swgoh_comlink.utils import (
     search_gac_brackets,
 )
 
-test_dir = Path('/Users/marktripod/code/comlink-python/tests')
+test_dir = Path('.') / 'tests'
 
 with open(f"{test_dir}/master/skills.json") as fn:
     _skills: list = json.load(fn)
