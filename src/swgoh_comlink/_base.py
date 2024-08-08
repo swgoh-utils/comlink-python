@@ -22,9 +22,8 @@ from hmac import HMAC
 from json import dumps
 from typing import Any
 
-from sentinels import Sentinel
-
 import swgoh_comlink.utils as utils
+from sentinels import Sentinel
 from swgoh_comlink.constants import (
     get_logger,
     EMPTY,
@@ -55,6 +54,24 @@ class SwgohComlinkBase:
 
     This base class is meant to be inherited by extension classes for actual method definitions
     using synchronous and asynchronous interfaces.
+
+        Args:
+            url (str): The URL where swgoh-comlink is running.
+            stats_url (str): The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
+            access_key (str): The HMAC public key. Default to None which indicates HMAC is not used.
+            secret_key (str): The HMAC private key. Default to None which indicates HMAC is not used.
+            protocol (str): The protocol to use for connecting to comlink. Typically, http or https.
+            host (str): IP address or DNS name of server where the swgoh-comlink service is running
+            port (int): TCP port number between 1024 and 65535 where the swgoh-comlink service is running.
+            stats_port (int): TCP port number between 1024 and 65535 where the comlink-stats service is running.
+            logger (logging.Logger): A logger instance to use for logging messages if the default logger is
+                                    insufficient.
+            default_logger_enabled (bool): Flag to enable default logging. Should only be used if testing.
+
+        Note:
+            'url' and 'stat_url' are mutually exclusive of the protocol/host/port/stats_port parameters.
+                Either of the options should be chosen but not both.
+
 
     """
 

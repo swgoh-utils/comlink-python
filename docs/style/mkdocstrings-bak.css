@@ -1,14 +1,32 @@
+div.autodoc-docstring {
+    padding-left: 20px;
+    margin-bottom: 30px;
+    border-left: 5px solid rgba(230, 230, 230);
+}
+
+div.autodoc-members {
+    padding-left: 20px;
+    margin-bottom: 15px;
+}
+
+div.md-content {
+    min-width: fit-content;
+}
+
+div.md-sidebar {
+    min-width: fit-content;
+}
 
 .rst-content code {
     color: darkblue;
-    font-family: "Roboto Slab";
+    font-family: "Roboto Slab", sans-serif;
     font-size: 14px;
     border-radius: 15px;
     padding: 4px 10px;
 }
 
 .doc {
-    font-family: "Roboto Slab";
+    font-family: "Roboto Slab", sans-serif;
 }
 
 .doc-label {
@@ -36,18 +54,4 @@
 .doc-label-read-only {
     background-color: #FAEA48;
     color: black;
-}
-
-.md-sidebar__scrollwrap {
-    min-width: 320px;
-}
-
-.md-sidebar--secondary {
-    min-width: 350px;
-    width: 350px;
-}
-
-.md-sidebar__inner {
-    min-width: 350px;
-    width: 350px;
 }
