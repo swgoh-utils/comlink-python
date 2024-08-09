@@ -14,8 +14,9 @@ from typing import Callable
 
 import requests
 import urllib3
-
 from swgoh_comlink import version
+
+from .helpers import Constants
 
 __all__ = [
     'SwgohComlink'
@@ -230,7 +231,9 @@ class SwgohComlink:
                       version: str = "",
                       include_pve_units: bool = True,
                       request_segment: int = 0,
-                      enums: bool = False
+                      enums: bool = False,
+                      items: str = None,
+                      device_platform="Android"
                       ) -> dict:
         """
         Get game data
@@ -238,6 +241,8 @@ class SwgohComlink:
         :param include_pve_units: boolean [Defaults to True]
         :param request_segment: integer >=0 [Defaults to 0]
         :param enums: boolean [Defaults to False]
+        :param items: string [Defaults to None] bitwise value indicating the collections to retreive from game.
+                NOTE: this parameter is mutually exclusive with request_segment.
         :return: dict
         """
         if version == "":
@@ -247,18 +252,29 @@ class SwgohComlink:
         payload = {
             "payload": {
                 "version": f"{game_version}",
+                "devicePlatform": device_platform,
                 "includePveUnits": include_pve_units,
-                "requestSegment": request_segment
             },
             "enums": enums
         }
+
+        if items:  # presence of 'items' argument overrides the 'request_segment' and 'include_pve_units' arguments
+            if isinstance(items, int) and str(abs(items)).isdigit():
+                payload['payload']['items'] = str(items)
+            else:
+                payload['payload']['items'] = Constants.get(items) or "-1"
+        else:
+            payload['payload']['requestSegment'] = int(request_segment)
+
+        print(f"{payload=}")
         return self._post(endpoint='data', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGameData = get_game_data
 
     def get_localization(self,
-                         id: str,
+                         id: str = None,
+                         locale: str = None,
                          unzip: bool = False,
                          enums: bool = False
                          ) -> dict:
@@ -266,13 +282,17 @@ class SwgohComlink:
         Get localization data from game
         :param id: latestLocalizationBundleVersion found in game metadata. This method will collect the latest language
                     version if the 'id' argument is not provided.
+        :param locale: string Specify only a specific locale to retreive [for example "ENG_US"]
         :param unzip: boolean [Defaults to False]
         :param enums: boolean [Defaults to False]
         :return: dict
         """
-        if id == "":
+        if not id:
             current_game_version = self.get_latest_game_data_version()
             id = current_game_version['language']
+
+        if locale:
+            id = id + ":" + locale.upper()
 
         payload = {
             'unzip': unzip,
