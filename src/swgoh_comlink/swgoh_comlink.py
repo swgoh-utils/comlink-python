@@ -266,7 +266,6 @@ class SwgohComlink:
         else:
             payload['payload']['requestSegment'] = int(request_segment)
 
-        print(f"{payload=}")
         return self._post(endpoint='data', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls

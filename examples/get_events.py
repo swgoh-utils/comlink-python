@@ -3,9 +3,11 @@ get_events.py
 Sample script to get events from Comlink
 """
 
-from swgoh_comlink import SwgohComlink
 from datetime import datetime
 from typing import Any
+
+from swgoh_comlink import SwgohComlink
+
 
 def convert_time(timestamp: Any) -> str:
     """
@@ -13,13 +15,14 @@ def convert_time(timestamp: Any) -> str:
     :param timestamp: integer or string representing a unix timestamp value
     :return: str
     """
-    if not ( isinstance(timestamp, str) or isinstance(timestamp, int)) :
+    if not (isinstance(timestamp, str) or isinstance(timestamp, int)):
         return f'Invalid argument {timestamp}, type( {type(timestamp)} ). Expecting type str or int.'
     if len(str(timestamp)) > 10:
         # timestamp is in milliseconds
         timestamp = int(timestamp)
         timestamp /= 1000
     return datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+
 
 # Create instance of SwgohComlink
 comlink = SwgohComlink()
