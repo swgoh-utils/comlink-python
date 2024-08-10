@@ -187,7 +187,7 @@ class DataBuilder:
         os.path.join(_DATA_PATH, "languages", "backups"),
     ]
     _DATA_VERSION_FILE = "dataVersion"
-    _GAME_DATA_PATH_SUB_FOLDER = "../../data/game"
+    _GAME_DATA_PATH_SUB_FOLDER = "game"
     _GAME_DATA_FILE = "gameData"
     _GAME_DATA_FILES = [
         "crTables",
@@ -212,6 +212,12 @@ class DataBuilder:
     def get_language_file_path(cls) -> str:
         """Return path to localized language files"""
         return os.path.join(cls._DATA_PATH, "languages")
+
+    @classmethod
+    def get_localized_stat_names(cls, language: str = "eng_us") -> dict[str, str]:
+        """Load the requested localized stat string information and return"""
+        data_path = os.path.join(cls._DATA_PATH, "languages")
+        return _read_json_file(data_path, language)
 
     @classmethod
     def _auto_update_game_data(cls) -> None:
@@ -721,9 +727,7 @@ class DataBuilder:
         return data
 
     @classmethod
-    def _build_table_data(
-            cls, table_list: list, xp_table_list: list
-    ) -> tuple[dict, dict]:
+    def _build_table_data(cls, table_list: list, xp_table_list: list) -> tuple[dict, dict]:
         data = {"cr": {}, "gp": {}}
         cls._parse_table_list(table_list, data)
         cls._parse_xp_table_list(xp_table_list, data)

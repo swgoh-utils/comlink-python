@@ -5,14 +5,14 @@ game from EA/CG.
 """
 import base64
 import copy
+import functools
 import io
 import json
 import logging
-import math
 import os
 import zipfile
 from dataclasses import dataclass
-from typing import Callable
+from math import floor as math_floor
 
 import swgoh_comlink
 import swgoh_comlink.utils as utils
@@ -23,38 +23,13 @@ logger = Constants.get_logger()
 
 
 @utils.func_debug_logger
-def _format_stats(stats: dict = None, level: int = 85, options: dict = None) -> dict:
+def _format_stats(stats: dict, level: int = 85, options: dict = None) -> dict:
     logger.info("Formatting stats ... ")
-    logger.debug(f"Stats: {stats} {level=} {options=}")
-    if stats is None:
+    if not stats:
         logger.debug("No stats object provided. Returning empty.")
         return {}
 
-    def _convert_percent(stat_id_idx: str, convert_func: Callable, **kwargs) -> None:
-        """In place conversion of stats to percent values where appropriate"""
-        logger.info(f"Converting to percent ... {stat_id_idx=}")
-        flat = stats["base"][stat_id_idx]
-        percent = convert_func(flat)
-        stats["base"][stat_id_idx] = percent
-        last = percent
-        logger.info(f" ... {flat=} {percent=} {last=} ...")
-        if "crew" in stats:
-            if stat_id_idx in stats["crew"]:
-                logger.info("  ... converting crew member stat ...")
-                flat += stats["crew"][stat_id_idx]
-                stats["crew"][stat_id_idx] = (convert_func(flat, **kwargs)) - last
-        else:
-            if "gear" in stats and stat_id_idx in stats["gear"]:
-                logger.info("  ... converting gear values ...")
-                flat += stats["gear"][stat_id_idx]
-                percent = convert_func(flat)
-                flat += stats["gear"][stat_id_idx]
-                stats["gear"][stat_id_idx] = percent - last
-                last = percent
-            if "mods" in stats and stat_id_idx in stats["mods"]:
-                logger.info("  ... converting mod values ...")
-                flat += stats["mods"][stat_id_idx]
-                stats["mods"][stat_id_idx] = (convert_func(flat, **kwargs)) - last
+    logger.debug(f"Stats: {stats} {level=} {options=}")
 
     scale = 1
     if options["scaled"]:
@@ -62,17 +37,23 @@ def _format_stats(stats: dict = None, level: int = 85, options: dict = None) -> 
     elif options["unscaled"]:
         scale = 1e-8
 
+    logger.debug(f"Scaling stats ... {scale=}")
+
     if scale != 1:
         elements = list(stats.keys())
+        logger.debug(f"### {elements=} ###")
         if "mods" in stats:
             elements.append("mods")
         for element in elements:
+            logger.debug(f"### {element=} ###")
             for stat_id in stats[element]:
+                logger.debug(f"### {stat_id=} ###")
                 stats[element][stat_id] *= scale
 
     if options["percentVals"] or options["gameStyle"]:
         is_ship: bool = True if "crew" in stats else False
         logger.info("Converting flat values to percentages")
+        # Build a function dispatch dictionary with appropriate function arguments keyed by 'statId'
         conversion_dispatcher = {
             "8": {
                 "func": _convert_flat_def_to_percent,
@@ -116,29 +97,13 @@ def _format_stats(stats: dict = None, level: int = 85, options: dict = None) -> 
             },
         }
 
-        for stat_category in list(stats.keys()):
-            for stat_idx in stats[stat_category]:
-                if stat_idx in conversion_dispatcher:
-                    stats[stat_category][stat_idx] = conversion_dispatcher[stat_idx][
-                        "func"
-                    ](**conversion_dispatcher[stat_idx]["args"])
-        # Convert Crit
-        # _convert_percent("14", _convert_flat_crit_to_percent, scale=scale * 1e8)  # Ph.Crit Rating -> Chance
-        # _convert_percent("15", _convert_flat_crit_to_percent, scale=scale * 1e8)  # Sp.Crit Rating -> Chance
-        # convert Def
-        # _convert_percent("8", _convert_flat_def_to_percent, level=level, scale=scale * 1e8, is_ship=is_ship)  # Armor
-        # _convert_percent("9", _convert_flat_def_to_percent, level=level, scale=scale * 1e8, is_ship=is_ship)  # Resistance
-        # convert Acc
-        # _convert_percent("37", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Physical Accuracy
-        # _convert_percent("38", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Special Accuracy
-        # convert Evasion
-        # _convert_percent("12", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Dodge
-        # _convert_percent("13", _convert_flat_acc_to_percent, scale=scale * 1e8)  # Deflection
-        # convert Crit Avoidance
-        # _convert_percent("39", _convert_flat_crit_avoid_to_percent, scale=scale * 1e8)  # Physical Crit Avoidance
-        # _convert_percent("40", _convert_flat_crit_avoid_to_percent, scale=scale * 1e8)  # Special Crit Avoidance
+        for stat_idx in list(stats.keys()):
+            logger.debug(f"### {stat_idx=} ###")
+            if stat_idx in conversion_dispatcher:
+                logger.info(f"Dispatching stat conversion function for {stat_idx=}")
+                stats[stat_idx] = conversion_dispatcher[stat_idx]["func"](**conversion_dispatcher[stat_idx]["args"])
 
-    if options["gameStyle"] is True:
+    if options["gameStyle"]:
         gs_stats = {"final": {}}
         stat_list = list(stats["base"].keys())
         if "gear" in stats:  # Character
@@ -178,10 +143,8 @@ def _format_stats(stats: dict = None, level: int = 85, options: dict = None) -> 
                 mod_val = 0
                 if "mods" in stats:
                     mod_val = stats["mods"].get(stat_list_id, 0.0)
-                gs_stats["final"][stat_list_id] += (
-                                                           stats["base"].get(stat_list_id, 0.0)
-                                                           + stats["crew"].get(stat_list_id, 0.0)
-                                                   ) + mod_val
+                gs_stats["final"][stat_list_id] += (stats["base"].get(stat_list_id, 0.0)
+                                                    + stats["crew"].get(stat_list_id, 0.0)) + mod_val
         stats = gs_stats
         logger.debug(f"Stats: {stats}")
     return stats
@@ -203,7 +166,7 @@ def _floor(value: float, digits: int = 0) -> float:
 
 
 def _convert_flat_def_to_percent(
-        value: float, /, *, level: int = 85, scale: float = 1.0, is_ship: bool = False
+        value: float, level: int = 85, scale: float = 1.0, is_ship: bool = False
 ) -> float:
     val = value / scale
     level_effect = level * 7.5
@@ -212,18 +175,25 @@ def _convert_flat_def_to_percent(
     return (val / (level_effect + val)) * scale
 
 
-def _convert_flat_crit_to_percent(value: float, /, *, scale: float = 1.0) -> float:
+def _convert_flat_crit_to_percent(value: float, scale: float = 1.0) -> float:
     return ((value / scale / 2400) + 0.1) * scale
 
 
-def _convert_flat_acc_to_percent(value: float, /, *, scale: float = 1.0) -> float:
+def _convert_flat_acc_to_percent(value: float, scale: float = 1.0) -> float:
     return (value / scale / 1200) * scale
 
 
-def _convert_flat_crit_avoid_to_percent(
-        value: float, /, *, scale: float = 1.0
-) -> float:
+def _convert_flat_crit_avoid_to_percent(value: float, scale: float = 1.0) -> float:
     return (value / scale / 2400) * scale
+
+
+def _verify_def_id(unit: dict) -> dict:
+    if 'defId' not in unit:
+        if 'definitionId' in unit:
+            unit['defId'] = unit.get("definitionId").split(":")[0]
+        elif 'baseId' in unit:
+            unit['defId'] = unit.get("baseId")
+    return unit
 
 
 class StatCalcException(Exception):
@@ -269,6 +239,8 @@ class StatCalc:
         [
             "withoutModCalc",
             "percentVals",
+            "calcGP",
+            "onlyGP",
             "useMax",
             "scaled",
             "unscaled",
@@ -276,6 +248,7 @@ class StatCalc:
             "statIDs",
             "enums",
             "noSpace",
+            "language",
         ]
     )
 
@@ -307,7 +280,7 @@ class StatCalc:
         },
     }
 
-    _COMLINK: swgoh_comlink.SwgohComlink = swgoh_comlink.SwgohComlink()
+    _COMLINK: swgoh_comlink.SwgohComlink = None
 
     @property
     def is_initialized(self) -> bool:
@@ -403,12 +376,13 @@ class StatCalc:
     def _rename_stats(cls, stats: dict, options: dict) -> dict:
         logger.info(f"Renaming stats ... ")
         if options.get('language'):
+            lang = options.get('language', "eng_us").lower()
+            stat_id_name_map = DataBuilder.get_localized_stat_names(language=lang)
             rn_stats = {}
             for stat_type in stats:
                 rn_stats[stat_type] = {}
                 for stat_id, value in stats[stat_type].items():
-                    stat_name = options['language'].get(stat_id,
-                                                        stat_id)  # leave as stat_id if no localization string is found
+                    stat_name = stat_id_name_map.get(stat_id, stat_id)
                     if options.get('no_space'):
                         stat_name = stat_name.replace(' ', '')  # remove spaces
                         stat_name = stat_name[0].lower() + stat_name[1:]  # ensure first letter is lower case
@@ -423,17 +397,21 @@ class StatCalc:
         """Calculate bonus primary stats from growth modifiers"""
         logger.info("Calculating base stats")
         logger.debug(f"{stats=}")
-        for i in ["2", "3", "4"]:
+        if 'base' not in stats:
+            stats['base'] = {}
+        for i in ("2", "3", "4"):
+            logger.info(f"Processing base stats for {i} ...")
             logger.info(f"{stats['base'][i]=} before")
-            logger.info(f"Adding math.floor({stats['growthModifiers'][i]} * {level}, 8")
-            stats["base"][i] += math.floor(stats["growthModifiers"][i] * level, 1e8) / 1e8
+            logger.info(f"Adding math_floor({stats['growthModifiers'][i]} * {level} * 1e8")
+            stats["base"][i] += math_floor(stats["growthModifiers"][i] * level * 1e8) / 1e8
             logger.info(f"{stats['base'][i]=} after")
         if stats["base"].get("61"):
-            mastery_modifier_key = cls._UNIT_DATA[base_id]["masteryModifierID"]
+            logger.info(f"Calculating effect of mastery on secondary stats ...")
+            mastery_modifier_key = cls._UNIT_DATA[base_id].get("masteryModifierID")
             try:
                 mms = cls._CR_TABLES[mastery_modifier_key]
-                for stat_id, modifer in mms.items():
-                    stats['base'][stat_id] = stats['base'].get(stat_id, 0) + stats['base']["61"] * modifer
+                for stat_id, modifier in mms.items():
+                    stats['base'][stat_id] = stats['base'].get(stat_id, 0) + stats['base']["61"] * modifier
             except KeyError as e_str:
                 logger.error(
                     f"Unable to find mastery modifier key [{mastery_modifier_key}] in crTable."
@@ -441,19 +419,21 @@ class StatCalc:
                 logger.error(e_str)
                 logger.error(f"crTable keys: {sorted(list(cls._CR_TABLES.keys()))}")
 
+        logger.info(f"Calculating effect of primary stat on secondary stats ...")
         # Calculate effects of primary stats on secondary stats
         stats['base']['1'] = stats['base'].get('1', 0) + stats['base']['2'] * 18  # Health += STR * 18
-        stats['base']['6'] = math.floor((stats['base'].get('6', 0) + stats['base'][
-            unit_data[base_id]['primaryStat']] * 1.4) * 1e8) / 1e8  # Ph. Damage += MainStat * 1.4
-        stats['base']['7'] = math.floor(
+        stats['base']['6'] = math_floor((stats['base'].get('6', 0) + stats['base'][
+            str(cls._UNIT_DATA[base_id]['primaryStat'])] * 1.4) * 1e8) / 1e8  # Ph. Damage += MainStat * 1.4
+        stats['base']['7'] = math_floor(
             (stats['base'].get('7', 0) + stats['base']['4'] * 2.4) * 1e8) / 1e8  # Sp. Damage += TAC * 2.4
-        stats['base']['8'] = math.floor((stats['base'].get('8', 0) + stats['base']['2'] * 0.14 +
+        stats['base']['8'] = math_floor((stats['base'].get('8', 0) + stats['base']['2'] * 0.14 +
                                          stats['base']['3'] * 0.07) * 1e8) / 1e8  # Armor += STR*0.14 + AGI*0.07
-        stats['base']['9'] = math.floor(
+        stats['base']['9'] = math_floor(
             (stats['base'].get('9', 0) + stats['base']['4'] * 0.1) * 1e8) / 1e8  # Resistance += TAC * 0.1
-        stats['base']['14'] = math.floor(
+        stats['base']['14'] = math_floor(
             (stats['base'].get('14', 0) + stats['base']['3'] * 0.4) * 1e8) / 1e8  # Ph. Crit += AGI * 0.4
 
+        logger.info(f"Ensuing core stats are present and at minimum ...")
         # add hard-coded minimums or potentially missing stats
         stats["base"]["12"] = stats["base"].get("12", 0) + (24 * 1e8)
         stats["base"]["13"] = stats["base"].get("13", 0) + (24 * 1e8)
@@ -467,72 +447,81 @@ class StatCalc:
     @utils.func_debug_logger
     def _calculate_mod_stats(cls, base_stats: dict, char: dict = None) -> dict or None:
         logger.info("Calculating mod stats ... ")
+        logger.info(f"{base_stats=}")
         if not char.get('mods') and not char.get('equippedStatMod'):
-            logger.warning("Mod list is missing or empty. Returning empty")
-            return {}
+            logger.warning("Mod list is missing or empty. Returning.")
+            return char
 
         set_bonuses = {}
         raw_mod_stats = {}
 
-        def scale_stat_value(stat_id, value):
-            # convert stat value from displayed value to "unscaled" value used in calculations
-            if stat_id in [1, 5, 28, 41, 42]:
-                # Flat stats
-                return value * 1e8
-            else:
-                # Percent stats
-                return value * 1e6
-
         if char.get('mods'):
+            def scale_stat_value(stat_id_num: int, stat_value: float) -> float:
+                # convert stat_value from displayed value to "unscaled" value used in calculations
+                stat_scale = {
+                    1: 1e8,
+                    5: 1e8,
+                    28: 1e8,
+                    41: 1e8,
+                    42: 1e8
+                }
+                return stat_value * stat_scale.get(stat_id_num, 1e6)
+
             for mod in char['mods']:
                 if not mod.get('set'):
-                    continue  # ignore if empty mod (/units format only)
-
+                    continue
                 # add to set bonuses counters (same for both formats)
-                if mod['set'] in set_bonuses:
+                mod_set_id = mod.get('set')
+                if mod_set_id in set_bonuses:
                     # set bonus already found, increment
-                    set_bonuses[mod['set']]['count'] += 1
+                    set_bonuses[mod_set_id]['count'] += 1
                     if mod['level'] == 15:
-                        set_bonuses[mod['set']]['maxLevel'] += 1
+                        set_bonuses[mod_set_id]['maxLevel'] += 1
                 else:
                     # new set bonus, create object
-                    set_bonuses[mod['set']] = {'count': 1, 'maxLevel': 1 if mod['level'] == 15 else 0}
+                    set_bonuses[mod_set_id] = {'count': 1, 'maxLevel': 1 if mod['level'] == 15 else 0}
 
                 # add Primary/Secondary stats to data
                 if mod.get('stat'):
-                    # using /units format
+                    # using /units format from old .help API. Only needed for fake.help support now
                     for stat in mod['stat']:
                         raw_mod_stats[stat[0]] = raw_mod_stats.get(stat[0], 0) + scale_stat_value(stat[0], stat[1])
                 else:
                     # using /player.roster format
-                    stat = mod['primaryStat']
+                    mod_stat = mod['primaryStat']['stat']
                     i = 0
                     while True:
-                        raw_mod_stats[stat['unitStat']] = raw_mod_stats.get(stat['unitStat'], 0) + scale_stat_value(
-                            stat['unitStat'], stat['value'])
+                        stat_id = mod_stat.get('unitStat')  # this returns an integer
+                        unscaled_stat = scale_stat_value(stat_id, mod_stat['value'])
+                        raw_mod_stats[stat_id] = raw_mod_stats.get(stat_id, 0) + unscaled_stat
                         if i >= len(mod['secondaryStat']):
                             break
-                        stat = mod['secondaryStat'][i]
+                        mod_stat = mod['secondaryStat'][i]
                         i += 1
 
         elif char.get('equippedStatMod'):
             for mod in char['equippedStatMod']:
-                set_id = int(mod['definitionId'][0])
-                if set_id in set_bonuses:
+                # The mod['definitionId'] value is a 3 character string. Each character in the string is a numeral
+                #   representing mod set type (health, speed, potency, etc.), rarity (pips)  and position (slot)
+                #   The first numeric character is the mod set ID
+                #   The second numeric character is the mod rarity (number of pips/dots [1-6])
+                #   The third numeric character is the mod position/slot [1-6]
+                mod_set_id = mod['definitionId'][0]
+                if mod_set_id in set_bonuses:
                     # set bonus already found, increment
-                    set_bonuses[set_id]['count'] += 1
+                    set_bonuses[mod_set_id]['count'] += 1
                     if mod['level'] == 15:
-                        set_bonuses[set_id]['maxLevel'] += 1
+                        set_bonuses[mod_set_id]['maxLevel'] += 1
                 else:
                     # new set bonus, create object
-                    set_bonuses[set_id] = {'count': 1, 'maxLevel': 1 if mod['level'] == 15 else 0}
+                    set_bonuses[mod_set_id] = {'count': 1, 'maxLevel': 1 if mod['level'] == 15 else 0}
 
                 # add Primary/Secondary stats to data
                 stat = mod['primaryStat']['stat']
                 i = 0
                 while True:
-                    raw_mod_stats[stat['unitStatId']] = float(stat['unscaledDecimalValue']) + raw_mod_stats.get(
-                        stat['unitStatId'], 0)
+                    unscaled_stat = float(stat['unscaledDecimalValue']) + raw_mod_stats.get(stat['unitStatId'], 0)
+                    raw_mod_stats[stat['unitStatId']] = unscaled_stat
                     if i >= len(mod['secondaryStat']):
                         break
                     stat = mod['secondaryStat'][i]['stat']
@@ -543,7 +532,7 @@ class StatCalc:
 
         # add stats given by set bonuses
         for set_id, set_bonus in set_bonuses.items():
-            set_def = mod_set_data[set_id]
+            set_def = cls._MOD_SET_DATA[str(set_id)]
             count, max_count = set_bonus['count'], set_bonus['maxLevel']
             multiplier = (count // set_def['count']) + (max_count // set_def['count'])
             raw_mod_stats[set_def['id']] = raw_mod_stats.get(set_def['id'], 0) + (set_def['value'] * multiplier)
@@ -553,58 +542,58 @@ class StatCalc:
         for stat_id, value in raw_mod_stats.items():
             stat_id = int(stat_id)
             if stat_id == 41:  # Offense
-                mod_stats[6] = mod_stats.get(6, 0) + value  # Ph. Damage
-                mod_stats[7] = mod_stats.get(7, 0) + value  # Sp. Damage
+                mod_stats['6'] = mod_stats.get('6', 0) + value  # Ph. Damage
+                mod_stats['7'] = mod_stats.get('7', 0) + value  # Sp. Damage
             elif stat_id == 42:  # Defense
-                mod_stats[8] = mod_stats.get(8, 0) + value  # Armor
-                mod_stats[9] = mod_stats.get(9, 0) + value  # Resistance
+                mod_stats['8'] = mod_stats.get('8', 0) + value  # Armor
+                mod_stats['9'] = mod_stats.get('9', 0) + value  # Resistance
             elif stat_id == 48:  # Offense %
-                mod_stats[6] = math.floor(mod_stats.get(6, 0) + (base_stats[6] * 1e-8 * value), 8)  # Ph. Damage
-                mod_stats[7] = math.floor(mod_stats.get(7, 0) + (base_stats[7] * 1e-8 * value), 8)  # Sp. Damage
+                mod_stats['6'] = math_floor(mod_stats.get('6', 0) + (base_stats['6'] * 1e-8 * value))  # Ph. Damage
+                mod_stats['7'] = math_floor(mod_stats.get('7', 0) + (base_stats['7'] * 1e-8 * value))  # Sp. Damage
             elif stat_id == 49:  # Defense %
-                mod_stats[8] = math.floor(mod_stats.get(8, 0) + (base_stats[8] * 1e-8 * value), 8)  # Armor
-                mod_stats[9] = math.floor(mod_stats.get(9, 0) + (base_stats[9] * 1e-8 * value), 8)  # Resistance
+                mod_stats['8'] = math_floor(mod_stats.get('8', 0) + (base_stats['8'] * 1e-8 * value))  # Armor
+                mod_stats['9'] = math_floor(mod_stats.get('9', 0) + (base_stats['9'] * 1e-8 * value))  # Resistance
             elif stat_id == 53:  # Crit Chance
-                mod_stats[21] = mod_stats.get(21, 0) + value  # Ph. Crit Chance
-                mod_stats[22] = mod_stats.get(22, 0) + value  # Sp. Crit Chance
+                mod_stats['21'] = mod_stats.get('21', 0) + value  # Ph. Crit Chance
+                mod_stats['22'] = mod_stats.get('22', 0) + value  # Sp. Crit Chance
             elif stat_id == 54:  # Crit Avoid
-                mod_stats[35] = mod_stats.get(35, 0) + value  # Ph. Crit Avoid
-                mod_stats[36] = mod_stats.get(36, 0) + value  # Ph. Crit Avoid
+                mod_stats['35'] = mod_stats.get('35', 0) + value  # Ph. Crit Avoid
+                mod_stats['36'] = mod_stats.get('36', 0) + value  # Ph. Crit Avoid
             elif stat_id == 55:  # Health %
-                mod_stats[1] = math.floor(mod_stats.get(1, 0) + (base_stats[1] * 1e-8 * value), 8)  # Health
+                mod_stats['1'] = math_floor(mod_stats.get('1', 0) + (base_stats['1'] * 1e-8 * value))  # Health
             elif stat_id == 56:  # Protection %
-                mod_stats[28] = math.floor(mod_stats.get(28, 0) + (base_stats.get(28, 0) * 1e-8 * value),
-                                           8)  # Protection may not exist in base
+                mod_stats['28'] = math_floor(mod_stats.get('28', 0) + (
+                        base_stats.get('28', 0) * 1e-8 * value))  # Protection may not exist in base
             elif stat_id == 57:  # Speed %
-                mod_stats[5] = math.floor(mod_stats.get(5, 0) + (base_stats[5] * 1e-8 * value), 8)  # Speed
+                mod_stats['5'] = math_floor(mod_stats.get('5', 0) + (base_stats['5'] * 1e-8 * value))  # Speed
             else:
                 # other stats add like flat values
-                mod_stats[stat_id] = mod_stats.get(stat_id, 0) + value
+                mod_stats[str(stat_id)] = mod_stats.get(str(stat_id), 0) + value
 
         return mod_stats
 
     @classmethod
-    def _get_crew_rating(crew):
+    def _get_crew_rating(cls, crew):
         def calculate_character_cr(crew_rating, char):
-            crew_rating += cr_tables['unitLevelCR'][char['level']] + cr_tables['crewRarityCR'][char['rarity']]
-            crew_rating += cr_tables['gearLevelCR'][char['gear']]
-            crew_rating += cr_tables['gearPieceCR'][char['gear']] * len(char.get('equipped', []))
+            crew_rating += cls._CR_TABLES['unitLevelCR'][char['level']] + cls._CR_TABLES['crewRarityCR'][char['rarity']]
+            crew_rating += cls._CR_TABLES['gearLevelCR'][char['gear']]
+            crew_rating += cls._CR_TABLES['gearPieceCR'][char['gear']] * len(char.get('equipped', []))
 
-            crew_rating = functools.reduce(lambda cr, skill: cr + get_skill_crew_rating(skill), char['skills'],
+            crew_rating = functools.reduce(lambda cr, skill: cr + cls._get_skill_crew_rating(skill), char['skills'],
                                            crew_rating)
 
             if 'mods' in char:
                 crew_rating = functools.reduce(
-                    lambda cr, mod: cr + cr_tables['modRarityLevelCR'][mod['pips']][mod['level']], char['mods'],
+                    lambda cr, mod: cr + cls._CR_TABLES['modRarityLevelCR'][mod['pips']][mod['level']], char['mods'],
                     crew_rating)
             elif 'equippedStatMod' in char:
                 crew_rating = functools.reduce(
-                    lambda cr, mod: cr + cr_tables['modRarityLevelCR'][int(mod['definitionId'][1])][mod['level']],
+                    lambda cr, mod: cr + cls._CR_TABLES['modRarityLevelCR'][int(mod['definitionId'][1])][mod['level']],
                     char['equippedStatMod'], crew_rating)
 
             if 'relic' in char and char['relic']['currentTier'] > 2:
-                crew_rating += cr_tables['relicTierCR'][char['relic']['currentTier']]
-                crew_rating += char['level'] * cr_tables['relicTierLevelFactor'][char['relic']['currentTier']]
+                crew_rating += cls._CR_TABLES['relicTierCR'][char['relic']['currentTier']]
+                crew_rating += char['level'] * cls._CR_TABLES['relicTierLevelFactor'][char['relic']['currentTier']]
 
             return crew_rating
 
@@ -612,45 +601,41 @@ class StatCalc:
         return total_cr
 
     @classmethod
-    def _get_skill_crew_rating(skill):
-        return cr_tables['abilityLevelCR'][skill['tier']]
+    def _get_skill_crew_rating(cls, skill):
+        return cls._CR_TABLES['abilityLevelCR'][skill['tier']]
 
     @classmethod
-    def _get_crewless_crew_rating(ship):
+    def _get_crewless_crew_rating(cls, ship):
         # temporarily uses hard-coded multipliers, as the true in-game formula remains a mystery.
         # but these values have experimentally been found accurate for the first 3 crewless ships:
         #     (Vulture Droid, Hyena Bomber, and BTL-B Y-wing)
-        cr = math.floor(
-            cr_tables.crew_rarity_cr[ship.rarity] +
-            3.5 * cr_tables.unit_level_cr[ship.level] +
-            get_crewless_skills_crew_rating(ship.skills)
+        crew_rating = math_floor(
+            cls._CR_TABLES['crewRarityCr'][ship['currentRarity']] +
+            3.5 * cls._CR_TABLES['unitLevelCr'][ship['currentLevel']] +
+            cls._get_crewless_skills_crew_rating(ship['skills'])
         )
-        return cr
+        return crew_rating
 
     @classmethod
-    def _get_crewless_skills_crew_rating(skills):
-        return sum(
-            (0.696 if re.match(r'^hardware', skill['id']) else 2.46) * cr_tables.ability_level_cr[skill['tier']]
-            for skill in skills
-        )
+    def _get_crewless_skills_crew_rating(cls, skills):
+        crew_rating = 0
+        for skill in skills:
+            const = 0.696 if skill['id'].startswith('hardware') else 2.46
+            crew_rating += const * cls._CR_TABLES['abilityLevelCR'][str(skill['currentTier'])]
+        return crew_rating
 
     @classmethod
-    @utils.func_debug_logger
     def _get_char_raw_stats(cls, char: dict) -> dict:
         """Generate raw stats for character"""
         # Construction stats dictionary using game data for character based on specifics of character data provided
         stats: dict = {
-            "base": cls._UNIT_DATA[char["defId"]]["gearLvl"][str(char["currentTier"])][
-                "stats"
-            ].copy(),
+            "base": cls._UNIT_DATA[char["defId"]]["gearLvl"][str(char["currentTier"])]["stats"].copy(),
             "growthModifiers": copy.deepcopy(
-                cls._UNIT_DATA[char["defId"]]["growthModifiers"][
-                    str(char["currentRarity"])
-                ]
+                cls._UNIT_DATA[char["defId"]]["growthModifiers"][str(char["currentRarity"])]
             ),
             "gear": {},
         }
-        logger.info(f"stats: {stats=}")
+        logger.info(f"raw stats: {stats=}")
         # Calculate stats from current gear
         if len(char["equipment"]) != 0:
             logger.info(f"Calculating stats for {char['defId']} equipment ")
@@ -664,19 +649,16 @@ class StatCalc:
                 for equipment_stat_id in equipment_stats.keys():
                     if equipment_stat_id in ["2", "3", "4"]:
                         # Primary stat applies before mods
-                        stats["base"][equipment_stat_id] += stats["base"][
-                            equipment_stat_id
-                        ]
+                        stats["base"][equipment_stat_id] += stats["base"][equipment_stat_id]
                     else:
                         # Secondary stat applies after mods
-                        stats["gear"][equipment_stat_id] = equipment_stats[
-                                                               equipment_stat_id
-                                                           ] + stats["gear"].get(equipment_stat_id, 0)
+                        stats["gear"][equipment_stat_id] = (equipment_stats[equipment_stat_id] +
+                                                            stats["gear"].get(equipment_stat_id, 0))
         else:
             logger.info(f"No equipment for {char['defId']}")
 
-        if "relic" in char and char["relic"]["currentTier"] > 2:
-            current_relic_tier: int = char["relic"]["currentTier"]
+        if char.get("relic") and char["relic"]["currentTier"] > 2:
+            current_relic_tier: int = char["relic"].get("currentTier")
             logger.info(
                 f"Calculating stats for {char['defId']} relic level: {current_relic_tier - 2} "
             )
@@ -685,9 +667,7 @@ class StatCalc:
                 cls._UNIT_DATA[char["defId"]]["relic"][str(current_relic_tier)]
             ]
             for r_id in list(relic_tier_data["stats"].keys()):
-                stats["base"][r_id] = relic_tier_data["stats"][r_id] + stats[
-                    "base"
-                ].get(r_id, 0)
+                stats["base"][r_id] = relic_tier_data["stats"][r_id] + stats["base"].get(r_id, 0)
                 logger.info(f"{stats['base'][r_id]=}")
             for g_id in list(relic_tier_data["gms"].keys()):
                 stats["growthModifiers"][g_id] += relic_tier_data["gms"][g_id]
@@ -698,36 +678,35 @@ class StatCalc:
         return stats
 
     @classmethod
-    def _get_ship_raw_stats(ship, crew):
+    def _get_ship_raw_stats(cls, ship, crew):
         # ensure crew is the correct crew
-        if len(crew) != len(unit_data[ship['defId']]['crew']):
+        if len(crew) != len(cls._UNIT_DATA[ship['defId']]['crew']):
             raise ValueError(f"Incorrect number of crew members for ship {ship['defId']}.")
 
         for char in crew:
-            if char['defId'] not in unit_data[ship['defId']]['crew']:
+            if char['defId'] not in cls._UNIT_DATA[ship['defId']]['crew']:
                 raise ValueError(f"Unit {char['defId']} is not in {ship['defId']}'s crew.")
 
         # if still here, crew is good -- go ahead and determine stats
-        crew_rating = get_crewless_crew_rating(ship) if len(crew) == 0 else get_crew_rating(crew)
+        crew_rating = cls._get_crewless_crew_rating(ship) if len(crew) == 0 else cls._get_crew_rating(crew)
 
         stats = {
-            'base': dict(unit_data[ship['defId']]['stats']),
+            'base': cls._UNIT_DATA[ship['defId']]['stats'].copy(),
             'crew': {},
-            'growth_modifiers': dict(unit_data[ship['defId']]['growthModifiers'][ship['rarity']])
+            'growth_modifiers': cls._UNIT_DATA[ship['defId']]['growthModifiers'][ship['rarity']].copy()
         }
 
-        stat_multiplier = cr_tables['shipRarityFactor'][ship['rarity']] * crew_rating
+        stat_multiplier = cls._CR_TABLES['shipRarityFactor'][ship['rarity']] * crew_rating
 
-        for stat_id, stat_value in unit_data[ship['defId']]['crewStats'].items():
+        for stat_id, stat_value in cls._UNIT_DATA[ship['defId']]['crewStats'].items():
             # stats 1-15 and 28 all have final integer values
-            # other stats require decimals -- shrink to 8 digits of precision through 'unscaled' values this calculator uses
+            # other stats require decimals -- shrink to 8 digits of precision through 'unscaled'
+            # values this calculator uses
             precision = 8 if int(stat_id) < 16 or int(stat_id) == 28 else 0
-            stats['crew'][stat_id] = math.floor(stat_value * stat_multiplier * (10 ** precision)) / (10 ** precision)
-
+            stats['crew'][stat_id] = math_floor(stat_value * stat_multiplier * (10 ** precision)) / (10 ** precision)
         return stats
 
     @classmethod
-    @utils.func_debug_logger
     def calc_char_stats(
             cls,
             char: dict,
@@ -735,7 +714,6 @@ class StatCalc:
             *,
             options: list or dict = None,
             use_values: dict = None,
-            language: str = "eng_us",
             set_global_options: bool = False,
     ) -> dict:
         """Calculate stats for a single character based upon arguments provided.
@@ -744,7 +722,6 @@ class StatCalc:
             char (dict): Character object from player roster or game_data['unit']
             options (dict|list): Dictionary or list of options to enable
             use_values (dict): See example below
-            language (str): Localization language stat key translations
             set_global_options (bool): Flag indicating if the global attributes should be set
                                         using the 'options' attribute
 
@@ -808,16 +785,12 @@ class StatCalc:
                 "StatCalc is not initialized. Please perform the initialization first."
             )
 
-        if "defId" not in char:
-            if "definitionId" in char and ":" in char["definitionId"]:
-                char["defId"] = char["definitionId"].split(":")[0]
-            else:
-                logger.error(f"Invalid character [{char}].")
-                return {}
+        char = _verify_def_id(char)
 
         logger.info(f"Calculating stats for {char['defId']}")
 
-        cls._process_language(language)
+        cls._process_language(options.get('language', "eng_us"))
+
         if options is not None:
             options = cls._process_options(options, set_global=set_global_options)
         else:
@@ -825,14 +798,20 @@ class StatCalc:
 
         char = cls._use_values_char(char, use_values)
 
-        stats = cls._get_char_raw_stats(char)
-        stats = cls._calculate_base_stats(stats, char["currentLevel"], char["defId"])
-        if options is not None:
+        stats = {}
+        if not options.get('onlyGP'):
+            stats = cls._get_char_raw_stats(char)
+            stats = cls._calculate_base_stats(stats, char["currentLevel"], char["defId"])
             if len(char["equippedStatMod"]) > 0 and not options["withoutModCalc"]:
-                stats = cls._calculate_mod_stats(stats["base"], char["equippedStatMod"])
-        stats = _format_stats(stats, int(char["currentLevel"]), options)
-        stats = cls._rename_stats(stats, options)
-        return stats
+                stats['mods'] = cls._calculate_mod_stats(stats.get("base"), char)
+            stats = _format_stats(stats, int(char["currentLevel"]), options)
+            char['stats'] = cls._rename_stats(stats, options)
+
+        if options.get('calcGP') or options.get('onlyGP'):
+            char['gp'] = cls._calc_char_gp(char)
+            stats['gp'] = char['gp']
+
+        return char
 
     @classmethod
     def calc_ship_stats(
@@ -843,7 +822,7 @@ class StatCalc:
             *,
             options: list or dict = None,
             use_values: dict = None,
-            language: str = None,
+            set_global_options: bool = False,
     ) -> dict:
         """
 
@@ -852,35 +831,48 @@ class StatCalc:
             crew (list): List of ship crew members
             options (dict|list): Dictionary or list of options to enable
             use_values (dict): See example from calc_char_stats
-            language (str): Localization language stat key translations
+            set_global_options (bool): Flag indicating if the global attributes should be set
+                                        using the 'options' attribute
 
         Returns:
             dict: Ship object with stats calculated
 
         """
-        if options is None:
-            options = {}
+
+        if not cls.is_initialized:
+            raise StatCalcException(
+                "StatCalc is not initialized. Please perform the initialization first."
+            )
+
+        ship = _verify_def_id(ship)
+
+        logger.info(f"Calculating stats for {ship['defId']}")
+
+        cls._process_language(options.get('language', "eng_us"))
+
+        if options is not None:
+            options = cls._process_options(options, set_global=set_global_options)
+        else:
+            options = cls._OPTIONS
 
         try:
-            ship, crew = _use_values_ship(unit, crew_member, options.get('useValues'))
+            ship, crew = cls._use_values_ships(ship, crew, use_values)
 
             stats = {}
             if not options.get('onlyGP'):
-                stats = get_ship_raw_stats(ship, crew)
-                stats = calculate_base_stats(stats, ship.level, ship.def_id)
-                stats = format_stats(stats, ship.level, options)
-                stats = rename_stats(stats, options)
-
-                unit.stats = stats
+                stats = cls._get_ship_raw_stats(ship, crew)
+                stats = cls._calculate_base_stats(stats, ship['currentLevel'], ship['defId'])
+                stats = _format_stats(stats, ship['currentLevel'], options)
+                ship['stats'] = cls._rename_stats(stats, options)
 
             if options.get('calcGP') or options.get('onlyGP'):
-                unit.gp = _calc_ship_gp(ship, crew)
-                stats['gp'] = unit.gp
+                ship['gp'] = cls._calc_ship_gp(ship, crew)
+                stats['gp'] = ship['gp']
 
-            return stats
+            return ship
         except Exception as e:
             print(f"Error on ship '{ship['defId']}':\n{json.dumps(ship)}")
-            print(e)
+            print(str(e))
             raise
 
     @classmethod
@@ -890,40 +882,41 @@ class StatCalc:
         if val == "max":
             return [
                 {"id": d["id"], "tier": d["maxTier"]}
-                for d in StatCalc._UNIT_DATA[unit_id]["skills"]
+                for d in cls._UNIT_DATA[unit_id]["skills"]
             ]
         elif val == "maxNoZeta":
             return [
                 {"id": d["id"], "tier": d["maxTier"] - (1 if d["isZeta"] else 0)}
-                for d in StatCalc._UNIT_DATA[unit_id]["skills"]
+                for d in cls._UNIT_DATA[unit_id]["skills"]
             ]
         elif isinstance(val, int):
             return [
                 {"id": d["id"], "tier": min(val, d["maxTier"])}
-                for d in StatCalc._UNIT_DATA[unit_id]["skills"]
+                for d in cls._UNIT_DATA[unit_id]["skills"]
             ]
         else:
-            return val
+            return []
 
     @classmethod
-    def _use_values_ships(cls, ship: dict, crew: list, use_values: dict = None):
-        if not hasattr(ship, 'defId'):
-            ship = {
-                'defId': ship.definition_id.split(":")[0],
-                'rarity': ship.current_rarity,
-                'level': ship.current_level,
-                'skills': [{'id': skill.id, 'tier': skill.tier + 2} for skill in ship.skill]
+    def _use_values_ships(cls, ship: dict, crew: list, use_values: dict = None) -> dict:
+        if 'defId' not in ship:
+            temp_ship = {
+                'defId': ship['definitionId'].split(":")[0],
+                'rarity': ship['currentRarity'],
+                'level': ship['currentLevel'],
+                'skills': [{'id': skill['id'], 'tier': skill.get('tier') + 2} for skill in ship['skill']]
             }
+            ship.update(temp_ship)
             crew = [{
-                'defId': c.definition_id.split(":")[0],
-                'rarity': c.current_rarity,
-                'level': c.current_level,
-                'gear': c.current_tier,
-                'equipped': c.equipment,
-                'equipped_stat_mod': c.equipped_stat_mod,
-                'relic': c.relic,
-                'skills': [{'id': skill.id, 'tier': skill.tier + 2} for skill in c.skill],
-                'gp': c.gp
+                'defId': c['definitionId'].split(":")[0],
+                'rarity': c.get('currentRarity'),
+                'level': c.get('currentLevel'),
+                'gear': c.get('currentTier'),
+                'equipped': c.get('equipment'),
+                'equipped_stat_mod': c.get('equippedStatMod'),
+                'relic': c['relic'].get('currentTier'),
+                'skills': [{'id': skill.get('id'), 'tier': skill.get('tier') + 2} for skill in c['skill']],
+                'gp': c.get('gp')
             } for c in crew]
 
         if not use_values:
@@ -933,11 +926,11 @@ class StatCalc:
             'defId': ship['defId'],
             'rarity': use_values['ship'].get('rarity', ship['rarity']),
             'level': use_values['ship'].get('level', ship['level']),
-            'skills': set_skills(ship['defId'], use_values['ship'].get('skills', ship['skills']))
+            'skills': cls._set_skills(ship['defId'], use_values['ship'].get('skills', ship['skills']))
         }
 
         chars = []
-        for char_id in unit_data[ship['defId']]['crew']:
+        for char_id in cls._UNIT_DATA[ship['defId']]['crew']:
             char = next((cmem for cmem in crew if cmem['defId'] == char_id), None)
             char = {
                 'defId': char_id,
@@ -945,22 +938,22 @@ class StatCalc:
                 'level': use_values['crew'].get('level', char['level']),
                 'gear': use_values['crew'].get('gear', char['gear']),
                 'equipped': char['gear'],
-                'skills': set_skills(char_id, use_values['crew'].get('skills', char['skills'])),
-                'mods': char['mods'],
-                'relic': {'current_tier': use_values['crew']['relic']} if use_values['crew'].get('relic') else char[
-                    'relic']
+                'skills': cls._set_skills(char_id, use_values['crew'].get('skills', char['skills'])),
+                'mods': char.get('mods'),
+                'relic': {'current_tier': use_values['crew']['relic']} if use_values['crew'].get('relic') else char.get(
+                    'relic')
             }
 
             if use_values['crew'].get('equipped') == "all":
                 char['equipped'] = [
-                    {'equipmentId': gear_id} for gear_id in unit_data[char_id]['gear_lvl'][char['gear']]['gear']
+                    {'equipmentId': gear_id} for gear_id in cls._UNIT_DATA[char_id]['gear_lvl'][char['gear']]['gear']
                     if int(gear_id) < 9990
                 ]
             elif use_values['crew'].get('equipped') == "none":
                 char['equipped'] = []
             elif isinstance(use_values['crew'].get('equipped'), list):
                 char['equipped'] = [
-                    unit_data[char_id]['gear_lvl'][char['gear']]['gear'][int(slot) - 1]
+                    cls._UNIT_DATA[char_id]['gear_lvl'][char['gear']]['gear'][int(slot) - 1]
                     for slot in use_values['crew']['equipped']
                 ]
             elif use_values['crew'].get('equipped'):
@@ -969,9 +962,9 @@ class StatCalc:
             if use_values['crew'].get('mod_rarity') or use_values['crew'].get('mod_level'):
                 char['mods'] = [
                     {
-                        'pips': use_values['crew'].get('mod_rarity', DEFAULT_MOD_PIPS),
-                        'level': use_values['crew'].get('mod_level', DEFAULT_MOD_LEVEL),
-                        'tier': use_values['crew'].get('mod_tier', DEFAULT_MOD_TIER)
+                        'pips': use_values['crew'].get('mod_rarity', cls._DEFAULT_MOD_PIPS),
+                        'level': use_values['crew'].get('mod_level', cls._DEFAULT_MOD_LEVEL),
+                        'tier': use_values['crew'].get('mod_tier', cls._DEFAULT_MOD_TIER)
                     }
                     for _ in range(6)
                 ]
@@ -987,35 +980,43 @@ class StatCalc:
 
         # Handle newer Comlink style raw data input
         if "defId" not in char:
+            if 'relic' in char and 'currentTier' in char['relic']:
+                relic_val = char['relic'].get('currentTier')
+                logger.info(f"Setting relic currentTier to {relic_val} ...")
+            else:
+                relic_val = char.get('relic')
+                logger.info(f"Setting relic tier to {relic_val} ...")
             char = {
                 "defId": char["definitionId"].split(":")[0],
-                "rarity": char["currentRarity"],
-                "level": char["currentLevel"],
-                "gear": char["currentTier"],
-                "equipped": char["equipment"],
-                "equippedStatMod": char["equippedStatMod"],
-                "relic": char["relic"],
-                "skills": char["skill"].copy(),
+                "rarity": char.get("currentRarity"),
+                "level": char.get("currentLevel"),
+                "gear": char.get("currentTier"),
+                "equipped": char.get("equipment"),
+                "equippedStatMod": char.get("equippedStatMod"),
+                "relic": relic_val,
+                "skills": [{"id": s['id'], 'tier': s.get("tier") + 2} for s in char["skill"]]
             }
-
+            logger.info(f"Skills for dummy char: {char['skills']} ...")
         # The use_values option has not been set so the char object does not need to be modified
-        if use_values is None:
+        if not use_values:
             logger.info(f"No 'use_values' argument provided. Returning.")
+            logger.info(f"{char['skill']=}")
             return char
 
         unit_skills = []
         skills = cls._UNIT_DATA[char["defId"]]["skills"]
         for skill in skills:
+            logger.info(f'Adding {"id": skill["id"], "tier": char["skills"]} to the skill list for ')
             unit_skills.append({"id": skill["id"], "tier": char["skills"]})
 
         # use_values values should take precedence so that they can be used to model how the stats for a
         # current character would change if upgraded according to the provided values.
         unit = {
-            "defId": char["defId"],
+            "defId": char.get("defId"),
             "rarity": (
                 use_values["char"]["rarity"]
                 if "rarity" in use_values["char"]
-                else char["rarity"]
+                else char.get("currentRarity")
             ),
             "level": (
                 use_values["char"]["level"]
@@ -1027,9 +1028,9 @@ class StatCalc:
                 if "gear" in use_values["char"]
                 else char["gear"]
             ),
-            "equipped": char["gear"],
-            "mods": char["mods"],
-            "equippedStatMod": char["equippedStatMod"],
+            "equipped": char.get("gear"),
+            "mods": char.get("mods"),
+            "equippedStatMod": char.get("equippedStatMod"),
             "relic": {
                 "currentTier": (
                     use_values["char"]["relic"]
@@ -1044,7 +1045,7 @@ class StatCalc:
             set_skills_arg = use_values["char"]["skills"]
         elif "skills" in char:
             set_skills_arg = char["skills"]
-        unit["skills"]: cls._set_skills(char["defId"], set_skills_arg)
+        unit["skills"] = cls._set_skills(char["defId"], set_skills_arg)
 
         if any(
                 [
@@ -1097,33 +1098,34 @@ class StatCalc:
 
     @classmethod
     def _calc_char_gp(cls, char):
-        gp = cls._GP_TABLES['unitLevelGP'][char['level']]
-        gp += cls._GP_TABLES['unitRarityGP'][char['rarity']]
-        gp += cls._GP_TABLES['gearLevelGP'][char['gear']]
+        gp = cls._GP_TABLES['unitLevelGP'][str(char['currentLevel'])]
+        gp += cls._GP_TABLES['unitRarityGP'][Constants.UNIT_RARITY[char['currentRarity']]]
+        gp += cls._GP_TABLES['gearLevelGP'][str(char['currentTier'])]
 
         # Game tables for current gear include the possibility of different GP per slot.
         # Currently, all values are identical across each gear level, so a simpler method is possible.
         # But that could change at any time.
-        gp = sum(gp_tables['gearPieceGP'][char['gear']][piece['slot']] for piece in char['equipped']) + gp
+        gp += sum(cls._GP_TABLES['gearPieceGP'][str(char['currentTier'])][str(piece['slot'])]
+                  for piece in char['equipment'])
 
-        gp = sum(get_skill_gp(char['defId'], skill) for skill in char['skills']) + gp
+        gp += sum(cls._get_skill_gp(char['defId'], skill) for skill in char['skill'])
 
         if char.get('purchasedAbilityId'):
-            gp += len(char['purchasedAbilityId']) * gp_tables['abilitySpecialGP']['ultimate']
+            gp += len(char['purchasedAbilityId']) * cls._GP_TABLES['abilitySpecialGP']['ultimate']
 
         if 'mods' in char:
-            gp = sum(gp_tables['modRarityLevelTierGP'][mod['pips']][mod['level']][mod['tier']] for mod in
-                     char['mods']) + gp
+            gp += sum(cls._GP_TABLES['modRarityLevelTierGP'][mod['pips']][mod['level']][mod['tier']] for mod in
+                      char['mods'])
         elif 'equipped_stat_mod' in char:
-            gp = sum(
-                gp_tables['modRarityLevelTierGP'][int(mod['definitionId'][1])][mod['level']][mod['tier']] for mod
-                in char['equippedStatMod']) + gp
+            gp += sum(
+                cls._GP_TABLES['modRarityLevelTierGP'][int(mod['definitionId'][1])][mod['level']][mod['tier']] for mod
+                in char['equippedStatMod'])
 
-        if char.get('relic') and char['relic']['current_tier'] > 2:
-            gp += gp_tables['relicTierGP'][char['relic']['currentTier']]
-            gp += char['level'] * gp_tables['relicTierLevelFactor'][char['relic']['currentTier']]
+        if char.get('relic') and char['relic']['currentTier'] > 2:
+            gp += cls._GP_TABLES['relicTierGP'][char['relic']['currentTier']]
+            gp += char['level'] * cls._GP_TABLES['relicTierLevelFactor'][char['relic']['currentTier']]
 
-        return math.floor(gp * 1.5)
+        return math_floor(gp * 1.5)
 
     @classmethod
     def _calc_ship_gp(cls, ship, crew=None):
@@ -1131,27 +1133,27 @@ class StatCalc:
             crew = []
 
         # ensure crew is the correct crew
-        if len(crew) != len(unit_data[ship['defId']]['crew']):
+        if len(crew) != len(cls._UNIT_DATA[ship['defId']]['crew']):
             raise ValueError(f"Incorrect number of crew members for ship {ship['defId']}.")
 
         for char in crew:
-            if char['defId'] not in unit_data[ship['defId']]['crew']:
+            if char['defId'] not in cls._UNIT_DATA[ship['defId']]['crew']:
                 raise ValueError(f"Unit {char['defId']} is not in {ship['defId']}'s crew.")
 
         if len(crew) == 0:  # crewless calculations
-            gps = get_crewless_skills_gp(ship['defId'], ship['skills'])
-            gps['level'] = gp_tables['unit_level_gp'][ship['level']]
-            gp = (gps['level'] * 3.5 + gps['ability'] * 5.74 + gps['reinforcement'] * 1.61) * \
-                 gp_tables['ship_rarity_factor'][ship['rarity']]
+            gps = cls._get_crewless_skills_gp(ship['defId'], ship['skills'])
+            gps['level'] = cls._GP_TABLES['unit_level_gp'][ship['level']]
+            gp = ((gps['level'] * 3.5 + gps['ability'] * 5.74 + gps['reinforcement'] * 1.61) *
+                  cls._GP_TABLES['ship_rarity_factor'][ship['rarity']])
             gp += gps['level'] + gps['ability'] + gps['reinforcement']
         else:  # normal ship calculations
             gp = sum(c['gp'] for c in crew)
-            gp *= gp_tables['ship_rarity_factor'][ship['rarity']] * gp_tables['crew_size_factor'][
+            gp *= cls._GP_TABLES['ship_rarity_factor'][ship['rarity']] * cls._GP_TABLES['crew_size_factor'][
                 len(crew)]  # multiply crewPower factors before adding other GP sources
-            gp += gp_tables['unit_level_gp'][ship['level']]
-            gp = sum(get_skill_gp(ship['defId'], skill) for skill in ship['skills']) + gp
+            gp += cls._GP_TABLES['unit_level_gp'][ship['level']]
+            gp += sum(cls._get_skill_gp(ship['defId'], skill) for skill in ship['skills'])
 
-        return math.floor(gp * 1.5)
+        return math_floor(gp * 1.5)
 
     @classmethod
     def _get_crewless_skills_gp(cls, id, skills):
@@ -1159,23 +1161,31 @@ class StatCalc:
         r = 0
         for skill in skills:
             o_tag = next(
-                (s['powerOverrideTags'][skill['tier']] for s in unit_data[id]['skills'] if s['id'] == skill['id']),
+                (s['powerOverrideTags'][skill['tier']] for s in cls._UNIT_DATA[id]['skills'] if s['id'] == skill['id']),
                 None)
             if o_tag and o_tag.startswith('reinforcement'):
-                r += gp_tables['abilitySpecialGP'][o_tag]
+                r += cls._GP_TABLES['abilitySpecialGP'][o_tag]
             else:
-                a += gp_tables['abilitySpecialGP'][o_tag] if o_tag else gp_tables['abilityLevelGP'][skill['tier']]
+                a += cls._GP_TABLES['abilitySpecialGP'][o_tag] if o_tag else (
+                    cls._GP_TABLES)['abilityLevelGP'][skill['tier']]
 
         return {'ability': a, 'reinforcement': r}
 
     @classmethod
     def _get_skill_gp(cls, id, skill):
-        o_tag = next((s['powerOverrideTags'][skill['tier']] for s in unit_data[id]['skills'] if s['id'] == skill['id']),
-                     None)
-        if o_tag:
-            return cls._GP_TABLES['abilitySpecialGP'][o_tag]
-        else:
-            return cls._GP_TABLES['abilityLevelGP'].get(skill['tier'], 0)
+        logger.info(f"Getting skill GP for {id=}: {skill=} ...")
+        for s in cls._UNIT_DATA[id]['skills']:
+            logger.info(f"{s['id']=}, {skill['id']=}")
+            if s['id'] == skill['id']:
+                logger.info(f"{s['powerOverrideTags']=} {str(skill['tier'])=}")
+                o_tag = s['powerOverrideTags'].get(str(skill['tier']), None)
+                # o_tag = next(
+                #     (s['powerOverrideTags'][str(skill.get('tier'))] for s in cls._UNIT_DATA[id]['skills'] if s['id'] == skill['id']),
+                #     None)
+                if o_tag:
+                    return cls._GP_TABLES['abilitySpecialGP'][o_tag]
+                else:
+                    return cls._GP_TABLES['abilityLevelGP'].get(str(skill['tier']), "0")
 
     @classmethod
     @utils.func_debug_logger
@@ -1228,6 +1238,8 @@ class StatCalc:
     @utils.func_debug_logger
     def _process_use_values_settings(cls, use_values: dict) -> None:
         """Break options object into parts and validate settings"""
+        if not use_values:
+            return
         if not isinstance(use_values, dict):
             raise StatCalcRuntimeError(
                 f"Invalid object type ({type(use_values)}) for 'options' attribute. Should be dict."
@@ -1239,84 +1251,111 @@ class StatCalc:
 
     @classmethod
     @utils.func_debug_logger
+    def calc_player_stats(
+            cls,
+            players: list or dict,
+            options: list or dict = None,
+            use_values: dict = None,
+    ) -> list or None:
+        """
+        Calculate roster stats for list of players
+
+        Args:
+            players (list or dict): List of player objects, including the rosterUnits
+            options (list|dict): Dictionary or list of options to enable
+            use_values (dict): A dictionary containing elements for 'char', 'ship', and 'crew' for overriding defaults
+
+        Returns: List of players with stats included in each player unit roster
+        """
+        if not players:
+            logger.error(f"No player rosters submitted to calc_player_stats(). Exiting...")
+            return
+
+        if isinstance(players, list):
+            for player in players:
+                logger.info(f"Processing player: {player['name']} ...")
+                player['rosterUnit'] = cls.calc_roster_stats(player['rosterUnit'], options, use_values)
+        else:
+            # Single player roster
+            logger.info(f"Processing player: {players['name']} ...")
+            if 'rosterUnit' in players.keys():
+                players['rosterUnit'] = cls.calc_roster_stats(players['rosterUnit'], options, use_values)
+            else:
+                logger.warning(f"No unit roster detected in submission. Exiting.")
+                return
+        return players
+
+    @classmethod
+    @utils.func_debug_logger
     def calc_roster_stats(
             cls,
             units: list[dict],
-            options: list[str] = None,
+            options: list or dict = None,
             use_values: dict = None,
-            language: str = "eng_us",
     ) -> list:
         """
         Calculate units stats from SWGOH roster game data
 
         :param units: A list containing the value of the 'rosterUnit' key within the SwgohComlink.get_player() result
         :type units: list
-        :param options: A list of strings indicating the optional flags affecting how data is return to enable
-        :type options: list
+        :param options: Dictionary or list of options to enable
+        :type options: (dict|list)
         :param use_values: A dictionary containing elements for 'char', 'ship', and 'crew' for overriding defaults
         :type use_values: dict
-        :param language: A string indicating which language to use for localization of statIds
-        :type language: str
 
         :return: The same object format provided in the units parameter with additional fields added containing the
                  results of the stat calculations
         :rtype: list
         """
-
+        logger.info(f"*** Entering calc_roster_stats() ***")
         if not cls.is_initialized:
             raise StatCalcException(
                 "StatCalc is not initialized. Please perform the initialization first."
             )
 
         cls._process_options(options)
-        cls._process_use_values_settings(use_values)
-        if language is not None:
-            cls._process_language(language)
+        if use_values:
+            cls._process_use_values_settings(use_values)
+
+        language = options.get('language', "eng_us")
+        cls._process_language(language)
 
         if isinstance(units, list):
             ships = []
-            crew = {}
+            temp_units = []
+            temp_ships = []
             for unit in units:
-                defId = unit["definitionId"].split(":")[0]
-                unit["defId"] = defId
+                unit = _verify_def_id(unit)
+                defId = unit.get('defId')
                 if not unit or not cls._UNIT_DATA[defId]:
                     logger.warning(f"Unable to find {defId} in game data.")
                     return []
-                if (
-                        isinstance(cls._UNIT_DATA[defId]["combatType"], int)
-                        and cls._UNIT_DATA[defId]["combatType"] == 2
-                ) or (
-                        isinstance(cls._UNIT_DATA[defId]["combatType"], str)
-                        and cls._UNIT_DATA[defId]["combatType"] == "SHIP"
-                ):
+                combat_type = cls._UNIT_DATA[defId]["combatType"]
+                if combat_type == 2 or combat_type == "SHIP":
                     ships.append(unit)
                 else:
-                    crew[defId] = unit
-                    calculated_char_stats = cls.calc_char_stats(
-                        unit, use_values=use_values, options=options, language=language
-                    )
+                    temp_units.append(cls.calc_char_stats(unit, use_values=use_values, options=options))
             for ship in ships:
-                defId = ship["definitionId"].split(":")[0]
-                if not ship or not cls._UNIT_DATA[defId]:
+                ship = _verify_def_id(ship)
+                defId = ship.get('defId')
+                if not cls._UNIT_DATA[defId]:
                     logger.warning(f"Unable to find {defId} in game data.")
                     return []
-                # TODO: check the code below for proper functionality
-                crw = [
-                    id
-                    for id in cls._UNIT_DATA[defId]["crew"]["id"]
-                    if crew["id"] == cls._UNIT_DATA[defId]["crew"]["id"]
-                ]
-                calculated_ship_stats = cls.calc_ship_stats(ship, crw)
+                crw = cls._UNIT_DATA[defId].get("crew")
+                temp_ships.append(cls.calc_ship_stats(ship, crw))
         else:
             raise StatCalcRuntimeError(
                 f'[calc_roster_stats] Unsupported data type [{type(units)}] for "unit" parameter'
             )
-        return []
+        return temp_units + temp_ships
 
     @classmethod
-    def initialize(cls, **kwargs) -> bool:
+    def initialize(cls, cl: swgoh_comlink, **kwargs) -> bool:
         """Prepare StatCalc environment for first use. Providing keyword arguments can override default settings.
 
+        Args:
+            cl swgoh_comlink: Instance of SwgohComlink class for retrieving data from game servers
+            
         Keyword Args:
             game_data dict: Defaults to None. Will autoload if not provided.
             default_mod_tier int: Defaults to 5. Should not need to be set unless the game changes mods and some point.
@@ -1337,6 +1376,7 @@ class StatCalc:
         }
 
         logger.info("Initializing StatCalc for first time use.")
+        cls._COMLINK = cl
         class_vars = vars(cls)
         logger.debug(f"Class vars: {class_vars.keys()}")
         for param, value in kwargs.items():
