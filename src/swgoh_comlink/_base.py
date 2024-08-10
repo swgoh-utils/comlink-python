@@ -22,8 +22,9 @@ from hmac import HMAC
 from json import dumps
 from typing import Any
 
-import swgoh_comlink.utils as utils
 from sentinels import Sentinel
+
+import swgoh_comlink.utils as utils
 from swgoh_comlink.constants import (
     get_logger,
     EMPTY,
@@ -38,6 +39,7 @@ from swgoh_comlink.constants import (
     SET,
     LEAGUES,
     DIVISIONS,
+    DataItemConstants
 )
 from swgoh_comlink.version import __version__
 
@@ -439,20 +441,41 @@ class SwgohComlinkBase:
     def _make_game_data_payload(
             version: str | Sentinel = OPTIONAL,
             include_pve_units: bool = False,
-            request_segment: int = 0,
+            request_segment: int | Sentinel = MutualExclusiveRequired,
             enums: bool = False,
+            items: str | Sentinel = MutualExclusiveRequired,
+            device_platform: str = "Android"
     ) -> dict:
         """Create game_data payload object and return"""
         if version is NotSet:
-            return {}
-        return {
+            err_str = f"{_get_function_name()}: The 'version' argument must be provided."
+            get_logger().error(err_str)
+            raise ValueError(err_str)
+
+        if request_segment is MutualRequiredNotSet and items is MutualRequiredNotSet:
+            err_str = f"{_get_function_name()}: Either the 'request_segment' or 'items' must be set."
+            get_logger().error(err_str)
+            raise ValueError(err_str)
+
+        payload = {
             "payload": {
                 "version": f"{version}",
+                "devicePlatform": device_platform,
                 "includePveUnits": include_pve_units,
-                "requestSegment": request_segment,
             },
-            "enums": enums,
+            "enums": enums
         }
+
+        # presence of 'items' argument overrides the 'request_segment' and 'include_pve_units' arguments
+        if isinstance(items, int) and str(abs(items)).isdigit():
+            payload['payload']['items'] = str(items)
+        elif isinstance(items, str):
+            payload['payload']['items'] = DataItemConstants.get(items) or "-1"
+        else:
+            payload['payload']['requestSegment'] = int(request_segment)
+
+        get_logger().debug(f"{_get_function_name()}, {payload=}")
+        return payload
 
     @staticmethod
     def _make_guild_payload(
