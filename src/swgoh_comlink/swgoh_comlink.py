@@ -201,6 +201,8 @@ class SwgohComlink(SwgohComlinkBase):
         Returns:
             Current game data
 
+        Raises:
+            ValueError: if 'version' is not provided or neither 'items' not 'request_segment' are set
         """
 
         if isinstance(version, Sentinel):

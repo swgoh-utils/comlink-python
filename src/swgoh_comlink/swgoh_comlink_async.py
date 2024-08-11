@@ -19,13 +19,14 @@ from sentinels import Sentinel
 
 from swgoh_comlink._base import SwgohComlinkBase
 from swgoh_comlink.constants import (
-    param_alias,
+    REQUIRED,
+    OPTIONAL,
+    MISSING,
     MutualExclusiveRequired,
     MutualRequiredNotSet,
-    OPTIONAL,
     NotSet,
-    REQUIRED,
-    MISSING
+    param_alias,
+    LANGUAGES
 )
 
 __all__ = ["SwgohComlinkAsync"]
@@ -168,6 +169,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             include_pve_units: bool = True,
             request_segment: int = 0,
             enums: bool = False,
+            items: str | None = None,
+            device_platform: str = "Android",
     ) -> dict:
         """Get current game data from servers
 
@@ -176,15 +179,22 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             include_pve_units: Flag to indicate whether PVE units should be included in results  [Defaults to True]
             request_segment: Identifier for whether to return all data (segment 0) or partial segments (values 1-4)
             enums: Flag to enable ENUM replace [Defaults to False]
+            items: Bitwise value indicating the collection(s) to retrieve from game.
+            device_platform: Type of device to emulate. [Unused at this time]
+
 
         Returns:
             Current game data
 
+        Raises:
+            ValueError: if 'version' is not provided or neither 'items' not 'request_segment' are set
         """
+
         if version is NotSet:
             game_version = await self._get_game_version()
         else:
             game_version = version
+
         return await self._post(
             endpoint="data",
             payload=self._make_game_data_payload(
@@ -192,6 +202,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
                 include_pve_units=include_pve_units,
                 request_segment=request_segment,
                 enums=enums,
+                items=items,
+                device_platform=device_platform,
             ),
         )
 
@@ -199,28 +211,47 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     getGameData = get_game_data
 
     async def get_localization(
-            self, id: str | Sentinel = OPTIONAL, unzip: bool = False, enums: bool = False
+            self,
+            id: str | Sentinel = OPTIONAL,
+            locale: str | Sentinel = OPTIONAL,
+            unzip: bool = False,
+            enums: bool = False
     ) -> dict:
         """Get localization data from game
 
         Args:
             id: latestLocalizationBundleVersion found in game metadata. This method will collect the latest language
                             version if the 'id' argument is not provided.
+            locale: String indicating the desired localized language. For example, "eng_us" or "ger_de"
             unzip: Flag to indicate whether the localization bundle should be unzipped. [Default: False]
             enums: Flag to indicate whether ENUMs should be translated. [Default: False]
 
         Returns:
             Dictionary containing each localization file in a separate element value
 
+        Raises:
+            ValueError: If 'locale' is not a supported localized language.
         """
+
+        if isinstance(locale, str):
+            if locale not in LANGUAGES:
+                err_str = f"{self._get_function_name()}: Unknown locale {locale}. Please use only supported languages."
+                self.logger.error(err_str)
+                raise ValueError(err_str)
 
         if isinstance(id, Sentinel):
             current_game_version = await self.get_latest_game_data_version()
             id = current_game_version["language"]
 
+        if isinstance(locale, str):
+            id = id + ":" + locale.upper()
+
+        payload = {"unzip": unzip, "enums": enums, "payload": {"id": id}}
+        self.logger.debug(f"{self._get_function_name()}, {payload=}")
+
         return await self._post(
             endpoint="localization",
-            payload={"unzip": unzip, "enums": enums, "payload": {"id": id}},
+            payload=payload,
         )
 
     # aliases for non PEP usage of direct endpoint calls
