@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-File containing test configurations for the SwgohComlink class methods
+File containing mock tests configurations for the SwgohComlink class methods
 """
 import httpx
 import pytest
@@ -8,7 +8,7 @@ from pytest_httpx import HTTPXMock
 
 from swgoh_comlink import SwgohComlink
 
-comlink = SwgohComlink()
+comlink = SwgohComlink(default_logger_enabled=False)
 
 
 def test_mock_post_exception(httpx_mock: HTTPXMock):
@@ -17,7 +17,7 @@ def test_mock_post_exception(httpx_mock: HTTPXMock):
         en = comlink._post(endpoint="/enums", payload={"test": True})
 
 
-def test_get_enums(httpx_mock: HTTPXMock):
+def test_mock_get_enums(httpx_mock: HTTPXMock):
     """
     Test that game enums can be retrieved from game server correctly
     """
@@ -32,7 +32,7 @@ def test_mock_get_nums_exception(httpx_mock: HTTPXMock):
         en = comlink.get_enums()
 
 
-def test_get_game_data_segment(httpx_mock: HTTPXMock):
+def test_mock_get_game_data_segment(httpx_mock: HTTPXMock):
     """
     Test that game data can be retrieved from game server correctly
     """
@@ -45,7 +45,7 @@ def test_get_game_data_segment(httpx_mock: HTTPXMock):
     assert "units" in game_data.keys()
 
 
-def test_get_game_data_items(httpx_mock: HTTPXMock):
+def test_mock_get_game_data_items(httpx_mock: HTTPXMock):
     """
     Test that game data can be retrieved from game server correctly
     """
@@ -58,7 +58,7 @@ def test_get_game_data_items(httpx_mock: HTTPXMock):
     assert "modRecommendation" in game_data.keys()
 
 
-def test_get_guild_by_criteria(httpx_mock: HTTPXMock):
+def test_mock_get_guild_by_criteria(httpx_mock: HTTPXMock):
     """
     Test that guild data can be retrieved from game server correctly
     """
@@ -67,7 +67,7 @@ def test_get_guild_by_criteria(httpx_mock: HTTPXMock):
     assert "guild" in p.keys()
 
 
-def test_get_guild_by_name(httpx_mock: HTTPXMock):
+def test_mock_get_guild_by_name(httpx_mock: HTTPXMock):
     """
     Test that guild data can be retrieved from game server correctly
     """
@@ -76,7 +76,7 @@ def test_get_guild_by_name(httpx_mock: HTTPXMock):
     assert "guild" in p.keys()
 
 
-def test_get_localization_bundle(httpx_mock: HTTPXMock):
+def test_mock_get_localization_bundle(httpx_mock: HTTPXMock):
     """
     Test that localization data can be retrieved from game server correctly
     """
@@ -88,7 +88,24 @@ def test_get_localization_bundle(httpx_mock: HTTPXMock):
     assert "localizationBundle" in game_data.keys()
 
 
-def test_get_metadata(httpx_mock: HTTPXMock):
+def test_mock_get_localization_language(httpx_mock: HTTPXMock):
+    """
+    Test that specific language localization data can be retrieved from game server correctly
+    """
+    httpx_mock.add_response(json={"latestLocalizationBundleVersion": "xyz"}, status_code=200)
+    httpx_mock.add_response(json={"localizationBundle": "..."}, status_code=200)
+    game_metadata = comlink.get_game_metadata(client_specs={})
+    localization_id = game_metadata["latestLocalizationBundleVersion"]
+    game_data = comlink.get_localization(id=localization_id, locale="eng_us")
+    assert "localizationBundle" in game_data.keys()
+
+
+def test_mock_get_localization_language_with_bad_locale():
+    with pytest.raises(ValueError):
+        comlink.get_localization(locale="xyz_bb")
+
+
+def test_mock_get_metadata(httpx_mock: HTTPXMock):
     """
     Test that game metadata can be retrieved from game server correctly
     """
@@ -97,7 +114,7 @@ def test_get_metadata(httpx_mock: HTTPXMock):
     assert "serverVersion" in md.keys()
 
 
-def test_get_player(httpx_mock: HTTPXMock, allycode):
+def test_mock_get_player(httpx_mock: HTTPXMock, allycode):
     """
     Test that player data can be retrieved from game server correctly
     """
@@ -106,7 +123,7 @@ def test_get_player(httpx_mock: HTTPXMock, allycode):
     assert "name" in p.keys()
 
 
-def test_get_player_arena(httpx_mock: HTTPXMock, allycode):
+def test_mock_get_player_arena(httpx_mock: HTTPXMock, allycode):
     """
     Test that player data can be retrieved from game server correctly
     """
@@ -115,7 +132,7 @@ def test_get_player_arena(httpx_mock: HTTPXMock, allycode):
     assert "name" in p.keys()
 
 
-def test_get_player_arena_details_only(httpx_mock: HTTPXMock, allycode):
+def test_mock_get_player_arena_details_only(httpx_mock: HTTPXMock, allycode):
     """
     Test that player data can be retrieved from game server correctly
     """
@@ -124,7 +141,7 @@ def test_get_player_arena_details_only(httpx_mock: HTTPXMock, allycode):
     assert "name" in p.keys()
 
 
-def test_get_player_arena_details_only_alias(httpx_mock: HTTPXMock, allycode):
+def test_mock_get_player_arena_details_only_alias(httpx_mock: HTTPXMock, allycode):
     """
     Test that player data can be retrieved from game server correctly
     """
@@ -133,7 +150,7 @@ def test_get_player_arena_details_only_alias(httpx_mock: HTTPXMock, allycode):
     assert "name" in p.keys()
 
 
-def test_get_unit_stats(httpx_mock: HTTPXMock, allycode):
+def test_mock_get_unit_stats(httpx_mock: HTTPXMock, allycode):
     """
     Test that player data can be retrieved from game server correctly
     """

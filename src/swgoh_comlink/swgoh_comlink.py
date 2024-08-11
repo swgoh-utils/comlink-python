@@ -25,7 +25,8 @@ from swgoh_comlink.constants import (
     MutualExclusiveRequired,
     MutualRequiredNotSet,
     NotSet,
-    param_alias
+    param_alias,
+    LANGUAGES
 )
 
 __all__ = ["SwgohComlink"]
@@ -241,7 +242,16 @@ class SwgohComlink(SwgohComlinkBase):
         Returns:
             Dictionary containing each localization file in a separate element value
 
+        Raises:
+            ValueError: If 'locale' is not a supported localized language.
         """
+
+        if isinstance(locale, str):
+            if locale not in LANGUAGES:
+                err_str = f"{self._get_function_name()}: Unknown locale {locale}. Please use only supported languages."
+                self.logger.error(err_str)
+                raise ValueError(err_str)
+
         if isinstance(id, Sentinel):
             current_game_version = self.get_latest_game_data_version()
             id = current_game_version["language"]
