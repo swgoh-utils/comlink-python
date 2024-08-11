@@ -32,7 +32,7 @@ def test_mock_get_nums_exception(httpx_mock: HTTPXMock):
         en = comlink.get_enums()
 
 
-def test_get_game_data(httpx_mock: HTTPXMock):
+def test_get_game_data_segment(httpx_mock: HTTPXMock):
     """
     Test that game data can be retrieved from game server correctly
     """
@@ -43,6 +43,19 @@ def test_get_game_data(httpx_mock: HTTPXMock):
         request_segment=4
     )
     assert "units" in game_data.keys()
+
+
+def test_get_game_data_items(httpx_mock: HTTPXMock):
+    """
+    Test that game data can be retrieved from game server correctly
+    """
+    httpx_mock.add_response(json={"latestGamedataVersion": "x"}, status_code=200)
+    httpx_mock.add_response(json={"modRecommendation": "x"}, status_code=200)
+    game_data = comlink.get_game_data(
+        include_pve_units=False,
+        items="ModRecommendations"
+    )
+    assert "modRecommendation" in game_data.keys()
 
 
 def test_get_guild_by_criteria(httpx_mock: HTTPXMock):

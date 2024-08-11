@@ -207,6 +207,8 @@ def _get_new_logger(
         log_level: str = "DEBUG",
         log_to_console: bool = True,
         log_to_file: bool = True,
+        max_log_bytes: int = 25_000_000,
+        backup_log_count: int = 3,
 ) -> logging.Logger:
     """Get default_logger instance
 
@@ -215,6 +217,8 @@ def _get_new_logger(
         log_level: The message severity level to assign to the new default_logger instance
         log_to_console: Flag to enable console logging
         log_to_file: Flag to enable file logging
+        max_log_bytes: The maximum size in bytes of log file
+        backup_log_count: The number of backup log files to retain
 
     Returns:
         default_logger instance
@@ -239,7 +243,8 @@ def _get_new_logger(
         root_log_path = os.path.join(os.getcwd(), "logs")
         Path(root_log_path).mkdir(parents=True, exist_ok=True)
         log_path = os.path.join(root_log_path, logfile_name)
-        file_handler = RotatingFileHandler(filename=log_path, encoding="utf-8")
+        file_handler = RotatingFileHandler(
+            filename=log_path, encoding="utf-8", maxBytes=max_log_bytes, backupCount=backup_log_count)
         file_handler_formatter = LoggingFormatter()
         file_handler.setFormatter(file_handler_formatter)
         tmp_logger.addHandler(file_handler)
@@ -258,7 +263,22 @@ def get_logger(
         default_logger: bool = _DEFAULT_LOGGER_ENABLED,
         **kwargs,
 ) -> logging.Logger:
-    """Returns a default_logger"""
+    """Returns a default_logger
+
+        Args:
+            name: Name of the default_logger instance to create or retrieve
+            default_logger: Flag to enable default logger
+            **kwargs: Keyword arguments to pass to the logger
+                    Available options are:
+                                log_level: str = "DEBUG",
+                                log_to_console: bool = True,
+                                log_to_file: bool = True,
+                                max_log_bytes: int = 25_000_000,
+                                backup_log_count: int = 3,
+
+        Returns:
+            logging.Logger instance
+    """
     queued_msgs = [f"Received default_logger request from {_get_function_name()}"]
     if name in _LOGGER_REGISTRY:
         queued_msgs.append(f"Found default_logger in registry. Returning {_LOGGER_REGISTRY[name]}")

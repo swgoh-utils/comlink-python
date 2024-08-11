@@ -452,7 +452,7 @@ class SwgohComlinkBase:
             get_logger().error(err_str)
             raise ValueError(err_str)
 
-        if request_segment is MutualRequiredNotSet and items is MutualRequiredNotSet:
+        if request_segment is not MutualExclusiveRequired and items is not MutualExclusiveRequired:
             err_str = f"{_get_function_name()}: Either the 'request_segment' or 'items' must be set."
             get_logger().error(err_str)
             raise ValueError(err_str)

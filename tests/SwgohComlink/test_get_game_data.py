@@ -1,6 +1,8 @@
+import pytest
+
 from swgoh_comlink import SwgohComlink
 
-comlink = SwgohComlink(default_logger_enabled=True)
+comlink = SwgohComlink(default_logger_enabled=False)
 
 
 def test_get_game_metadata():
@@ -27,6 +29,16 @@ def test_get_game_data_with_version():
     versions = comlink.get_latest_game_data_version()
     game_data = comlink.get_game_data(version=versions['game'], include_pve_units=False, request_segment=1)
     assert 'effect' in game_data.keys()
+
+
+def test_get_game_data_with_items():
+    game_data = comlink.get_game_data(include_pve_units=False, items="ModRecommendations")
+    assert 'modRecommendation' in game_data.keys()
+
+
+def test_get_game_data_with_request_segment_and_items():
+    with pytest.raises(ValueError):
+        p = comlink.get_game_data(request_segment=4, items="ModRecommendations")
 
 
 def test_get_latest_game_data_version():
