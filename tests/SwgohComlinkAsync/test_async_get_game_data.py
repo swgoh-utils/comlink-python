@@ -4,6 +4,12 @@ from pytest_httpx import HTTPXMock
 from swgoh_comlink import SwgohComlinkAsync
 
 
+# TODO: add async mock test for 'items' parameter in get_game_data()
+# TODO: add async mock exception test for get_game_data() when neither 'items' nor 'request_segment' are set
+# TODO: add async mock test for 'locale' parameter in get_localization()
+# TODO add async mock test for bad 'locale' parameter in get_localization()
+
+
 @pytest.mark.asyncio
 async def test_mock_async_get_game_data(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"latestGamedataVersion": 1,
