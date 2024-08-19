@@ -4,6 +4,7 @@ Helper utilities for the swgoh_comlink package and related modules
 """
 from __future__ import annotations, print_function, absolute_import
 
+import inspect
 import os
 import time
 from functools import wraps
@@ -34,7 +35,12 @@ __all__ = [
     "sanitize_allycode",
     "search_gac_brackets",
     "validate_path",
+    "get_function_name"
 ]
+
+
+def get_function_name() -> str:
+    return f"{inspect.stack()[1].function}()"
 
 
 def func_timer(f):
@@ -54,6 +60,9 @@ def func_timer(f):
 
 def func_debug_logger(f):
     """Decorator for applying debug logging to a function"""
+
+    if not Constants.get_debug:
+        return f
 
     @wraps(f)
     def wrap(*args, **kw):

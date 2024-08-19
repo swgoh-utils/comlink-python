@@ -11,6 +11,7 @@ located at https://discord.gg/8ATYnUA746
 """
 from __future__ import annotations, print_function, absolute_import
 
+from json import loads
 from typing import Any
 
 import requests
@@ -62,8 +63,8 @@ class SwgohComlink(SwgohComlinkBase):
 
         try:
             r = requests.post(post_url, json=payload, headers=req_headers)
-            return r.json()
-            # return loads(r.content.decode())
+            # return r.json()
+            return loads(r.content.decode())
         except Exception as e:
             raise e
 
@@ -148,6 +149,8 @@ class SwgohComlink(SwgohComlinkBase):
             include_pve_units: bool = True,
             request_segment: int = 0,
             enums: bool = False,
+            items: str = None,
+            device_platform="Android"
     ) -> dict:
         """Get current game data from servers
 
@@ -156,6 +159,9 @@ class SwgohComlink(SwgohComlinkBase):
             include_pve_units: Flag to indicate whether PVE units should be included in results  [Defaults to True]
             request_segment: Identifier for whether to return all data (segment 0) or partial segments (values 1-4)
             enums: Flag to enable ENUM replace [Defaults to False]
+            items: string [Defaults to None] bitwise value indicating the collections to retrieve from game.
+                NOTE: this parameter is mutually exclusive with request_segment.
+            device_platform: Type of client to emulate. [Currently unused]
 
         Returns:
             Current game data
@@ -169,11 +175,20 @@ class SwgohComlink(SwgohComlinkBase):
         payload = {
             "payload": {
                 "version": f"{game_version}",
+                "devicePlatform": device_platform,
                 "includePveUnits": include_pve_units,
-                "requestSegment": request_segment,
             },
-            "enums": enums,
+            "enums": enums
         }
+
+        if items:  # presence of 'items' argument overrides the 'request_segment' and 'include_pve_units' arguments
+            if isinstance(items, int) and str(abs(items)).isdigit():
+                payload['payload']['items'] = str(items)
+            else:
+                payload['payload']['items'] = const.Constants.get(items) or "-1"
+        else:
+            payload['payload']['requestSegment'] = int(request_segment)
+
         return self._post(endpoint="data", payload=payload)
 
     # alias for non PEP usage of direct endpoint calls

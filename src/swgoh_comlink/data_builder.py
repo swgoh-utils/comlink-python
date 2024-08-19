@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import swgoh_comlink
+import swgoh_comlink.utils as utils
 from swgoh_comlink.const import Constants
 
 _COMMENT_START = "#"
@@ -209,6 +210,17 @@ class DataBuilder:
     _AUTO_UPDATE_GAME_DATA_THREAD_ID = None
 
     @classmethod
+    def _update_version_attr(cls):
+        logger.debug(f"{utils.get_function_name()}: Updating game data version object")
+        temp_version = cls._VERSION
+        logger.debug(f"{utils.get_function_name()}: Current game data version: {temp_version}")
+        server_versions = cls._COMLINK.get_latest_game_data_version()
+        temp_version["game"] = server_versions["game"]
+        temp_version["language"] = server_versions["language"]
+        logger.debug(f"{utils.get_function_name()}: New game data version: {temp_version}")
+        setattr(cls, "_VERSION", temp_version)
+
+    @classmethod
     def get_language_file_path(cls) -> str:
         """Return path to localized language files"""
         return os.path.join(cls._DATA_PATH, "languages")
@@ -217,7 +229,7 @@ class DataBuilder:
     def get_localized_stat_names(cls, language: str = "eng_us") -> dict[str, str]:
         """Load the requested localized stat string information and return"""
         data_path = os.path.join(cls._DATA_PATH, "languages")
-        return _read_json_file(data_path, language)
+        return _read_json_file(data_path, language.lower())
 
     @classmethod
     def _auto_update_game_data(cls) -> None:
@@ -315,7 +327,6 @@ class DataBuilder:
 
         loc_line = loc_line.rstrip(_NEWLINE_CHARACTER)
         key, value = loc_line.split(_FIELD_SEPARATOR)
-        logger.debug(f"{key=} {value=}")
 
         if not key or not value:
             return
@@ -325,7 +336,6 @@ class DataBuilder:
 
         value = _apply_value_patterns(value)
 
-        logger.debug(f"Returning {key=} {value=}")
         return key, value
 
     @classmethod
@@ -337,7 +347,6 @@ class DataBuilder:
         master_map = {}
         for line in content:
             if isinstance(line, bytes):
-                logger.debug("Decoding byte string...")
                 line = line.decode()
             line = line.rstrip(_NEWLINE_CHARACTER)
             result = cls._process_localization_line_stat_ids(line)
@@ -361,10 +370,15 @@ class DataBuilder:
             cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER
         )
         for game_data_file in cls._GAME_DATA_FILES:
-            logger.info(f"Reading game data for {game_data_file}...")
+            logger.info(f"{utils.get_function_name()}: Reading game data for {game_data_file}...")
             cls._GAME_DATA[game_data_file]: dict = _read_json_file(
                 game_data_file_path, game_data_file
             )
+        if not cls._verify_data_version_file():
+            logger.warning(
+                f"{utils.get_function_name()}: {cls._DATA_VERSION_FILE} not found. Updating game data files.")
+            cls.update_game_data()
+        logger.debug(f"{utils.get_function_name()}: Reading {cls._DATA_VERSION_FILE}")
         cls._VERSION: dict = _read_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE)
 
     @classmethod
@@ -495,6 +509,12 @@ class DataBuilder:
         """
         languages_file_path = os.path.join(cls._DATA_PATH, "units")
         unit_file_name = language + "_unit_name_keys.json"
+        if not os.path.isfile(unit_file_name):
+            logger.warning(f"{utils.get_function_name()}: {unit_file_name} does not exist."
+                           + " Loading localization data from game servers ...")
+            if not cls.update_localization_bundle(force_update=True):
+                logger.error(f"{utils.get_function_name()}: Failed to update location files.")
+                return {}
         return _read_json_file(languages_file_path, unit_file_name)
 
     @classmethod
@@ -528,20 +548,32 @@ class DataBuilder:
         :rtype: dict
         """
 
+        def get_skill_tier(s_tier: str) -> str:
+            for suffix in ('_DISCOUNTED', '_OMICRON', '_ZETA'):
+                s_tier = s_tier.replace(suffix, '')
+            return s_tier[-1:]
+
         skills = {}
         for skill in skill_list:
             s = {
                 "id": skill["id"],
-                "maxTier": len(skill["tier"]) + 1,
+                "maxTier": len(skill['tier']) - 1,
                 "powerOverrideTags": {},
-                "isZeta": skill["isZeta"],
+                "isZeta": False,
+                "isOmicron": False
             }
-            tier_count = 1
             for tier in skill["tier"]:
-                tier_count += 1
-                if "powerOverrideTag" in tier.keys():
-                    s["powerOverrideTags"][str(tier_count)] = tier["powerOverrideTag"]
-                    tier_count = 1
+                if tier['isZetaTier'] or tier['isOmicronTier']:
+                    s['isZeta'] = tier['isZetaTier']
+                    s['isOmicron'] = tier['isOmicronTier']
+                    skill_tier = get_skill_tier(tier['recipeId'])
+                    s["powerOverrideTags"][skill_tier] = tier["powerOverrideTag"]
+                    if s['isZeta'] and s['isOmicron']:
+                        s['maxTier'] += 1
+                    elif s['isZeta'] and not s['isOmicron']:
+                        s['maxTier'] += 1
+                    elif not s['isZeta'] and s['isOmicron']:
+                        s['maxTier'] += 1
             skills[skill["id"]] = s
         return skills
 
@@ -901,41 +933,41 @@ class DataBuilder:
                 target_directory, game_data_file, cls._GAME_DATA.get(game_data_file, {})
             )
 
+        cls._update_version_attr()
+
         logger.info("*** Writing game version information to disk... ***")
         _write_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE, cls._VERSION)
 
     @classmethod
-    def update_localization_bundle(cls, force_update: bool = False):
+    def update_localization_bundle(cls, force_update: bool = False) -> bool:
         """Collect localization bundle from game servers.
 
         Parameters:
             force_update: Flag to indicate whether existing files should be overwritten. Defaults to False
         """
-        logger.info("Updating localization bundle...")
+        logger.info(f"{utils.get_function_name()}: Updating localization bundle...")
         server_versions = cls._COMLINK.get_latest_game_data_version()
 
         current_versions = cls._get_data_versions_from_file()
         if current_versions == server_versions:
             logger.warning(
-                f"The current server game versions are the same as those in {cls._DATA_VERSION_FILE}"
+                f"{utils.get_function_name()}: The current server game versions are the same as those in " +
+                f"{cls._DATA_VERSION_FILE}"
             )
             if force_update is False:
                 logger.warning(
-                    f"The 'force_update' flag is set to '{force_update}'. Data files contain most"
-                    + " current data."
+                    f"{utils.get_function_name()}: The 'force_update' flag is set to '{force_update}'. " +
+                    "Data files contain most current data."
                 )
-                return
+                return False
 
-        cls._VERSION["game"] = server_versions["game"]
-        cls._VERSION["language"] = server_versions["language"]
+        cls._update_version_attr()
 
-        cls._VERSION["languages"] = []
-
-        logger.info("Validating that required data file paths exist.")
+        logger.info(f"{utils.get_function_name()}: Validating that required data file paths exist.")
         cls._validate_data_file_paths()
 
         logger.info(
-            "Collecting bundle from game servers. "
+            f"{utils.get_function_name()}: Collecting bundle from game servers. "
             + f"Language version: '{server_versions['language']}', USE_UNZIP = '{cls._USE_UNZIP}'"
         )
         loc_bundle = cls._COMLINK.get_localization_bundle(
@@ -986,6 +1018,7 @@ class DataBuilder:
 
         logger.info("Writing game version information to disk...")
         _write_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE, cls._VERSION)
+        return True
 
     @classmethod
     def enable_auto_game_data_update(cls, interval: int = None) -> bool:
@@ -1060,18 +1093,13 @@ class DataBuilder:
             _verify_data_path(path)
             logger.info(f"Path validation for {path} complete.")
 
-    @property
-    def is_initialized(self) -> bool:
-        """Return class initialization state
-
-        Returns:
-            True or False
-        """
-        return self._INITIALIZED
+    @classmethod
+    def is_initialized(cls) -> bool:
+        return cls._INITIALIZED
 
     @classmethod
     def initialize(
-            cls, comlink: swgoh_comlink.SwgohComlink = None, /, **kwargs
+            cls, comlink: swgoh_comlink.SwgohComlink = None, **kwargs
     ) -> bool:
         """Prepare DataBuilder environment for first use. Providing keyword arguments can override default settings.
 
@@ -1140,5 +1168,8 @@ class DataBuilder:
             cls.update_localization_bundle()
             logger.info("Writing game version information to disk...")
             _write_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE, cls._VERSION)
-        cls._INITIALIZED = True
+
+        logger.debug(f"Setting DataBuilder._INITIALIZED to True")
+        setattr(cls, "_INITIALIZED", True)
+
         return True
