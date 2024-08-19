@@ -26,7 +26,7 @@ from swgoh_comlink.constants import (
     MutualRequiredNotSet,
     NotSet,
     param_alias,
-    LANGUAGES
+    Constants,
 )
 
 __all__ = ["SwgohComlink"]
@@ -38,6 +38,23 @@ class SwgohComlink(SwgohComlinkBase):
     Instances of this class are used to query the Star Wars Galaxy of Heroes
     game servers for exposed endpoints via the swgoh-comlink proxy library
     running on the same host.
+
+        Args:
+            url (str): The URL where swgoh-comlink is running.
+            stats_url (str): The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
+            access_key (str): The HMAC public key. Default to None which indicates HMAC is not used.
+            secret_key (str): The HMAC private key. Default to None which indicates HMAC is not used.
+            protocol (str): The protocol to use for connecting to comlink. Typically, http or https.
+            host (str): IP address or DNS name of server where the swgoh-comlink service is running
+            port (int): TCP port number between 1024 and 65535 where the swgoh-comlink service is running.
+            stats_port (int): TCP port number between 1024 and 65535 where the comlink-stats service is running.
+            logger (logging.Logger): A logger instance to use for logging messages if the default logger is
+                                    insufficient.
+            default_logger_enabled (bool): Flag to enable default logging. Should only be used if testing.
+
+        Note:
+            'url' and 'stat_url' are mutually exclusive of the protocol/host/port/stats_port parameters.
+                Either of the options should be chosen but not both.
 
     """
 
@@ -210,6 +227,7 @@ class SwgohComlink(SwgohComlinkBase):
         else:
             game_version = version
 
+        # TODO: Update 'items' type hint and default
         return self._post(
             endpoint="data",
             payload=self._make_game_data_payload(
@@ -249,7 +267,7 @@ class SwgohComlink(SwgohComlinkBase):
         """
 
         if isinstance(locale, str):
-            if locale not in LANGUAGES:
+            if locale not in Constants.LANGUAGES:
                 err_str = f"{self._get_function_name()}: Unknown locale {locale}. Please use only supported languages."
                 self.logger.error(err_str)
                 raise ValueError(err_str)

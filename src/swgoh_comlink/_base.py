@@ -24,11 +24,10 @@ from typing import Any
 
 from sentinels import Sentinel
 
-import swgoh_comlink.utils as utils
 from swgoh_comlink.constants import (
     get_logger,
     EMPTY,
-    LANGUAGES,
+    Constants,
     MISSING,
     MutualExclusiveRequired,
     MutualRequiredNotSet,
@@ -37,18 +36,18 @@ from swgoh_comlink.constants import (
     OPTIONAL,
     REQUIRED,
     SET,
-    LEAGUES,
-    DIVISIONS,
     DataItemConstants
+)
+from swgoh_comlink.constants import set_debug
+from swgoh_comlink.utils import (
+    _get_function_name,
+    sanitize_allycode,
+    convert_league_to_int,
+    convert_divisions_to_int,
 )
 from swgoh_comlink.version import __version__
 
 __all__ = ["SwgohComlinkBase"]
-
-
-def _get_function_name() -> str:
-    """Return the name for the calling function"""
-    return f"{inspect.stack()[1].function}()"
 
 
 class SwgohComlinkBase:
@@ -56,24 +55,6 @@ class SwgohComlinkBase:
 
     This base class is meant to be inherited by extension classes for actual method definitions
     using synchronous and asynchronous interfaces.
-
-        Args:
-            url (str): The URL where swgoh-comlink is running.
-            stats_url (str): The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
-            access_key (str): The HMAC public key. Default to None which indicates HMAC is not used.
-            secret_key (str): The HMAC private key. Default to None which indicates HMAC is not used.
-            protocol (str): The protocol to use for connecting to comlink. Typically, http or https.
-            host (str): IP address or DNS name of server where the swgoh-comlink service is running
-            port (int): TCP port number between 1024 and 65535 where the swgoh-comlink service is running.
-            stats_port (int): TCP port number between 1024 and 65535 where the comlink-stats service is running.
-            logger (logging.Logger): A logger instance to use for logging messages if the default logger is
-                                    insufficient.
-            default_logger_enabled (bool): Flag to enable default logging. Should only be used if testing.
-
-        Note:
-            'url' and 'stat_url' are mutually exclusive of the protocol/host/port/stats_port parameters.
-                Either of the options should be chosen but not both.
-
 
     """
 
@@ -104,6 +85,7 @@ class SwgohComlinkBase:
             self,
             url: str = "http://localhost:3000",
             stats_url: str = "http://localhost:3223",
+            *,
             access_key: str | Sentinel = OPTIONAL,
             secret_key: str | Sentinel = OPTIONAL,
             host: str | Sentinel = OPTIONAL,
@@ -112,6 +94,7 @@ class SwgohComlinkBase:
             stats_port: int | Sentinel = OPTIONAL,
             logger: logging.Logger | Sentinel = OPTIONAL,
             default_logger_enabled: bool = False,
+            **kwargs
     ):
         """
         Set initial values when new class instance is created
@@ -151,6 +134,10 @@ class SwgohComlinkBase:
 
         self.stats_url_base = stats_url
         self.logger.debug("Initial stats_url_base= %s" % self.stats_url_base)
+
+        for k, v in kwargs.items():
+            if k.lower() == 'debug':
+                set_debug(True)
 
         def verify_port(input_port: int | str | Sentinel) -> None:
             port_name = self._get_var_name(input_port)
@@ -335,7 +322,7 @@ class SwgohComlinkBase:
             )
         )
 
-        if language not in LANGUAGES:
+        if language not in Constants.LANGUAGES:
             language = "eng_us"
 
         language_string = f"language={language}"
@@ -416,7 +403,7 @@ class SwgohComlinkBase:
         payload: dict[str, Any] = {"payload": {}, "enums": enums}
 
         if isinstance(allycode, int) or isinstance(allycode, str):
-            allycode = utils.sanitize_allycode(allycode)
+            allycode = sanitize_allycode(allycode)
             payload["payload"]["allyCode"] = allycode
         else:
             payload["payload"]["playerId"] = player_id
@@ -569,12 +556,12 @@ class SwgohComlinkBase:
             if division is NotGiven and division is not SET:
                 raise ValueError(f"{_get_function_name()}, 'division' must be provided.")
 
-            league = utils.convert_league_to_int(league) if isinstance(league, str) else league
-            if league not in LEAGUES.values():
+            league = convert_league_to_int(league) if isinstance(league, str) else league
+            if league not in Constants.LEAGUES.values():
                 raise ValueError(f"{_get_function_name()}: Invalid league {league}.")
 
-            division = utils.convert_divisions_to_int(division) if isinstance(division, str) else division
-            if division not in DIVISIONS.values():
+            division = convert_divisions_to_int(division) if isinstance(division, str) else division
+            if division not in Constants.DIVISIONS.values():
                 raise ValueError(f"{_get_function_name()}: Invalid division {division}.")
 
             payload["payload"]["league"] = league

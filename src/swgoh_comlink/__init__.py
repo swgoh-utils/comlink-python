@@ -11,7 +11,6 @@ sys.path.append(os.path.dirname(__file__))
 from swgoh_comlink.version import __version__
 from swgoh_comlink.swgoh_comlink import SwgohComlink
 from swgoh_comlink.swgoh_comlink_async import SwgohComlinkAsync
-import swgoh_comlink.utils
 
 __all__ = [
     '__version__',
