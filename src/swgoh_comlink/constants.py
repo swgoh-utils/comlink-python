@@ -5,6 +5,7 @@ Constants used throughout the swgoh_comlink package
 
 from __future__ import annotations, absolute_import
 
+import inspect
 import logging
 import os
 from functools import wraps
@@ -13,8 +14,6 @@ from pathlib import Path
 from typing import Callable
 
 from sentinels import Sentinel
-
-from swgoh_comlink.utils import _get_function_name
 
 OPTIONAL = Sentinel('NotSet')
 NotSet = Sentinel('NotSet')
@@ -33,25 +32,6 @@ _LOGGER_REGISTRY = {}
 _DEBUG = False
 DATA_PATH = os.path.join(os.getcwd(), "data")
 LOG_PATH = os.path.join(os.getcwd(), "logs")
-
-__all__ = [
-    GIVEN,  # Sentinel
-    OPTIONAL,  # Sentinel
-    MISSING,  # Sentinel
-    NotGiven,  # Sentinel
-    REQUIRED,  # Sentinel
-    MutualExclusiveRequired,  # Sentinel
-    MutualRequiredNotSet,
-    NotSet,  # Sentinel
-    SET,
-    EMPTY,
-    "DataItemConstants",
-    "Constants",
-    "DATA_PATH",
-    "enable_default_logger",
-    "get_logger",
-    "param_alias",  # Decorator
-]
 
 
 class Constants:
@@ -1091,6 +1071,10 @@ class LoggingFormatter(logging.Formatter):
         return formatter.format(record)
 
 
+def _get_function_name() -> str:
+    return f"{inspect.stack()[1].function}()"
+
+
 def enable_default_logger():
     global _DEFAULT_LOGGER_ENABLED
     get_logger().debug("Enabled default default_logger")
@@ -1231,3 +1215,23 @@ def set_debug(debug: bool):
 
 def logger_name(cls) -> str:
     return cls._logger_name
+
+
+__all__ = [
+    GIVEN,  # Sentinel
+    OPTIONAL,  # Sentinel
+    MISSING,  # Sentinel
+    NotGiven,  # Sentinel
+    REQUIRED,  # Sentinel
+    MutualExclusiveRequired,  # Sentinel
+    MutualRequiredNotSet,
+    NotSet,  # Sentinel
+    SET,
+    EMPTY,
+    DataItemConstants,
+    Constants,
+    DATA_PATH,
+    enable_default_logger,
+    get_logger,
+    param_alias,  # Decorator
+]

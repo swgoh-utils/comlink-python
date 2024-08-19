@@ -8,11 +8,9 @@ from __future__ import absolute_import
 
 from typing import Any
 
-from swgoh_comlink.const import Constants
+from swgoh_comlink.constants import get_logger, _get_function_name
 
-import swgoh_comlink.utils as utils
-
-logger = Constants.get_logger()
+logger = get_logger()
 
 
 class StatValues(object):
@@ -158,18 +156,18 @@ class StatValues(object):
         """StatValues instance constructor"""
         if attributes:
             if not isinstance(attributes, dict):
-                err_msg = f"{utils.get_function_name()}: 'attributes' argument must be a dictionary."
+                err_msg = f"{_get_function_name()}: 'attributes' argument must be a dictionary."
                 logger.error(err_msg)
                 raise AttributeError(err_msg)
             else:
                 for unit_type in attributes.keys():
-                    self._check_unit_type(unit_type, utils.get_function_name())
+                    self._check_unit_type(unit_type, _get_function_name())
                     temp_attrs = {}
                     for attr in attributes[unit_type].keys():
-                        self._check_attribute(unit_type, attr, attributes[unit_type][attr], utils.get_function_name())
+                        self._check_attribute(unit_type, attr, attributes[unit_type][attr], _get_function_name())
                         temp_attrs.setdefault(attr, {})
                         temp_attrs[attr] = attributes[unit_type][attr]
-                    logger.debug(f"{utils.get_function_name()}: setting {unit_type} attributes to {temp_attrs}")
+                    logger.debug(f"{_get_function_name()}: setting {unit_type} attributes to {temp_attrs}")
                     setattr(self.__class__, unit_type, temp_attrs)
 
     def set_attribute(self, unit_type: str, attributes: dict):
@@ -188,24 +186,24 @@ class StatValues(object):
 
         """
         if not unit_type:
-            err_msg = f"{utils.get_function_name()}: 'unit_type' argument cannot be empty."
+            err_msg = f"{_get_function_name()}: 'unit_type' argument cannot be empty."
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
-        self._check_unit_type(unit_type, utils.get_function_name())
+        self._check_unit_type(unit_type, _get_function_name())
 
         if attributes:
             if not isinstance(attributes, dict):
-                err_msg = f"{utils.get_function_name()}: 'attributes' argument must be a dictionary."
+                err_msg = f"{_get_function_name()}: 'attributes' argument must be a dictionary."
                 logger.error(err_msg)
                 raise AttributeError(err_msg)
             else:
                 for attr in attributes.keys():
-                    self._check_attribute(unit_type, attr, attributes[attr], utils.get_function_name())
-                logger.debug(f"{utils.get_function_name()}: setting {unit_type} attributes to {attributes}")
+                    self._check_attribute(unit_type, attr, attributes[attr], _get_function_name())
+                logger.debug(f"{_get_function_name()}: setting {unit_type} attributes to {attributes}")
                 setattr(self.__class__, unit_type, attributes)
         else:
-            err_msg = f"{utils.get_function_name()}: 'attributes' argument cannot be empty."
+            err_msg = f"{_get_function_name()}: 'attributes' argument cannot be empty."
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
@@ -224,12 +222,12 @@ class StatValues(object):
 
         """
         if not unit_type:
-            err_msg = f"{utils.get_function_name()}: 'unit_type' argument cannot be empty."
+            err_msg = f"{_get_function_name()}: 'unit_type' argument cannot be empty."
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
         if unit_type not in self._ALLOWED_UNIT_TYPES:
-            err_msg = f"{utils.get_function_name()}: unit type {unit_type} not allowed."
+            err_msg = f"{_get_function_name()}: unit type {unit_type} not allowed."
             logger.error(err_msg)
             raise AttributeError(err_msg)
 

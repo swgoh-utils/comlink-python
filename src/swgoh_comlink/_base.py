@@ -24,8 +24,10 @@ from typing import Any
 
 from sentinels import Sentinel
 
+from swgoh_comlink import __version__
 from swgoh_comlink.constants import (
     get_logger,
+    set_debug,
     EMPTY,
     Constants,
     MISSING,
@@ -38,14 +40,12 @@ from swgoh_comlink.constants import (
     SET,
     DataItemConstants
 )
-from swgoh_comlink.constants import set_debug
 from swgoh_comlink.utils import (
     _get_function_name,
     sanitize_allycode,
     convert_league_to_int,
     convert_divisions_to_int,
 )
-from swgoh_comlink.version import __version__
 
 __all__ = ["SwgohComlinkBase"]
 

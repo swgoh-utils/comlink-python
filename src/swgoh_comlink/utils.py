@@ -16,16 +16,16 @@ from typing import TYPE_CHECKING
 
 from sentinels import Sentinel
 
-from swgoh_comlink.constants import (
+from .constants import (
     get_logger,
+    GIVEN,  # Sentinel
+    OPTIONAL,  # Sentinel
+    MISSING,  # Sentinel
+    REQUIRED,  # Sentinel
+    MutualExclusiveRequired,  # Sentinel
+    NotSet,  # Sentinel
     Constants,
     DATA_PATH,
-    GIVEN,
-    MISSING,
-    NotSet,
-    OPTIONAL,
-    REQUIRED,
-    MutualExclusiveRequired,
 )
 
 if TYPE_CHECKING:
