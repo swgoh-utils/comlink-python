@@ -13,12 +13,20 @@ import threading
 import time
 import zipfile
 from copy import copy, deepcopy
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from sentinels import Sentinel
+
 import swgoh_comlink
-from swgoh_comlink.constants import Constants, get_logger, DATA_PATH, OPTIONAL
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.constants import (
+    Constants,
+    get_logger,
+    DATA_PATH,
+    OPTIONAL,
+    NotSet,
+)
 from swgoh_comlink.utils import _get_function_name
 
 _COMMENT_START = "#"
@@ -154,7 +162,7 @@ def _compare_game_data_versions(current_version: dict, server_version: dict) -> 
     return True if stripped_current_version == server_version else False
 
 
-@dataclass
+# @dataclass
 class DataBuilder:
     """DataBuilder is a base container class representing a collection of methods for managing game data files
     populated with information retrieved from the game servers directly. This class is not intended to be instantiated.
@@ -165,18 +173,18 @@ class DataBuilder:
 
     """
 
-    _INITIALIZED = False
-    _VERSION = {"game": "", "language": "", "languages": set()}
+    _INITIALIZED: bool = False
+    _VERSION: dict[str, set | str] = {"game": "", "language": "", "languages": set()}
 
-    _STATS_ENUM = copy(Constants.STAT_ENUMS)
-    _GAME_DATA = {}
-    _ZIP_GAME_DATA = False
-    _USE_SEGMENTS = False
-    _USE_UNZIP = False
-    _LOCALIZATION_MAP = {}
+    _STATS_ENUM: dict[str, str] = copy(Constants.STAT_ENUMS)
+    _GAME_DATA: dict = {}
+    _ZIP_GAME_DATA: bool = False
+    _USE_SEGMENTS: bool = False
+    _USE_UNZIP: bool = False
+    _LOCALIZATION_MAP: dict = {}
 
-    _DATA_PATH = DATA_PATH
-    _DATA_FILE_PATHS = [
+    _DATA_PATH: str = DATA_PATH
+    _DATA_FILE_PATHS: list[str] = [
         _DATA_PATH,
         os.path.join(_DATA_PATH, "game"),
         os.path.join(_DATA_PATH, "game", "backups"),
@@ -185,10 +193,10 @@ class DataBuilder:
         os.path.join(_DATA_PATH, "languages"),
         os.path.join(_DATA_PATH, "languages", "backups"),
     ]
-    _DATA_VERSION_FILE = "dataVersion"
-    _GAME_DATA_PATH_SUB_FOLDER = "game"
-    _GAME_DATA_FILE = "gameData"
-    _GAME_DATA_FILES = [
+    _DATA_VERSION_FILE: str = "dataVersion"
+    _GAME_DATA_PATH_SUB_FOLDER: str = "game"
+    _GAME_DATA_FILE: str = "gameData"
+    _GAME_DATA_FILES: list[str] = [
         "crTables",
         "gearData",
         "gpTables",
@@ -196,16 +204,16 @@ class DataBuilder:
         "relicData",
         "unitData",
     ]
-    _STATS_ENUM_MAP_LOADED = False
-    _LOG_LEVEL = "INFO"
-    _LANGUAGE_FILE_SKIP_LIST = ["key_mapping"]
-    _COMLINK = None
+    _STATS_ENUM_MAP_LOADED: bool = False
+    _LOG_LEVEL: str = "INFO"
+    _LANGUAGE_FILE_SKIP_LIST: list[str] = ["key_mapping"]
+    _COMLINK: SwgohComlink | Sentinel = NotSet
     _AUTO_UPDATE_GAME_DATA = False
-    _AUTO_UPDATE_GAME_DATA_INTERVAL_DEFAULT = 60  # 5 minutes
-    _AUTO_UPDATE_GAME_DATA_INTERVAL_MIN = 30  # 5 minutes
-    _AUTO_UPDATE_GAME_DATA_INTERVAL = copy(_AUTO_UPDATE_GAME_DATA_INTERVAL_DEFAULT)
-    _AUTO_UPDATE_GAME_DATA_THREAD_NAME = None
-    _AUTO_UPDATE_GAME_DATA_THREAD_ID = None
+    _AUTO_UPDATE_GAME_DATA_INTERVAL_DEFAULT: int = 60  # 5 minutes
+    _AUTO_UPDATE_GAME_DATA_INTERVAL_MIN: int = 30  # 5 minutes
+    _AUTO_UPDATE_GAME_DATA_INTERVAL: int = copy(_AUTO_UPDATE_GAME_DATA_INTERVAL_DEFAULT)
+    _AUTO_UPDATE_GAME_DATA_THREAD_NAME: str | Sentinel = NotSet
+    _AUTO_UPDATE_GAME_DATA_THREAD_ID: str | Sentinel = NotSet
 
     @classmethod
     def _update_version_attr(cls):
@@ -239,15 +247,15 @@ class DataBuilder:
                 < cls._AUTO_UPDATE_GAME_DATA_INTERVAL_MIN
         ):
             logger.warning(
-                "Setting the interval for automatic game data update checks to less than "
+                f"{_get_function_name()}: Setting the interval for automatic game data update checks to less than "
                 + f"{cls._AUTO_UPDATE_GAME_DATA_INTERVAL_MIN} is not recommended. It may cause your Comlink "
                 + "process to become rate limited by Capital Games."
             )
         thread_name = threading.current_thread().name
         sleep_minutes = cls._AUTO_UPDATE_GAME_DATA_INTERVAL * 60
         logger.info(
-            f"Automatic game data update thread [{thread_name}] starting with an update interval of "
-            + f"{cls._AUTO_UPDATE_GAME_DATA_INTERVAL}"
+            f"{_get_function_name()}: Automatic game data update thread [{thread_name}] starting with an update "
+            + f"interval of {cls._AUTO_UPDATE_GAME_DATA_INTERVAL}"
         )
         thread_shutdown = False
         while thread_shutdown is False:
@@ -255,7 +263,8 @@ class DataBuilder:
             server_game_versions = cls._COMLINK.get_latest_game_data_version()
             if not _compare_game_data_versions(server_game_versions, cls._VERSION):
                 logger.info(
-                    f"Server game versions {server_game_versions} does not equal the current data version file."
+                    f"{_get_function_name()}: Server game versions {server_game_versions} does not equal the "
+                    + "current data version file."
                 )
                 cls.update_game_data()
                 cls.update_localization_bundle()
@@ -267,20 +276,20 @@ class DataBuilder:
             ):
                 if cls._AUTO_UPDATE_GAME_DATA is False:
                     logger.info(
-                        "Automatic game data updates have been disabled. "
+                        f"{_get_function_name()}: Automatic game data updates have been disabled. "
                         + f"Shutting down thread {thread_name}."
                     )
                     thread_shutdown = True
                 time.sleep(10)
                 auto_update_polling_counter += 10
             time.sleep(sleep_minutes)
-        cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME = None
-        logger.info(f"Thread {thread_name} stopped.")
+        cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME = NotSet
+        logger.info(f"{_get_function_name()}: Thread {thread_name} stopped.")
 
     @classmethod
     def _start_auto_update_thread(cls) -> bool:
         thread_name = "AUTO UPDATE GAME DATA THREAD"
-        logger.info(f"Starting auto update thread [{thread_name}]...")
+        logger.info(f"{_get_function_name()}: Starting auto update thread [{thread_name}]...")
         update_t = threading.Thread(
             target=cls._auto_update_game_data, name=thread_name, daemon=True
         )
@@ -339,7 +348,7 @@ class DataBuilder:
     @classmethod
     def _process_file_contents_by_line(cls, content: list) -> tuple[dict, dict, dict]:
         """Iterate through file contents list and create language map from information contained within"""
-        logger.info("Processing language content...")
+        logger.info(f"{_get_function_name()}: Processing language content...")
         lang_map = {}
         unit_name_map = {}
         master_map = {}
@@ -388,16 +397,16 @@ class DataBuilder:
             full_path = os.path.join(
                 cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER, game_data_file
             )
-            logger.info(f"Verifying {full_path} ...")
+            logger.info(f"{_get_function_name()}: Verifying {full_path} ...")
             if os.path.isfile(full_path):
                 file_info = os.stat(full_path)
                 if file_info.st_size == 0:
-                    logger.warning(f"{game_data_file} exists but is empty.")
+                    logger.warning(f"{_get_function_name()}: {game_data_file} exists but is empty.")
                     return False
                 else:
-                    logger.info(f"{game_data_file} is valid.")
+                    logger.info(f"{_get_function_name()}: {game_data_file} is valid.")
             else:
-                logger.error(f"{full_path} does not exist.")
+                logger.error(f"{_get_function_name()}: {full_path} does not exist.")
                 return False
         return True
 
@@ -412,13 +421,13 @@ class DataBuilder:
         if os.path.isfile(full_path):
             file_info = os.stat(full_path)
             if file_info.st_size == 0:
-                logger.warning(f"{data_version_file} exists but is empty.")
+                logger.warning(f"{_get_function_name()}: {data_version_file} exists but is empty.")
                 return False
             else:
-                logger.info(f"{data_version_file} is valid.")
+                logger.info(f"{_get_function_name()}: {data_version_file} is valid.")
                 return True
         else:
-            logger.error(f"{full_path} does not exist.")
+            logger.error(f"{_get_function_name()}: {full_path} does not exist.")
         return False
 
     @staticmethod
@@ -429,7 +438,7 @@ class DataBuilder:
         except IOError as io_err:
             logger.error(io_err)
         finally:
-            logger.info(f"{file_name} written successfully.")
+            logger.info(f"{_get_function_name()}: {file_name} written successfully.")
 
     @classmethod
     def _get_data_versions_from_file(cls) -> dict:
@@ -469,7 +478,7 @@ class DataBuilder:
     @classmethod
     def get_attribute(cls, attribute_name: str) -> Any:
         """Get an attribute value"""
-        return getattr(cls, attribute_name)
+        return getattr(cls, attribute_name, None)
 
     @classmethod
     def set_attribute(cls, attr_name: str, attr_value: any) -> None:
@@ -477,9 +486,9 @@ class DataBuilder:
         setattr(cls, attr_name, attr_value)
 
     @classmethod
-    def set_comlink(cls, comlink: Any) -> None:
+    def set_comlink(cls, comlink: SwgohComlink) -> None:
         """Assign a value to the DataBuilder class"""
-        cls._COMLINK = comlink
+        cls.set_attribute("_COMLINK", comlink)
 
     @classmethod
     def set_log_level(cls, log_level):
@@ -864,23 +873,23 @@ class DataBuilder:
         """Take game data dictionary and parse into just the needed tables"""
 
         game_data = {}
-        logger.info("Building stat_tables from statProgression")
+        logger.info(f"{_get_function_name()}: Building stat_tables from statProgression")
         stat_tables = cls._build_stat_progression_list(data["statProgression"])
 
-        logger.info("Building modSetData from equipment list")
+        logger.info(f"{_get_function_name()}: Building modSetData from equipment list")
         game_data["modSetData"] = cls._build_mod_set_data(data["statModSet"])
-        logger.info("Building crTables and gpTables")
+        logger.info(f"{_get_function_name()}: Building crTables and gpTables")
         (game_data["crTables"], game_data["gpTables"]) = cls._build_table_data(
             data["table"], data["xpTable"]
         )
 
-        logger.info("Building gearData from equipment list")
+        logger.info(f"{_get_function_name()}: Building gearData from equipment list")
         game_data["gearData"] = cls._build_gear_data(data["equipment"])
-        logger.info("Building relicData from relicTierDefinition list")
+        logger.info(f"{_get_function_name()}: Building relicData from relicTierDefinition list")
         game_data["relicData"] = cls._build_relic_data(
             data["relicTierDefinition"], stat_tables
         )
-        logger.info("Building unitData from units and skill lists")
+        logger.info(f"{_get_function_name()}: Building unitData from units and skill lists")
         game_data["unitData"] = cls._build_unit_data(
             data["units"], data["skill"], stat_tables
         )
@@ -907,23 +916,23 @@ class DataBuilder:
     def update_game_data(cls):
         """Get the latest game data from servers"""
 
-        logger.info("Getting game data from comlink instance")
+        logger.info(f"{_get_function_name()}: Getting game data from comlink instance")
         start_time = time.perf_counter()
         game_data = cls._COMLINK.get_game_data(include_pve_units=False)
         end_time = time.perf_counter()
         logger.debug(
-            f"Game data retrieval completed in {end_time - start_time:.2f} seconds."
+            f"{_get_function_name()}: Game data retrieval completed in {end_time - start_time:.2f} seconds."
         )
 
-        logger.info("Building data constructs from game data...")
+        logger.info(f"{_get_function_name()}: Building data constructs from game data...")
         cls._GAME_DATA = cls._build_data(game_data)
 
-        logger.info("Validating that required data file paths exist.")
+        logger.info(f"{_get_function_name()}: Validating that required data file paths exist.")
         cls._validate_data_file_paths()
 
-        logger.info("*** Writing game data files to disk... ***")
+        logger.info(f"{_get_function_name()}: *** Writing game data files to disk... ***")
         for game_data_file in cls._GAME_DATA_FILES:
-            logger.info(f"... Writing game data file: {game_data_file} ...")
+            logger.info(f"{_get_function_name()}: ... Writing game data file: {game_data_file} ...")
             target_directory = os.path.join(
                 cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER
             )
@@ -933,7 +942,7 @@ class DataBuilder:
 
         cls._update_version_attr()
 
-        logger.info("*** Writing game version information to disk... ***")
+        logger.info(f"{_get_function_name()}: *** Writing game version information to disk... ***")
         _write_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE, cls._VERSION)
 
     @classmethod
@@ -979,9 +988,9 @@ class DataBuilder:
 
         zip_obj = None
         if cls._USE_UNZIP is False:
-            logger.info("Decoding Base64 data...")
+            logger.info(f"{_get_function_name()}: Decoding Base64 data...")
             loc_bundle_decoded = base64.b64decode(loc_bundle["localizationBundle"])
-            logger.info("Decompressing data stream...")
+            logger.info(f"{_get_function_name()}: Decompressing data stream...")
             zip_obj = zipfile.ZipFile(io.BytesIO(loc_bundle_decoded))
             language_files = zip_obj.namelist()
         else:
@@ -1005,13 +1014,13 @@ class DataBuilder:
                 (name_key_file, name_key_map, "/units"),
                 (master_file_name, master_map, "/master"),
             ]:
-                logger.info(f"Writing {file_name} data to disk.")
+                logger.info(f"{_get_function_name()}: Writing {file_name} data to disk.")
                 _write_json_file(f"{cls._DATA_PATH + path}", file_name, data_map)
             if lang_name not in cls._LANGUAGE_FILE_SKIP_LIST:
                 cls._VERSION["languages"].update({lang_name})
 
         if cls._STATS_ENUM_MAP_LOADED is False:
-            logger.info("stats_enum_map not loaded. Loading now...")
+            logger.info(f"{_get_function_name()}: stats_enum_map not loaded. Loading now...")
             cls.load_stats_enums_map()
 
         stat_enums = {}
@@ -1019,7 +1028,7 @@ class DataBuilder:
         for key, value in cls._LOCALIZATION_MAP.items():
             stat_enums[value] = key
 
-        logger.info("Writing game version information to disk...")
+        logger.info(f"{_get_function_name()}: Writing game version information to disk...")
         _write_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE, cls._VERSION)
         return True
 
@@ -1031,7 +1040,7 @@ class DataBuilder:
             interval: Time in minutes to wait between polling cycles for new data
         """
         if cls._AUTO_UPDATE_GAME_DATA is True:
-            logger.info("Auto update is already enabled")
+            logger.info(f"{_get_function_name()}: Auto update is already enabled")
             return True
         cls._AUTO_UPDATE_GAME_DATA = True
 
@@ -1039,24 +1048,28 @@ class DataBuilder:
             cls._AUTO_UPDATE_GAME_DATA_INTERVAL = interval
 
         logger.info(
-            f"Enabling automatic data updates at {cls._AUTO_UPDATE_GAME_DATA_INTERVAL} minute interval."
+            f"{_get_function_name()}: Enabling automatic data updates at {cls._AUTO_UPDATE_GAME_DATA_INTERVAL} "
+            + f"minute interval."
         )
-        if cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME is None:
-            logger.info("No existing auto update thread found. Creating a new one.")
+        if cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME is NotSet:
+            logger.info(f"{_get_function_name()}: No existing auto update thread found. Creating a new one.")
             result = cls._start_auto_update_thread()
             if result is True:
                 logger.info(
-                    f"Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] created successfully."
+                    f"{_get_function_name()}: Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] "
+                    + f"created successfully."
                 )
                 return True
             else:
                 logger.error(
-                    f"Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] failed to start."
+                    f"{_get_function_name()}: Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] "
+                    + f"failed to start."
                 )
                 return False
         else:
             logger.info(
-                f"Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] is already running."
+                f"{_get_function_name()}: Auto data update thread [{cls._AUTO_UPDATE_GAME_DATA_THREAD_NAME}] "
+                + f"is already running."
             )
             return True
 
@@ -1064,9 +1077,9 @@ class DataBuilder:
     def disable_auto_game_data_update_thread(cls) -> bool:
         """Turn the automatic game data file update thread off"""
         if cls._AUTO_UPDATE_GAME_DATA is False:
-            logger.info("Automatic game data updates are currently disabled.")
+            logger.info(f"{_get_function_name()}: Automatic game data updates are currently disabled.")
             return True
-        logger.info("Disabling automatic game data updates...")
+        logger.info(f"{_get_function_name()}: Disabling automatic game data updates...")
         cls._AUTO_UPDATE_GAME_DATA = False
 
     @classmethod
@@ -1074,27 +1087,28 @@ class DataBuilder:
         """Set the automatic game data update interval in minutes. Default is 60 minutes."""
         if not isinstance(minutes, int):
             logger.error(
-                f"Value for the minutes argument should be 'int', not {type(minutes)}"
+                f"{_get_function_name()}: Value for the minutes argument should be 'int', not {type(minutes)}"
             )
             raise DataBuilderRuntimeError(
-                f"Value for the minutes argument should be 'int', not {type(minutes)}"
+                f"{_get_function_name()}: Value for the minutes argument should be 'int', not {type(minutes)}"
             )
         logger.info(
-            f"Updating automatic game data update interval to {str(minutes)} minutes."
+            f"{_get_function_name()}: Updating automatic game data update interval to {str(minutes)} minutes."
         )
         current_interval = str(cls._AUTO_UPDATE_GAME_DATA_INTERVAL)
         cls._AUTO_UPDATE_GAME_DATA_INTERVAL = minutes
         new_interval = str(cls._AUTO_UPDATE_GAME_DATA_INTERVAL)
         logger.info(
-            f"Automatic game data update interval changed from {current_interval} to {new_interval}."
+            f"{_get_function_name()}: Automatic game data update interval changed from {current_interval} to "
+            + f"{new_interval}."
         )
 
     @classmethod
     def _validate_data_file_paths(cls) -> None:
         for path in cls._DATA_FILE_PATHS:
-            logger.info(f"Verifying that {path} exists...")
+            logger.info(f"{_get_function_name()}: Verifying that {path} exists...")
             _verify_data_path(path)
-            logger.info(f"Path validation for {path} complete.")
+            logger.info(f"{_get_function_name()}: Path validation for {path} complete.")
 
     @classmethod
     def is_initialized(cls) -> bool:
@@ -1130,49 +1144,50 @@ class DataBuilder:
         logger.info("Initializing DataBuilder for first time use.")
         if comlink is None:
             logger.error(
-                "DataBuilder must have an instance of swgoh_comlink.SwgohComlink to operate properly."
+                f"{_get_function_name()}: DataBuilder must have an instance of swgoh_comlink.SwgohComlink "
+                + "to operate properly."
             )
             return False
         else:
             cls._COMLINK = comlink
         class_vars = vars(cls)
-        logger.debug(f"Class vars: {class_vars.keys()}")
+        logger.debug(f"{_get_function_name()}: Class vars: {class_vars.keys()}")
         for param, value in kwargs.items():
             if param in allowed_parameters:
                 class_var = "_" + param.upper()
-                logger.debug(f"Setting class variable {class_var} to {value}")
+                logger.debug(f"{_get_function_name()}: Setting class variable {class_var} to {value}")
                 # Remove .json file extension from file name arguments since it is added by the read/write methods
                 if value.endswith(".json"):
                     value = value.replace(".json", "")
-                logger.debug(f"Before: {class_var} = {class_vars[class_var]}")
+                logger.debug(f"{_get_function_name()}: Before: {class_var} = {class_vars[class_var]}")
                 setattr(cls, class_var, value)
                 new_vars = vars(cls)
-                logger.debug(f"After: {class_var} = {new_vars[class_var]}")
+                logger.debug(f"{_get_function_name()}: After: {class_var} = {new_vars[class_var]}")
 
         # Ensure that required data file paths exist on the filesystem
         cls._validate_data_file_paths()
 
-        logger.info("Loading stat_enums_map.")
+        logger.info(f"{_get_function_name()}: Loading stat_enums_map.")
         if cls.load_stats_enums_map():
-            logger.info("stat_enums_map loaded successfully.")
+            logger.info(f"{_get_function_name()}: stat_enums_map loaded successfully.")
         else:
-            logger.error("stat_enums_map failed to load. Exiting.")
+            logger.error(f"{_get_function_name()}: stat_enums_map failed to load. Exiting.")
             raise DataBuilderRuntimeError("'stat_enums_map' failed to load.")
 
-        logger.info("Checking for game data files")
+        logger.info(f"{_get_function_name()}: Checking for game data files")
         data_files_exist = cls._verify_game_data_files()
         if data_files_exist is True:
-            logger.info("Reading game data from files")
+            logger.info(f"{_get_function_name()}: Reading game data from files")
             cls._read_game_data()
         else:
-            logger.info("Updating game data from servers.")
+            logger.info(f"{_get_function_name()}: Updating game data from servers.")
             cls.update_game_data()
-            logger.info("Updating localization data from servers.")
+            logger.info(f"{_get_function_name()}: Updating localization data from servers.")
             cls.update_localization_bundle()
-            logger.info("Writing game version information to disk...")
+            logger.info(f"{_get_function_name()}: Writing game version information to disk...")
             _write_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE, cls._VERSION)
 
-        logger.debug(f"Setting DataBuilder._INITIALIZED to True")
+        logger.debug(f"{_get_function_name()}: Setting DataBuilder._INITIALIZED to True")
         setattr(cls, "_INITIALIZED", True)
 
         return True
