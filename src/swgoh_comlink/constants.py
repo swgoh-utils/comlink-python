@@ -1059,15 +1059,14 @@ class LoggingFormatter(logging.Formatter):
                 + "(green){name:<25} | {threadName} | "
                 + "(green){module:<14}(reset) | (green){funcName:>20}:{lineno:^4}(reset) | {message}"
         )
-        """
-        log_message_format = ('{asctime} | [{levelname:^9}] | {name:25} | pid:{process} | {threadName} | ' +
-                              '{filename:<15} | {module:<14} : {funcName:>20}()_{lineno:_^4}_ | {message}')
-        """
+        log_message_format = \
+            '{asctime} | [{levelname:^9}] | {name:25} | {module:<14} : {funcName:>20}()_{lineno:_^4}_ | {message}'
         format_str = format_str.replace("(black)", time_color)
         format_str = format_str.replace("(reset)", self.reset)
         format_str = format_str.replace("(lvl_color)", log_color)
         format_str = format_str.replace("(green)", self.green + self.bold)
-        formatter = logging.Formatter(format_str, "%Y-%m-%d %H:%M:%S", style="{")
+        # formatter = logging.Formatter(format_str, "%Y-%m-%d %H:%M:%S", style="{")
+        formatter = logging.Formatter(log_message_format, "%Y-%m-%d %H:%M:%S", style="{")
         return formatter.format(record)
 
 

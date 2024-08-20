@@ -12,13 +12,13 @@ import shutil
 import threading
 import time
 import zipfile
-from copy import copy
+from copy import copy, deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import swgoh_comlink
-from swgoh_comlink.constants import Constants, get_logger, DATA_PATH
+from swgoh_comlink.constants import Constants, get_logger, DATA_PATH, OPTIONAL
 from swgoh_comlink.utils import _get_function_name
 
 _COMMENT_START = "#"
@@ -166,7 +166,7 @@ class DataBuilder:
     """
 
     _INITIALIZED = False
-    _VERSION = {"game": "", "language": "", "languages": []}
+    _VERSION = {"game": "", "language": "", "languages": set()}
 
     _STATS_ENUM = copy(Constants.STAT_ENUMS)
     _GAME_DATA = {}
@@ -210,7 +210,7 @@ class DataBuilder:
     @classmethod
     def _update_version_attr(cls):
         logger.debug(f"{_get_function_name()}: Updating game data version object")
-        temp_version = cls._VERSION
+        temp_version = deepcopy(cls._VERSION)
         logger.debug(f"{_get_function_name()}: Current game data version: {temp_version}")
         server_versions = cls._COMLINK.get_latest_game_data_version()
         temp_version["game"] = server_versions["game"]
@@ -493,7 +493,7 @@ class DataBuilder:
             )
 
     @classmethod
-    def get_languages(cls) -> list:
+    def get_languages(cls) -> set:
         """Return list of current language localizations available"""
         return cls._VERSION["languages"]
 
@@ -510,7 +510,7 @@ class DataBuilder:
         if not os.path.isfile(unit_file_name):
             logger.warning(f"{_get_function_name()}: {unit_file_name} does not exist."
                            + " Loading localization data from game servers ...")
-            if not cls.update_localization_bundle(force_update=True):
+            if not cls.update_localization_bundle(language=language, force_update=True):
                 logger.error(f"{_get_function_name()}: Failed to update location files.")
                 return {}
         return _read_json_file(languages_file_path, unit_file_name)
@@ -937,10 +937,11 @@ class DataBuilder:
         _write_json_file(cls._DATA_PATH, cls._DATA_VERSION_FILE, cls._VERSION)
 
     @classmethod
-    def update_localization_bundle(cls, force_update: bool = False) -> bool:
+    def update_localization_bundle(cls, language: str = "All", force_update: bool = False) -> bool:
         """Collect localization bundle from game servers.
 
         Parameters:
+            language: Specific language to update. Default: All languages.
             force_update: Flag to indicate whether existing files should be overwritten. Defaults to False
         """
         logger.info(f"{_get_function_name()}: Updating localization bundle...")
@@ -968,8 +969,12 @@ class DataBuilder:
             f"{_get_function_name()}: Collecting bundle from game servers. "
             + f"Language version: '{server_versions['language']}', USE_UNZIP = '{cls._USE_UNZIP}'"
         )
+
+        if language == 'All':
+            language = OPTIONAL
+
         loc_bundle = cls._COMLINK.get_localization_bundle(
-            id=server_versions["language"], unzip=cls._USE_UNZIP
+            id=server_versions["language"], locale=language, unzip=cls._USE_UNZIP
         )
 
         zip_obj = None
@@ -1003,7 +1008,7 @@ class DataBuilder:
                 logger.info(f"Writing {file_name} data to disk.")
                 _write_json_file(f"{cls._DATA_PATH + path}", file_name, data_map)
             if lang_name not in cls._LANGUAGE_FILE_SKIP_LIST:
-                cls._VERSION["languages"].append(lang_name)
+                cls._VERSION["languages"].update({lang_name})
 
         if cls._STATS_ENUM_MAP_LOADED is False:
             logger.info("stats_enum_map not loaded. Loading now...")

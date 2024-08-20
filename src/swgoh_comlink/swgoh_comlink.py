@@ -271,13 +271,12 @@ class SwgohComlink(SwgohComlinkBase):
                 err_str = f"{self._get_function_name()}: Unknown locale {locale}. Please use only supported languages."
                 self.logger.error(err_str)
                 raise ValueError(err_str)
+            else:
+                id = id + ":" + locale.upper()
 
         if isinstance(id, Sentinel):
             current_game_version = self.get_latest_game_data_version()
             id = current_game_version["language"]
-
-        if isinstance(locale, str):
-            id = id + ":" + locale.upper()
 
         payload = {"unzip": unzip, "enums": enums, "payload": {"id": id}}
         self.logger.debug(f"{self._get_function_name()}, {payload=}")

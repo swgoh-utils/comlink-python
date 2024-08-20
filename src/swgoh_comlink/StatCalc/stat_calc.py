@@ -35,7 +35,7 @@ def _format_stats(stats: dict, level: int = 85, options: dict = None) -> dict:
     scale = 1
     if options["scaled"]:
         scale = 1e-4
-    elif options["unscaled"]:
+    elif not options["unscaled"]:
         scale = 1e-8
 
     logger.debug(f"{_get_function_name()}: Scaling stats ... {scale=}")
@@ -470,7 +470,7 @@ class StatCalc:
         stats["base"]["13"] = stats["base"].get("13", 0) + (24 * 1e8)
         stats["base"]["15"] = stats["base"].get("15", 0)
         stats["base"]["16"] = stats["base"].get("16", 0) + (150 * 1e6)
-        stats["base"]["18"] = stats["base"].get("18", 0) + (15 * 1e8)
+        stats["base"]["18"] = stats["base"].get("18", 0) + (15 * 1e6)
         logger.debug(f"{_get_function_name()}: Base stat calculated: {stats['base']=}")
         return stats
 
