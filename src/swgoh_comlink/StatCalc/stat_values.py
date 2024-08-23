@@ -13,6 +13,11 @@ from swgoh_comlink.constants import get_logger, _get_function_name
 logger = get_logger()
 
 
+class StatValidator(object):
+    """Class to validate SWGOH Stat value entries"""
+    ...
+
+
 class StatValues(object):
     """
     Container class to house unit attributes for stat calculations.

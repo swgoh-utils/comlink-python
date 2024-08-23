@@ -99,11 +99,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             return resp.json()
         except httpx.RequestError as exc:
             exc_str = str(exc).replace("\n", "-")
-            self.logger.exception(f"Exception occurred: {self._get_function_name()}: {exc_str}")
+            self.logger.exception(f"Exception occurred: {exc_str}")
             raise exc
         except RuntimeError as exc:
             exc_str = str(exc).replace("\n", "-")
-            self.logger.exception(f"Exception occurred: {self._get_function_name()}: {exc_str}")
+            self.logger.exception(f"Exception occurred: {exc_str}")
             raise exc
 
     async def get_game_metadata(
@@ -155,7 +155,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             return resp.json()
         except httpx.RequestError as exc:
             exc_str = str(exc).replace("\n", "-")
-            self.logger.exception(f"Exception occurred: {self._get_function_name()}: {exc_str}")
+            self.logger.exception(f"Exception occurred: {exc_str}")
             raise exc
 
     # alias for non PEP usage of direct endpoint calls
@@ -253,7 +253,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         if isinstance(locale, str):
             if locale not in Constants.LANGUAGES:
-                err_str = f"{self._get_function_name()}: Unknown locale {locale}. Please use only supported languages."
+                err_str = f"Unknown locale {locale}. Please use only supported languages."
                 self.logger.error(err_str)
                 raise ValueError(err_str)
 
@@ -346,12 +346,12 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         """
         if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
-            err_msg = f"{self._get_function_name()}: Either allycode or player_id must be provided."
+            err_msg = f"Either allycode or player_id must be provided."
             self.logger.debug(err_msg)
             raise ValueError(err_msg)
 
         if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
-            err_msg = f"{self._get_function_name()}: Only one of allycode or player_id can be provided."
+            err_msg = f"Only one of allycode or player_id can be provided."
             self.logger.debug(err_msg)
             raise ValueError(err_msg)
 
@@ -391,12 +391,12 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         """
         if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
-            err_msg = f"{self._get_function_name()}: Either allycode or player_id must be provided."
+            err_msg = f"Either allycode or player_id must be provided."
             self.logger.debug(err_msg)
             raise ValueError(err_msg)
 
         if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
-            err_msg = f"{self._get_function_name()}: Only one of allycode or player_id can be provided."
+            err_msg = f"Only one of allycode or player_id can be provided."
             self.logger.debug(err_msg)
             raise ValueError(err_msg)
 
@@ -440,7 +440,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         """
         if isinstance(guild_id, Sentinel):
-            raise ValueError(f"{self._get_function_name()}: Guild ID must be provided.")
+            raise ValueError(f"Guild ID must be provided.")
 
         guild = await self._post(
             endpoint="guild",
@@ -606,7 +606,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         """
         if leaderboard_id is MISSING or not isinstance(leaderboard_id, list):
-            err_msg = f"{self._get_function_name()}: 'leaderboard_id' argument is required."
+            err_msg = f"'leaderboard_id' argument is required."
             self.logger.error(err_msg)
             raise ValueError(err_msg)
 

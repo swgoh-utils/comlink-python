@@ -19,7 +19,7 @@ from typing import Callable
 import swgoh_comlink
 from swgoh_comlink.constants import Constants, get_logger, set_debug
 from swgoh_comlink.data_builder import DataBuilder, DataBuilderException
-from swgoh_comlink.utils import _get_function_name, validate_file_path, create_localized_unit_name_dictionary
+from swgoh_comlink.utils import validate_file_path, create_localized_unit_name_dictionary
 
 logger = get_logger()
 
@@ -30,7 +30,7 @@ def _format_stats(stats: dict, level: int = 85, options: dict = None) -> dict:
         logger.debug("No stats object provided. Returning empty.")
         return {}
 
-    logger.debug(f"{_get_function_name()}: Stats: {stats} {level=} {options=}")
+    logger.debug(f"Stats: {stats} {level=} {options=}")
 
     scale = 1
     if options["scaled"]:
@@ -38,35 +38,35 @@ def _format_stats(stats: dict, level: int = 85, options: dict = None) -> dict:
     elif not options["unscaled"]:
         scale = 1e-8
 
-    logger.debug(f"{_get_function_name()}: Scaling stats ... {scale=}")
+    logger.debug(f"Scaling stats ... {scale=}")
 
     if stats['mods']:
-        logger.debug(f"{_get_function_name()}: Rounding mod values ... ")
+        logger.debug(f"Rounding mod values ... ")
         for stat_id, value in stats['mods'].items():
             stats['mods'][stat_id] = round(value, 6)
-            logger.debug(f"{_get_function_name()}: {stat_id} old value: {value}, "
+            logger.debug(f"{stat_id} old value: {value}, "
                          + f"new value: {stats['mods'][stat_id]}")
 
     if scale != 1:
-        logger.debug(f"{_get_function_name()}: Scaling stats ... {scale=}")
+        logger.debug(f"Scaling stats ... {scale=}")
         for stat_type in ('base', 'gear', 'crew', 'growthModifiers', 'mods'):
             if stat_type in stats:
                 for stat_id in stats[stat_type].keys():
                     original_value = stats[stat_type][stat_id]
                     stats[stat_type][stat_id] *= scale
-                    logger.debug(f"{_get_function_name()}: {stat_id} old value: {original_value}, "
+                    logger.debug(f"{stat_id} old value: {original_value}, "
                                  + f"new value: {stats[stat_type][stat_id]}")
             else:
-                logger.debug(f"{_get_function_name()}: {stat_type} not found in {list(stats.keys())}")
+                logger.debug(f"{stat_type} not found in {list(stats.keys())}")
 
     if options.get('percentVals') or options.get('gameStyle'):  # 'gameStyle' flag inherently includes 'percentVals'
         def convert_percent(stat_id_str: str, convert_func: Callable):
-            logger.debug(f"{_get_function_name()}: {stat_id_str=}, {convert_func=}")
+            logger.debug(f"{stat_id_str=}, {convert_func=}")
             flat = stats['base'].get(stat_id_str, 0)
             percent = convert_func(flat)
             stats['base'][stat_id_str] = percent
             last = percent
-            logger.debug(f"{_get_function_name()}: {flat=}, {percent=}, {last=}")
+            logger.debug(f"{flat=}, {percent=}, {last=}")
             if stats.get('crew'):  # is Ship
                 if stats['crew'].get(stat_id_str):
                     flat += stats['crew'][stat_id_str]
@@ -104,30 +104,30 @@ def _format_stats(stats: dict, level: int = 85, options: dict = None) -> dict:
     if options.get("gameStyle"):
         gs_stats = {"final": {}}
         stat_list = list(stats["base"].keys())
-        logger.debug(f"{_get_function_name()}: {stat_list=}")
+        logger.debug(f"{stat_list=}")
 
         def add_stats(stat_id_str: str):
-            logger.debug(f"{_get_function_name()}: {stat_id_str=} ({type(stat_id_str)})...")
+            logger.debug(f"{stat_id_str=} ({type(stat_id_str)})...")
             if not isinstance(stat_id_str, str):
-                logger.debug(f"{_get_function_name()}: converting 'stat_id' from {type(stat_id_str)} to 'str' ...")
+                logger.debug(f"converting 'stat_id' from {type(stat_id_str)} to 'str' ...")
                 stat_id_str = str(stat_id_str)
             if stat_id_str not in stat_list:
-                logger.debug(f"{_get_function_name()}: {stat_id_str} not in stat_list. Adding it ...")
+                logger.debug(f"{stat_id_str} not in stat_list. Adding it ...")
                 stat_list.append(stat_id_str)
 
         if "gear" in stats:  # Character
-            logger.debug(f"{_get_function_name()}: Processing 'gear' ...")
+            logger.debug(f"Processing 'gear' ...")
             for stat_id in stats['gear']:
                 add_stats(stat_id)  # add stats from gear to list
             if 'mods' in stats:
-                logger.debug(f"{_get_function_name()}: Processing 'mods' ...")
+                logger.debug(f"Processing 'mods' ...")
                 for stat_id in stats['mods']:
                     add_stats(stat_id)  # add stats from mods to list
                 gs_stats['mods'] = stats['mods']  # keep mod stats untouched
 
             for stat_id in stat_list:
                 flat_stat_id = stat_id
-                logger.debug(f"{_get_function_name()}: {flat_stat_id=} ({type(flat_stat_id)})... ...")
+                logger.debug(f"{flat_stat_id=} ({type(flat_stat_id)})... ...")
                 match math_floor(int(stat_id)):
                     # stats with both Percent Stats get added to the ID for their flat stat
                     # (which was converted to % above)
@@ -159,21 +159,21 @@ def _format_stats(stats: dict, level: int = 85, options: dict = None) -> dict:
 
 def _scale_stat_value(stat_id: int or str, value: float) -> float:
     """Convert stat value from displayed value to "unscaled" value used in calculations"""
-    logger.debug(f"{_get_function_name()}: *** Scaling statId: {stat_id} value: {value} ***")
+    logger.debug(f"*** Scaling statId: {stat_id} value: {value} ***")
     if isinstance(stat_id, str):
         stat_id = int(stat_id)
     if stat_id in [1, 5, 28, 41, 42]:
-        logger.debug(f"{_get_function_name()}:    New value: {value * 1e8} (times 1e8)")
+        logger.debug(f"   New value: {value * 1e8} (times 1e8)")
         return value * 1e8
     else:
-        logger.debug(f"{_get_function_name()}:    New value: {value * 1e6} (times 1e6)")
+        logger.debug(f"   New value: {value * 1e6} (times 1e6)")
         return value * 1e6
 
 
 def _floor(value: float, digits: int = 0) -> float:
     precision = float(("1e" + str(digits)))
     floor_value = math_floor(value / precision) * precision
-    logger.debug(f"{_get_function_name()}: {value=}, {floor_value=}")
+    logger.debug(f"{value=}, {floor_value=}")
     return floor_value
 
 
@@ -182,36 +182,36 @@ def _convert_flat_def_to_percent(
         level: int = 85,
         scale: float = 1.0,
         is_ship: bool = False) -> float:
-    logger.debug(f"{_get_function_name()}: *** Converting flat defense value to percent ({value=}, "
+    logger.debug(f"*** Converting flat defense value to percent ({value=}, "
                  + f"{level=}, {scale=}, {is_ship=}) *** ")
     val = value / scale
     level_effect = 300 + level * 5 if is_ship else level * 7.5
     percent_value = (val / (level_effect + val)) * scale
-    logger.debug(f"{_get_function_name()}: {val=}, {level_effect=}, {percent_value=}")
+    logger.debug(f"{val=}, {level_effect=}, {percent_value=}")
     return percent_value
 
 
 def _convert_flat_crit_to_percent(value: float, scale: float = 1.0) -> float:
-    logger.debug(f"{_get_function_name()}: *** Converting flat Critical Chance to percent ({value=}, {scale=}) *** ")
+    logger.debug(f"*** Converting flat Critical Chance to percent ({value=}, {scale=}) *** ")
     val = value / scale
     percent_val = (val / 2400 + 0.1) * scale
-    logger.debug(f"{_get_function_name()}: {val=}, {percent_val=}")
+    logger.debug(f"{val=}, {percent_val=}")
     return percent_val
 
 
 def _convert_flat_acc_to_percent(value: float, scale: float = 1.0) -> float:
-    logger.debug(f"{_get_function_name()}: *** Converting flat Accuracy to percent ({value=}, {scale=}) *** ")
+    logger.debug(f"*** Converting flat Accuracy to percent ({value=}, {scale=}) *** ")
     val = value / scale
     percent_val = (val / 1200) * scale
-    logger.debug(f"{_get_function_name()}: {val=}, {percent_val=}")
+    logger.debug(f"{val=}, {percent_val=}")
     return percent_val
 
 
 def _convert_flat_crit_avoid_to_percent(value: float, scale: float = 1.0) -> float:
-    logger.debug(f"{_get_function_name()}: *** Converting flat Critical Avoidance to percent ({value=}, {scale=}) *** ")
+    logger.debug(f"*** Converting flat Critical Avoidance to percent ({value=}, {scale=}) *** ")
     val = value / scale
     percent_val = (val / 2400) * scale
-    logger.debug(f"{_get_function_name()}: {val=}, {percent_val=}")
+    logger.debug(f"{val=}, {percent_val=}")
     return percent_val
 
 
@@ -223,8 +223,8 @@ def _verify_def_id(unit: dict) -> dict:
         elif 'baseId' in unit:
             unit['defId'] = unit.get("baseId")
         else:
-            logger.warning(f"{_get_function_name()}: Unable to set a 'defId' value for {unit['id']}")
-    logger.debug(f"{_get_function_name()}: {unit['defId']=}")
+            logger.warning(f"Unable to set a 'defId' value for {unit['id']}")
+    logger.debug(f"{unit['defId']=}")
     return unit
 
 
@@ -365,7 +365,7 @@ class StatCalc:
             id=latest_game_version["language"]
         )
         loc_bundle_decoded = base64.b64decode(loc_bundle["localizationBundle"])
-        logger.info(f"{_get_function_name()}: Decompressing data stream...")
+        logger.info(f"Decompressing data stream...")
         zip_obj = zipfile.ZipFile(io.BytesIO(loc_bundle_decoded))
         lang_file_name = f"Loc_{cls._LANGUAGE.upper()}.txt"
         with zip_obj.open(lang_file_name) as lang_file:
@@ -381,26 +381,26 @@ class StatCalc:
             language_file = os.path.join(data_path, cls._LANGUAGE + ".json")
         except Exception as e_str:
             logger.error(
-                f"{_get_function_name()}: An error occurred while attempting to load the stat names map. [{e_str}]"
+                f"An error occurred while attempting to load the stat names map. [{e_str}]"
             )
             return False
         if not validate_file_path(language_file):
             logger.error(
-                f"{_get_function_name()}: Error while validating language file data path ({language_file})"
+                f"Error while validating language file data path ({language_file})"
             )
             return False
         try:
             with open(language_file) as fn:
                 cls._STAT_NAME_MAP = json.load(fn)
         except OSError as os_error:
-            logger.exception(f"{_get_function_name()}: Error while loading {language_file}. [{os_error}]")
+            logger.exception(f"Error while loading {language_file}. [{os_error}]")
             return False
         else:
             return True
 
     @classmethod
     def _rename_stats(cls, stats: dict, options: dict) -> dict:
-        logger.info(f"{_get_function_name()}: Renaming stats ... ")
+        logger.info(f"Renaming stats ... ")
         if options.get('language'):
             lang = options.get('language', "eng_us").lower()
             # Create a new localized stat name mapping rather than use the global default
@@ -414,28 +414,28 @@ class StatCalc:
                     if options.get('no_space'):
                         stat_name = stat_name.replace(' ', '')  # remove spaces
                         stat_name = stat_name[0].lower() + stat_name[1:]  # ensure first letter is lower case
-                    logger.debug(f"{_get_function_name()}: Renaming {stat_id} to {stat_name} ... ")
+                    logger.debug(f"Renaming {stat_id} to {stat_name} ... ")
                     rn_stats[stat_type][stat_name] = value
             stats = deepcopy(rn_stats)
-        logger.info(f"{_get_function_name()}: Done renaming stats")
+        logger.info(f"Done renaming stats")
         return stats
 
     @classmethod
     def _calculate_base_stats(cls, stats: dict, level: int, base_id: str) -> dict:
         """Calculate bonus primary stats from growth modifiers"""
-        logger.info(f"{_get_function_name()}: Calculating base stats")
+        logger.info(f"Calculating base stats")
         logger.debug(f"{stats=}")
         if 'base' not in stats:
             stats['base'] = {}
         for i in ("2", "3", "4"):
-            logger.info(f"{_get_function_name()}: Processing base stats for {i} ...")
-            logger.info(f"{_get_function_name()}: {stats['base'][i]=} before")
-            logger.info(f"{_get_function_name()}: Adding math_floor({stats['growthModifiers'][i]} * "
+            logger.info(f"Processing base stats for {i} ...")
+            logger.info(f"{stats['base'][i]=} before")
+            logger.info(f"Adding math_floor({stats['growthModifiers'][i]} * "
                         + f"{level} * 1e8) / 1e8")
-            stats["base"][i] += math_floor(stats["growthModifiers"][i] * level * 1e8) / 1e8
-            logger.info(f"{_get_function_name()}: {stats['base'][i]=} after")
+            stats["base"][i] += _floor(stats["growthModifiers"][i] * level, 8)
+            logger.info(f"{stats['base'][i]=} after")
         if stats["base"].get("61"):
-            logger.info(f"{_get_function_name()}: Calculating effect of mastery on secondary stats ...")
+            logger.info(f"Calculating effect of mastery on secondary stats ...")
             mastery_modifier_key = cls._UNIT_DATA[base_id].get("masteryModifierID")
             try:
                 mms = cls._CR_TABLES[mastery_modifier_key]
@@ -443,44 +443,45 @@ class StatCalc:
                     stats['base'][stat_id] = stats['base'].get(stat_id, 0) + stats['base']["61"] * modifier
             except KeyError as e_str:
                 logger.error(
-                    f"{_get_function_name()}: Unable to find mastery modifier key [{mastery_modifier_key}] in crTable."
+                    f"Unable to find mastery modifier key [{mastery_modifier_key}] in crTable."
                 )
                 logger.error(e_str)
                 logger.error(f"crTable keys: {sorted(list(cls._CR_TABLES.keys()))}")
 
-        logger.info(f"{_get_function_name()}: Calculating effect of primary stat on secondary stats ...")
-        logger.debug(f"{_get_function_name()}: {stats['base']=}")
+        logger.info(f" *** Calculating effect of primary stat on secondary stats ... ***")
+        logger.debug(f"{stats['base']=}")
         # Calculate effects of primary stats on secondary stats
-        stats['base']['1'] = stats['base'].get('1', 0) + stats['base']['2'] * 18  # Health += STR * 18
-        stats['base']['6'] = math_floor((stats['base'].get('6', 0) + stats['base'][
-            str(cls._UNIT_DATA[base_id]['primaryStat'])] * 1.4) * 1e8) / 1e8  # Ph. Damage += MainStat * 1.4
-        stats['base']['7'] = math_floor(
-            (stats['base'].get('7', 0) + stats['base']['4'] * 2.4) * 1e8) / 1e8  # Sp. Damage += TAC * 2.4
-        stats['base']['8'] = math_floor(
-            (stats['base'].get('8', 0) + stats['base']['2'] * 0.14 +
-             stats['base']['3'] * 0.07) * 1e8) / 1e8  # Armor += STR*0.14 + AGI*0.07
-        stats['base']['9'] = math_floor(
-            (stats['base'].get('9', 0) + stats['base']['4'] * 0.1) * 1e8) / 1e8  # Resistance += TAC * 0.1
-        stats['base']['14'] = math_floor(
-            (stats['base'].get('14', 0) + stats['base']['3'] * 0.4) * 1e8) / 1e8  # Ph. Crit += AGI * 0.4
+        primary_stat_name = str(cls._UNIT_DATA[base_id]['primaryStat'])
+        stats['base']['1'] = (stats['base'].get('1', 0) +
+                              stats['base']['2'] * 18)  # Health += STR * 18
+        stats['base']['6'] = _floor(stats['base'].get('6', 0) +
+                                    stats['base'][primary_stat_name] * 1.4, 8)  # Ph. Damage += MainStat * 1.4
+        stats['base']['7'] = _floor(stats['base'].get('7', 0) +
+                                    stats['base']['4'] * 2.4, 8)  # Sp. Damage += TAC * 2.4
+        stats['base']['8'] = _floor(stats['base'].get('8', 0) + stats['base']['2'] * 0.14 +
+                                    stats['base']['3'] * 0.07, 8)  # Armor += STR*0.14 + AGI*0.07
+        stats['base']['9'] = _floor(stats['base'].get('9', 0) +
+                                    stats['base']['4'] * 0.1, 8)  # Resistance += TAC * 0.1
+        stats['base']['14'] = _floor(stats['base'].get('14', 0) +
+                                     stats['base']['3'] * 0.4, 8)  # Ph. Crit += AGI * 0.4
 
-        logger.info(f"{_get_function_name()}: Ensuring core stats are present and at minimum ...")
+        logger.info(f"Ensuring core stats are present and at minimum ...")
         # add hard-coded minimums or potentially missing stats
         stats["base"]["12"] = stats["base"].get("12", 0) + (24 * 1e8)
         stats["base"]["13"] = stats["base"].get("13", 0) + (24 * 1e8)
         stats["base"]["15"] = stats["base"].get("15", 0)
         stats["base"]["16"] = stats["base"].get("16", 0) + (150 * 1e6)
         stats["base"]["18"] = stats["base"].get("18", 0) + (15 * 1e6)
-        logger.debug(f"{_get_function_name()}: Base stat calculated: {stats['base']=}")
+        logger.debug(f"Base stat calculated: {stats['base']=}")
         return stats
 
     @classmethod
     def _calculate_mod_stats(cls, base_stats: dict, char: dict = None) -> dict or None:
-        logger.info("{_get_function_name()}: Calculating mod stats ... ")
-        logger.info(f"{_get_function_name()}: {base_stats=}")
+        logger.info("Calculating mod stats ... ")
+        logger.info(f"{base_stats=}")
         if not char.get('mods') and not char.get('equippedStatMod'):
-            logger.warning(f"{_get_function_name()}: Mod list is missing or empty. Returning.")
-            return char
+            logger.warning(f"Mod list is missing or empty. Returning.")
+            return {}
 
         set_bonuses = {}
         raw_mod_stats = {}
@@ -495,115 +496,112 @@ class StatCalc:
                 mod_set_id = int(mod['definitionId'][0])
                 mod_set_name = Constants.MOD_SET_IDS[str(mod_set_id)]
                 set_bonus = set_bonuses.get(mod_set_id)
-                logger.debug(f"{_get_function_name()}: Mod set id: {mod_set_id} ({mod_set_name}), {set_bonus=}")
+                logger.debug(f"Mod set id: {mod_set_id} ({mod_set_name}), {set_bonus=}")
                 if set_bonus:
                     # set bonus already found, increment
-                    logger.debug(f"{_get_function_name()}: {mod_set_id} ({mod_set_name}) "
+                    logger.debug(f"{mod_set_id} ({mod_set_name}) "
                                  + f"already present in set_bonuses list. Incrementing counter.")
                     set_bonus['count'] += 1
                     if mod['level'] == 15:
                         set_bonus['maxLevel'] += 1
-                    logger.debug(f"{_get_function_name()}: {set_bonus['count']=}, "
+                    logger.debug(f"{set_bonus['count']=}, "
                                  + f"{set_bonus['maxLevel']=}, {mod['level']=}")
                 else:
                     # new set bonus, create object
-                    logger.debug(f"{_get_function_name()}: Creating new entry for {mod_set_id} "
+                    logger.debug(f"Creating new entry for {mod_set_id} "
                                  + f"({mod_set_name}) in set_bonuses list.")
                     set_bonuses[mod_set_id] = {'count': 1, 'maxLevel': 1 if mod['level'] == 15 else 0}
 
                 # add Primary/Secondary stats to data
                 stat = mod['primaryStat']['stat']
                 i = 0
-                logger.debug(f"{_get_function_name()}: counter = {i}, {stat=}")
+                logger.debug(f"counter = {i}, {stat=}")
                 while True:
                     unscaled_stat = float(stat['unscaledDecimalValue']) + raw_mod_stats.get(stat['unitStatId'], 0)
                     raw_mod_stats[stat['unitStatId']] = unscaled_stat
-                    logger.debug(f"{_get_function_name()}: raw_mod_stats[{stat['unitStatId']}] = {unscaled_stat}")
+                    logger.debug(f"raw_mod_stats[{stat['unitStatId']}] = {unscaled_stat}")
                     if i >= len(mod['secondaryStat']):
                         break
                     stat = mod['secondaryStat'][i]['stat']
                     i += 1
-                    logger.debug(f"{_get_function_name()}: counter = {i}, {stat=}")
+                    logger.debug(f"counter = {i}, {stat=}")
         else:
             # return empty dictionary if no mods
-            logger.debug(f"{_get_function_name()}: Failed to find 'definitionId' in {char['defId']}. "
+            logger.debug(f"Failed to find 'definitionId' in {char['defId']}. "
                          + f"Returning empty dictionary.")
             return {}
 
         # add stats given by set bonuses
-        logger.debug(f"{_get_function_name()}: Adding mod set bonuses ...")
+        logger.debug(f" *** Adding mod set bonuses ... ***")
         for set_id, set_bonus in set_bonuses.items():
             set_def = cls._MOD_SET_DATA[str(set_id)]
+            logger.debug(f"{set_id=}, {set_bonus=}, {set_def=}")
+
             count = set_bonus['count']
             max_count = set_bonus['maxLevel']
-            multiplier = math_floor(count / set_def['count']) + math_floor(max_count / set_def['count'])
+            logger.debug(f"{count=}, {max_count=}")
+            multiplier = (count // set_def['count']) + (max_count // set_def['count'])
+            logger.debug(f"(count // set_def['count']) + (max_count // set_def['count']) = {multiplier}")
 
-            logger.debug(f"{_get_function_name()}: {count=}, {max_count=}, {multiplier=}")
             raw_mod_stat = raw_mod_stats.get(set_def['id'], 0) + (set_def['value'] * multiplier)
 
-            logger.debug(f"{_get_function_name()}: raw_mod_stats[{set_def['id']}] = {raw_mod_stat}")
+            logger.debug(f"raw_mod_stats[{set_def['id']}] = {raw_mod_stat}")
             raw_mod_stats[set_def['id']] = raw_mod_stat
 
         # calculate actual stat bonuses from mods
-        logger.debug(f"{_get_function_name()}: Calculating stat bonuses from mods ...")
+        logger.debug(f" *** Calculating stat bonuses from mods ... ***")
         mod_stats = {}
         for stat_id, value in raw_mod_stats.items():
             stat_id = int(stat_id)
             if stat_id == 41:  # Offense
                 mod_stats['6'] = mod_stats.get('6', 0) + value  # Ph. Damage
                 mod_stats['7'] = mod_stats.get('7', 0) + value  # Sp. Damage
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
                              + f"{mod_stats['6']=}, {mod_stats['7']=}")
             elif stat_id == 42:  # Defense
                 mod_stats['8'] = mod_stats.get('8', 0) + value  # Armor
                 mod_stats['9'] = mod_stats.get('9', 0) + value  # Resistance
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
                              + f"{mod_stats['8']=}, {mod_stats['9']=}")
             elif stat_id == 48:  # Offense %
-                mod_stats['6'] = math_floor(
-                    (mod_stats.get('6', 0) + (base_stats['6'] * 1e-8 * value)) * 1e8) / 1e8  # Ph. Damage
-                mod_stats['7'] = math_floor(
-                    (mod_stats.get('7', 0) + (base_stats['7'] * 1e-8 * value)) * 1e8) / 1e8  # Sp. Damage
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                mod_stats['6'] = _floor(mod_stats.get('6', 0) + (base_stats['6'] * 1e-8 * value), 8)  # Ph. Damage
+                mod_stats['7'] = _floor(mod_stats.get('7', 0) + (base_stats['7'] * 1e-8 * value), 8)  # Sp. Damage
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
                              + f"{mod_stats['6']=}, {mod_stats['7']=}")
             elif stat_id == 49:  # Defense %
-                mod_stats['8'] = math_floor(
-                    (mod_stats.get('8', 0) + (base_stats['8'] * 1e-8 * value)) * 1e8) / 1e8  # Armor
-                mod_stats['9'] = math_floor(
-                    (mod_stats.get('9', 0) + (base_stats['9'] * 1e-8 * value)) * 1e8) / 1e8  # Resistance
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                mod_stats['8'] = _floor(mod_stats.get('8', 0) + (base_stats['8'] * 1e-8 * value), 8)  # Armor
+                mod_stats['9'] = _floor(mod_stats.get('9', 0) + (base_stats['9'] * 1e-8 * value), 8)  # Resistance
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=} "
                              + f"{mod_stats['8']=}, {mod_stats['9']=}")
             elif stat_id == 53:  # Crit Chance
                 mod_stats['21'] = mod_stats.get('21', 0) + value  # Ph. Crit Chance
                 mod_stats['22'] = mod_stats.get('22', 0) + value  # Sp. Crit Chance
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
                              + f"{mod_stats['21']=}, {mod_stats['22']=}")
             elif stat_id == 54:  # Crit Avoid
                 mod_stats['35'] = mod_stats.get('35', 0) + value  # Ph. Crit Avoid
                 mod_stats['36'] = mod_stats.get('36', 0) + value  # Ph. Crit Avoid
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
                              + f"{mod_stats['35']=}, {mod_stats['36']=}")
             elif stat_id == 55:  # Health %
-                mod_stats['1'] = math_floor(
-                    (mod_stats.get('1', 0) + (base_stats['1'] * 1e-8 * value)) * 1e8) / 1e8  # Health
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                mod_stats['1'] = _floor(mod_stats.get('1', 0) + (base_stats['1'] * 1e-8 * value), 8)  # Health
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
                              + f"{mod_stats['1']=}")
             elif stat_id == 56:  # Protection %
-                mod_stats['28'] = math_floor((mod_stats.get('28', 0) + (
-                        base_stats.get('28', 0) * 1e-8 * value)) * 1e8) / 1e8  # Protection may not exist in base
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                mod_stats['28'] = _floor(mod_stats.get('28', 0) + (base_stats.get('28', 0) * 1e-8 * value),
+                                         8)  # Protection may not exist in base
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
                              + f"{mod_stats['28']=}")
             elif stat_id == 57:  # Speed %
-                mod_stats['5'] = math_floor(
-                    (mod_stats.get('5', 0) + (base_stats['5'] * 1e-8 * value)) * 1e8) / 1e8  # Speed
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                mod_stats['5'] = _floor(mod_stats.get('5', 0) + (base_stats['5'] * 1e-8 * value), 8)  # Speed
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
                              + f"{mod_stats['5']=}")
             else:
                 # other stats add like flat values
                 mod_stats[str(stat_id)] = mod_stats.get(str(stat_id), 0) + value
-                logger.debug(f"{_get_function_name()}: {stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), "
+                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
                              + f"{mod_stats[str(stat_id)]=}")
-
+        logger.debug(f"{mod_stats=}")
         return mod_stats
 
     @classmethod
@@ -669,15 +667,15 @@ class StatCalc:
             ),
             "gear": {},
         }
-        logger.info(f"{_get_function_name()}: raw stats: {stats=}")
+        logger.info(f"raw stats: {stats=}")
         # Calculate stats from current gear
         if len(char["equipment"]) != 0:
-            logger.info(f"{_get_function_name()}: Calculating stats for {char['defId']} equipment ")
+            logger.info(f"Calculating stats for {char['defId']} equipment ")
             for equipment_piece in char["equipment"]:
                 equipmentId = equipment_piece["equipmentId"]
-                logger.info(f"{_get_function_name()}: Searching for {equipmentId} in game gearData ...")
+                logger.info(f"Searching for {equipmentId} in game gearData ...")
                 if equipmentId not in cls._GEAR_DATA:
-                    logger.info(f"{_get_function_name()}: {equipmentId=} not found in game gearData ...")
+                    logger.info(f"{equipmentId=} not found in game gearData ...")
                     continue
                 equipment_stats = copy(cls._GEAR_DATA[equipmentId]["stats"])
                 for equipment_stat_id in equipment_stats.keys():
@@ -689,11 +687,11 @@ class StatCalc:
                         stats["gear"][equipment_stat_id] = (equipment_stats[equipment_stat_id] +
                                                             stats["gear"].get(equipment_stat_id, 0))
         else:
-            logger.info(f"{_get_function_name()}: No equipment for {char['defId']}")
+            logger.info(f"No equipment for {char['defId']}")
 
         if char.get("relic") and char["relic"]["currentTier"] > 2:
             current_relic_tier: int = char["relic"].get("currentTier")
-            logger.info(f"{_get_function_name()}: Calculating stats for {char['defId']} relic level: "
+            logger.info(f"Calculating stats for {char['defId']} relic level: "
                         + f"{current_relic_tier - 2}")
             # Calculate stats from relics
             relic_tier_data = cls._RELIC_DATA[
@@ -704,10 +702,10 @@ class StatCalc:
                 logger.info(f"{stats['base'][r_id]=}")
             for g_id in list(relic_tier_data["gms"].keys()):
                 stats["growthModifiers"][g_id] += relic_tier_data["gms"][g_id]
-                logger.info(f"{_get_function_name()}: {stats['growthModifiers'][g_id]=}")
+                logger.info(f"{stats['growthModifiers'][g_id]=}")
         else:
-            logger.info(f"{_get_function_name()}: No relic information for {char['defId']}")
-        logger.info(f"{_get_function_name()}: Stat results for {char['defId']}: {stats}")
+            logger.info(f"No relic information for {char['defId']}")
+        logger.info(f"Stat results for {char['defId']}: {stats}")
         return stats
 
     @classmethod
@@ -818,10 +816,10 @@ class StatCalc:
 
         char = _verify_def_id(char)
 
-        logger.info(f"{_get_function_name()}: Calculating stats for {char['defId']}")
+        logger.info(f"Calculating stats for {char['defId']}")
 
         if options is None:
-            logger.debug(f"{_get_function_name()}: No options provided. Copying defaults ...")
+            logger.debug(f"No options provided. Copying defaults ...")
             options = deepcopy(cls._OPTIONS)
         else:
             options = cls._process_options(options, set_global=set_global_options)
@@ -875,12 +873,12 @@ class StatCalc:
 
         ship = _verify_def_id(ship)
 
-        logger.info(f"{_get_function_name()}: Calculating stats for {ship['defId']}")
+        logger.info(f"Calculating stats for {ship['defId']}")
 
         cls._process_language(options.get('language', "eng_us"))
 
         if options is None:
-            logger.debug(f"{_get_function_name()}: No options provided. Copying defaults ...")
+            logger.debug(f"No options provided. Copying defaults ...")
             options = deepcopy(cls._OPTIONS)
         else:
             options = cls._process_options(options, set_global=set_global_options)
@@ -908,16 +906,16 @@ class StatCalc:
 
     @classmethod
     def _set_skills(cls, unit_id: str, val: str) -> list:
-        logger.info(f"{_get_function_name()}: Setting skills for {unit_id}")
-        logger.debug(f"{_get_function_name()}: {val=}")
+        logger.info(f"Setting skills for {unit_id}")
+        logger.debug(f"{val=}")
         if val == "max":
-            logger.debug(f"{_get_function_name()}: Setting skills for {unit_id} (max)")
+            logger.debug(f"Setting skills for {unit_id} (max)")
             return [
                 {"id": d["id"], "tier": d["maxTier"]}
                 for d in cls._UNIT_DATA[unit_id]["skills"]
             ]
         elif val == "maxNoZeta":
-            logger.debug(f"{_get_function_name()}: Setting skills for {unit_id} (maxNoZeta)")
+            logger.debug(f"Setting skills for {unit_id} (maxNoZeta)")
             return [
                 {"id": d["id"], "tier": d["maxTier"] - (1 if d["isZeta"] else 0)}
                 for d in cls._UNIT_DATA[unit_id]["skills"]
@@ -927,7 +925,7 @@ class StatCalc:
                 {"id": d["id"], "tier": min(val, d["maxTier"])}
                 for d in cls._UNIT_DATA[unit_id]["skills"]
             ]
-            logger.debug(f"{_get_function_name()}: Setting {len(_skills)} skills for {unit_id} ")
+            logger.debug(f"Setting {len(_skills)} skills for {unit_id} ")
             return _skills
         else:
             return []
@@ -1073,7 +1071,7 @@ class StatCalc:
             dictionary of character attribute values
 
         """
-        logger.info(f"{_get_function_name()}: Executing _use_values_char() ...")
+        logger.info(f"Executing _use_values_char() ...")
 
         if not char.get('defId'):
             char = {
@@ -1090,7 +1088,7 @@ class StatCalc:
 
         # The use_values option has not been set so the char object does not need to be modified
         if not use_values:
-            logger.info(f"{_get_function_name()}: No 'use_values' argument provided. Returning.")
+            logger.info(f"No 'use_values' argument provided. Returning.")
             return char
 
         unit = {
@@ -1131,59 +1129,59 @@ class StatCalc:
 
     @classmethod
     def _calc_char_gp(cls, char: dict):
-        logger.debug(f"{_get_function_name()}: *** Calculating character GP for {char['defId']} ***")
+        logger.debug(f"*** Calculating character GP for {char['defId']} ***")
 
         gp = cls._GP_TABLES['unitLevelGP'][str(char['currentLevel'])]
-        logger.debug(f"{_get_function_name()}: Char level: {str(char['currentLevel'])}, "
+        logger.debug(f"Char level: {str(char['currentLevel'])}, "
                      + f"GP added: {cls._GP_TABLES['unitLevelGP'][str(char['currentLevel'])]}")
-        logger.debug(f"{_get_function_name()}: {gp=} after level adjustment "
+        logger.debug(f"{gp=} after level adjustment "
                      + f"({cls._GP_TABLES['unitLevelGP'][str(char['currentLevel'])]})")
 
         gp += cls._GP_TABLES['unitRarityGP'][Constants.UNIT_RARITY[char['currentRarity']]]
-        logger.debug(f"{_get_function_name()}: {gp=} after rarity adjustment")
+        logger.debug(f"{gp=} after rarity adjustment")
 
         gp += cls._GP_TABLES['gearLevelGP'][str(char['currentTier'])]
-        logger.debug(f"{_get_function_name()}: {gp=} after equipment level adjustment")
+        logger.debug(f"{gp=} after equipment level adjustment")
 
         # Game tables for current gear include the possibility of different GP per slot.
         # Currently, all values are identical across each gear level, so a simpler method is possible.
         # But that could change at any time.
 
         if len(char['equipment']) > 0:
-            logger.debug(f"{_get_function_name()}: *** Equipment found (processing) ***")
+            logger.debug(f"*** Equipment found (processing) ***")
             for piece in char['equipment']:
                 gp += cls._GP_TABLES['gearPieceGP'][str(char['currentTier'])][str(piece['slot'])]
         else:
-            logger.debug(f"{_get_function_name()}: *** No equipment found (skipping) ***")
+            logger.debug(f"*** No equipment found (skipping) ***")
 
         """
         gp += sum(cls._GP_TABLES['gearPieceGP'][str(char['currentTier'])][str(piece['slot'])]
                   for piece in char['equipment'])
         """
 
-        logger.debug(f"{_get_function_name()}: {gp=} after equipment piece adjustment")
+        logger.debug(f"{gp=} after equipment piece adjustment")
 
         gp += sum(cls._get_skill_gp(char['defId'], skill) for skill in char['skill'])
         logger.debug(f"{gp=} after skill adjustment")
 
-        logger.debug(f"{_get_function_name()}: {gp=} after character skills adjustment")
+        logger.debug(f"{gp=} after character skills adjustment")
 
         if char.get('purchasedAbilityId'):
             gp += len(char['purchasedAbilityId']) * cls._GP_TABLES['abilitySpecialGP']['ultimate']
 
-        logger.debug(f"{_get_function_name()}: {gp=} after purchaseAbility adjustment")
+        logger.debug(f"{gp=} after purchaseAbility adjustment")
 
         gp += sum(cls._GP_TABLES['modRarityLevelTierGP'][mod['definitionId'][1]][str(mod['level'])][str(mod['tier'])]
                   for mod in char['equippedStatMod'])
 
-        logger.debug(f"{_get_function_name()}: {gp=} after mods adjustment")
+        logger.debug(f"{gp=} after mods adjustment")
 
         if char.get('relic') and char['relic']['currentTier'] > 2:
             relic_tier = str(char['relic']['currentTier'])
             gp += cls._GP_TABLES['relicTierGP'][relic_tier]
             gp += char['currentLevel'] * cls._GP_TABLES['relicTierLevelFactor'][relic_tier]
-            logger.debug(f"{_get_function_name()}: {gp=} after relic adjustment")
-        logger.debug(f"{_get_function_name()}: Final GP: {math_floor(gp * 1.5)}")
+            logger.debug(f"{gp=} after relic adjustment")
+        logger.debug(f"Final GP: {math_floor(gp * 1.5)}")
 
         return math_floor(gp * 1.5)
 
@@ -1235,89 +1233,89 @@ class StatCalc:
 
     @classmethod
     def _get_skill_gp(cls, def_id: str, skill: dict) -> float:
-        logger.debug(f"{_get_function_name()}: *** Getting skill GP *** {def_id=}, {skill=}")
+        logger.debug(f"*** Getting skill GP *** {def_id=}, {skill=}")
         for s in cls._UNIT_DATA[def_id]['skills']:
             if s['id'] == skill['id']:
                 # Convert player unit skill tier to same index scale as base game data unit scale
                 player_unit_skill_tier = str(int(skill['tier']) + 2)
-                logger.debug(f"{_get_function_name()}: Original skill tier: {skill['tier']}, "
+                logger.debug(f"Original skill tier: {skill['tier']}, "
                              + f"Adjusted skill tier: {player_unit_skill_tier}")
-                logger.debug(f"{_get_function_name()}: Found skill {skill['id']} "
+                logger.debug(f"Found skill {skill['id']} "
                              + f"tier {player_unit_skill_tier} ... ")
-                logger.debug(f"{_get_function_name()}: _GP_TABLES skill {s} ")
+                logger.debug(f"_GP_TABLES skill {s} ")
                 if int(player_unit_skill_tier) > s['maxTier']:
                     temp_skill_tier = player_unit_skill_tier
                     player_unit_skill_tier = str(s['maxTier'])
-                    logger.debug(f"{_get_function_name()}: Adjusting skill tier down to maximum.  "
+                    logger.debug(f"Adjusting skill tier down to maximum.  "
                                  + f"Original: {temp_skill_tier}, new: {player_unit_skill_tier}.")
                 power_override_tag = s['powerOverrideTags'].get(player_unit_skill_tier, None)
                 # if 'powerOverrideTags' exists for the player unit skill, use that GP value
                 if power_override_tag:  # 'zeta' or 'omicron' or 'upgrade'
-                    logger.debug(f"{_get_function_name()}: {power_override_tag=}, returning "
+                    logger.debug(f"{power_override_tag=}, returning "
                                  + f"{cls._GP_TABLES['abilitySpecialGP'][power_override_tag]}")
                     return cls._GP_TABLES['abilitySpecialGP'][power_override_tag]
                 # if no 'powerOverrideTags' exists for the player unit skill, use the GP for skill tier
                 else:
-                    logger.debug(f"{_get_function_name()}: No 'powerOverrideTags' found. Using "
+                    logger.debug(f"No 'powerOverrideTags' found. Using "
                                  + f"{cls._GP_TABLES['abilityLevelGP'].get(player_unit_skill_tier, '0.0')}")
                     return cls._GP_TABLES['abilityLevelGP'].get(player_unit_skill_tier, "0")
 
     @classmethod
     def _process_language(cls, language: str = None) -> None:
         """Update localized language selection for statIds"""
-        logger.info(f"{_get_function_name()}: Processing language: {language}")
-        languages: list = DataBuilder.get_languages()
+        logger.info(f"Processing language: {language}")
+        languages: set = DataBuilder.get_languages()
         if language is not None and language in languages:
-            cls._LANGUAGE = language
+            setattr(cls, '_LANGUAGE', language)
         else:
-            logger.warning(f"{_get_function_name()}: Unknown language: {language}, "
+            logger.warning(f"Unknown language: {language}, "
                            + f"setting default language to {cls._LANGUAGE}")
 
     @classmethod
     def _process_options(cls, options: list or dict, set_global: bool = False) -> dict:
         """Update class instance properties based on flags provided"""
-        logger.info(f"{_get_function_name()}: Processing options: type({type(options)})")
+        logger.info(f"Processing options: type({type(options)})")
         new_options = cls._OPTIONS.copy()
         if isinstance(options, list):
             for option in options:
                 if option in cls._ALLOWED_OPTIONS:
-                    logger.info(f"{_get_function_name()}: Setting cls._OPTIONS['{option}'] to True.")
+                    logger.info(f"Setting cls._OPTIONS['{option}'] to True.")
                     new_options[option] = True
                     if set_global:
                         cls._OPTIONS[option] = True
                 else:
-                    logger.warning(f"{_get_function_name()}: Unknown option: {option}")
+                    logger.warning(f"Unknown option: {option}")
         elif isinstance(options, dict):
             for option in list(options.keys()):
                 if option in cls._ALLOWED_OPTIONS:
-                    logger.info(f"{_get_function_name()}: Setting cls._OPTIONS[{option}] to {options[option]}.")
+                    logger.info(f"Setting cls._OPTIONS[{option}] to {options[option]}.")
                     new_options[option] = options[option]
                     if set_global:
                         cls._OPTIONS[option] = options[option]
                 else:
-                    logger.warning(f"{_get_function_name()}: Unknown option: {option}")
+                    logger.warning(f"Unknown option: {option}")
         else:
-            err_msg = (f"{_get_function_name()}: Invalid options argument: expected type list() or dict(), "
+            err_msg = (f"Invalid options argument: expected type list() or dict(), "
                        + f"got {type(options)}")
             logger.exception(err_msg)
             raise StatCalcRuntimeError(err_msg)
-        logger.info(f"{_get_function_name()}: Returning {new_options=}")
+        logger.info(f"Returning {new_options=}")
         return new_options
 
     @classmethod
     def _process_use_values_settings(cls, use_values: dict) -> None:
         """Break options object into parts and validate settings"""
         if not use_values:
-            logger.warning(f"{_get_function_name()}: No 'use_values' parameter. Returning ...")
+            logger.warning(f"No 'use_values' parameter. Returning ...")
             return
         if not isinstance(use_values, dict):
             raise StatCalcRuntimeError(
-                (f"{_get_function_name()}: Invalid object type ({type(use_values)}) for "
+                (f"Invalid object type ({type(use_values)}) for "
                  + f"'options' attribute. Should be dict.")
             )
         for key in list(use_values.keys()):
             if key not in ["char", "ship", "crew"]:
-                logger.debug(f"{_get_function_name()}: Deleting unexpected element: {key}")
+                logger.debug(f"Deleting unexpected element: {key}")
                 del use_values[key]
         cls._USE_VALUES = deepcopy(use_values)
 
@@ -1339,20 +1337,20 @@ class StatCalc:
         Returns: List of players with stats included in each player unit roster
         """
         if not players:
-            logger.error(f"{_get_function_name()}: No player rosters submitted to calc_player_stats(). Exiting...")
+            logger.error(f"No player rosters submitted to calc_player_stats(). Exiting...")
             return
 
         if isinstance(players, list):
             for player in players:
-                logger.info(f"{_get_function_name()}: Processing player: {player['name']} ...")
+                logger.info(f"Processing player: {player['name']} ...")
                 player['rosterUnit'] = cls.calc_roster_stats(player['rosterUnit'], options, use_values)
         else:
             # Single player roster
-            logger.info(f"{_get_function_name()}: Processing player: {players['name']} ...")
+            logger.info(f"Processing player: {players['name']} ...")
             if 'rosterUnit' in players.keys():
                 players['rosterUnit'] = cls.calc_roster_stats(players['rosterUnit'], options, use_values)
             else:
-                logger.warning(f"{_get_function_name()}: No unit roster detected in submission. Exiting.")
+                logger.warning(f"No unit roster detected in submission. Exiting.")
                 return
         return players
 
@@ -1377,7 +1375,7 @@ class StatCalc:
                  results of the stat calculations
         :rtype: list
         """
-        logger.info(f"{_get_function_name()}: *** Entering calc_roster_stats() ***")
+        logger.info(f"*** Entering calc_roster_stats() ***")
         if not cls.is_initialized:
             raise StatCalcException(
                 "StatCalc is not initialized. Please perform the initialization first."
@@ -1398,7 +1396,7 @@ class StatCalc:
                 unit = _verify_def_id(unit)
                 defId = unit.get('defId')
                 if not unit or not cls._UNIT_DATA[defId]:
-                    logger.warning(f"{_get_function_name()}: Unable to find {defId} in game data.")
+                    logger.warning(f"Unable to find {defId} in game data.")
                     return []
                 combat_type = cls._UNIT_DATA[defId]["combatType"]
                 if combat_type == 2 or combat_type == "SHIP":
@@ -1409,13 +1407,13 @@ class StatCalc:
                 ship = _verify_def_id(ship)
                 defId = ship.get('defId')
                 if not cls._UNIT_DATA[defId]:
-                    logger.warning(f"{_get_function_name()}: Unable to find {defId} in game data.")
+                    logger.warning(f"Unable to find {defId} in game data.")
                     return []
                 crw = cls._UNIT_DATA[defId].get("crew")
                 temp_ships.append(cls.calc_ship_stats(ship, crw))
         else:
             raise StatCalcRuntimeError(
-                f"{_get_function_name()}: Unsupported data type [{type(units)}] for 'unit' parameter"
+                f"Unsupported data type [{type(units)}] for 'unit' parameter"
             )
         return temp_units + temp_ships
 
@@ -1452,11 +1450,11 @@ class StatCalc:
         """
 
         if language not in DataBuilder.get_languages():
-            logger.warning(f"{_get_function_name()}: Provided language {language} is not supported. "
+            logger.warning(f"Provided language {language} is not supported. "
                            + f"Defaulting to 'eng_us'")
             setattr(cls, "language", "eng_us")
         else:
-            logger.debug(f"{_get_function_name()}: Setting StatCalc.language to {language}")
+            logger.debug(f"Setting StatCalc.language to {language}")
             setattr(cls, "language", language)
 
         # Set allowed parameters and values for argument checking
@@ -1469,13 +1467,13 @@ class StatCalc:
             "debug": [False, True]
         }
 
-        logger.info(f"{_get_function_name()}: Initializing StatCalc for first time use.")
+        logger.info(f"Initializing StatCalc for first time use.")
         # Populate the _OPTIONS dictionary with default values
         cls.reset_options()
 
         cls._COMLINK = cl
         class_vars = vars(cls)
-        logger.debug(f"{_get_function_name()}: Class vars: {class_vars.keys()}")
+        logger.debug(f"Class vars: {class_vars.keys()}")
         for param, value in kwargs.items():
             if param in allowed_parameters.keys():
                 if value in allowed_parameters[param]:
@@ -1483,25 +1481,25 @@ class StatCalc:
                         set_debug(value)
                         continue
                     class_var = "_" + param.upper()
-                    logger.debug(f"{_get_function_name()}: Setting class variable {class_var} to {value}")
+                    logger.debug(f"Setting class variable {class_var} to {value}")
                     # Remove .json file extension from file name arguments since it is added by the read/write methods
                     if value.endswith(".json"):
                         value = value.replace(".json", "")
-                    logger.debug(f"{_get_function_name()}: Before: {class_var} = {class_vars[class_var]}")
+                    logger.debug(f"Before: {class_var} = {class_vars[class_var]}")
                     setattr(cls, class_var, value)
                     new_vars = vars(cls)
-                    logger.debug(f"{_get_function_name()}: After: {class_var} = {new_vars[class_var]}")
+                    logger.debug(f"After: {class_var} = {new_vars[class_var]}")
                 else:
                     logger.error(
-                        f"{_get_function_name()}: Invalid value ({value}) for argument ({param}). "
+                        f"Invalid value ({value}) for argument ({param}). "
                         + f"Allowed values are [{allowed_parameters[param]}]."
                     )
 
         if not cls._GAME_DATA:
-            logger.info("{_get_function_name()}: Loading game data from DataBuilder.")
+            logger.info("Loading game data from DataBuilder.")
             if not DataBuilder.is_initialized:
                 if not DataBuilder.initialize():
-                    logger.error(f"A{_get_function_name()}: n error occurred while initializing DataBuilder.")
+                    logger.error(f"An error occurred while initializing DataBuilder.")
                     return False
             try:
                 cls._GAME_DATA = DataBuilder.get_game_data()
@@ -1509,7 +1507,7 @@ class StatCalc:
                 logger.exception(e_str)
                 return False
         else:
-            logger.info("{_get_function_name()}: Game stat information provided.")
+            logger.info("Game stat information provided.")
 
         try:
             cls._UNIT_DATA = cls._GAME_DATA["unitData"]
@@ -1519,31 +1517,31 @@ class StatCalc:
             cls._GP_TABLES = cls._GAME_DATA["gpTables"]
             cls._RELIC_DATA = cls._GAME_DATA["relicData"]
         except KeyError as key_err_str:
-            logger.error(f"{_get_function_name()}: Unable to initialize stat data structures. [{key_err_str}]")
+            logger.error(f"Unable to initialize stat data structures. [{key_err_str}]")
             raise StatCalcRuntimeError(
                 f"Unable to initialize stat data structures. [{key_err_str}]"
             )
 
-        logger.info(f"{_get_function_name()}: Loading unit 'nameKey' mapping object from DataBuilder files...")
+        logger.info(f"Loading unit 'nameKey' mapping object from DataBuilder files...")
         try:
             cls._UNIT_NAME_MAP = DataBuilder.get_unit_names_mapping(cls._LANGUAGE)
         except FileNotFoundError:
-            logger.error(f"{_get_function_name()}: Unit name mapping file not found. [{cls._LANGUAGE}]")
+            logger.error(f"Unit name mapping file not found. [{cls._LANGUAGE}]")
             logger.info(
-                f"{_get_function_name()}: Creating unit 'nameKey' mapping object from game server data."
+                f"Creating unit 'nameKey' mapping object from game server data."
             )
             cls._load_unit_name_map()
 
         logger.info(
-            f"{_get_function_name()}: Loading stat ID to localized name mapping for language: {cls._LANGUAGE} ..."
+            f"Loading stat ID to localized name mapping for language: {cls._LANGUAGE} ..."
         )
         if not cls._load_stat_name_map():
-            logger.error(f"{_get_function_name()}: Unable to load stat ID to name mapping. "
+            logger.error(f"Unable to load stat ID to name mapping. "
                          + f"Stats will be referenced by ID only.")
         else:
-            logger.info(f"{_get_function_name()}: Stat ID to localized name mapping loading complete.")
+            logger.info(f"Stat ID to localized name mapping loading complete.")
 
-        logger.debug("{_get_function_name()}: Setting StatCalc._INITIALIZED to True")
+        logger.debug("Setting StatCalc._INITIALIZED to True")
         setattr(cls, "_INITIALIZED", True)
 
         return True

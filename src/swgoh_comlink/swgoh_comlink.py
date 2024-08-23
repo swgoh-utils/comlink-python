@@ -268,7 +268,7 @@ class SwgohComlink(SwgohComlinkBase):
 
         if isinstance(locale, str):
             if locale not in Constants.LANGUAGES:
-                err_str = f"{self._get_function_name()}: Unknown locale {locale}. Please use only supported languages."
+                err_str = f"Unknown locale {locale}. Please use only supported languages."
                 self.logger.error(err_str)
                 raise ValueError(err_str)
             else:
@@ -314,7 +314,7 @@ class SwgohComlink(SwgohComlinkBase):
                 }
             ```
         """
-        self.logger.debug(f"{self._get_function_name()}: 'client_specs' = {client_specs} (type: {type(client_specs)})")
+        self.logger.debug(f"'client_specs' = {client_specs} (type: {type(client_specs)})")
         return self._post(
             endpoint="metadata",
             payload=self._make_client_specs(client_specs, enums),
@@ -346,12 +346,12 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
         if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
-            err_msg = f"{self._get_function_name()}: Either allycode or player_id must be provided."
+            err_msg = f"Either allycode or player_id must be provided."
             self.logger.debug(err_msg)
             raise ValueError(err_msg)
 
         if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
-            err_msg = f"{self._get_function_name()}: Only one of allycode or player_id can be provided."
+            err_msg = f"Only one of allycode or player_id can be provided."
             self.logger.debug(err_msg)
             raise ValueError(err_msg)
 
@@ -392,12 +392,12 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
         if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
-            err_msg = f"{self._get_function_name()}: Either allycode or player_id must be provided."
+            err_msg = f"Either allycode or player_id must be provided."
             self.logger.debug(err_msg)
             raise ValueError(err_msg)
 
         if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
-            err_msg = f"{self._get_function_name()}: Only one of allycode or player_id can be provided."
+            err_msg = f"Only one of allycode or player_id can be provided."
             self.logger.debug(err_msg)
             raise ValueError(err_msg)
 
@@ -441,7 +441,7 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
         if isinstance(guild_id, Sentinel):
-            raise ValueError(f"{self._get_function_name()}: Guild ID must be provided.")
+            raise ValueError(f"Guild ID must be provided.")
 
         guild = self._post(
             endpoint="guild",
@@ -605,7 +605,7 @@ class SwgohComlink(SwgohComlinkBase):
 
         """
         if leaderboard_id is MISSING or not isinstance(leaderboard_id, list):
-            err_msg = f"{self._get_function_name()}: 'leaderboard_id' argument is required."
+            err_msg = f"'leaderboard_id' argument is required."
             self.logger.error(err_msg)
             raise ValueError(err_msg)
 

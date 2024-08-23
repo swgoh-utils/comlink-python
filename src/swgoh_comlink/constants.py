@@ -976,7 +976,7 @@ class DataItemConstants:
     PersistentVFX = 8192
     CraftingMaterialDefinitions = 16384
     PlayerTitleDefinitions = 32768
-    PlayerPortaitDefinitions = 65536
+    PlayerPortraitDefinitions = 65536
     TimeZoneChangeConfig = 131072
     EnvironmentCollections = 262144
     PersistentEffectPriorities = 524288
@@ -1025,7 +1025,7 @@ class DataItemConstants:
                 not isinstance(cls.__dict__[x], classmethod)]
 
 
-class LoggingFormatter(logging.Formatter):
+class LoggingFormatterColor(logging.Formatter):
     """Custom logging formatter class with colored output"""
 
     # Colors
@@ -1036,6 +1036,7 @@ class LoggingFormatter(logging.Formatter):
     yellow = "\x1b[33m"
     blue = "\x1b[34m"
     gray = "\x1b[38m"
+
     # Styles
     reset = "\x1b[0m"
     bold = "\x1b[1m"
@@ -1052,6 +1053,7 @@ class LoggingFormatter(logging.Formatter):
 
     def format(self, record):
         """Method to dynamically color log messages for console output based on message severity"""
+
         log_color = self.COLORS[record.levelno]
         time_color = "\x1b[1;30;47m"
         format_str = (
@@ -1059,13 +1061,20 @@ class LoggingFormatter(logging.Formatter):
                 + "(green){name:<25} | {threadName} | "
                 + "(green){module:<14}(reset) | (green){funcName:>20}:{lineno:^4}(reset) | {message}"
         )
-        log_message_format = \
-            '{asctime} | [{levelname:^9}] | {name:25} | {module:<14} : {funcName:>20}()_{lineno:_^4}_ | {message}'
         format_str = format_str.replace("(black)", time_color)
         format_str = format_str.replace("(reset)", self.reset)
         format_str = format_str.replace("(lvl_color)", log_color)
         format_str = format_str.replace("(green)", self.green + self.bold)
-        # formatter = logging.Formatter(format_str, "%Y-%m-%d %H:%M:%S", style="{")
+        formatter = logging.Formatter(format_str, "%Y-%m-%d %H:%M:%S", style="{")
+        return formatter.format(record)
+
+
+class LoggingFormatter(logging.Formatter):
+    """Custom logging formatter class"""
+
+    def format(self, record):
+        log_message_format = \
+            '{asctime} | {levelname:<9} | {name:15} | {module:<14} : {funcName:>30}() [{lineno:_>5}] | {message}'
         formatter = logging.Formatter(log_message_format, "%Y-%m-%d %H:%M:%S", style="{")
         return formatter.format(record)
 
@@ -1106,6 +1115,7 @@ def _get_new_logger(
         log_to_file: bool = True,
         max_log_bytes: int = 25_000_000,
         backup_log_count: int = 3,
+        colorize: bool = False,
 ) -> logging.Logger:
     """Get default_logger instance
 
@@ -1116,6 +1126,7 @@ def _get_new_logger(
         log_to_file: Flag to enable file logging
         max_log_bytes: The maximum size in bytes of log file
         backup_log_count: The number of backup log files to retain
+        colorize: Flag to enable ANSI colorized log output
 
     Returns:
         default_logger instance
@@ -1130,10 +1141,14 @@ def _get_new_logger(
     # Console handler
     if log_to_console:
         console_handler = logging.StreamHandler()
-        console_handler.setFormatter(LoggingFormatter())
+        if colorize:
+            console_handler.setFormatter(LoggingFormatterColor())
+        else:
+            console_handler.setFormatter(LoggingFormatter())
         tmp_logger.addHandler(console_handler)
 
     log_path = NotSet
+
     # File handler
     if log_to_file:
         logfile_name = name + ".log"
@@ -1142,8 +1157,10 @@ def _get_new_logger(
         log_path = os.path.join(root_log_path, logfile_name)
         file_handler = RotatingFileHandler(
             filename=log_path, encoding="utf-8", maxBytes=max_log_bytes, backupCount=backup_log_count)
-        file_handler_formatter = LoggingFormatter()
-        file_handler.setFormatter(file_handler_formatter)
+        if colorize:
+            file_handler.setFormatter(LoggingFormatterColor())
+        else:
+            file_handler.setFormatter(LoggingFormatter())
         tmp_logger.addHandler(file_handler)
     tmp_logger.info("")
     tmp_logger.info(" --- [ Logging started for %s ] ---", name)
@@ -1167,11 +1184,12 @@ def get_logger(
             default_logger: Flag to enable default logger
 
         Keyword Args
-            log_level: Default "DEBUG",
-            log_to_console: Default True,
-            log_to_file: Default True,
-            max_log_bytes: Default 25_000_000,
-            backup_log_count: Default 3,
+            log_level: Log level of messages to capture. [Default: "INFO"]
+            log_to_console: Enable logging to STDERR (console). [Default: True]
+            log_to_file: Enabling logging to file(s). [Default: True]
+            max_log_bytes: Maximum size of log file before rotating. [Default: 25,000,000]
+            backup_log_count: Number of log files to keep. [Default: 3]
+            colorize: Enable ANSI colorized log messages [Default: False]
 
         Returns:
             logging.Logger instance
@@ -1223,14 +1241,14 @@ __all__ = [
     NotGiven,  # Sentinel
     REQUIRED,  # Sentinel
     MutualExclusiveRequired,  # Sentinel
-    MutualRequiredNotSet,
+    MutualRequiredNotSet,  # Sentinel
     NotSet,  # Sentinel
-    SET,
-    EMPTY,
-    DataItemConstants,
-    Constants,
-    DATA_PATH,
-    enable_default_logger,
-    get_logger,
-    param_alias,  # Decorator
+    SET,  # Sentinel
+    EMPTY,  # Sentinel
+    DataItemConstants,  # Class for get_game_data() 'items' arguments
+    Constants,  # Class with general application shared constants/methods
+    DATA_PATH,  # String with base path to data folder
+    enable_default_logger,  # Boolean flag to control if built-in logger is enabled
+    get_logger,  # Function to create/return library logger
+    param_alias,  # Decorator to replace function/method argument aliases with actual parameter name
 ]
