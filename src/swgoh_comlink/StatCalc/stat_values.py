@@ -4,18 +4,40 @@ Class definition for 'StatValues' object. The StatValues object is intended to b
 with the stat calculation interfaces for indicating the unit attributes to use during
 calculations.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
 
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Any
 
-from swgoh_comlink.constants import get_logger, _get_function_name
+from swgoh_comlink.constants import get_logger
 
 logger = get_logger()
 
 
-class StatValidator(object):
-    """Class to validate SWGOH Stat value entries"""
-    ...
+class Validator(ABC):
+    def __set_name__(self, owner, name):
+        self.private_name = '_' + name
+
+    def __get__(self, obj, objtype=None):
+        return getattr(obj, self.private_name)
+
+    def __set__(self, obj, value):
+        self.validate(value)
+        setattr(obj, self.private_name, value)
+
+    @abstractmethod
+    def validate(self, value):
+        pass
+
+
+class StatValidator(Validator):
+    def __init__(self, *options):
+        self.options = set(options)
+
+    def validate(self, value):
+        if value not in self.options:
+            raise ValueError(f'Expected {value!r} to be one of {self.options!r}')
 
 
 class StatValues(object):
@@ -23,7 +45,7 @@ class StatValues(object):
     Container class to house unit attributes for stat calculations.
 
     Args:
-        attributes (dict): character attribute values in the format from the game data['unit'] collection
+        unit_type:
 
             Dictionary structure must be as follows. Elements missing from the dictionary will be assigned
             their default value.
@@ -84,16 +106,14 @@ class StatValues(object):
         StatValue instance object
 
     """
-    char: dict | None = None
-    ship: dict | None = None
-    crew: dict | None = None
-
     _ALLOWED_UNIT_TYPES: tuple = ('char', 'ship', 'crew')
+
     _ALLOWED_ATTRS: dict[str, tuple] = {
         "char": ('rarity', 'level', 'gear', 'equipment', 'skills', 'relic', 'mod_rarity', 'mod_level', 'mod_tier'),
         "ship": ('rarity', 'level'),
         "crew": ('rarity', 'level', 'gear', 'equipment', 'skills', 'relic', 'mod_rarity', 'mod_level', 'mod_tier')
     }
+
     _ATTR_LIMITS = {
         'rarity': {
             "type": (int,),
@@ -133,11 +153,21 @@ class StatValues(object):
         }
     }
 
-    unit_type: str | None = None
+    # TODO: replace with validator descriptor
+    rarity = 7
+    level = 85
+    gear = 13
+    equipment = "all"
+    skills = "max"
+    relic = 9
+    mod_rarity = 6
+    mod_level = 15
+    mod_tier = 5
+    purchase_ability_id = None
 
-    def _check_unit_type(self, unit_type: str, func_name: str = None):
-        if unit_type not in self._ALLOWED_UNIT_TYPES:
-            err_msg = f"{func_name}: unit type {unit_type} not allowed."
+    def _check_unit_type(self, u_type: str):
+        if u_type not in self._ALLOWED_UNIT_TYPES:
+            err_msg = f"unit type {u_type} not allowed."
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
@@ -157,83 +187,126 @@ class StatValues(object):
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
-    def __init__(self, attributes: dict | None = None):
+    def __init__(self, unit_type: str):
         """StatValues instance constructor"""
+        self.unit_type = unit_type
+
+    def from_dict(self, attributes: dict):
+        """Create new StatValues instance from dictionary."""
         if attributes:
             if not isinstance(attributes, dict):
-                err_msg = f"{_get_function_name()}: 'attributes' argument must be a dictionary."
+                err_msg = f"'attributes' argument must be a dictionary."
                 logger.error(err_msg)
                 raise AttributeError(err_msg)
             else:
                 for unit_type in attributes.keys():
-                    self._check_unit_type(unit_type, _get_function_name())
+                    self._check_unit_type(unit_type)
                     temp_attrs = {}
                     for attr in attributes[unit_type].keys():
-                        self._check_attribute(unit_type, attr, attributes[unit_type][attr], _get_function_name())
+                        self._check_attribute(unit_type, attr, attributes[unit_type][attr])
                         temp_attrs.setdefault(attr, {})
                         temp_attrs[attr] = attributes[unit_type][attr]
-                    logger.debug(f"{_get_function_name()}: setting {unit_type} attributes to {temp_attrs}")
+                    logger.debug(f"setting {unit_type} attributes to {temp_attrs}")
                     setattr(self.__class__, unit_type, temp_attrs)
 
     def set_attribute(self, unit_type: str, attributes: dict):
-        """
-        Set StatValues instance attributes.
-
-        Args:
-            unit_type (str): One of 'char', 'ship', or 'crew'
-            attributes (dict): Dictionary of attribute values for the corresponding 'unit_type'
-
-        Returns:
-            None
-
-        Raises:
-            AttributeError if arguments do not contain the expected attributes.
-
-        """
         if not unit_type:
-            err_msg = f"{_get_function_name()}: 'unit_type' argument cannot be empty."
+            err_msg = f"'unit_type' argument cannot be empty."
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
-        self._check_unit_type(unit_type, _get_function_name())
+        self._check_unit_type(unit_type)
 
         if attributes:
             if not isinstance(attributes, dict):
-                err_msg = f"{_get_function_name()}: 'attributes' argument must be a dictionary."
+                err_msg = f"'attributes' argument must be a dictionary."
                 logger.error(err_msg)
                 raise AttributeError(err_msg)
             else:
                 for attr in attributes.keys():
-                    self._check_attribute(unit_type, attr, attributes[attr], _get_function_name())
-                logger.debug(f"{_get_function_name()}: setting {unit_type} attributes to {attributes}")
+                    self._check_attribute(unit_type, attr, attributes[attr])
+                logger.debug(f"setting {unit_type} attributes to {attributes}")
                 setattr(self.__class__, unit_type, attributes)
         else:
-            err_msg = f"{_get_function_name()}: 'attributes' argument cannot be empty."
+            err_msg = f"'attributes' argument cannot be empty."
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
     def get_attribute(self, unit_type: str) -> dict | None:
-        """
-        Returns StatValues instance attributes for the corresponding 'unit_type'.
-
-        Args:
-            unit_type (str): One of 'char', 'ship', or 'crew':
-
-        Returns:
-            Dictionary containing StatValues instance attributes for the corresponding 'unit_type'
-
-        Raises:
-            AttributeError if arguments do not contain the expected attributes.
-
-        """
         if not unit_type:
-            err_msg = f"{_get_function_name()}: 'unit_type' argument cannot be empty."
+            err_msg = f"'unit_type' argument cannot be empty."
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
         if unit_type not in self._ALLOWED_UNIT_TYPES:
-            err_msg = f"{_get_function_name()}: unit type {unit_type} not allowed."
+            err_msg = f"unit type {unit_type} not allowed."
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
         return getattr(self.__class__, unit_type, None)
+
+
+@dataclass
+class StatOptions:
+    """
+    Data object containing flags to control various aspects of unit stat calculation and results formatting.
+    """
+
+    def __init__(self, *,
+                 without_mod_calc: bool = False,
+                 percent_vals: bool = False,
+                 calc_gp: bool = False,
+                 only_gp: bool = False,
+                 use_max: bool = False,
+                 scaled: bool = False,
+                 unscaled: bool = False,
+                 game_style: bool = False,
+                 stat_ids: bool = False,
+                 enums: bool = False,
+                 no_space: bool = False,
+                 language: str = "eng_us"
+                 ):
+        """
+        StatCalc Options constructor. Controls the behavior of stat calculation and results formatting.
+        All flags default to False.
+
+        Args:
+            without_mod_calc: Do not include mods in stat calculation.
+            percent_vals: Converts Crit Chance and Armor/Resistance from their flat values (default) to the
+                          percent values as displayed in-game
+            calc_gp: Include total Galactic Power calculation.
+            only_gp: Only calculate Galactic Power.
+            use_max: Use maximum possible values for stat calculations.
+            scaled: Returns all stats as their 'scaledValueDecimal' equivalents -- 10,000 times the common value.
+                    Non-modded stats should all be integers at this scale.
+            unscaled: Returns all stats as their 'unscaledDecimalValue' equivalents -- 100,000,000 times the common
+                    value. All stats should be integers at this scale.
+            game_style: Adjusts the stat objects to return 'final' stats (the total seen in-game)
+                        instead of 'base' stats. Also applies same conversion as percentVals.
+            stat_ids: Leaves the stat object indexed by the stat ID rather than localized string.
+                      Ignores any specified 'language' option
+            enums: Indexes the stat object by the non-localized enum string used as a key in the game's
+                   localization files. Ignores any specified 'language' option
+            no_space: In conjunction with the 'language' option below, this flag will convert the localization
+                      string into standard camelCase with no spaces.
+            language: String with the language code for the desired language. [Default: 'eng_us']
+
+        """
+        self.without_mod_calc = without_mod_calc,
+        self.percent_vals = percent_vals,
+        self.calc_gp = calc_gp,
+        self.only_gp = only_gp,
+        self.use_max = use_max,
+        self.scaled = scaled,
+        self.unscaled = unscaled,
+        self.game_style = game_style,
+        self.stat_ids = stat_ids,
+        self.enums = enums,
+        self.no_space = no_space,
+        self.language = language
+
+
+__all__ = [
+    StatValues,
+    StatOptions,
+]
