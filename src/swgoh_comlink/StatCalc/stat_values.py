@@ -7,7 +7,6 @@ calculations.
 from __future__ import absolute_import, annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Any
 
 from swgoh_comlink.constants import get_logger
@@ -153,18 +152,6 @@ class StatValues(object):
         }
     }
 
-    # TODO: replace with validator descriptor
-    rarity = 7
-    level = 85
-    gear = 13
-    equipment = "all"
-    skills = "max"
-    relic = 9
-    mod_rarity = 6
-    mod_level = 15
-    mod_tier = 5
-    purchase_ability_id = None
-
     def _check_unit_type(self, u_type: str):
         if u_type not in self._ALLOWED_UNIT_TYPES:
             err_msg = f"unit type {u_type} not allowed."
@@ -187,9 +174,40 @@ class StatValues(object):
             logger.error(err_msg)
             raise AttributeError(err_msg)
 
-    def __init__(self, unit_type: str):
+    def __init__(self,
+                 unit_type: str = "char",
+                 /,
+                 *,
+                 rarity: int = 7,
+                 level: int = 85,
+                 gear: int = 13,
+                 equipment: str | int | list = "all",
+                 skills: str | int = "max",
+                 relic: int | str = 9,
+                 mod_rarity: int = 6,
+                 mod_level: int = 15,
+                 mod_tier: int = 5,
+                 purchase_ability_id: int = None,
+                 ):
         """StatValues instance constructor"""
         self.unit_type = unit_type
+        self.rarity = rarity
+        self.level = level
+        if self.unit_type != 'ship':
+            self.gear = gear
+            self.equipment = equipment
+            self.skills = skills
+            self.relic = relic
+            self.mod_rarity = mod_rarity
+            self.mod_level = mod_level
+            self.mod_tier = mod_tier
+            self.purchase_ability_id = purchase_ability_id
+
+    def __str__(self):
+        rtn_str = ''
+        for attr in self.__dict__.keys():
+            rtn_str += f"{attr}: {self.__dict__[attr]}\n"
+        return rtn_str
 
     def from_dict(self, attributes: dict):
         """Create new StatValues instance from dictionary."""
@@ -246,25 +264,26 @@ class StatValues(object):
         return getattr(self.__class__, unit_type, None)
 
 
-@dataclass
 class StatOptions:
     """
     Data object containing flags to control various aspects of unit stat calculation and results formatting.
     """
 
-    def __init__(self, *,
-                 without_mod_calc: bool = False,
-                 percent_vals: bool = False,
-                 calc_gp: bool = False,
-                 only_gp: bool = False,
-                 use_max: bool = False,
-                 scaled: bool = False,
-                 unscaled: bool = False,
-                 game_style: bool = False,
-                 stat_ids: bool = False,
-                 enums: bool = False,
-                 no_space: bool = False,
-                 language: str = "eng_us"
+    def __init__(self,
+                 /,
+                 *,
+                 without_mod_calc=False,
+                 percent_vals=False,
+                 calc_gp=False,
+                 only_gp=False,
+                 use_max=False,
+                 scaled=False,
+                 unscaled=False,
+                 game_style=False,
+                 stat_ids=False,
+                 enums=False,
+                 no_space=False,
+                 language="eng_us",
                  ):
         """
         StatCalc Options constructor. Controls the behavior of stat calculation and results formatting.
@@ -292,18 +311,83 @@ class StatOptions:
             language: String with the language code for the desired language. [Default: 'eng_us']
 
         """
-        self.without_mod_calc = without_mod_calc,
-        self.percent_vals = percent_vals,
-        self.calc_gp = calc_gp,
-        self.only_gp = only_gp,
-        self.use_max = use_max,
-        self.scaled = scaled,
-        self.unscaled = unscaled,
-        self.game_style = game_style,
-        self.stat_ids = stat_ids,
-        self.enums = enums,
-        self.no_space = no_space,
+
+        self.without_mod_calc = without_mod_calc
+        self.percent_vals = percent_vals
+        self.calc_gp = calc_gp
+        self.only_gp = only_gp
+        self.use_max = use_max
+        self.scaled = scaled
+        self.unscaled = unscaled
+        self.game_style = game_style
+        self.stat_ids = stat_ids
+        self.enums = enums
+        self.no_space = no_space
         self.language = language
+
+    def __str__(self):
+        rtn_str = ''
+        for attr in self.__dict__.keys():
+            rtn_str += f"{attr}: {self.__dict__[attr]}\n"
+        return rtn_str
+
+    def from_list(self, options_list: list[str]):
+        """Create StatOptions instance with attributes from list
+
+            Args:
+                options_list: List of option names to set to True.
+
+            Examples:
+                ```python
+                options_list = ['calc_gp', 'percent_vals', 'game_style', 'no_space', language='eng_us']
+                ```
+
+            Raises:
+                AttributeError
+
+        """
+        if options_list:
+            if not isinstance(options_list, list):
+                err_msg = f"'options_list' argument must be a list."
+                logger.error(err_msg)
+                raise AttributeError(err_msg)
+            else:
+                for option in options_list:
+                    if option in self.__dict__.keys():
+                        if 'language' in option:
+                            _, lang_code = option.split('=')
+                            self.__dict__['language'] = lang_code
+                        else:
+                            self.__dict__[option] = True
+                    else:
+                        logger.warning(f"option {option!r} not recognized. skipping.")
+
+    def from_dict(self, options_dict: dict[str, bool | str]):
+        """Create StatOptions instance with attributes from dictionary
+
+            Args:
+                options_dict: Dictionary with option name as keys and boolean or string values.
+
+            Examples:
+                ```python
+                options_dict = {'calc_gp': True, 'percent_vals': True, 'game_style': True, 'language': 'eng_us',}
+                ```
+
+            Raises:
+                AttributeError
+
+        """
+        if options_dict:
+            if not isinstance(options_dict, dict):
+                err_msg = f"'options_dict' argument must be a dictionary."
+                logger.error(err_msg)
+                raise AttributeError(err_msg)
+            else:
+                for option in options_dict.keys():
+                    if option in self.__dict__.keys():
+                        self.__dict__[option] = options_dict[option]
+                    else:
+                        logger.warning(f"option {option!r} not recognized. skipping.")
 
 
 __all__ = [

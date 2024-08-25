@@ -631,7 +631,7 @@ class DataBuilder:
             elif table["id"] == "crew_rating_per_gear_piece_at_tier":
                 data["cr"]["gearPieceCR"] = {}
                 for row in table["row"]:
-                    data["cr"]["gearPieceCR"][row["key"].replace("TIER_0", "")] = float(
+                    data["cr"]["gearPieceCR"][row["key"].replace("TIER_0", "").replace("TIER_", "")] = float(
                         row["value"]
                     )
             elif table["id"] == "galactic_power_per_complete_gear_tier_table":

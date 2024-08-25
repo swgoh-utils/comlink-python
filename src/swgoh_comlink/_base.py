@@ -41,7 +41,6 @@ from swgoh_comlink.constants import (
     DataItemConstants
 )
 from swgoh_comlink.utils import (
-    _get_function_name,
     sanitize_allycode,
     convert_league_to_int,
     convert_divisions_to_int,
@@ -145,7 +144,7 @@ class SwgohComlinkBase:
             self.logger.debug(f"{port_name} ({type(input_port)}) = {input_port}")
 
             if input_port is not NotSet and not isinstance(input_port, int):
-                e_msg = (f"{_get_function_name()}: '{port_name}' must be an integer between "
+                e_msg = (f"'{port_name}' must be an integer between "
                          f"{self.MINIMUM_PORT_VALUE} and {self.MAXIMUM_PORT_VALUE} or not provided. "
                          f"[type={type(port)}, should be <int>]")
                 self.logger.error(e_msg)
@@ -167,7 +166,7 @@ class SwgohComlinkBase:
         if not all(map(lambda list_item: list_item is NotSet, [host, port, protocol, stats_port])):
             com_host = host
             if protocol is not OPTIONAL and protocol.lower() not in self.ALLOWED_PROTOCOLS:
-                err_msg = f"{_get_function_name()}: 'protocol' argument must be one of {self.ALLOWED_PROTOCOLS}"
+                err_msg = f"'protocol' argument must be one of {self.ALLOWED_PROTOCOLS}"
                 self.logger.error(err_msg)
                 raise ValueError(err_msg)
             com_proto = protocol
@@ -196,16 +195,16 @@ class SwgohComlinkBase:
         if access_key is not EMPTY:
             self.__access_key = access_key
         elif "ACCESS_KEY" in os.environ.keys():
-            self.logger.debug(f"{_get_function_name()}: 'ACCESS_KEY' found in environment variable.")
+            self.logger.debug(f"'ACCESS_KEY' found in environment variable.")
             self.__access_key = os.getenv("ACCESS_KEY", "")
-            self.logger.debug(f"{_get_function_name()}: 'ACCESS_KEY' has been set to {self.__access_key!r}.")
+            self.logger.debug(f"'ACCESS_KEY' has been set to {self.__access_key!r}.")
         else:
             self.__access_key = NotSet
 
         if secret_key is not EMPTY:
             self.__secret_key = secret_key
         elif "SECRET_KEY" in os.environ.keys():
-            self.logger.debug(f"{_get_function_name()}: 'SECRET_KEY' found in environment variable.")
+            self.logger.debug(f"'SECRET_KEY' found in environment variable.")
             self.__secret_key = os.getenv("SECRET_KEY", "")
         else:
             self.__secret_key = NotSet
@@ -278,13 +277,13 @@ class SwgohComlinkBase:
 
         """
         if hmac_obj is MISSING or values is MISSING:
-            raise ValueError(f"{_get_function_name()}: Both 'hmac_obj' and 'values' arguments are required.")
+            raise ValueError(f"Both 'hmac_obj' and 'values' arguments are required.")
 
         if not isinstance(hmac_obj, HMAC):
-            raise ValueError(f"{_get_function_name()}: 'hmac_obj' argument must be type <HMAC>")
+            raise ValueError(f"'hmac_obj' argument must be type <HMAC>")
 
         if not isinstance(values, list):
-            raise ValueError(f"{_get_function_name()}: 'values' argument must be type <list>")
+            raise ValueError(f"'values' argument must be type <list>")
 
         for value in values:
             hmac_obj.update(value.encode())
@@ -328,7 +327,7 @@ class SwgohComlinkBase:
         language_string = f"language={language}"
 
         if not isinstance(flags, list) and flags is not OPTIONAL:
-            raise ValueError(f"{_get_function_name()}, Invalid flags '{flags}', must be type list of strings.")
+            raise ValueError(f"Invalid flags '{flags}', must be type list of strings.")
 
         if flags is NotSet:
             flags = []
@@ -391,12 +390,12 @@ class SwgohComlinkBase:
 
         """
         if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
-            err_msg = f"{_get_function_name()}: Either allycode or player_id must be provided."
+            err_msg = f"Either allycode or player_id must be provided."
             get_logger(default_logger=True).debug(err_msg)
             raise ValueError(err_msg)
 
         if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
-            err_msg = f"{_get_function_name()}: Only one of allycode or player_id can be provided."
+            err_msg = f"Only one of allycode or player_id can be provided."
             get_logger(default_logger=True).debug(err_msg)
             raise ValueError(err_msg)
 
@@ -417,11 +416,11 @@ class SwgohComlinkBase:
             client_specs: dict | Sentinel = OPTIONAL, enums: bool = False
     ) -> dict:
         """Create client_spec dictionary for get_metadata() method"""
-        get_logger().debug(f"{_get_function_name()}, client_specs={client_specs}, enums={enums}")
+        get_logger().debug(f"client_specs={client_specs}, enums={enums}")
         payload = {"payload": {}, "enums": enums}
         if isinstance(client_specs, dict):
             payload["payload"]["clientSpecs"] = client_specs
-        get_logger().debug(f"{_get_function_name()}, payload={payload}")
+        get_logger().debug(f"payload={payload}")
         return payload
 
     @staticmethod
@@ -435,12 +434,12 @@ class SwgohComlinkBase:
     ) -> dict:
         """Create game_data payload object and return"""
         if version is NotSet:
-            err_str = f"{_get_function_name()}: The 'version' argument must be provided."
+            err_str = f"The 'version' argument must be provided."
             get_logger().error(err_str)
             raise ValueError(err_str)
 
-        if request_segment is not MutualExclusiveRequired and items is not MutualExclusiveRequired:
-            err_str = f"{_get_function_name()}: Either the 'request_segment' or 'items' must be set."
+        if not isinstance(request_segment, Sentinel) and not isinstance(items, Sentinel):
+            err_str = f"Either the 'request_segment' or 'items' must be set. [{request_segment=}, {items=}]"
             get_logger().error(err_str)
             raise ValueError(err_str)
 
@@ -461,7 +460,7 @@ class SwgohComlinkBase:
         else:
             payload['payload']['requestSegment'] = int(request_segment)
 
-        get_logger().debug(f"{_get_function_name()}, {payload=}")
+        get_logger().debug(f"{payload=}")
         return payload
 
     @staticmethod
@@ -470,7 +469,7 @@ class SwgohComlinkBase:
     ) -> dict:
         """Create get_guild() method payload object"""
         if guild_id is REQUIRED and guild_id is not SET:
-            raise ValueError(f"{_get_function_name()}, 'guild_id' must be provided.")
+            raise ValueError(f"'guild_id' must be provided.")
 
         return {
             "payload": {
@@ -486,7 +485,7 @@ class SwgohComlinkBase:
     ) -> dict:
         """Create get_builds_by_name() method payload object"""
         if guild_name is REQUIRED and guild_name is not SET:
-            raise ValueError(f"{_get_function_name()}, 'guild_name' must be provided.")
+            raise ValueError(f"'guild_name' must be provided.")
 
         return {
             "payload": {
@@ -504,7 +503,7 @@ class SwgohComlinkBase:
     ) -> dict:
         """Create get_builds_by_name() method payload object"""
         if criteria is REQUIRED and criteria is not SET:
-            raise ValueError(f"{_get_function_name()}, 'criteria' must be provided.")
+            raise ValueError(f"'criteria' must be provided.")
 
         return {
             "payload": {
@@ -527,11 +526,11 @@ class SwgohComlinkBase:
     ) -> dict:
         """Create get_leaderboards() method payload"""
         if lb_type is REQUIRED and lb_type is not SET:
-            raise ValueError(f"{_get_function_name()}, 'lb_type' must be provided.")
+            raise ValueError(f"'lb_type' must be provided.")
 
         if lb_type not in (4, 6):
             raise ValueError(
-                f"{_get_function_name()}, 'leaderboard_type' must be either 4 (GAC brackets) or 6 (Global "
+                f"'leaderboard_type' must be either 4 (GAC brackets) or 6 (Global "
                 f"Leaderboards"
             )
 
@@ -544,25 +543,25 @@ class SwgohComlinkBase:
         if lb_type == 4:
             if ((event_instance_id is NotGiven and event_instance_id is not SET) or
                     not isinstance(event_instance_id, str)):
-                raise ValueError(f"{_get_function_name()}, 'event_instance_id' string must be provided.")
+                raise ValueError(f"'event_instance_id' string must be provided.")
 
             if (group_id is NotGiven and group_id is not SET) or not isinstance(group_id, str):
-                raise ValueError(f"{_get_function_name()}, 'group_id' string must be provided.")
+                raise ValueError(f"'group_id' string must be provided.")
             payload["payload"]["eventInstanceId"] = event_instance_id
             payload["payload"]["groupId"] = group_id
         elif lb_type == 6:
             if league is NotGiven and league is not SET:
-                raise ValueError(f"{_get_function_name()}, 'league' must be provided.")
+                raise ValueError(f"'league' must be provided.")
             if division is NotGiven and division is not SET:
-                raise ValueError(f"{_get_function_name()}, 'division' must be provided.")
+                raise ValueError(f"'division' must be provided.")
 
             league = convert_league_to_int(league) if isinstance(league, str) else league
             if league not in Constants.LEAGUES.values():
-                raise ValueError(f"{_get_function_name()}: Invalid league {league}.")
+                raise ValueError(f"Invalid league {league}.")
 
             division = convert_divisions_to_int(division) if isinstance(division, str) else division
             if division not in Constants.DIVISIONS.values():
-                raise ValueError(f"{_get_function_name()}: Invalid division {division}.")
+                raise ValueError(f"Invalid division {division}.")
 
             payload["payload"]["league"] = league
             payload["payload"]["division"] = division
@@ -574,7 +573,7 @@ class SwgohComlinkBase:
     ) -> dict:
         """Create get_guild_leaderboards() method payload"""
         if lb_id is MISSING or not isinstance(lb_id, list):
-            err_msg = f"{_get_function_name()}: 'leaderboard_id' argument is required as type <list>."
+            err_msg = f"'leaderboard_id' argument is required as type <list>."
             get_logger().error(err_msg)
             raise ValueError(err_msg)
         return {"payload": {"leaderboardId": lb_id, "count": count}, "enums": enums}

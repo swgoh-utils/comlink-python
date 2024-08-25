@@ -3,6 +3,8 @@
 Python library module for calculating character and ship statistic values for the Star Wars: Galaxy of Heroes mobile
 game from EA/CG.
 """
+from __future__ import annotations, absolute_import
+
 import base64
 import functools
 import io
@@ -17,7 +19,7 @@ from typing import Callable
 from sentinels import Sentinel
 
 import swgoh_comlink
-from stat_values import StatValues, StatOptions
+from swgoh_comlink.StatCalc.stat_values import StatValues, StatOptions
 from swgoh_comlink.constants import Constants, get_logger, set_debug, OPTIONAL, REQUIRED, NotSet
 from swgoh_comlink.data_builder import DataBuilder, DataBuilderException
 from swgoh_comlink.utils import validate_file_path, create_localized_unit_name_dictionary
@@ -617,10 +619,10 @@ class StatCalc:
         return mod_stats
 
     @classmethod
-    def _get_crew_rating(cls, crew):
-        def calculate_character_cr(crew_rating, char):
+    def _get_crew_rating(cls, crew: list) -> float:
+        def calculate_character_cr(crew_rating: float, char: dict) -> float:
             crew_rating += (cls._CR_TABLES['unitLevelCR'][str(char['currentLevel'])]
-                            + cls._CR_TABLES['crewRarityCR'][str(char['currentRarity'])])
+                            + cls._CR_TABLES['crewRarityCR'][Constants.UNIT_RARITY[char['currentRarity']]])
             crew_rating += cls._CR_TABLES['gearLevelCR'][char['gear']]
             crew_rating += cls._CR_TABLES['gearPieceCR'][char['gear']] * len(char.get('equipped', []))
 
@@ -637,33 +639,31 @@ class StatCalc:
                     char['equippedStatMod'], crew_rating)
 
             if 'relic' in char and char['relic']['currentTier'] > 2:
-                crew_rating += cls._CR_TABLES['relicTierCR'][char['relic']['currentTier']]
-                crew_rating += char['level'] * cls._CR_TABLES['relicTierLevelFactor'][char['relic']['currentTier']]
-
+                relic_tier = str(char['relic']['currentTier'])
+                crew_rating += cls._CR_TABLES['relicTierCR'][relic_tier]
+                crew_rating += char['level'] * cls._CR_TABLES['relicTierLevelFactor'][relic_tier]
             return crew_rating
 
-        total_cr = functools.reduce(calculate_character_cr, crew, 0)
-        return total_cr
+        return functools.reduce(calculate_character_cr, crew, 0.0)
 
     @classmethod
-    def _get_skill_crew_rating(cls, skill):
-        return cls._CR_TABLES['abilityLevelCR'][str(skill['tier'])]
+    def _get_skill_crew_rating(cls, skill: dict) -> float:
+        return float(cls._CR_TABLES['abilityLevelCR'][str(skill['tier'])])
 
     @classmethod
-    def _get_crewless_crew_rating(cls, ship):
+    def _get_crewless_crew_rating(cls, ship: dict) -> float:
         # temporarily uses hard-coded multipliers, as the true in-game formula remains a mystery.
         # but these values have experimentally been found accurate for the first 3 crewless ships:
         #     (Vulture Droid, Hyena Bomber, and BTL-B Y-wing)
-        crew_rating = _floor(
-            cls._CR_TABLES['crewRarityCr'][str(ship['currentRarity'])] +
+        return _floor(
+            cls._CR_TABLES['crewRarityCr'][Constants.UNIT_RARITY[ship['currentRarity']]] +
             3.5 * cls._CR_TABLES['unitLevelCr'][str(ship['currentLevel'])] +
             cls._get_crewless_skills_crew_rating(ship['skills'])
         )
-        return crew_rating
 
     @classmethod
-    def _get_crewless_skills_crew_rating(cls, skills: list):
-        crew_rating = 0
+    def _get_crewless_skills_crew_rating(cls, skills: list) -> float:
+        crew_rating = 0.0
         for skill in skills:
             const = 0.696 if skill['id'].startswith('hardware') else 2.46
             crew_rating += const * cls._CR_TABLES['abilityLevelCR'][str(skill['tier'])]
@@ -744,7 +744,7 @@ class StatCalc:
             'growth_modifiers': deepcopy(cls._UNIT_DATA[ship['defId']]['growthModifiers'][rarity])
         }
 
-        stat_multiplier = cls._CR_TABLES['shipRarityFactor'][rarity] * crew_rating
+        stat_multiplier: float = cls._CR_TABLES['shipRarityFactor'][rarity] * crew_rating
         logger.debug(f"{crew_rating=}, {rarity=}, {stat_multiplier=}, {stats=}")
 
         for stat_id, stat_value in cls._UNIT_DATA[ship['defId']]['crewStats'].items():
@@ -752,7 +752,7 @@ class StatCalc:
             # other stats require decimals -- shrink to 8 digits of precision through 'unscaled'
             # values this calculator uses
             precision = 8 if int(stat_id) < 16 or int(stat_id) == 28 else 0
-            stats['crew'].setdefault(str(stat_id), _floor(stat_value * stat_multiplier, precision))
+            stats['crew'].setdefault(stat_id, _floor(stat_value * stat_multiplier, precision))
         logger.debug(f"{stats=}")
         return stats
 
@@ -782,9 +782,6 @@ class StatCalc:
 
         logger.info(f"Calculating stats for {char['defId']}")
 
-        # TODO: is this still needed?
-        # cls._process_language(options.get('language', "eng_us"))
-
         if options is NotSet:
             logger.debug(f"No options provided. Copying defaults ...")
             options = StatOptions()
@@ -810,7 +807,7 @@ class StatCalc:
     def calc_ship_stats(
             cls,
             ship: dict,
-            crew: list,
+            crew: list[dict],
             options: StatOptions | Sentinel = OPTIONAL,
             use_values: StatValues | Sentinel = OPTIONAL,
     ) -> dict:
@@ -818,8 +815,8 @@ class StatCalc:
 
         Args:
             ship: Ship object from player roster
-            crew: List of ship crew members
-            options: StatOption object instance
+            crew: List of ship crew members objects from player roster
+            options: StatOptions object instance
             use_values: StatValues object instance
 
         Returns:
@@ -836,13 +833,12 @@ class StatCalc:
 
         logger.info(f"Calculating stats for {ship['defId']}")
 
-        cls._process_language(options.language)
-
         if options is NotSet:
             logger.debug(f"No options provided. Copying defaults ...")
             options = StatOptions()
 
-        ship, crew = cls._use_values_ships(ship, crew, use_values)
+        if isinstance(use_values, StatValues):
+            ship, crew = cls._use_values_ships(ship, crew, use_values)
 
         stats = {}
         if not options.only_gp:
@@ -854,7 +850,6 @@ class StatCalc:
         if options.calc_gp or options.only_gp:
             ship['gp'] = cls._calc_ship_gp(ship, crew)
             stats['gp'] = ship['gp']
-
         return ship
 
     @classmethod
@@ -1193,17 +1188,6 @@ class StatCalc:
                     return cls._GP_TABLES['abilityLevelGP'].get(player_unit_skill_tier, "0")
 
     @classmethod
-    def _process_language(cls, language: str = None) -> None:
-        """Update localized language selection for statIds"""
-        logger.info(f"Processing language: {language}")
-        languages: list = DataBuilder.get_languages()
-        if language is not None and language in languages:
-            setattr(cls, '_LANGUAGE', language)
-        else:
-            logger.warning(f"Unknown language: {language}, "
-                           + f"setting default language to {cls._LANGUAGE}")
-
-    @classmethod
     def calc_player_stats(
             cls,
             players: list or dict,
@@ -1263,48 +1247,43 @@ class StatCalc:
                  results of the stat calculations
         :rtype: list
         """
-        """
         logger.info(f"*** Entering calc_roster_stats() ***")
         if not cls.is_initialized:
             raise StatCalcException(
                 "StatCalc is not initialized. Please perform the initialization first."
             )
 
-        # cls._process_options(options)
-
-        language = options.get('language', "eng_us")
-        cls._process_language(language)
-
         if isinstance(units, list):
             ships = []
+            crew_members = {}
             temp_units = []
             temp_ships = []
             for unit in units:
-                unit = _verify_def_id(unit)
-                defId = unit.get('defId')
+                defId = _get_def_id(unit)
                 if not unit or not cls._UNIT_DATA[defId]:
                     logger.warning(f"Unable to find {defId} in game data.")
-                    return []
+                    continue
                 combat_type = cls._UNIT_DATA[defId]["combatType"]
                 if combat_type == 2 or combat_type == "SHIP":
                     ships.append(unit)
                 else:
+                    # Populate dictionary with unit data keyed by unit defId.
+                    # Needed for lookup of ship crew members below
+                    crew_members[defId] = unit
                     temp_units.append(cls.calc_char_stats(unit, use_values=use_values, options=options))
             for ship in ships:
-                ship = _verify_def_id(ship)
-                defId = ship.get('defId')
-                if not cls._UNIT_DATA[defId]:
+                defId = _get_def_id(ship)
+                if not ship or not cls._UNIT_DATA[defId]:
                     logger.warning(f"Unable to find {defId} in game data.")
-                    return []
-                crw = cls._UNIT_DATA[defId].get("crew")
-                temp_ships.append(cls.calc_ship_stats(ship, crw))
+                    continue
+                # Get list of crew members for ship (or empty list for crewless)
+                crew_list = [crew_members[def_id] for def_id in cls._UNIT_DATA[defId].get("crew")]
+                temp_ships.append(cls.calc_ship_stats(ship, crew_list))
         else:
             raise StatCalcRuntimeError(
                 f"Unsupported data type [{type(units)}] for 'unit' parameter"
             )
         return temp_units + temp_ships
-        """
-        return None
 
     @classmethod
     def calc_stats(cls,

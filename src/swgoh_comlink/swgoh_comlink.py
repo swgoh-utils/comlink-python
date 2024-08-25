@@ -202,7 +202,7 @@ class SwgohComlink(SwgohComlinkBase):
             include_pve_units: bool = True,
             request_segment: int = 0,
             enums: bool = False,
-            items: str | None = None,
+            items: str | Sentinel = NotSet,
             device_platform: str = "Android",
     ) -> dict:
         """Get current game data from servers
