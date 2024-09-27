@@ -8,7 +8,6 @@ import json
 import logging
 import os
 import re
-import shutil
 import threading
 import time
 import zipfile
@@ -23,7 +22,7 @@ from swgoh_comlink import SwgohComlink
 from swgoh_comlink.constants import (
     Constants,
     get_logger,
-    DATA_PATH,
+    Config,
     OPTIONAL,
     NotSet,
 )
@@ -85,16 +84,6 @@ def _write_json_file(data_path: str, file_name: str, json_data: dict) -> None:
     if not file_name.endswith(".json"):
         file_name += ".json"
     full_path = os.path.join(data_path, file_name)
-    if os.path.isfile(full_path):
-        file_name_bak = (
-                file_name + "-" + time.strftime("%Y%m%d_%H%M%S", time.localtime()) + ".bak"
-        )
-        logger.info(
-            f"{file_name} already exists. Renaming to {file_name_bak} before saving."
-        )
-        _verify_data_path(os.path.join(data_path, "backups"))
-        full_name_bak = os.path.join(data_path, "backups", file_name_bak)
-        shutil.move(full_path, full_name_bak)
     try:
         logger.info(f"Opening {full_path}...")
         with open(full_path, "w") as fn:
@@ -182,15 +171,12 @@ class DataBuilder:
     _USE_UNZIP: bool = False
     _LOCALIZATION_MAP: dict = {}
 
-    _DATA_PATH: str = DATA_PATH
+    _DATA_PATH: str = Config.DATA_PATH
     _DATA_FILE_PATHS: list[str] = [
         _DATA_PATH,
         os.path.join(_DATA_PATH, "game"),
-        os.path.join(_DATA_PATH, "game", "backups"),
         os.path.join(_DATA_PATH, "units"),
-        os.path.join(_DATA_PATH, "units", "backups"),
         os.path.join(_DATA_PATH, "languages"),
-        os.path.join(_DATA_PATH, "languages", "backups"),
     ]
     _DATA_VERSION_FILE: str = "dataVersion"
     _GAME_DATA_PATH_SUB_FOLDER: str = "game"
@@ -372,7 +358,7 @@ class DataBuilder:
         return lang_map, unit_name_map, master_map
 
     @classmethod
-    def _read_game_data(cls) -> None:
+    def _load_game_data(cls) -> None:
         """Method to read game data stored on disk"""
         game_data_file_path = os.path.join(
             cls._DATA_PATH, cls._GAME_DATA_PATH_SUB_FOLDER
@@ -550,17 +536,12 @@ class DataBuilder:
     def _parse_skills(skill_list: list) -> dict:
         """Populate skill list object from data['skills']
 
-        :param skill_list: Game data 'skills' list
-        :type skill_list:
-        :return: dictionary of skills
-        :rtype: dict
+            Args
+                skill_list: Game data 'skills' list
+
+            Returns
+                Dictionary of skills
         """
-
-        def get_skill_tier(s_tier: str) -> str:
-            for suffix in ('_DISCOUNTED', '_OMICRON', '_ZETA'):
-                s_tier = s_tier.replace(suffix, '')
-            return s_tier[-1:]
-
         skills = {}
         for skill in skill_list:
             s = {
@@ -570,18 +551,11 @@ class DataBuilder:
                 "isZeta": False,
                 "isOmicron": False
             }
-            for tier in skill["tier"]:
+            for idx, tier in enumerate(skill["tier"]):
                 if tier['isZetaTier'] or tier['isOmicronTier']:
                     s['isZeta'] = tier['isZetaTier']
                     s['isOmicron'] = tier['isOmicronTier']
-                    skill_tier = get_skill_tier(tier['recipeId'])
-                    s["powerOverrideTags"][skill_tier] = tier["powerOverrideTag"]
-                    if s['isZeta'] and s['isOmicron']:
-                        s['maxTier'] += 1
-                    elif s['isZeta'] and not s['isOmicron']:
-                        s['maxTier'] += 1
-                    elif not s['isZeta'] and s['isOmicron']:
-                        s['maxTier'] += 1
+                    s["powerOverrideTags"][idx] = tier["powerOverrideTag"]
             skills[skill["id"]] = s
         return skills
 
@@ -609,15 +583,6 @@ class DataBuilder:
 
     @classmethod
     def _parse_table_list(cls, table_list: list, data: dict) -> dict:
-        rarity_enum = {
-            "ONE_STAR": 1,
-            "TWO_STAR": 2,
-            "THREE_STAR": 3,
-            "FOUR_STAR": 4,
-            "FIVE_STAR": 5,
-            "SIX_STAR": 6,
-            "SEVEN_STAR": 7,
-        }
         for table in table_list:
             if table["id"] == "galactic_power_modifier_per_ship_crew_size_table":
                 data["gp"]["crewSizeFactor"] = {}
@@ -655,7 +620,7 @@ class DataBuilder:
             elif table["id"] == "crew_contribution_multiplier_per_rarity":
                 data["cr"]["shipRarityFactor"] = {}
                 for row in table["row"]:
-                    data["cr"]["shipRarityFactor"][rarity_enum[row["key"]]] = float(
+                    data["cr"]["shipRarityFactor"][Constants.UNIT_RARITY_NAMES[row["key"]]] = float(
                         row["value"]
                     )
                 data["gp"]["shipRarityFactor"] = data["cr"]["shipRarityFactor"]
@@ -721,8 +686,6 @@ class DataBuilder:
 
     @staticmethod
     def _build_meta_data(meta_data):
-        """Build config_map from the game meta data "config" element"""
-
         config_map = {}
         for cfg_item in meta_data["config"]:
             config_map[cfg_item["key"]] = cfg_item["value"]
@@ -754,7 +717,6 @@ class DataBuilder:
 
     @staticmethod
     def _build_gear_data(equipment_list: list[dict]) -> dict:
-        """Take equipmentList from game data and use it to populate the 'gear' element in gameData.json"""
         data = {}
         for gear in equipment_list:
             stat_list = gear["equipmentStat"]["stat"]
@@ -775,8 +737,6 @@ class DataBuilder:
 
     @staticmethod
     def _build_relic_data(relic_list: list, stat_tables: dict) -> dict:
-        """Extract relic details from stats table"""
-
         data = {}
         for relic in relic_list:
             data[relic["id"]] = {
@@ -791,19 +751,13 @@ class DataBuilder:
 
     @staticmethod
     def _map_skills(skill_ref_list, skill_list) -> list:
-        """match skill_ref_list[x]['id'] against skill_list.keys() and return the resulting list"""
-
         skill_ids = []
         for skill_ref in skill_ref_list:
             skill_ids.append(skill_list[skill_ref["skillId"]])
         return skill_ids
 
     @classmethod
-    def _build_unit_data(
-            cls, units_list: list, skill_list: list, stat_tables: dict
-    ) -> dict:
-        """Combine units list, skills list and stats tables into a single list of unit objects"""
-
+    def _build_unit_data(cls, units_list: list, skill_list: list, stat_tables: dict) -> dict:
         skills = DataBuilder._parse_skills(skill_list)
         base_list = []
         unit_gm_tables = {}
@@ -871,8 +825,6 @@ class DataBuilder:
 
     @classmethod
     def _build_data(cls, data):
-        """Take game data dictionary and parse into just the needed tables"""
-
         game_data = {}
         logger.info(f"Building stat_tables from statProgression")
         stat_tables = cls._build_stat_progression_list(data["statProgression"])
@@ -902,15 +854,23 @@ class DataBuilder:
         representing the unitData, gearData, modSetData, crTables, gpTables and relicData. Primary intended use
         is by the StatCalc library for initializing internal data structures for roster calculations.
 
+            Returns:
+                dictionary of generated tables for StatCalc use or None
+
+            Raises:
+                DataBuilderException
         """
-        if cls._INITIALIZED is False:
+        if not cls._INITIALIZED:
             raise DataBuilderException(
                 "DataBuilder has not yet been initialized. Please perform that action first."
             )
-        if cls._verify_game_data_files() is False:
+
+        if not cls._verify_game_data_files():
+            logger.debug(f"Updating game data files ...")
             cls.update_game_data()
         else:
-            cls._read_game_data()
+            logger.debug(f"Reading game data files ...")
+            cls._load_game_data()
         return cls._GAME_DATA
 
     @classmethod
@@ -1177,10 +1137,9 @@ class DataBuilder:
             raise DataBuilderRuntimeError("'stat_enums_map' failed to load.")
 
         logger.info(f"Checking for game data files")
-        data_files_exist = cls._verify_game_data_files()
-        if data_files_exist is True:
+        if cls._verify_game_data_files():
             logger.info(f"Reading game data from files")
-            cls._read_game_data()
+            cls._load_game_data()
         else:
             logger.info(f"Updating game data from servers.")
             cls.update_game_data()
@@ -1191,5 +1150,6 @@ class DataBuilder:
 
         logger.debug(f"Setting DataBuilder._INITIALIZED to True")
         setattr(cls, "_INITIALIZED", True)
+        logger.debug(f"{cls.__name__} is initialized: {cls.is_initialized()}")
 
         return True

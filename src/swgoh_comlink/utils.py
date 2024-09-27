@@ -25,13 +25,13 @@ from .constants import (
     MutualExclusiveRequired,  # Sentinel
     NotSet,  # Sentinel
     Constants,
-    DATA_PATH,
+    Config,
 )
 
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: ignore
 
-default_logger = get_logger()
+default_logger = get_logger(default_logger=Config.DEFAULT_LOGGER_ENABLED)
 default_logger.debug("Utils logging is set to %s..." % default_logger.name)
 
 __all__ = [
@@ -39,7 +39,6 @@ __all__ = [
     "convert_league_to_int",
     "convert_relic_tier",
     "create_localized_unit_name_dictionary",
-    "default_logger",
     "func_debug_logger",
     "func_timer",
     "get_async_player",
@@ -591,7 +590,7 @@ def search_gac_brackets(gac_brackets: dict, player_name: str) -> dict:
 
 
 def load_master_map(
-        master_map_path: str | Path = DATA_PATH, language: str = "eng_us"
+        master_map_path: str | Path = Config.DATA_PATH, language: str = "eng_us"
 ) -> dict | None:
     """Read master localization key/string mapping file into dictionary and return
 

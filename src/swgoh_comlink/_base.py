@@ -20,7 +20,7 @@ import os
 import time
 from hmac import HMAC
 from json import dumps
-from typing import Any
+from typing import Any, Dict
 
 from sentinels import Sentinel
 
@@ -38,7 +38,7 @@ from swgoh_comlink.constants import (
     OPTIONAL,
     REQUIRED,
     SET,
-    DataItemConstants
+    DataItemConstants, Config
 )
 from swgoh_comlink.utils import (
     sanitize_allycode,
@@ -47,6 +47,8 @@ from swgoh_comlink.utils import (
 )
 
 __all__ = ["SwgohComlinkBase"]
+
+logger = get_logger(default_logger=Config.DEFAULT_LOGGER_ENABLED)
 
 
 class SwgohComlinkBase:
@@ -92,7 +94,7 @@ class SwgohComlinkBase:
             port: int | Sentinel = OPTIONAL,
             stats_port: int | Sentinel = OPTIONAL,
             logger: logging.Logger | Sentinel = OPTIONAL,
-            default_logger_enabled: bool = False,
+            default_logger_enabled: bool = Config.DEFAULT_LOGGER_ENABLED,
             **kwargs
     ):
         """
@@ -116,17 +118,17 @@ class SwgohComlinkBase:
                 Either of the options should be chosen but not both.
 
         """
-        if logger is not EMPTY and isinstance(logger, logging.Logger):
+        if isinstance(logger, logging.Logger):
             self.logger = logger
             for handler in logger.handlers:
                 if isinstance(handler, logging.NullHandler):
                     logger.removeHandler(handler)
-        elif logger is not EMPTY and not isinstance(logger, logging.Logger):
+        elif not isinstance(logger, Sentinel) and not isinstance(logger, logging.Logger):
             raise ValueError("'logger' must be either 'None' or a <logging.Logger> instance")
         else:
             self.logger = get_logger(default_logger=default_logger_enabled)
-        self.logger.debug("Initializing %s" % self.__class__.__name__)
-        self.logger.debug("Logger is %s" % self.logger)
+        self.logger.debug("Initializing instance of class: %s" % self.__class__.__name__)
+        self.logger.debug(f"Logger is {self.logger} (ID: {hex(id(self.logger))})")
 
         self.url_base = url
         self.logger.debug("Initial url_base= %s" % self.url_base)
@@ -416,11 +418,11 @@ class SwgohComlinkBase:
             client_specs: dict | Sentinel = OPTIONAL, enums: bool = False
     ) -> dict:
         """Create client_spec dictionary for get_metadata() method"""
-        get_logger().debug(f"client_specs={client_specs}, enums={enums}")
+        logger.debug(f"client_specs={client_specs}, enums={enums}")
         payload = {"payload": {}, "enums": enums}
         if isinstance(client_specs, dict):
             payload["payload"]["clientSpecs"] = client_specs
-        get_logger().debug(f"payload={payload}")
+        logger.debug(f"payload={payload}")
         return payload
 
     @staticmethod
@@ -435,15 +437,15 @@ class SwgohComlinkBase:
         """Create game_data payload object and return"""
         if version is NotSet:
             err_str = f"The 'version' argument must be provided."
-            get_logger().error(err_str)
+            logger.error(err_str)
             raise ValueError(err_str)
 
         if not isinstance(request_segment, Sentinel) and not isinstance(items, Sentinel):
             err_str = f"Either the 'request_segment' or 'items' must be set. [{request_segment=}, {items=}]"
-            get_logger().error(err_str)
+            logger.error(err_str)
             raise ValueError(err_str)
 
-        payload = {
+        payload: dict[str, Any] = {
             "payload": {
                 "version": f"{version}",
                 "devicePlatform": device_platform,
@@ -456,11 +458,13 @@ class SwgohComlinkBase:
         if isinstance(items, int) and str(abs(items)).isdigit():
             payload['payload']['items'] = str(items)
         elif isinstance(items, str):
-            payload['payload']['items'] = DataItemConstants.get(items) or "-1"
-        else:
+            payload['payload']['items'] = str(DataItemConstants.__getitem__(items).value) or "-1"
+        elif not isinstance(request_segment, Sentinel):
             payload['payload']['requestSegment'] = int(request_segment)
+        else:
+            raise ValueError("Unable to determine 'items' or 'request_segment' argument.")
 
-        get_logger().debug(f"{payload=}")
+        logger.debug(f"{payload=}")
         return payload
 
     @staticmethod
@@ -574,7 +578,7 @@ class SwgohComlinkBase:
         """Create get_guild_leaderboards() method payload"""
         if lb_id is MISSING or not isinstance(lb_id, list):
             err_msg = f"'leaderboard_id' argument is required as type <list>."
-            get_logger().error(err_msg)
+            logger.error(err_msg)
             raise ValueError(err_msg)
         return {"payload": {"leaderboardId": lb_id, "count": count}, "enums": enums}
 

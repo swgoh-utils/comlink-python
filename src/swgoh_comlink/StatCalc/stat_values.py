@@ -7,11 +7,26 @@ calculations.
 from __future__ import absolute_import, annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
 
-from swgoh_comlink.constants import get_logger
+from sentinels import Sentinel
+
+from swgoh_comlink.constants import get_logger, Constants, OPTIONAL
 
 logger = get_logger()
+
+
+class StatValueError(ValueError):
+
+    def __init__(self, err_msg: str):
+        logger.error(err_msg)
+        raise ValueError(err_msg)
+
+
+class StatTypeError(TypeError):
+
+    def __init__(self, err_msg: str):
+        logger.error(err_msg)
+        raise TypeError(err_msg)
 
 
 class Validator(ABC):
@@ -30,166 +45,105 @@ class Validator(ABC):
         pass
 
 
-class StatValidator(Validator):
-    def __init__(self, *options):
+class ValueType(Validator):
+
+    def __init__(self, *types):
+        self.types = set(types)
+
+    def validate(self, value_type):
+        if value_type not in self.types:
+            raise StatValueError(f"Expected {value_type} to be one of {self.types!r}")
+
+
+class ValueAttr(Validator):
+
+    def __init__(self, *stat_attrs):
+        self.stat_attrs = stat_attrs
+
+    def validate(self, stat_attr):
+        if stat_attr not in self.stat_attrs:
+            raise StatValueError(f"Expected {stat_attr} to be one of {self.stat_attrs!r}")
+
+
+class ValueOptions(Validator):
+
+    def __init__(self, options):
         self.options = set(options)
 
-    def validate(self, value):
-        if value not in self.options:
-            raise ValueError(f'Expected {value!r} to be one of {self.options!r}')
+    def validate(self, attr_value):
+        if isinstance(attr_value, list):
+            for v in attr_value:
+                self.validate(v)
+        elif attr_value not in self.options:
+            raise StatValueError(f'Expected {attr_value!r} to be one of {self.options!r}')
 
 
-class StatValues(object):
-    """
-    Container class to house unit attributes for stat calculations.
+class StatValues:
+    """Container class to house unit attributes for stat calculations."""
 
-    Args:
-        unit_type:
+    __module__ = Constants.MODULE_NAME
 
-            Dictionary structure must be as follows. Elements missing from the dictionary will be assigned
-            their default value.
+    unit_type = ValueType('char', 'ship', 'crew')
 
-            ```python
-            {
-              char: {
-                rarity: <int>,                        # 1-7 (default 7)
-                level: <int>,                         # 1-90 (default 85)
-                gear: <int>,                          # 1-12 (default 12)
-                equipment: <str|list|None>,           # [see below]
-                relic: <str|int>,                     # [see below]
-                skills: <str|list>,                   # [see below]
-                mod_rarity: <int>,                    # 1-7 [pips/dots] (default 6)
-                mod_level: <int>,                     # 1-15 (default 15)
-                mod_tier: <int>                       # 1-6 (default 6)
-              },
-              ship: {
-                rarity: <int>,                        # 1-7 (default 7)
-                level: <int>                          # 1-90 (default 85)
-              },
-              crew: {
-                rarity: <int>,                        # 1-7 (default 7)
-                level: <int>,                         # 1-90 (default 85)
-                gear: <int>,                          # 1-12 (default 12)
-                equipment: <str|int|list|None>,       # [see below]
-                relic: <str|int>                      # [see below]
-                skills: <str|int>,                    # [see below]
-                mod_rarity: <int>,                    # 1-7 [pips/dots] (default 6)
-                mod_level: <int>,                     # 1-15 (default 15)
-                mod_tier: <int>,                      # 1-5 (default 5)
-              }
-            }
-            ```
-
-            **equipment** (default: "all"):
-                Possible values are:
-                    "all": Include all possible gear pieces
-                    None: Do not include any gear pieces. The dictionary key must exist with a None value assigned.
-                    (list): List of integers indicating which gear slots to include, for example: [1,2,6]
-                            For the "crew" element, a single integer can be used to indicate how many
-                            gear pieces to include without specifying the slot assignment.
-
-            **skills** (default: "max"):
-                Possible values are:
-                    "max": Include all possible skills
-                    "max_no_zeta": Include all skills at the highest possible level below the zeta threshold
-                    "max_no_omicron": Include all skills at the highest possible level below the omicron threshold
-                    (int): Include all skills at the level indicated by the integer provided
-
-            **relic** (default: 9):
-                Possible values are:
-                    "locked": Relic level has not been unlocked (gear level < 13)
-                    "unlocked": Relic level unlocked but still level 0
-                    (int): The actual relic level [1-9]
-
-    Returns:
-        StatValue instance object
-
-    """
-    _ALLOWED_UNIT_TYPES: tuple = ('char', 'ship', 'crew')
-
-    _ALLOWED_ATTRS: dict[str, tuple] = {
-        "char": ('rarity', 'level', 'gear', 'equipment', 'skills', 'relic', 'mod_rarity', 'mod_level', 'mod_tier'),
-        "ship": ('rarity', 'level'),
-        "crew": ('rarity', 'level', 'gear', 'equipment', 'skills', 'relic', 'mod_rarity', 'mod_level', 'mod_tier')
-    }
-
-    _ATTR_LIMITS = {
-        'rarity': {
-            "type": (int,),
-            "values": tuple(range(1, 8))
-        },
-        'level': {
-            "type": (int,),
-            "values": tuple(range(1, 91))
-        },
-        "gear": {
-            "type": (int,),
-            "values": tuple(range(1, 13))
-        },
-        "equipment": {
-            "type": (str, int, list, None),
-            "values": tuple(["all", None] + list(range(1, 7)))
-        },
-        "relic": {
-            "type": (int, str),
-            "values": tuple(["locked", "unlocked"] + list(range(1, 11)))
-        },
-        "skills": {
-            "type": (str, int),
-            "values": tuple(["max", "max_no_zeta", "max_no_omicron"] + list(range(1, 10)))
-        },
-        "mod_rarity": {
-            "type": (int,),
-            "values": tuple(range(1, 7))
-        },
-        "mod_level": {
-            "type": (int,),
-            "values": tuple(range(1, 16))
-        },
-        "mod_tier": {
-            "type": (int,),
-            "values": tuple(range(1, 6))
-        }
-    }
-
-    def _check_unit_type(self, u_type: str):
-        if u_type not in self._ALLOWED_UNIT_TYPES:
-            err_msg = f"unit type {u_type} not allowed."
-            logger.error(err_msg)
-            raise AttributeError(err_msg)
-
-    def _check_attribute(self, unit_type: str, attr_name: str, attr_value: Any, func_name: str = None):
-        if attr_name not in self._ALLOWED_ATTRS[unit_type]:
-            err_msg = f"{func_name}: attribute type {type(attr_name)} not allowed for {unit_type:r}."
-            logger.error(err_msg)
-            raise AttributeError(err_msg)
-
-        if type(attr_value) not in self._ATTR_LIMITS[attr_name]['type']:
-            err_msg = f"{func_name}: attribute type {type(attr_name)} not allowed for {unit_type:r}."
-            logger.error(err_msg)
-            raise AttributeError(err_msg)
-
-        if attr_value not in self._ATTR_LIMITS[attr_name]['values']:
-            err_msg = f"{func_name}: attribute value {attr_value} not allowed for {attr_name}."
-            logger.error(err_msg)
-            raise AttributeError(err_msg)
+    rarity = ValueOptions(tuple(range(1, 8)))
+    level = ValueOptions(tuple(range(1, 91)))
+    gear = ValueOptions(tuple(range(1, 14)))
+    equipment = ValueOptions(tuple(["all", None] + list(range(1, 7))))
+    relic = ValueOptions(tuple(["locked", "unlocked"] + list(range(1, 11))))
+    skills = ValueOptions(tuple(["max", "max_no_zeta", "max_no_omicron"] + list(range(1, 10))))
+    mod_rarity = ValueOptions(tuple(range(1, 7)))
+    mod_level = ValueOptions(tuple(range(1, 16)))
+    mod_tier = ValueOptions(tuple(range(1, 7)))
+    purchase_ability_id = None
 
     def __init__(self,
-                 unit_type: str = "char",
                  /,
                  *,
+                 unit_type: str = "char",
                  rarity: int = 7,
                  level: int = 85,
                  gear: int = 13,
-                 equipment: str | int | list = "all",
+                 equipment: str | int | list | None = "all",
                  skills: str | int = "max",
                  relic: int | str = 9,
                  mod_rarity: int = 6,
                  mod_level: int = 15,
-                 mod_tier: int = 5,
-                 purchase_ability_id: int = None,
+                 mod_tier: int = 6,
+                 purchase_ability_id: list[str] | None = None,
                  ):
-        """StatValues instance constructor"""
+        """StatValues instance constructor
+
+        Keyword Args:
+                 unit_type: Type of unit the stat values apply to. Possible values are: "char", "ship", "crew".
+                            [Default: "char"]
+                 rarity: Unit rarity (1-7) [Default: 7]
+                 level: Unit level (1-90) [Default: 85]
+                 gear: Unit gear level (1-13) [Default: 13]
+                 equipment: Unit equipment pieces to model.
+                            Possible values are:
+                                "all": Include all possible gear pieces [Default]
+                                None: Do not include any gear pieces.
+                                (int|list): List of integers indicating which gear slots to include.
+                                            For example: [1,2,6]
+                                            For unit_type "crew", a single integer (1-6) can be used to indicate how
+                                            many gear pieces to include without specifying the slot assignment.
+                 skills: Unit skill level to model.
+                            Possible values are:
+                                "max": Include all possible skills
+                                "max_no_zeta": Include all skills at the highest possible level below the zeta threshold
+                                "max_no_omicron": Include all skills at the highest possible level below the omicron
+                                                    threshold
+                                (int): Include all skills at the level (1-9) indicated by the integer provided
+                 relic: Relic tier to use for calculations.
+                            Possible values are:
+                                "locked": Unit is gear level 13 but has NOT unlocked the relic tier
+                                "unlocked": Unit is gear level 13 and has unlocked the relic tier
+                                (int): Single integer (1-9) indicating the relic tier. [Default: 9]
+                 mod_rarity: Unit mod pips/dots to model. Integer (1-6) [Default: 6]
+                 mod_level: Unit mod level to model. Integer (1-15) [Default: 15]
+                 mod_tier: Unit mod tier to model. Integer (1-6) [Default: 6]
+                 purchase_ability_id: Galactic Legend Ultimate Ability ID string. Not Implemented
+        """
         self.unit_type = unit_type
         self.rarity = rarity
         self.level = level
@@ -206,62 +160,16 @@ class StatValues(object):
     def __str__(self):
         rtn_str = ''
         for attr in self.__dict__.keys():
-            rtn_str += f"{attr}: {self.__dict__[attr]}\n"
+            rtn_str += f"{attr.lstrip('_')}: {self.__dict__[attr]}\n"
         return rtn_str
 
     def from_dict(self, attributes: dict):
         """Create new StatValues instance from dictionary."""
-        if attributes:
-            if not isinstance(attributes, dict):
-                err_msg = f"'attributes' argument must be a dictionary."
-                logger.error(err_msg)
-                raise AttributeError(err_msg)
-            else:
-                for unit_type in attributes.keys():
-                    self._check_unit_type(unit_type)
-                    temp_attrs = {}
-                    for attr in attributes[unit_type].keys():
-                        self._check_attribute(unit_type, attr, attributes[unit_type][attr])
-                        temp_attrs.setdefault(attr, {})
-                        temp_attrs[attr] = attributes[unit_type][attr]
-                    logger.debug(f"setting {unit_type} attributes to {temp_attrs}")
-                    setattr(self.__class__, unit_type, temp_attrs)
+        if not isinstance(attributes, dict):
+            raise StatValueError(f"'attributes' argument must be a dictionary.")
 
-    def set_attribute(self, unit_type: str, attributes: dict):
-        if not unit_type:
-            err_msg = f"'unit_type' argument cannot be empty."
-            logger.error(err_msg)
-            raise AttributeError(err_msg)
-
-        self._check_unit_type(unit_type)
-
-        if attributes:
-            if not isinstance(attributes, dict):
-                err_msg = f"'attributes' argument must be a dictionary."
-                logger.error(err_msg)
-                raise AttributeError(err_msg)
-            else:
-                for attr in attributes.keys():
-                    self._check_attribute(unit_type, attr, attributes[attr])
-                logger.debug(f"setting {unit_type} attributes to {attributes}")
-                setattr(self.__class__, unit_type, attributes)
-        else:
-            err_msg = f"'attributes' argument cannot be empty."
-            logger.error(err_msg)
-            raise AttributeError(err_msg)
-
-    def get_attribute(self, unit_type: str) -> dict | None:
-        if not unit_type:
-            err_msg = f"'unit_type' argument cannot be empty."
-            logger.error(err_msg)
-            raise AttributeError(err_msg)
-
-        if unit_type not in self._ALLOWED_UNIT_TYPES:
-            err_msg = f"unit type {unit_type} not allowed."
-            logger.error(err_msg)
-            raise AttributeError(err_msg)
-
-        return getattr(self.__class__, unit_type, None)
+        for k, v in attributes.items():
+            setattr(self, k, v)
 
 
 class StatOptions:
@@ -269,27 +177,31 @@ class StatOptions:
     Data object containing flags to control various aspects of unit stat calculation and results formatting.
     """
 
-    def __init__(self,
-                 /,
-                 *,
-                 without_mod_calc=False,
-                 percent_vals=False,
-                 calc_gp=False,
-                 only_gp=False,
-                 use_max=False,
-                 scaled=False,
-                 unscaled=False,
-                 game_style=False,
-                 stat_ids=False,
-                 enums=False,
-                 no_space=False,
-                 language="eng_us",
-                 ):
+    __module__ = Constants.MODULE_NAME
+
+    __slots__ = [
+        "WITHOUT_MOD_CALC",
+        "PERCENT_VALS",
+        "CALC_GP",
+        "ONLY_GP",
+        "USE_MAX",
+        "SCALED",
+        "UNSCALED",
+        "GAME_STYLE",
+        "STAT_IDS",
+        "ENUMS",
+        "NO_SPACE",
+        "LANGUAGE",
+    ]
+
+    def __init__(self, flags: Sentinel = OPTIONAL, **kwargs):
         """
         StatCalc Options constructor. Controls the behavior of stat calculation and results formatting.
-        All flags default to False.
+        All flags default to False. Default constructor sets all allowed attributes to False. List argument sets
+        attributes matching allowed attributes to True. Dictionary argument set allowed attributes to specified
+        value. Keyword arguments set the corresponding attributes to the indicated vale.
 
-        Args:
+        Keyword Args:
             without_mod_calc: Do not include mods in stat calculation.
             percent_vals: Converts Crit Chance and Armor/Resistance from their flat values (default) to the
                           percent values as displayed in-game
@@ -311,86 +223,108 @@ class StatOptions:
             language: String with the language code for the desired language. [Default: 'eng_us']
 
         """
+        for attr in self.__slots__:
+            if attr == 'LANGUAGE':
+                setattr(self, attr, 'eng_us')
+            else:
+                setattr(self, attr, False)
 
-        self.without_mod_calc = without_mod_calc
-        self.percent_vals = percent_vals
-        self.calc_gp = calc_gp
-        self.only_gp = only_gp
-        self.use_max = use_max
-        self.scaled = scaled
-        self.unscaled = unscaled
-        self.game_style = game_style
-        self.stat_ids = stat_ids
-        self.enums = enums
-        self.no_space = no_space
-        self.language = language
+        if flags is not OPTIONAL:
+            if isinstance(flags, list):
+                self.from_list(flags)
+            elif isinstance(flags, dict):
+                self.from_dict(flags)
+            else:
+                raise StatValueError("StatOptions(): Unknown constructor type provided.")
+        else:
+            for k, v in kwargs.items():
+                if k.upper() == 'LANGUAGE':
+                    if v.lower() not in Constants.LANGUAGES:
+                        raise StatValueError(f"StatOptions() 'LANGUAGE' attribute must be one of "
+                                             f"{Constants.LANGUAGES!r}, not {v.lower()!r}")
+                    else:
+                        setattr(self, k.upper(), v.lower())
+                elif not isinstance(v, bool):
+                    raise StatValueError(f"StatOptions() flag values must be type bool, not {type(v)!r}")
+                else:
+                    setattr(self, k.upper(), v)
+
+    def __setattr__(self, attr_name, value):
+        if attr_name.upper() == 'LANGUAGE':
+            if value.lower() not in Constants.LANGUAGES:
+                raise StatValueError(f"StatOptions() 'LANGUAGE' attribute must be one of "
+                                     f"{Constants.LANGUAGES!r}, not {value.lower()!r}")
+            else:
+                object.__setattr__(self, 'LANGUAGE', value.lower())
+        else:
+            if not isinstance(value, bool):
+                raise StatTypeError(f"Expected {value} to be of type bool, not {type(value)!r}.")
+            else:
+                object.__setattr__(self, attr_name.upper(), value)
+
+    def __repr__(self):
+        return f"StatOptions({self.to_dict()})"
 
     def __str__(self):
-        rtn_str = ''
-        for attr in self.__dict__.keys():
-            rtn_str += f"{attr}: {self.__dict__[attr]}\n"
+        rtn_str = '\nInstance of StatOptions class.\n\n'
+        for attr in self.__slots__:
+            rtn_str += f"{attr}: {getattr(self, attr)}\n"
         return rtn_str
 
     def from_list(self, options_list: list[str]):
-        """Create StatOptions instance with attributes from list
-
-            Args:
-                options_list: List of option names to set to True.
-
-            Examples:
-                ```python
-                options_list = ['calc_gp', 'percent_vals', 'game_style', 'no_space', language='eng_us']
-                ```
-
-            Raises:
-                AttributeError
-
-        """
-        if options_list:
-            if not isinstance(options_list, list):
-                err_msg = f"'options_list' argument must be a list."
-                logger.error(err_msg)
-                raise AttributeError(err_msg)
-            else:
-                for option in options_list:
-                    if option in self.__dict__.keys():
-                        if 'language' in option:
-                            _, lang_code = option.split('=')
-                            self.__dict__['language'] = lang_code
-                        else:
-                            self.__dict__[option] = True
+        """Create instance from list"""
+        if not isinstance(options_list, list):
+            raise StatTypeError(f"Expected {options_list} to be of type list[str], not {type(options_list)!r}.")
+        else:
+            for option in options_list:
+                if 'LANGUAGE' in option.upper():
+                    _, lang_code = option.split('=')
+                    if lang_code.lower() not in Constants.LANGUAGES:
+                        raise StatValueError(f"StatOptions() 'LANGUAGE' attribute must be one of "
+                                             f"{Constants.LANGUAGES!r}, not {lang_code.lower()!r}")
                     else:
-                        logger.warning(f"option {option!r} not recognized. skipping.")
+                        setattr(self, 'LANGUAGE', lang_code.lower())
+                else:
+                    setattr(self, option.upper(), True)
 
     def from_dict(self, options_dict: dict[str, bool | str]):
-        """Create StatOptions instance with attributes from dictionary
-
-            Args:
-                options_dict: Dictionary with option name as keys and boolean or string values.
-
-            Examples:
-                ```python
-                options_dict = {'calc_gp': True, 'percent_vals': True, 'game_style': True, 'language': 'eng_us',}
-                ```
-
-            Raises:
-                AttributeError
-
-        """
-        if options_dict:
-            if not isinstance(options_dict, dict):
-                err_msg = f"'options_dict' argument must be a dictionary."
-                logger.error(err_msg)
-                raise AttributeError(err_msg)
-            else:
-                for option in options_dict.keys():
-                    if option in self.__dict__.keys():
-                        self.__dict__[option] = options_dict[option]
+        """Create instance from dict"""
+        if not isinstance(options_dict, dict):
+            raise StatTypeError(f"Expected {options_dict} to be of type dict, not {type(options_dict)!r}.")
+        else:
+            for option, value in options_dict.items():
+                if option.upper() == 'LANGUAGE':
+                    if value.lower() not in Constants.LANGUAGES:
+                        raise StatValueError(f"StatOptions() 'LANGUAGE' attribute must be one of "
+                                             f"{Constants.LANGUAGES!r}, not {value.lower()!r}")
                     else:
-                        logger.warning(f"option {option!r} not recognized. skipping.")
+                        setattr(self, 'LANGUAGE', value.lower())
+                else:
+                    if not isinstance(value, bool):
+                        raise StatTypeError(f"Expected {value} to be of type bool, not {type(value)!r}.")
+                    setattr(self, option.upper(), value)
+
+    def to_list(self):
+        """Return instance attributes as list"""
+        rtn_list = []
+        for attr in self.__slots__:
+            if attr == 'LANGUAGE':
+                rtn_list.append(f"LANGUAGE={getattr(self, attr)}")
+            elif getattr(self, attr):
+                rtn_list.append(attr)
+        return rtn_list
+
+    def to_dict(self):
+        """Return instance attributes as dict"""
+        rtn_dict = {}
+        for attr in self.__slots__:
+            rtn_dict[attr] = getattr(self, attr)
+        return rtn_dict
 
 
 __all__ = [
     StatValues,
     StatOptions,
+    StatValueError,
+    StatTypeError,
 ]

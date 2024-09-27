@@ -8,6 +8,7 @@ from __future__ import annotations, absolute_import
 import inspect
 import logging
 import os
+from enum import Flag
 from functools import wraps
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -15,6 +16,7 @@ from typing import Callable
 
 from sentinels import Sentinel
 
+# Define sentinels used in parameter checking
 OPTIONAL = Sentinel('NotSet')
 NotSet = Sentinel('NotSet')
 EMPTY = Sentinel('NotSet')
@@ -26,16 +28,31 @@ SET = Sentinel('NotMissing')
 MutualExclusiveRequired = Sentinel('MutualExclusiveRequired')
 MutualRequiredNotSet = Sentinel('MutualExclusiveRequired')
 
-_DEFAULT_LOGGER_NAME: str = "swgoh_comlink"
-_DEFAULT_LOGGER_ENABLED: bool = False
-_LOGGER_REGISTRY = {}
-_DEBUG = False
-DATA_PATH = os.path.join(os.getcwd(), "data")
-LOG_PATH = os.path.join(os.getcwd(), "logs")
+
+class Config:
+    """Container class for global configuration items"""
+    DEFAULT_LOGGER_NAME = "swgoh_comlink"
+    DEFAULT_LOGGER_ENABLED = True
+    DEBUG = False
+    DATA_PATH = os.path.join(os.getcwd(), "data")
+    LOG_PATH = os.path.join(os.getcwd(), "logs")
+    LOGGER: logging.Logger | None = None
 
 
 class Constants:
     """Package wide constants"""
+
+    MODULE_NAME = "SwgohComlink"
+
+    MAX_VALUES: dict[str, int] = {
+        "GEAR_TIER": 13,
+        "UNIT_LEVEL": 85,
+        "RELIC_TIER": 9,
+        "UNIT_RARITY": 7,
+        "MOD_TIER": 5,  # Color
+        "MOD_LEVEL": 15,
+        "MOD_RARITY": 6,  # Pips
+    }
 
     LEAGUES: dict[str, int] = {
         "kyber": 100,
@@ -940,6 +957,16 @@ class Constants:
         2: "TWO_STAR",
     }
 
+    UNIT_RARITY_NAMES: dict[str, int] = {
+        "ONE_STAR": 1,
+        "TWO_STAR": 2,
+        "THREE_STAR": 3,
+        "FOUR_STAR": 4,
+        "FIVE_STAR": 5,
+        "SIX_STAR": 6,
+        "SEVEN_STAR": 7,
+    }
+
     LANGUAGES: list[str] = ["chs_cn", "cht_cn", "eng_us", "fre_fr", "ger_de", "ind_id", "ita_it", "jpn_jp", "kor_kr",
                             "por_br", "rus_ru", "spa_xm", "tha_th", "tur_tr"]
 
@@ -958,7 +985,7 @@ class Constants:
     }
 
 
-class DataItemConstants:
+class DataItemConstants(Flag):
     ALL = -1
     CategoryDefinitions = 1
     UnlockAnnouncements = 2
@@ -1079,14 +1106,12 @@ class LoggingFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def _get_function_name() -> str:
+def get_function_name() -> str:
     return f"{inspect.stack()[1].function}()"
 
 
-def enable_default_logger():
-    global _DEFAULT_LOGGER_ENABLED
-    get_logger().debug("Enabled default default_logger")
-    _DEFAULT_LOGGER_ENABLED = True
+def get_called_by() -> str:
+    return f"{inspect.stack()[2].function}() in {inspect.stack()[2].filename}"
 
 
 def param_alias(param: str, alias: str) -> Callable:
@@ -1113,7 +1138,7 @@ def _get_new_logger(
         log_level: str = "DEBUG",
         log_to_console: bool = True,
         log_to_file: bool = True,
-        max_log_bytes: int = 25_000_000,
+        max_log_bytes: int = 25000000,
         backup_log_count: int = 3,
         colorize: bool = False,
 ) -> logging.Logger:
@@ -1132,14 +1157,22 @@ def _get_new_logger(
         default_logger instance
 
     """
-    if name is NotSet:
-        name = _DEFAULT_LOGGER_NAME
 
-    tmp_logger: logging.Logger = logging.getLogger(name)
+    if isinstance(name, Sentinel):
+        name = Config.DEFAULT_LOGGER_NAME
+
+    if Config.LOGGER is not None and Config.LOGGER.name == name:
+        Config.LOGGER.debug(f"Existing logger found in global Config class. Returning {Config.LOGGER!r}")
+        return Config.LOGGER
+
+    queued_msg = [f"{get_function_name()} called by {get_called_by()}"]
+
+    tmp_logger = logging.getLogger(name)
     tmp_logger.setLevel(logging.getLevelName(log_level))
 
     # Console handler
     if log_to_console:
+        queued_msg.append(f"Configuring console logging handler ...")
         console_handler = logging.StreamHandler()
         if colorize:
             console_handler.setFormatter(LoggingFormatterColor())
@@ -1147,34 +1180,51 @@ def _get_new_logger(
             console_handler.setFormatter(LoggingFormatter())
         tmp_logger.addHandler(console_handler)
 
-    log_path = NotSet
+    log_path = None
 
     # File handler
     if log_to_file:
+        queued_msg.append(f"Configuring file logging handler ...")
         logfile_name = name + ".log"
         root_log_path = os.path.join(os.getcwd(), "logs")
         Path(root_log_path).mkdir(parents=True, exist_ok=True)
         log_path = os.path.join(root_log_path, logfile_name)
         file_handler = RotatingFileHandler(
-            filename=log_path, encoding="utf-8", maxBytes=max_log_bytes, backupCount=backup_log_count)
+            filename=log_path, encoding="utf-8", maxBytes=max_log_bytes, backupCount=backup_log_count
+        )
         if colorize:
             file_handler.setFormatter(LoggingFormatterColor())
         else:
             file_handler.setFormatter(LoggingFormatter())
         tmp_logger.addHandler(file_handler)
+
     tmp_logger.info("")
     tmp_logger.info(" --- [ Logging started for %s ] ---", name)
     tmp_logger.info(" Log file path: %s", log_path)
-    global _LOGGER_REGISTRY
-    _LOGGER_REGISTRY[name] = tmp_logger
-    tmp_logger.debug(f"{_LOGGER_REGISTRY[name]} added to the global default_logger registry under the key '{name}'.")
-    tmp_logger.debug(f"New default_logger name: {name} - Instance: {tmp_logger}")
+    tmp_logger.info(" Log file size: %s, max count: %s", max_log_bytes, backup_log_count)
+    tmp_logger.debug(f"New default_logger name: {name!r} - Instance: {tmp_logger} (ID: {hex(id(tmp_logger))})")
+
+    for handler in tmp_logger.handlers:
+        tmp_logger.debug(f"Handler: {handler!r}")
+
+    if len(queued_msg) > 0:
+        for msg in queued_msg:
+            tmp_logger.debug(f"Queued message: {msg}")
+
+    Config.LOGGER = tmp_logger
+
     return tmp_logger
 
 
+def _remove_null_handlers(logger: logging.Logger) -> None:
+    for handler in logger.handlers:
+        if isinstance(handler, logging.NullHandler):
+            logger.removeHandler(handler)
+
+
 def get_logger(
-        name: str = _DEFAULT_LOGGER_NAME,
-        default_logger: bool = _DEFAULT_LOGGER_ENABLED,
+        name: str = Config.DEFAULT_LOGGER_NAME,
+        default_logger: bool = Config.DEFAULT_LOGGER_ENABLED,
         **kwargs,
 ) -> logging.Logger:
     """Get a logging.Logger instance
@@ -1194,44 +1244,33 @@ def get_logger(
         Returns:
             logging.Logger instance
     """
-    queued_msgs = [f"Received default_logger request from {_get_function_name()}"]
-    if name in _LOGGER_REGISTRY:
-        queued_msgs.append(f"Found default_logger in registry. Returning {_LOGGER_REGISTRY[name]}")
-        for msg in queued_msgs:
-            _LOGGER_REGISTRY[name].debug(msg)
-        return _LOGGER_REGISTRY[name]
-    if default_logger:
-        global _DEFAULT_LOGGER_ENABLED
-        _DEFAULT_LOGGER_ENABLED = True
+    queued_msgs = [
+        f"Received default_logger request from: {get_called_by()}, logger name: {name}",
+        f"Default logger: {default_logger}",
+    ]
+
+    if default_logger or Config.DEFAULT_LOGGER_ENABLED:
+        Config.DEFAULT_LOGGER_ENABLED = True
         queued_msgs.append(f"Creating new default_logger with {name=} {default_logger=}")
         new_logger = _get_new_logger(name, **kwargs)
+        _remove_null_handlers(new_logger)
         for msg in queued_msgs:
             new_logger.debug(msg)
         return new_logger
     else:
         # If the default default_logger is disabled, log messages to NULL handler
         # This allows library users to implement their own loggers, if desired
-        base_logger: logging.Logger = logging.getLogger(_DEFAULT_LOGGER_NAME)
+        base_logger = logging.getLogger(Config.DEFAULT_LOGGER_NAME)
         base_logger.addHandler(logging.NullHandler())
         queued_msgs.append(f"Return base NULL default_logger instance.")
         return base_logger
 
 
-def get_debug() -> bool:
-    """Get current global DEBUG flag setting"""
-    return _DEBUG
-
-
 def set_debug(debug: bool):
     """Set the global DEBUG flag"""
-    global _DEBUG
-    orig_debug = get_debug()
-    get_logger().debug(f"{_get_function_name()}: Setting _DEBUG to {debug}. Previous setting: {orig_debug}")
-    _DEBUG = debug
-
-
-def logger_name(cls) -> str:
-    return cls._logger_name
+    orig_debug = getattr(Config, "DEBUG", False)
+    get_logger().debug(f"{get_function_name()}: Setting _DEBUG to {debug}. Previous setting: {orig_debug}")
+    setattr(Config, 'DEBUG', debug)
 
 
 __all__ = [
@@ -1247,8 +1286,9 @@ __all__ = [
     EMPTY,  # Sentinel
     DataItemConstants,  # Class for get_game_data() 'items' arguments
     Constants,  # Class with general application shared constants/methods
-    DATA_PATH,  # String with base path to data folder
-    enable_default_logger,  # Boolean flag to control if built-in logger is enabled
+    Config,  # Global configuration container class
     get_logger,  # Function to create/return library logger
     param_alias,  # Decorator to replace function/method argument aliases with actual parameter name
+    get_function_name,
+    get_called_by,
 ]

@@ -12,6 +12,7 @@ located at https://discord.gg/8ATYnUA746
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Any
 
 import httpx
@@ -30,6 +31,8 @@ from swgoh_comlink.constants import (
 )
 
 __all__ = ["SwgohComlink"]
+
+from swgoh_comlink.utils import func_debug_logger
 
 
 class SwgohComlink(SwgohComlinkBase):
@@ -63,15 +66,29 @@ class SwgohComlink(SwgohComlinkBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client = httpx.Client(base_url=self.url_base, verify=False, timeout=self._DEFAULT_CONNECTION_TIMEOUT)
-        self.stats_client = httpx.Client(base_url=self.stats_url_base, verify=False,
-                                         timeout=self._DEFAULT_CONNECTION_TIMEOUT)
+        self.client = httpx.Client(
+            base_url=self.url_base,
+            headers={"Content-Type": "application/json"},
+            verify=False,
+            timeout=self._DEFAULT_CONNECTION_TIMEOUT
+        )
+        self.stats_client = httpx.Client(
+            base_url=self.stats_url_base,
+            headers={"Content-Type": "application/json"},
+            verify=False,
+            timeout=self._DEFAULT_CONNECTION_TIMEOUT
+        )
         self.logger.debug(f"Logger for SwgohComlink is initialized to {self.logger.name}")
 
     def _get_game_version(self) -> str:
         """Get the current game version"""
         md = self.get_game_metadata(client_specs={})
         return md["latestGamedataVersion"]
+
+    @lru_cache()
+    def _get_unit_data(self) -> list:
+        unit_data = self.get_game_data(items="UnitDefinitions", include_pve_units=False)
+        return unit_data['units']
 
     def _post(
             self,
@@ -99,8 +116,10 @@ class SwgohComlink(SwgohComlinkBase):
 
         timeout = self._DEFAULT_CONNECTION_TIMEOUT if timeout is NotSet else timeout
 
+        self.logger.debug(f"Sending POST, {endpoint=} {req_headers=} [{stats=}, {timeout=}]")
+        self.logger.debug(f"stats_client headers: {self.stats_client.headers}")
+
         try:
-            self.logger.debug(f"Sending POST, {endpoint=} {req_headers=}")
             if stats:
                 resp = self.stats_client.post(
                     f"/{endpoint}", json=payload, headers=req_headers, timeout=timeout
@@ -109,11 +128,27 @@ class SwgohComlink(SwgohComlinkBase):
                 resp = self.client.post(
                     f"/{endpoint}", json=payload, headers=req_headers, timeout=timeout
                 )
+            if resp.status_code != 200:
+                self.logger.error(f"Request failed with status code {resp.status_code}")
+                self.logger.error(f"{resp.reason_phrase=}")
+                return None
             return resp.json()
         except httpx.RequestError as exc:
             exc_str = str(exc).replace("\n", "-")
             self.logger.exception("%s: %s", type(exc).__name__, exc_str)
             raise exc
+
+    def get_unit_type(self, unit_base_id: str) -> tuple:
+        """Get type of unit"""
+        unit_data = self._get_unit_data()
+        for unit in unit_data:
+            if unit['baseId'] == unit_base_id:
+                if unit['combatType'] == 2:
+                    crew_members = [cm['unitId'] for cm in unit['crew']]
+                else:
+                    crew_members = []
+                return unit['combatType'], crew_members
+        return None, None
 
     @param_alias(param="request_payload", alias="roster_list")
     def get_unit_stats(
@@ -136,29 +171,47 @@ class SwgohComlink(SwgohComlinkBase):
             RuntimeError: if the request payload is not provided or flags is not a list object
 
         """
+        # TODO: Need to account for single ship submission with crew members
+
+        _SINGLE_UNIT = False
 
         if request_payload is MISSING:
-            err_msg = f"{self._get_function_name()}, 'request_payload'' must be provided."
+            err_msg = f"'request_payload'' must be provided."
             self.logger.error(err_msg)
             raise ValueError(err_msg)
 
         # Convert a single character/ship object to a one item list of obj for StatCalc
         if isinstance(request_payload, dict):
+            self.logger.debug(f"Wrapping request_payload object [type: {type(request_payload)}] in list")
+            if 'definitionId' in request_payload:
+                self.logger.debug(f"{request_payload['definitionId']=}")
+                unit_base_id = request_payload['definitionId'].split(':')[0]
+                unit_type, crew_members = self.get_unit_type(unit_base_id)
+                if unit_type is None:
+                    err_msg = f"Unable to determine unit combat type for {unit_base_id!r}"
+                    self.logger.error(err_msg)
+                    raise RuntimeError(err_msg)
+                elif unit_type == 2 and len(crew_members) > 0:
+                    err_msg = f"{unit_base_id!r} is a ship with crew, but no crew members were provided."
+                    self.logger.error(err_msg)
+                    raise ValueError(err_msg)
             request_payload = [request_payload]
+            _SINGLE_UNIT = True
 
         if flags is not NotSet and not isinstance(flags, list):
-            err_msg = f"{self._get_function_name()}, 'flags' must be a list when it is provided. Got {type(flags)}"
+            err_msg = f"'flags' must be a list when it is provided. Got {type(flags)}"
             self.logger.error(err_msg)
             raise ValueError(err_msg)
 
         query_string = self._construct_unit_stats_query_string(flags, language)
         endpoint_string = "api" + query_string if query_string else "api"
         self.logger.info(f"{self.stats_url_base=}, {endpoint_string=}")
-        return self._post(
+        result = self._post(
             endpoint=endpoint_string,
             payload=request_payload,
             stats=True,
         )
+        return result[0] if _SINGLE_UNIT and result is not None else result
 
     def get_enums(self) -> dict:
         """Get an object containing the game data enums
@@ -196,6 +249,7 @@ class SwgohComlink(SwgohComlinkBase):
     # alias for non PEP usage of direct endpoint calls
     getEvents = get_events
 
+    @func_debug_logger
     def get_game_data(
             self,
             version: str | Sentinel = OPTIONAL,
@@ -226,6 +280,9 @@ class SwgohComlink(SwgohComlinkBase):
             game_version = self._get_game_version()
         else:
             game_version = version
+
+        if isinstance(items, str):
+            request_segment = NotSet
 
         # TODO: Update 'items' type hint and default
         return self._post(
@@ -279,7 +336,7 @@ class SwgohComlink(SwgohComlinkBase):
             id = current_game_version["language"]
 
         payload = {"unzip": unzip, "enums": enums, "payload": {"id": id}}
-        self.logger.debug(f"{self._get_function_name()}, {payload=}")
+        self.logger.debug(f"{payload=}")
 
         return self._post(
             endpoint="localization",

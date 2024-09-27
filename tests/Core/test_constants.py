@@ -3,11 +3,6 @@ import logging
 import swgoh_comlink.constants as constants
 
 
-def test_enable_default_logger():
-    result = constants.enable_default_logger()
-    assert result is None
-
-
 def test__get_logger_with_no_name():
     logger: logging.Logger = constants._get_new_logger(name=constants.NotSet)
     assert logger.name == constants._DEFAULT_LOGGER_NAME
