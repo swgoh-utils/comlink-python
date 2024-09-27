@@ -15,6 +15,7 @@ from swgoh_comlink.constants import get_logger, Constants, OPTIONAL
 logger = get_logger()
 
 
+# Exception classes
 class StatValueError(ValueError):
 
     def __init__(self, err_msg: str):
@@ -29,6 +30,7 @@ class StatTypeError(TypeError):
         raise TypeError(err_msg)
 
 
+# Validation classes
 class Validator(ABC):
     def __set_name__(self, owner, name):
         self.private_name = '_' + name
@@ -39,6 +41,9 @@ class Validator(ABC):
     def __set__(self, obj, value):
         self.validate(value)
         setattr(obj, self.private_name, value)
+
+    def __delete__(self, obj):
+        raise NotImplementedError(f"Removal of {obj!r} is not permitted.")
 
     @abstractmethod
     def validate(self, value):
@@ -78,10 +83,25 @@ class ValueOptions(Validator):
             raise StatValueError(f'Expected {attr_value!r} to be one of {self.options!r}')
 
 
+# Public classes
 class StatValues:
     """Container class to house unit attributes for stat calculations."""
 
     __module__ = Constants.MODULE_NAME
+
+    ALLOWED_ATTRS: set = {
+        "unit_type",
+        "rarity",
+        "level",
+        "gear",
+        "equipment",
+        "skills",
+        "relic",
+        "mod_rarity",
+        "mod_level",
+        "mod_tier",
+        "purchase_ability_id",
+    }
 
     unit_type = ValueType('char', 'ship', 'crew')
 
@@ -100,15 +120,15 @@ class StatValues:
                  /,
                  *,
                  unit_type: str = "char",
-                 rarity: int = 7,
-                 level: int = 85,
-                 gear: int = 13,
+                 rarity: int = Constants.MAX_VALUES['UNIT_RARITY'],
+                 level: int = Constants.MAX_VALUES['UNIT_LEVEL'],
+                 gear: int = Constants.MAX_VALUES['GEAR_TIER'],
                  equipment: str | int | list | None = "all",
                  skills: str | int = "max",
-                 relic: int | str = 9,
-                 mod_rarity: int = 6,
-                 mod_level: int = 15,
-                 mod_tier: int = 6,
+                 relic: int | str = Constants.MAX_VALUES['RELIC_TIER'],
+                 mod_rarity: int = Constants.MAX_VALUES['MOD_RARITY'],
+                 mod_level: int = Constants.MAX_VALUES['MOD_LEVEL'],
+                 mod_tier: int = Constants.MAX_VALUES['MOD_TIER'],
                  purchase_ability_id: list[str] | None = None,
                  ):
         """StatValues instance constructor
@@ -157,19 +177,26 @@ class StatValues:
             self.mod_tier = mod_tier
             self.purchase_ability_id = purchase_ability_id
 
+    def __setattr__(self, key, value):
+        if key.lstrip('_') not in self.ALLOWED_ATTRS:
+            raise StatValueError(f"{key} not in allowed attributes list: {self.ALLOWED_ATTRS!r}")
+        object.__setattr__(self, key, value)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(**{self.to_dict()})"
+
     def __str__(self):
         rtn_str = ''
         for attr in self.__dict__.keys():
             rtn_str += f"{attr.lstrip('_')}: {self.__dict__[attr]}\n"
         return rtn_str
 
-    def from_dict(self, attributes: dict):
-        """Create new StatValues instance from dictionary."""
-        if not isinstance(attributes, dict):
-            raise StatValueError(f"'attributes' argument must be a dictionary.")
-
-        for k, v in attributes.items():
-            setattr(self, k, v)
+    def to_dict(self):
+        """Return instance attributes as dict"""
+        rtn_dict = {}
+        for attr in self.ALLOWED_ATTRS:
+            rtn_dict[attr] = getattr(self, attr)
+        return rtn_dict
 
 
 class StatOptions:
@@ -262,8 +289,11 @@ class StatOptions:
             else:
                 object.__setattr__(self, attr_name.upper(), value)
 
+    def __delattr__(self, attr_name):
+        logger.warning(f"Attempted removal of {attr_name!r} from {self.__class__.__name__} instance.")
+
     def __repr__(self):
-        return f"StatOptions({self.to_dict()})"
+        return f"{self.__class__.__name__}({self.to_dict()})"
 
     def __str__(self):
         rtn_str = '\nInstance of StatOptions class.\n\n'
