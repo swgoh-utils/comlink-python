@@ -11,23 +11,9 @@ from abc import ABC, abstractmethod
 from sentinels import Sentinel
 
 from swgoh_comlink.constants import get_logger, Constants, OPTIONAL
+from swgoh_comlink.exceptions import StatValueError, StatTypeError
 
 logger = get_logger()
-
-
-# Exception classes
-class StatValueError(ValueError):
-
-    def __init__(self, err_msg: str):
-        logger.error(err_msg)
-        raise ValueError(err_msg)
-
-
-class StatTypeError(TypeError):
-
-    def __init__(self, err_msg: str):
-        logger.error(err_msg)
-        raise TypeError(err_msg)
 
 
 # Validation classes
@@ -194,7 +180,12 @@ class StatValues:
     def to_dict(self):
         """Return instance attributes as dict"""
         rtn_dict = {}
-        for attr in self.ALLOWED_ATTRS:
+        if getattr(self, 'unit_type') == 'ship':
+            attrs = ['unit_type', 'rarity', 'level']
+        else:
+            attrs = self.ALLOWED_ATTRS
+
+        for attr in attrs:
             rtn_dict[attr] = getattr(self, attr)
         return rtn_dict
 
@@ -221,7 +212,7 @@ class StatOptions:
         "LANGUAGE",
     ]
 
-    def __init__(self, flags: Sentinel = OPTIONAL, **kwargs):
+    def __init__(self, flags: list | dict | None | Sentinel = OPTIONAL, **kwargs):
         """
         StatCalc Options constructor. Controls the behavior of stat calculation and results formatting.
         All flags default to False. Default constructor sets all allowed attributes to False. List argument sets

@@ -31,7 +31,7 @@ from .constants import (
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: ignore
 
-default_logger = get_logger(default_logger=Config.DEFAULT_LOGGER_ENABLED)
+default_logger = get_logger()
 default_logger.debug("Utils logging is set to %s..." % default_logger.name)
 
 __all__ = [

@@ -8,7 +8,6 @@ from __future__ import annotations, absolute_import
 import inspect
 import logging
 import os
-from enum import Flag
 from functools import wraps
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -32,13 +31,14 @@ MutualRequiredNotSet = Sentinel('MutualExclusiveRequired')
 class Config:
     """Container class for global configuration items"""
     DEFAULT_LOGGER_NAME = "swgoh_comlink"
-    DEFAULT_LOGGER_ENABLED = True
+    DEFAULT_LOGGER_ENABLED = False
     DEBUG = False
     DATA_PATH = os.path.join(os.getcwd(), "data")
     LOG_PATH = os.path.join(os.getcwd(), "logs")
     LOGGER: logging.Logger | None = None
 
 
+# noinspection SpellCheckingInspection
 class Constants:
     """Package wide constants"""
 
@@ -985,7 +985,7 @@ class Constants:
     }
 
 
-class DataItemConstants(Flag):
+class DataItems:
     ALL = -1
     CategoryDefinitions = 1
     UnlockAnnouncements = 2
@@ -1048,8 +1048,7 @@ class DataItemConstants(Flag):
 
     @classmethod
     def get_data_collection_names(cls):
-        return [x for x in list(cls.__dict__.keys()) if not x.startswith('_') and
-                not isinstance(cls.__dict__[x], classmethod)]
+        return [x for x in list(cls.__dict__.keys()) if isinstance(cls.__dict__[x], DataItems)]
 
 
 class LoggingFormatterColor(logging.Formatter):
@@ -1135,7 +1134,7 @@ def param_alias(param: str, alias: str) -> Callable:
 def _get_new_logger(
         name: str | Sentinel = OPTIONAL,
         *,
-        log_level: str = "DEBUG",
+        log_level: str = "INFO",
         log_to_console: bool = True,
         log_to_file: bool = True,
         max_log_bytes: int = 25000000,
@@ -1284,7 +1283,7 @@ __all__ = [
     NotSet,  # Sentinel
     SET,  # Sentinel
     EMPTY,  # Sentinel
-    DataItemConstants,  # Class for get_game_data() 'items' arguments
+    DataItems,  # Class for get_game_data() 'items' arguments
     Constants,  # Class with general application shared constants/methods
     Config,  # Global configuration container class
     get_logger,  # Function to create/return library logger

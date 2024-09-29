@@ -8,7 +8,6 @@ from __future__ import annotations, absolute_import
 import base64
 import functools
 import io
-import json
 import logging
 import os
 import zipfile
@@ -17,6 +16,7 @@ from functools import singledispatchmethod
 from math import floor as math_floor
 from typing import Callable
 
+import orjson
 from sentinels import Sentinel
 
 import swgoh_comlink
@@ -32,6 +32,7 @@ from swgoh_comlink.constants import (
     NotSet
 )
 from swgoh_comlink.data_builder import DataBuilder, DataBuilderException
+from swgoh_comlink.exceptions import StatCalcRuntimeError, StatCalcException
 from swgoh_comlink.utils import validate_file_path, create_localized_unit_name_dictionary
 
 logger = get_logger()
@@ -246,33 +247,9 @@ def _get_def_id(unit: dict) -> str:
             return unit.get('defId')
 
         else:
-            err_msg = f"Unable to detect required value of 'defId' creation."
-            logger.error(err_msg)
-            raise StatCalcRuntimeError(err_msg)
+            raise StatCalcRuntimeError(f"Unable to detect required value of 'defId' creation.")
 
 
-class StatCalcException(Exception):
-
-    def __init__(self, err_msg: str):
-        logger.error(err_msg)
-        raise Exception(err_msg)
-
-
-class StatCalcRuntimeError(RuntimeError):
-
-    def __init__(self, err_msg: str):
-        logger.error(err_msg)
-        raise RuntimeError(err_msg)
-
-
-class StatCalcValueError(ValueError):
-
-    def __init__(self, err_msg: str):
-        logger.error(err_msg)
-        raise ValueError(err_msg)
-
-
-# @dataclass
 class StatCalc:
     """
     Container class to house collection of stat calculation methods. Not intended to be instantiated.
@@ -280,9 +257,9 @@ class StatCalc:
 
     _INITIALIZED = False
 
-    _DEFAULT_MOD_TIER = os.getenv("DEFAULT_MOD_TIER", 5)
-    _DEFAULT_MOD_LEVEL = os.getenv("DEFAULT_MOD_LEVEL", 15)
-    _DEFAULT_MOD_PIPS = os.getenv("DEFAULT_MOD_PIPS", 6)
+    _DEFAULT_MOD_TIER = os.getenv("DEFAULT_MOD_TIER", Constants.MAX_VALUES['MOD_TIER'])
+    _DEFAULT_MOD_LEVEL = os.getenv("DEFAULT_MOD_LEVEL", Constants.MAX_VALUES['MOD_LEVEL'])
+    _DEFAULT_MOD_PIPS = os.getenv("DEFAULT_MOD_PIPS", Constants.MAX_VALUES['MOD_RARITY'])
 
     _GAME_DATA = None
     _UNIT_DATA = {}
@@ -411,7 +388,7 @@ class StatCalc:
             return False
         try:
             with open(language_file) as fn:
-                cls._STAT_NAME_MAP = json.load(fn)
+                cls._STAT_NAME_MAP = orjson.loads(fn.read())
         except OSError as os_error:
             logger.exception(f"Error while loading {language_file}. [{os_error}]")
             return False
@@ -713,12 +690,12 @@ class StatCalc:
         if len(char["equipment"]) != 0:
             logger.info(f"Calculating stats for {char['defId']} equipment ")
             for equipment_piece in char["equipment"]:
-                equipmentId = equipment_piece["equipmentId"]
-                logger.info(f"Searching for {equipmentId} in game gearData ...")
-                if equipmentId not in cls._GEAR_DATA:
-                    logger.info(f"{equipmentId=} not found in game gearData ...")
+                equipment_id = equipment_piece["equipmentId"]
+                logger.info(f"Searching for {equipment_id} in game gearData ...")
+                if equipment_id not in cls._GEAR_DATA:
+                    logger.info(f"{equipment_id=} not found in game gearData ...")
                     continue
-                equipment_stats = copy(cls._GEAR_DATA[equipmentId]["stats"])
+                equipment_stats = copy(cls._GEAR_DATA[equipment_id]["stats"])
                 for equipment_stat_id in equipment_stats.keys():
                     if equipment_stat_id in ["2", "3", "4"]:
                         # Primary stat applies before mods
@@ -987,59 +964,8 @@ class StatCalc:
         generating character stats
 
         Args
-            char (dict): character attribute values in the format from the game data['unit'] collection
-            use_values (dict): dictionary in the format of:
-                ```python
-                {
-                  char: {
-                    rarity: <int>,                        # 1-7 (default 7)
-                    level: <int>,                         # 1-90 (default 85)
-                    gear: <int>,                          # 1-12 (default 12)
-                    equipment: <str|list|None>,           # [see below]
-                    relic: <str|int>,                     # [see below]
-                    skills: <str|list>,                   # [see below]
-                    mod_rarity: <int>,                    # 1-7 [pips/dots] (default 6)
-                    mod_level: <int>,                     # 1-15 (default 15)
-                    mod_tier: <int>                       # 1-6 (default 6)
-                  },
-                  ship: {
-                    rarity: <int>,                        # 1-7 (default 7)
-                    level: <int>                          # 1-90 (default 85)
-                  },
-                  crew: {
-                    rarity: <int>,                        # 1-7 (default 7)
-                    level: <int>,                         # 1-90 (default 85)
-                    gear: <int>,                          # 1-12 (default 12)
-                    equipment: <str|int|list|None>,       # [see below]
-                    skills: <str|int>,                    # [see below]
-                    mod_rarity: <int>,                    # 1-7 [pips/dots] (default 6)
-                    mod_level: <int>,                     # 1-15 (default 15)
-                    mod_tier: <int>,                      # 1-5 (default 5)
-                    relic: <str|int>                      # [see below]
-                  }
-                }
-                ```
-
-                **equipment** (default: "all"):
-                    Possible values are:
-                        "all": Include all possible gear pieces
-                        None: Do not include any gear pieces. The dictionary key must exist with a None value assigned.
-                        (list): List of integers indicating which gear slots to include, for example: [1,2,6]
-                                For the "crew" element, a single integer can be used to indicate how many
-                                gear pieces to include without specifying the slot assignment.
-
-                **skills** (default: "max"):
-                    Possible values are:
-                        "max": Include all possible skills
-                        "max_no_zeta": Include all skills at the highest possible level below the zeta threshold
-                        "max_no_omicron": Include all skills at the highest possible level below the omicron threshold
-                        (int): Include all skills at the level indicated by the integer provided
-
-                **relic** (default: 9):
-                    Possible values are:
-                        "locked": Relic level has not been unlocked (gear level < 13)
-                        "unlocked": Relic level unlocked but still level 0
-                        (int): The actual relic level [1-9]
+            char: character attribute values in the format from the game data['unit'] collection
+            use_values: StatValues instance
 
         Returns
             dictionary of character attribute values
@@ -1070,7 +996,7 @@ class StatCalc:
             "rarity": use_values.rarity if use_values.rarity else char["rarity"],
             "level": use_values.level if use_values.level else char["level"],
             "gear": use_values.gear if use_values.gear else char["gear"],
-            "equipped": char["gear"],
+            "equipped": char["equipment"],
             "mods": char["mods"],
             "equippedStatMod": char["equippedStatMod"],
             "relic": {"currentTier": use_values.relic} if use_values.relic else char["relic"],
@@ -1130,11 +1056,6 @@ class StatCalc:
         else:
             logger.debug(f"*** No equipment found (skipping) ***")
 
-        """
-        gp += sum(cls._GP_TABLES['gearPieceGP'][str(char['currentTier'])][str(piece['slot'])]
-                  for piece in char['equipment'])
-        """
-
         logger.debug(f"{gp=} after equipment piece adjustment")
 
         gp += sum(cls._get_skill_gp(char['defId'], skill) for skill in char['skill'])
@@ -1168,13 +1089,11 @@ class StatCalc:
 
         # ensure crew is the correct crew
         if len(crew) != len(cls._UNIT_DATA[ship['defId']]['crew']):
-            # TODO: log error
-            raise ValueError(f"Incorrect number of crew members for ship {ship['defId']}.")
+            raise StatValueError(f"Incorrect number of crew members for ship {ship['defId']}.")
 
         for char in crew:
             if char['defId'] not in cls._UNIT_DATA[ship['defId']]['crew']:
-                # TODO: log error
-                raise ValueError(f"Unit {char['defId']} is not in {ship['defId']}'s crew.")
+                raise StatValueError(f"Unit {char['defId']} is not in {ship['defId']}'s crew.")
 
         if len(crew) == 0:  # crewless calculations
             gps = cls._get_crewless_skills_gp(ship['defId'], ship['skill'])
@@ -1339,25 +1258,25 @@ class StatCalc:
             temp_units = []
             temp_ships = []
             for unit in units:
-                defId = _get_def_id(unit)
-                if not unit or not cls._UNIT_DATA[defId]:
-                    logger.warning(f"Unable to find {defId} in game 'UNIT_DATA'.")
+                def_id = _get_def_id(unit)
+                if not unit or not cls._UNIT_DATA[def_id]:
+                    logger.warning(f"Unable to find {def_id} in game 'UNIT_DATA'.")
                     continue
-                combat_type = cls._UNIT_DATA[defId]["combatType"]
+                combat_type = cls._UNIT_DATA[def_id]["combatType"]
                 if combat_type == 2 or combat_type == "SHIP":
                     ships.append(unit)
                 else:
                     # Populate dictionary with unit data keyed by unit defId.
                     # Needed for lookup of ship crew members below
-                    crew_members[defId] = unit
+                    crew_members[def_id] = unit
                     temp_units.append(cls.calc_char_stats(unit, use_values=use_values, options=options))
             for ship in ships:
-                defId = _get_def_id(ship)
-                if not ship or not cls._UNIT_DATA[defId]:
-                    logger.warning(f"Unable to find {defId} in game data.")
+                def_id = _get_def_id(ship)
+                if not ship or not cls._UNIT_DATA[def_id]:
+                    logger.warning(f"Unable to find {def_id} in game data.")
                     continue
                 # Get list of crew members for ship (or empty list for crewless)
-                crew_list = [crew_members[def_id] for def_id in cls._UNIT_DATA[defId].get("crew")]
+                crew_list = [crew_members[def_id] for def_id in cls._UNIT_DATA[def_id].get("crew")]
                 temp_ships.append(cls.calc_ship_stats(ship, crew_list))
         else:
             raise StatCalcRuntimeError(f"Unsupported data type [{type(units)}] for 'unit' parameter")

@@ -38,8 +38,10 @@ from swgoh_comlink.constants import (
     OPTIONAL,
     REQUIRED,
     SET,
-    DataItemConstants, Config
+    DataItems,
+    Config
 )
+from swgoh_comlink.exceptions import ComlinkValueError
 from swgoh_comlink.utils import (
     sanitize_allycode,
     convert_league_to_int,
@@ -48,9 +50,10 @@ from swgoh_comlink.utils import (
 
 __all__ = ["SwgohComlinkBase"]
 
-logger = get_logger(default_logger=Config.DEFAULT_LOGGER_ENABLED)
+logger = get_logger()
 
 
+# noinspection PyShadowingNames
 class SwgohComlinkBase:
     """Base class for comlink-python interface and supported methods.
 
@@ -370,6 +373,14 @@ class SwgohComlinkBase:
         return f"{protocol}://{host}:{port}"
 
     @staticmethod
+    def _validate_player_args(allycode, player_id):
+        if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
+            raise ComlinkValueError(f"Either 'allycode' or 'player_id' must be provided.")
+
+        if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
+            raise ComlinkValueError(f"Only one of 'allycode' or 'player_id' can be provided.")
+
+    @staticmethod
     def _get_player_payload(
             allycode: str | int | Sentinel = MutualExclusiveRequired,
             player_id: str | Sentinel = MutualExclusiveRequired,
@@ -431,7 +442,7 @@ class SwgohComlinkBase:
             include_pve_units: bool = False,
             request_segment: int | Sentinel = MutualExclusiveRequired,
             enums: bool = False,
-            items: str | Sentinel = MutualExclusiveRequired,
+            items: str | int | Sentinel = MutualExclusiveRequired,
             device_platform: str = "Android"
     ) -> dict:
         """Create game_data payload object and return"""
@@ -458,7 +469,7 @@ class SwgohComlinkBase:
         if isinstance(items, int) and str(abs(items)).isdigit():
             payload['payload']['items'] = str(items)
         elif isinstance(items, str):
-            payload['payload']['items'] = str(DataItemConstants.__getitem__(items).value) or "-1"
+            payload['payload']['items'] = str(getattr(DataItems, items)) or "-1"
         elif not isinstance(request_segment, Sentinel):
             payload['payload']['requestSegment'] = int(request_segment)
         else:

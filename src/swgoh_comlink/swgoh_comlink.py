@@ -24,7 +24,6 @@ from swgoh_comlink.constants import (
     OPTIONAL,
     MISSING,
     MutualExclusiveRequired,
-    MutualRequiredNotSet,
     NotSet,
     param_alias,
     Constants,
@@ -97,19 +96,6 @@ class SwgohComlink(SwgohComlinkBase):
             stats: bool = False,
             timeout: float | Sentinel = OPTIONAL
     ) -> Any:
-        """
-        Execute HTTP POST operation against swgoh-comlink
-
-        Args:
-            endpoint: which game endpoint to call
-            payload: POST payload json data
-
-        Returns:
-            JSON decoded response or None
-
-        Raises:
-            requests.Exceptions
-        """
 
         req_headers = self._construct_request_headers(endpoint, payload)
         self.logger.info(f"Request headers: {req_headers}")
@@ -217,7 +203,7 @@ class SwgohComlink(SwgohComlinkBase):
         """Get an object containing the game data enums
 
         Raises:
-            requests.Exceptions: If the HTTP request encounters an error
+            httpx.RequestError: If the HTTP request encounters an error
 
         """
         try:
@@ -241,7 +227,7 @@ class SwgohComlink(SwgohComlinkBase):
             Dictionary containing a single 'gameEvents' which is a list of events as dicts
 
         Raises:
-            requests.Exception:
+            httpx.RequestError:
         """
         payload = {"payload": {}, "enums": enums}
         return self._post(endpoint="getEvents", payload=payload)
@@ -256,7 +242,7 @@ class SwgohComlink(SwgohComlinkBase):
             include_pve_units: bool = True,
             request_segment: int = 0,
             enums: bool = False,
-            items: str | Sentinel = NotSet,
+            items: str | int | Sentinel = NotSet,
             device_platform: str = "Android",
     ) -> dict:
         """Get current game data from servers
@@ -266,7 +252,7 @@ class SwgohComlink(SwgohComlinkBase):
             include_pve_units: Flag to indicate whether PVE units should be included in results  [Defaults to True]
             request_segment: Identifier for whether to return all data (segment 0) or partial segments (values 1-4)
             enums: Flag to enable ENUM replace [Defaults to False]
-            items: Bitwise value indicating the collection(s) to retrieve from game.
+            items: Bitwise integer or string value indicating the collection(s) to retrieve from game.
             device_platform: Type of device to emulate. [Unused at this time]
 
         Returns:
@@ -402,15 +388,7 @@ class SwgohComlink(SwgohComlinkBase):
             ValueError: if neither an allycode nor player_id is provided
 
         """
-        if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
-            err_msg = f"Either allycode or player_id must be provided."
-            self.logger.debug(err_msg)
-            raise ValueError(err_msg)
-
-        if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
-            err_msg = f"Only one of allycode or player_id can be provided."
-            self.logger.debug(err_msg)
-            raise ValueError(err_msg)
+        self._validate_player_args(allycode, player_id)
 
         payload = self._get_player_payload(
             allycode=allycode, player_id=player_id, enums=enums
@@ -448,15 +426,7 @@ class SwgohComlink(SwgohComlinkBase):
             ValueError: if neither a player_id nor allycode is provided
 
         """
-        if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
-            err_msg = f"Either allycode or player_id must be provided."
-            self.logger.debug(err_msg)
-            raise ValueError(err_msg)
-
-        if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
-            err_msg = f"Only one of allycode or player_id can be provided."
-            self.logger.debug(err_msg)
-            raise ValueError(err_msg)
+        self._validate_player_args(allycode, player_id)
 
         return self._post(
             endpoint="playerArena",

@@ -23,7 +23,6 @@ from swgoh_comlink.constants import (
     OPTIONAL,
     MISSING,
     MutualExclusiveRequired,
-    MutualRequiredNotSet,
     NotSet,
     param_alias,
     Constants,
@@ -171,7 +170,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             Dictionary containing a single 'gameEvents' which is a list of events as dicts
 
         Raises:
-            requests.Exception: HTTP Request exception
+            httpx.RequestError: HTTP Request exception
 
         """
         payload = {"payload": {}, "enums": enums}
@@ -345,15 +344,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ValueError: if neither an allycode nor player_id is provided
 
         """
-        if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
-            err_msg = f"Either allycode or player_id must be provided."
-            self.logger.debug(err_msg)
-            raise ValueError(err_msg)
-
-        if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
-            err_msg = f"Only one of allycode or player_id can be provided."
-            self.logger.debug(err_msg)
-            raise ValueError(err_msg)
+        self._validate_player_args(allycode, player_id)
 
         payload = self._get_player_payload(
             allycode=allycode, player_id=player_id, enums=enums
@@ -390,15 +381,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ValueError: if neither a player_id nor allycode is provided
 
         """
-        if allycode is MutualRequiredNotSet and player_id is MutualRequiredNotSet:
-            err_msg = f"Either allycode or player_id must be provided."
-            self.logger.debug(err_msg)
-            raise ValueError(err_msg)
-
-        if not isinstance(allycode, Sentinel) and not isinstance(player_id, Sentinel):
-            err_msg = f"Only one of allycode or player_id can be provided."
-            self.logger.debug(err_msg)
-            raise ValueError(err_msg)
+        self._validate_player_args(allycode, player_id)
 
         return await self._post(
             endpoint="playerArena",
