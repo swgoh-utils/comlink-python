@@ -267,10 +267,10 @@ class SwgohComlink(SwgohComlinkBase):
         else:
             game_version = version
 
-        if isinstance(items, str):
+        if not isinstance(items, Sentinel):
+            # 'items' argument takes precedence over 'request_segment'
             request_segment = NotSet
 
-        # TODO: Update 'items' type hint and default
         return self._post(
             endpoint="data",
             payload=self._make_game_data_payload(

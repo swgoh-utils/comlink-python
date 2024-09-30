@@ -94,13 +94,13 @@ class StatValues:
     rarity = ValueOptions(tuple(range(1, 8)))
     level = ValueOptions(tuple(range(1, 91)))
     gear = ValueOptions(tuple(range(1, 14)))
-    equipment = ValueOptions(tuple(["all", None] + list(range(1, 7))))
-    relic = ValueOptions(tuple(["locked", "unlocked"] + list(range(1, 11))))
+    equipment = ValueOptions(tuple(["all", None] + list(range(0, 6))))
+    relic = ValueOptions(tuple(["locked", "unlocked"] + list(range(1, Constants.MAX_VALUES['RELIC_TIER'] + 1))))
     skills = ValueOptions(tuple(["max", "max_no_zeta", "max_no_omicron"] + list(range(1, 10))))
     mod_rarity = ValueOptions(tuple(range(1, 7)))
     mod_level = ValueOptions(tuple(range(1, 16)))
     mod_tier = ValueOptions(tuple(range(1, 7)))
-    purchase_ability_id = None
+    purchase_ability_id = []
 
     def __init__(self,
                  /,
@@ -122,15 +122,19 @@ class StatValues:
         Keyword Args:
                  unit_type: Type of unit the stat values apply to. Possible values are: "char", "ship", "crew".
                             [Default: "char"]
-                 rarity: Unit rarity (1-7) [Default: 7]
+                 rarity: Unit rarity tier (1-7) [Default: 7]
                  level: Unit level (1-90) [Default: 85]
-                 gear: Unit gear level (1-13) [Default: 13]
+                 gear: Unit gear (equipment) tier (1-13) [Default: 13]
                  equipment: Unit equipment pieces to model.
                             Possible values are:
                                 "all": Include all possible gear pieces [Default]
                                 None: Do not include any gear pieces.
                                 (int|list): List of integers indicating which gear slots to include.
-                                            For example: [1,2,6]
+                                             Slots are numbered as:
+                                                    0    3
+                                                    1    4
+                                                    2    5
+                                            For example: [1,2,4]
                                             For unit_type "crew", a single integer (1-6) can be used to indicate how
                                             many gear pieces to include without specifying the slot assignment.
                  skills: Unit skill level to model.
@@ -161,7 +165,7 @@ class StatValues:
             self.mod_rarity = mod_rarity
             self.mod_level = mod_level
             self.mod_tier = mod_tier
-            self.purchase_ability_id = purchase_ability_id
+            self.purchase_ability_id = purchase_ability_id if purchase_ability_id else []
 
     def __setattr__(self, key, value):
         if key.lstrip('_') not in self.ALLOWED_ATTRS:

@@ -32,12 +32,13 @@ from swgoh_comlink.constants import (
     NotSet
 )
 from swgoh_comlink.data_builder import DataBuilder, DataBuilderException
-from swgoh_comlink.exceptions import StatCalcRuntimeError, StatCalcException
+from swgoh_comlink.exceptions import StatCalcRuntimeError, StatCalcException, StatCalcValueError
 from swgoh_comlink.utils import validate_file_path, create_localized_unit_name_dictionary
 
 logger = get_logger()
 
 
+# TODO: fix usage of StatValues
 def _format_stats(stats: dict, level: int = 85, options: StatOptions | Sentinel = OPTIONAL) -> dict:
     logger.info("*** Formatting stats *** ")
     if not stats:
@@ -71,7 +72,7 @@ def _format_stats(stats: dict, level: int = 85, options: StatOptions | Sentinel 
             else:
                 logger.debug(f"{stat_type} not found in {list(stats.keys())}")
 
-    if options.PERCENT_VALS or options.GAME_STYLE:  # 'gameStyle' flag inherently includes 'percentVals'
+    if options.PERCENT_VALS or options.GAME_STYLE:  # flags are basically included with each other
         def convert_percent(stat_id_str: str, convert_func: Callable):
             logger.debug(f"{stat_id_str=}, {convert_func=}")
             flat = stats['base'].get(stat_id_str, 0)
@@ -141,7 +142,7 @@ def _format_stats(stats: dict, level: int = 85, options: StatOptions | Sentinel 
                 logger.debug(f"Processing 'mods' ...")
                 for stat_id in stats['mods']:
                     add_stats(stat_id)  # add stats from mods to list
-                gs_stats['mods'] = stats['mods']  # keep mod stats untouched
+                gs_stats['mods'] = deepcopy(stats['mods'])  # keep mod stats untouched
 
             for stat_id in stat_list:
                 flat_stat_id = stat_id
@@ -170,7 +171,7 @@ def _format_stats(stats: dict, level: int = 85, options: StatOptions | Sentinel 
             for statID in stat_list:
                 gs_stats['final'][statID] = (stats['base'].get(statID, 0) +
                                              stats['crew'].get(statID, 0))
-        stats = gs_stats
+        stats = deepcopy(gs_stats)
         logger.debug(f"Stats: {stats}")
     return stats
 
@@ -480,57 +481,51 @@ class StatCalc:
     def _calculate_mod_stats(cls, base_stats: dict, char: dict = None) -> dict or None:
         logger.info("Calculating mod stats ... ")
         logger.info(f"{base_stats=}")
-        if not char.get('mods') and not char.get('equippedStatMod'):
+        if not char.get('equippedStatMod'):
             logger.warning(f"Mod list is missing or empty. Returning.")
             return {}
 
         set_bonuses = {}
         raw_mod_stats = {}
 
-        if char.get('equippedStatMod'):
-            for mod in char['equippedStatMod']:
-                # The mod['definitionId'] value is a 3 character string. Each character in the string is a numeral
-                #   representing mod set type (health, speed, potency, etc.), rarity (pips)  and position (slot)
-                #   The first numeric character is the mod set ID
-                #   The second numeric character is the mod rarity (number of pips/dots [1-6])
-                #   The third numeric character is the mod position/slot [1-6]
-                mod_set_id = int(mod['definitionId'][0])
-                mod_set_name = Constants.MOD_SET_IDS[str(mod_set_id)]
-                set_bonus = set_bonuses.get(mod_set_id)
-                logger.debug(f"Mod set id: {mod_set_id} ({mod_set_name}), {set_bonus=}")
-                if set_bonus:
-                    # set bonus already found, increment
-                    logger.debug(f"{mod_set_id} ({mod_set_name}) "
-                                 + f"already present in set_bonuses list. Incrementing counter.")
-                    set_bonus['count'] += 1
-                    if mod['level'] == 15:
-                        set_bonus['maxLevel'] += 1
-                    logger.debug(f"{set_bonus['count']=}, "
-                                 + f"{set_bonus['maxLevel']=}, {mod['level']=}")
-                else:
-                    # new set bonus, create object
-                    logger.debug(f"Creating new entry for {mod_set_id} "
-                                 + f"({mod_set_name}) in set_bonuses list.")
-                    set_bonuses[mod_set_id] = {'count': 1, 'maxLevel': 1 if mod['level'] == 15 else 0}
+        for mod in char['equippedStatMod']:
+            # The mod['definitionId'] value is a 3 character string. Each character in the string is a numeral
+            #   representing mod set type (health, speed, potency, etc.), rarity (pips)  and position (slot)
+            #   The first numeric character is the mod set ID
+            #   The second numeric character is the mod rarity (number of pips/dots [1-6])
+            #   The third numeric character is the mod position/slot [1-6]
+            mod_set_id = int(mod['definitionId'][0])
+            mod_set_name = Constants.MOD_SET_IDS[str(mod_set_id)]
+            set_bonus = set_bonuses.get(mod_set_id)
+            logger.debug(f"Mod set id: {mod_set_id} ({mod_set_name}), {set_bonus=}")
+            if set_bonus:
+                # set bonus already found, increment
+                logger.debug(f"{mod_set_id} ({mod_set_name}) "
+                             + f"already present in set_bonuses list. Incrementing counter.")
+                set_bonus['count'] += 1
+                if mod['level'] == 15:
+                    set_bonus['maxLevel'] += 1
+                logger.debug(f"{set_bonus['count']=}, "
+                             + f"{set_bonus['maxLevel']=}, {mod['level']=}")
+            else:
+                # new set bonus, create object
+                logger.debug(f"Creating new entry for {mod_set_id} "
+                             + f"({mod_set_name}) in set_bonuses list.")
+                set_bonuses[mod_set_id] = {'count': 1, 'maxLevel': 1 if mod['level'] == 15 else 0}
 
-                # add Primary/Secondary stats to data
-                stat = mod['primaryStat']['stat']
-                i = 0
+            # add Primary/Secondary stats to data
+            stat = mod['primaryStat']['stat']
+            i = 0
+            logger.debug(f"counter = {i}, {stat=}")
+            while True:
+                unscaled_stat = float(stat['unscaledDecimalValue']) + raw_mod_stats.get(stat['unitStatId'], 0)
+                raw_mod_stats[stat['unitStatId']] = unscaled_stat
+                logger.debug(f"raw_mod_stats[{stat['unitStatId']}] = {unscaled_stat}")
+                if i >= len(mod['secondaryStat']):
+                    break
+                stat = mod['secondaryStat'][i]['stat']
+                i += 1
                 logger.debug(f"counter = {i}, {stat=}")
-                while True:
-                    unscaled_stat = float(stat['unscaledDecimalValue']) + raw_mod_stats.get(stat['unitStatId'], 0)
-                    raw_mod_stats[stat['unitStatId']] = unscaled_stat
-                    logger.debug(f"raw_mod_stats[{stat['unitStatId']}] = {unscaled_stat}")
-                    if i >= len(mod['secondaryStat']):
-                        break
-                    stat = mod['secondaryStat'][i]['stat']
-                    i += 1
-                    logger.debug(f"counter = {i}, {stat=}")
-        else:
-            # return empty dictionary if no mods
-            logger.debug(f"Failed to find 'definitionId' in {char['defId']}. "
-                         + f"Returning empty dictionary.")
-            return {}
 
         # add stats given by set bonuses
         logger.debug(f" *** Adding mod set bonuses ... ***")
@@ -687,7 +682,7 @@ class StatCalc:
         }
         logger.info(f"raw stats: {stats=}")
         # Calculate stats from current gear
-        if len(char["equipment"]) != 0:
+        if isinstance(char['equipment'], list) and len(char["equipment"]) != 0:
             logger.info(f"Calculating stats for {char['defId']} equipment ")
             for equipment_piece in char["equipment"]:
                 equipment_id = equipment_piece["equipmentId"]
@@ -707,7 +702,7 @@ class StatCalc:
         else:
             logger.info(f"No equipment for {char['defId']}")
 
-        if char.get("relic") and char["relic"]["currentTier"] > 2:
+        if char.get("relic") and char["relic"].get("currentTier", 0) > 2:
             current_relic_tier: int = char["relic"].get("currentTier")
             logger.info(f"Calculating stats for {char['defId']} relic level: "
                         + f"{current_relic_tier - 2}")
@@ -777,109 +772,7 @@ class StatCalc:
         return stats
 
     @classmethod
-    def calc_char_stats(
-            cls,
-            char: dict,
-            options: StatOptions | Sentinel = OPTIONAL,
-            use_values: StatValues | Sentinel = OPTIONAL,
-    ) -> dict:
-        """Calculate stats for a single character based upon arguments provided.
-
-        Args
-            char (dict): Character object from player roster or game_data['unit']
-            options (dict|list): Dictionary or list of options to enable
-            use_values (dict): See example below
-
-        Returns
-            dict: character object dictionary with stats calculated
-
-        Raises
-            ValueError if an unexpected argument type is passed
-        """
-
-        if not cls.is_initialized:
-            raise StatCalcException("StatCalc is not initialized. Please perform the initialization first.")
-
-        char = _verify_def_id(char)
-
-        logger.info(f"Calculating stats for {char['defId']}")
-
-        if options is NotSet:
-            logger.debug(f"No options provided. Copying defaults ...")
-            options = StatOptions()
-
-        if not isinstance(use_values, Sentinel) and not isinstance(use_values, StatValues):
-            err_msg = f"The 'use_values' argument must be an instance of StatValues."
-            logger.error(err_msg)
-            raise ValueError(err_msg)
-
-        char = cls._use_values_char(char, use_values)
-
-        if not options.ONLY_GP:
-            stats = cls._get_char_raw_stats(char)
-            stats = cls._calculate_base_stats(stats, char["currentLevel"], char["defId"])
-            if len(char["equippedStatMod"]) > 0 and not options.WITHOUT_MOD_CALC:
-                stats['mods'] = cls._calculate_mod_stats(stats.get("base"), char)
-            stats = _format_stats(stats, int(char["currentLevel"]), options)
-            char['stats'] = cls._rename_stats(stats, options)
-
-        if options.CALC_GP or options.ONLY_GP:
-            char['gp'] = cls._calc_char_gp(char)
-            char['stats']['gp'] = char['gp']
-
-        return char
-
-    @classmethod
-    def calc_ship_stats(
-            cls,
-            ship: dict,
-            crew: list[dict],
-            options: StatOptions | Sentinel = OPTIONAL,
-            use_values: StatValues | Sentinel = OPTIONAL,
-    ) -> dict:
-        """
-
-        Args
-            ship: Ship object from player roster
-            crew: List of ship crew members objects from player roster
-            options: StatOptions object instance
-            use_values: StatValues object instance
-
-        Returns
-            dict: Ship object with stats calculated
-
-        """
-
-        if not cls.is_initialized:
-            raise StatCalcException("StatCalc is not initialized. Please perform the initialization first.")
-
-        ship = _verify_def_id(ship)
-
-        logger.info(f"Calculating stats for {ship['defId']}")
-
-        if options is NotSet:
-            logger.debug(f"No options provided. Using defaults ...")
-            options = StatOptions()
-
-        if isinstance(use_values, StatValues):
-            ship, crew = cls._use_values_ships(ship, crew, use_values)
-        else:
-            logger.debug(f"No StatValues provided. Skipping ...")
-
-        if not options.ONLY_GP:
-            stats = cls._get_ship_raw_stats(ship, crew)
-            stats = cls._calculate_base_stats(stats, ship['currentLevel'], ship['defId'])
-            stats = _format_stats(stats, ship['currentLevel'], options)
-            ship['stats'] = cls._rename_stats(stats, options)
-
-        if options.CALC_GP or options.ONLY_GP:
-            ship['gp'] = cls._calc_ship_gp(ship, crew)
-            ship['stats']['gp'] = ship['gp']
-
-        return ship
-
-    @classmethod
-    def _set_skills(cls, unit_id: str, val: str) -> list:
+    def _set_skills(cls, unit_id: str, val: str | int) -> list:
         logger.info(f"Setting skills for {unit_id}")
         logger.debug(f"{val=}")
         if val == "max":
@@ -888,10 +781,16 @@ class StatCalc:
                 {"id": d["id"], "tier": d["maxTier"]}
                 for d in cls._UNIT_DATA[unit_id]["skills"]
             ]
-        elif val == "maxNoZeta":
-            logger.debug(f"Setting skills for {unit_id} (maxNoZeta)")
+        elif val == "max_no_zeta":
+            logger.debug(f"Setting skills for {unit_id} (max_no_zeta)")
             return [
-                {"id": d["id"], "tier": d["maxTier"] - (1 if d["isZeta"] else 0)}
+                {"id": d["id"], "tier": d["maxTier"] - (1 if d["isZeta"] and not d['isOmicron'] else 0)}
+                for d in cls._UNIT_DATA[unit_id]["skills"]
+            ]
+        elif val == "max_no_omicron":
+            logger.debug(f"Setting skills for {unit_id} (max_no_omicron)")
+            return [
+                {"id": d["id"], "tier": d["maxTier"] - (1 if d["isOmicron"] else 0)}
                 for d in cls._UNIT_DATA[unit_id]["skills"]
             ]
         elif isinstance(val, int):
@@ -905,7 +804,7 @@ class StatCalc:
             return []
 
     @classmethod
-    def _use_values_ships(cls, ship: dict, crew: list, use_values: StatValues) -> dict:
+    def _use_values_ships(cls, ship: dict, crew: list, use_values: StatValues | Sentinel) -> dict:
         if not use_values:
             return {'ship': ship, 'crew': crew}
 
@@ -958,76 +857,68 @@ class StatCalc:
         return {'ship': ship, 'crew': chars}
 
     @classmethod
-    def _use_values_char(cls, char: dict, use_values: StatValues) -> dict:
-        """
-        Method to parse character attribute values from the 'use_values' dictionary for purposes of
-        generating character stats
+    def _use_values_char(cls, char: dict, use_values: StatValues | Sentinel) -> dict:
 
-        Args
-            char: character attribute values in the format from the game data['unit'] collection
-            use_values: StatValues instance
+        char['defId'] = _get_def_id(char)
 
-        Returns
-            dictionary of character attribute values
+        logger.info(f"Executing _use_values_char() for {char['defId']} ...")
 
-        """
-        logger.info(f"Executing _use_values_char() ...")
+        if not char.get('baseId'):  # Player roster unit
+            logger.debug(f"Player roster unit detected ...")
+            char['rarity'] = char.get('currentRarity')
+            char['level'] = char.get('currentLevel')
+            char['gear'] = char.get('currentTier')
+            char['equipment'] = char.get('equipment')
+            char['equippedStatMod'] = char.get('equippedStatMod')
+            char['relic'] = char.get('relic')
+            char['skills'] = [{'id': skill['id'], 'tier': skill['tier'] + 2} for skill in char['skill']]
+            char['purchasedAbilityId'] = char.get('purchasedAbilityId')
+        else:  # Game default unit, use max values
+            logger.debug(f"Default game unit detected ...")
+            char['rarity'] = char.get('rarity', Constants.MAX_VALUES['UNIT_RARITY'])
+            char['level'] = char.get('maxLevelOverride', Constants.MAX_VALUES['UNIT_LEVEL'])
+            char['gear'] = Constants.MAX_VALUES['GEAR_TIER']
+            char['equipment'] = []
+            char['equippedStatMod'] = []
+            char['relic'] = {'currentTier': Constants.MAX_VALUES['RELIC_TIER']}
+            char['skills'] = cls._set_skills(char["defId"], 'max')
 
-        if not char.get('defId'):
-            char = {
-                'defId': char['definitionId'].split(":")[0],
-                'rarity': char['currentRarity'],
-                'level': char['currentLevel'],
-                'gear': char['currentTier'],
-                'equipped': char['equipment'],
-                'equippedStatMod': char['equippedStatMod'],
-                'relic': char['relic'],
-                'skills': [{'id': skill['id'], 'tier': skill['tier'] + 2} for skill in char['skill']],
-                'purchasedAbilityId': char['purchasedAbilityId']
-            }
-
-        # The use_values option has not been set so the char object does not need to be modified
+        # The 'use_values' parameter has not been set so the 'char' object does not need to be modified
         if use_values is NotSet:
-            logger.info(f"No 'use_values' argument provided. Returning.")
+            logger.info(f"No 'use_values' argument provided. Returning default character object.")
             return char
 
-        unit = {
-            "defId": char["defId"],
-            "rarity": use_values.rarity if use_values.rarity else char["rarity"],
-            "level": use_values.level if use_values.level else char["level"],
-            "gear": use_values.gear if use_values.gear else char["gear"],
-            "equipped": char["equipment"],
-            "mods": char["mods"],
-            "equippedStatMod": char["equippedStatMod"],
-            "relic": {"currentTier": use_values.relic} if use_values.relic else char["relic"],
-            "skills":
-                cls._set_skills(char["defId"], use_values.skills if use_values.skills else char.get("skills", [])),
-            "purchasedAbilityId":
-                use_values.purchase_ability_id if use_values.purchase_ability_id else char['purchasedAbilityId']
-        }
+        logger.debug(f"Processing StatValue settings ...")
+        # 'use_values' StatValues instance provided. Override existing settings with values from 'use_values'
+        char["rarity"] = use_values.rarity
+        char["level"] = use_values.level
+        char["gear"] = use_values.gear
+        char["relic"] = {"currentTier": use_values.relic}
+        char["skills"] = cls._set_skills(char["defId"], use_values.skills)
+        char["purchasedAbilityId"] = use_values.purchase_ability_id
 
-        if use_values.mod_rarity or use_values.mod_level or use_values.mod_tier:
-            unit['mods'] = []
-            for _ in range(6):
-                unit['mods'].append({
-                    'pips': use_values.rarity or cls._DEFAULT_MOD_PIPS,
-                    'level': use_values.mod_level or cls._DEFAULT_MOD_LEVEL,
-                    'tier': use_values.mod_tier or cls._DEFAULT_MOD_TIER
-                })
+        # populate fake mods based on StatValues
+        for _ in range(6):
+            char['equippedStatMod'].append({
+                'pips': use_values.rarity,
+                'level': use_values.mod_level,
+                'tier': use_values.mod_tier
+            })
 
+        # populate fake equipment based on StatValues
+        _equipment_list: list = copy(cls._UNIT_DATA[char['defId']]['gearLvl'][str(char['gear'])]['gear'])
         if use_values.equipment == "all":
-            unit['equipment'] = []
-            for gear_id in cls._UNIT_DATA[unit['defId']]['gearLvl'][unit['gear']]['gear']:
+            char['equipment'] = []
+            for gear_id in _equipment_list:
                 if int(gear_id) < 9990:
-                    unit['equipment'].append({'equipmentId': gear_id})
-        elif use_values.equipment == "none":
-            unit['equipment'] = []
+                    char['equipment'].append({'equipmentId': gear_id})
         elif isinstance(use_values.equipment, list):  # expecting array of gear slots
-            # TODO: verify the below is correct
-            unit['equipment'] = [cls._UNIT_DATA[unit['defId']]['gearLvl'][unit['gear']]['gear'][int(slot) - 1] for slot
-                                 in use_values.equipment]
+            for idx in use_values.equipment:
+                char['equipment'].append({'equipmentId': _equipment_list[idx]})
+        else:
+            char['equipment'] = []
 
-        return unit
+        return char
 
     @classmethod
     def _calc_char_gp(cls, char: dict):
@@ -1154,6 +1045,111 @@ class StatCalc:
                     logger.debug(f"No 'powerOverrideTags' found. Using "
                                  + f"{cls._GP_TABLES['abilityLevelGP'].get(player_unit_skill_tier, '0.0')}")
                     return cls._GP_TABLES['abilityLevelGP'].get(player_unit_skill_tier, "0")
+
+    @classmethod
+    def calc_char_stats(
+            cls,
+            char: dict,
+            options: StatOptions | Sentinel = OPTIONAL,
+            use_values: StatValues | Sentinel = OPTIONAL,
+    ) -> dict:
+        """Calculate stats for a single character based upon arguments provided.
+
+        Args
+            char: Character object from player roster or 'unit' collection in game data
+            options: Instance of swgoh_comlink.StatCalc.StatOptions
+            use_values: Instance of swgoh_comlink.StatCalc.StatValues
+
+        Returns
+            dict: character object dictionary with stats calculated
+
+        Raises
+            ValueError if an unexpected argument type is passed
+        """
+        if not isinstance(char, dict):
+            raise StatCalcValueError(f"'char' argument must be type(dict) not {type(dict)}")
+
+        if not isinstance(options, Sentinel) and not isinstance(options, StatOptions):
+            raise StatCalcValueError(f"The 'options' argument must be an instance of StatOptions.")
+
+        if not isinstance(use_values, Sentinel) and not isinstance(use_values, StatValues):
+            raise StatCalcValueError(f"The 'use_values' argument must be an instance of StatValues.")
+
+        if not cls.is_initialized:
+            raise StatCalcException("StatCalc is not initialized. Please perform the initialization first.")
+
+        char = _verify_def_id(char)
+
+        logger.info(f"Calculating stats for {char['defId']}")
+
+        if options is NotSet:
+            logger.debug(f"No options provided. Assigning defaults ...")
+            options = StatOptions()
+
+        char = cls._use_values_char(char, use_values)
+
+        if not options.ONLY_GP:
+            stats = cls._get_char_raw_stats(char)
+            stats = cls._calculate_base_stats(stats, char["currentLevel"], char["defId"])
+            if len(char["equippedStatMod"]) > 0 and not options.WITHOUT_MOD_CALC:
+                stats['mods'] = cls._calculate_mod_stats(stats.get("base"), char)
+            stats = _format_stats(stats, int(char["currentLevel"]), options)
+            char['stats'] = cls._rename_stats(stats, options)
+
+        if options.CALC_GP or options.ONLY_GP:
+            char['gp'] = cls._calc_char_gp(char)
+            char['stats']['gp'] = char['gp']
+
+        return char
+
+    @classmethod
+    def calc_ship_stats(
+            cls,
+            ship: dict,
+            crew: list[dict],
+            options: StatOptions | Sentinel = OPTIONAL,
+            use_values: StatValues | Sentinel = OPTIONAL,
+    ) -> dict:
+        """
+
+        Args
+            ship: Ship object from player roster
+            crew: List of ship crew members objects from player roster
+            options: StatOptions object instance
+            use_values: StatValues object instance
+
+        Returns
+            dict: Ship object with stats calculated
+
+        """
+
+        if not cls.is_initialized:
+            raise StatCalcException("StatCalc is not initialized. Please perform the initialization first.")
+
+        ship = _verify_def_id(ship)
+
+        logger.info(f"Calculating stats for {ship['defId']}")
+
+        if options is NotSet:
+            logger.debug(f"No options provided. Using defaults ...")
+            options = StatOptions()
+
+        if isinstance(use_values, StatValues):
+            ship, crew = cls._use_values_ships(ship, crew, use_values)
+        else:
+            logger.debug(f"No StatValues provided. Skipping ...")
+
+        if not options.ONLY_GP:
+            stats = cls._get_ship_raw_stats(ship, crew)
+            stats = cls._calculate_base_stats(stats, ship['currentLevel'], ship['defId'])
+            stats = _format_stats(stats, ship['currentLevel'], options)
+            ship['stats'] = cls._rename_stats(stats, options)
+
+        if options.CALC_GP or options.ONLY_GP:
+            ship['gp'] = cls._calc_ship_gp(ship, crew)
+            ship['stats']['gp'] = ship['gp']
+
+        return ship
 
     # noinspection PyNestedDecorators
     @singledispatchmethod
