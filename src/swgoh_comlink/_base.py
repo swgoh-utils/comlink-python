@@ -39,7 +39,7 @@ from swgoh_comlink.constants import (
     REQUIRED,
     SET,
     DataItems,
-    Config
+    Config,
 )
 from swgoh_comlink.exceptions import ComlinkValueError
 from swgoh_comlink.utils import (
@@ -78,6 +78,8 @@ class SwgohComlinkBase:
     __comlink_type__ = NotSet
 
     _DEFAULT_CONNECTION_TIMEOUT: float = 15.0
+
+    _unit_cache: dict = {}
 
     def __new__(cls, *args, **kwargs):
         """Prevent instances of this base class from being created directly"""

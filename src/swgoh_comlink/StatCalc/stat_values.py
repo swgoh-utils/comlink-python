@@ -117,7 +117,9 @@ class StatValues:
                  mod_tier: int = Constants.MAX_VALUES['MOD_TIER'],
                  purchase_ability_id: list[str] | None = None,
                  ):
-        """StatValues instance constructor
+        """
+        StatValues instance constructor. Accepts keyword arguments only. No arguments will return an instance with
+        max values for each allowed attribute.
 
         Keyword Args:
                  unit_type: Type of unit the stat values apply to. Possible values are: "char", "ship", "crew".
@@ -157,10 +159,10 @@ class StatValues:
         self.unit_type = unit_type
         self.rarity = rarity
         self.level = level
+        self.skills = skills
         if self.unit_type != 'ship':
             self.gear = gear
             self.equipment = equipment
-            self.skills = skills
             self.relic = relic
             self.mod_rarity = mod_rarity
             self.mod_level = mod_level
@@ -178,7 +180,10 @@ class StatValues:
     def __str__(self):
         rtn_str = ''
         for attr in self.__dict__.keys():
-            rtn_str += f"{attr.lstrip('_')}: {self.__dict__[attr]}\n"
+            if isinstance(attr, str):
+                rtn_str += f"{attr.lstrip('_')}: {self.__dict__[attr]!r}\n"
+            else:
+                rtn_str += f"{attr.lstrip('_')}: {self.__dict__[attr]}\n"
         return rtn_str
 
     def to_dict(self):

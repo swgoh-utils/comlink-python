@@ -31,6 +31,8 @@ from swgoh_comlink.constants import (
 
 __all__ = ["SwgohComlink"]
 
+from swgoh_comlink.exceptions import ComlinkValueError
+
 from swgoh_comlink.utils import func_debug_logger
 
 
@@ -124,12 +126,20 @@ class SwgohComlink(SwgohComlinkBase):
             self.logger.exception("%s: %s", type(exc).__name__, exc_str)
             raise exc
 
-    def get_unit_type(self, unit_base_id: str) -> tuple:
-        """Get type of unit"""
+    def get_unit_combat_type(self, unit_base_id: str) -> tuple:
+        """Get the combatType of a unit
+
+            Args
+                unit_base_id: Unit baseId as defined in the SWGoH game data
+
+            Returns
+                Tuple of unit combat type and a list of the crew members baseIds, if the unit is a ship
+                or None and None if the unit is not found
+        """
         unit_data = self._get_unit_data()
         for unit in unit_data:
-            if unit['baseId'] == unit_base_id:
-                if unit['combatType'] == 2:
+            if unit['baseId'] == unit_base_id.upper():
+                if unit['combatType'] == [2, "ship"]:
                     crew_members = [cm['unitId'] for cm in unit['crew']]
                 else:
                     crew_members = []
@@ -154,17 +164,14 @@ class SwgohComlink(SwgohComlinkBase):
             The input object with 'stats' element containing the results of the calculations added.
 
         Raises:
-            RuntimeError: if the request payload is not provided or flags is not a list object
+            ValueError: if the request payload is not provided or flags is not a list object
 
         """
-        # TODO: Need to account for single ship submission with crew members
 
         _SINGLE_UNIT = False
 
         if request_payload is MISSING:
-            err_msg = f"'request_payload'' must be provided."
-            self.logger.error(err_msg)
-            raise ValueError(err_msg)
+            raise ComlinkValueError(f"'request_payload'' must be provided.")
 
         # Convert a single character/ship object to a one item list of obj for StatCalc
         if isinstance(request_payload, dict):
@@ -172,26 +179,19 @@ class SwgohComlink(SwgohComlinkBase):
             if 'definitionId' in request_payload:
                 self.logger.debug(f"{request_payload['definitionId']=}")
                 unit_base_id = request_payload['definitionId'].split(':')[0]
-                unit_type, crew_members = self.get_unit_type(unit_base_id)
+                unit_type, crew_members = self.get_unit_combat_type(unit_base_id)
                 if unit_type is None:
-                    err_msg = f"Unable to determine unit combat type for {unit_base_id!r}"
-                    self.logger.error(err_msg)
-                    raise RuntimeError(err_msg)
-                elif unit_type == 2 and len(crew_members) > 0:
-                    err_msg = f"{unit_base_id!r} is a ship with crew, but no crew members were provided."
-                    self.logger.error(err_msg)
-                    raise ValueError(err_msg)
+                    raise ComlinkValueError(f"Unable to determine unit combat type for {unit_base_id!r}")
+                elif unit_type == [2, "ship"] and len(crew_members) > 0:
+                    raise ComlinkValueError(f"{unit_base_id!r} is a ship with crew, but no crew members were provided.")
             request_payload = [request_payload]
             _SINGLE_UNIT = True
 
-        if flags is not NotSet and not isinstance(flags, list):
-            err_msg = f"'flags' must be a list when it is provided. Got {type(flags)}"
-            self.logger.error(err_msg)
-            raise ValueError(err_msg)
+        if not isinstance(flags, Sentinel) and not isinstance(flags, list):
+            raise ComlinkValueError(f"'flags' must be a list when it is provided, not type {type(flags)}")
 
         query_string = self._construct_unit_stats_query_string(flags, language)
         endpoint_string = "api" + query_string if query_string else "api"
-        self.logger.info(f"{self.stats_url_base=}, {endpoint_string=}")
         result = self._post(
             endpoint=endpoint_string,
             payload=request_payload,
@@ -311,9 +311,7 @@ class SwgohComlink(SwgohComlinkBase):
 
         if isinstance(locale, str):
             if locale not in Constants.LANGUAGES:
-                err_str = f"Unknown locale {locale}. Please use only supported languages."
-                self.logger.error(err_str)
-                raise ValueError(err_str)
+                raise ComlinkValueError(f"Unknown locale {locale}. Please use only supported languages.")
             else:
                 id = id + ":" + locale.upper()
 

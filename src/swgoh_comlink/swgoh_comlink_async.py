@@ -12,6 +12,7 @@ located at https://discord.gg/8ATYnUA746
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Any
 
 import httpx
@@ -27,6 +28,7 @@ from swgoh_comlink.constants import (
     param_alias,
     Constants,
 )
+from swgoh_comlink.exceptions import ComlinkValueError
 
 __all__ = ["SwgohComlinkAsync"]
 
@@ -142,6 +144,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         md = await self.get_game_metadata(client_specs={})
         return md["latestGamedataVersion"]
 
+    @lru_cache()
+    async def _get_unit_data(self) -> list:
+        unit_data = await self.get_game_data(items="UnitDefinitions", include_pve_units=False)
+        return unit_data['units']
+
     async def get_enums(self) -> dict:
         """Get an object containing the game data enums
 
@@ -252,9 +259,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         if isinstance(locale, str):
             if locale not in Constants.LANGUAGES:
-                err_str = f"Unknown locale {locale}. Please use only supported languages."
-                self.logger.error(err_str)
-                raise ValueError(err_str)
+                raise ComlinkValueError(f"Unknown locale {locale}. Please use only supported languages.")
 
         if isinstance(id, Sentinel):
             current_game_version = await self.get_latest_game_data_version()
@@ -275,6 +280,26 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     getLocalization = get_localization
     getLocalizationBundle = get_localization
     get_localization_bundle = get_localization
+
+    async def get_unit_combat_type(self, unit_base_id: str) -> tuple:
+        """Get the combatType of a unit
+
+            Args
+                unit_base_id: Unit baseId as defined in the SWGoH game data
+
+            Returns
+                Tuple of unit combat type and a list of the crew members baseIds, if the unit is a ship
+                or None and None if the unit is not found
+        """
+        unit_data = await self._get_unit_data()
+        for unit in unit_data:
+            if unit['baseId'] == unit_base_id:
+                if unit['combatType'] == [2, "ship"]:
+                    crew_members = [cm['unitId'] for cm in unit['crew']]
+                else:
+                    crew_members = []
+                return unit['combatType'], crew_members
+        return None, None
 
     # Introduced in 1.12.0
     # Use decorator to alias the request_payload parameter to 'units_list' to maintain backward compatibility
@@ -298,31 +323,40 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             The input object with 'stats' element containing the results of the calculations added.
 
         Raises:
-            RuntimeError: if the request payload is not provided or flags is not a list object
+            ValueError: if the request payload is not provided or flags is not a list object
 
         """
 
+        _SINGLE_UNIT = False
+
         if request_payload is MISSING:
-            err_msg = f"{self._get_function_name()}, 'request_payload'' must be provided."
-            self.logger.error(err_msg)
-            raise ValueError(err_msg)
+            raise ComlinkValueError(f"'request_payload'' must be provided.")
 
         # Convert a single character/ship object to a one item list of obj for StatCalc
         if isinstance(request_payload, dict):
+            self.logger.debug(f"Wrapping request_payload object [type: {type(request_payload)}] in list")
+            if 'definitionId' in request_payload:
+                self.logger.debug(f"{request_payload['definitionId']=}")
+                unit_base_id = request_payload['definitionId'].split(':')[0]
+                unit_type, crew_members = await self.get_unit_combat_type(unit_base_id)
+                if unit_type is None:
+                    raise ComlinkValueError(f"Unable to determine unit combat type for {unit_base_id!r}")
+                elif unit_type == [2, "ship"] and len(crew_members) > 0:
+                    raise ComlinkValueError(f"{unit_base_id!r} is a ship with crew, but no crew members were provided.")
             request_payload = [request_payload]
+            _SINGLE_UNIT = True
 
-        if flags is not NotSet and not isinstance(flags, list):
-            err_msg = f"{self._get_function_name()}, 'flags' must be a list when it is provided. Got {type(flags)}"
-            self.logger.error(err_msg)
-            raise ValueError(err_msg)
+        if not isinstance(flags, Sentinel) and not isinstance(flags, list):
+            raise ComlinkValueError(f"flags' must be a list when it is provided. Got {type(flags)}")
 
         query_string = self._construct_unit_stats_query_string(flags, language)
         endpoint_string = "api" + query_string if query_string else "api"
-        return await self._post(
+        result = await self._post(
             endpoint=endpoint_string,
             payload=request_payload,
             stats=True,
         )
+        return result[0] if _SINGLE_UNIT and result is not None else result
 
     async def get_player(
             self, allycode: str | int | Sentinel = MutualExclusiveRequired,
@@ -423,7 +457,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         """
         if isinstance(guild_id, Sentinel):
-            raise ValueError(f"Guild ID must be provided.")
+            raise ComlinkValueError(f"Guild ID must be provided.")
 
         guild = await self._post(
             endpoint="guild",
@@ -589,9 +623,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         """
         if leaderboard_id is MISSING or not isinstance(leaderboard_id, list):
-            err_msg = f"'leaderboard_id' argument is required."
-            self.logger.error(err_msg)
-            raise ValueError(err_msg)
+            raise ComlinkValueError(f"'leaderboard_id' argument is required.")
 
         return await self._post(
             endpoint="getGuildLeaderboard",

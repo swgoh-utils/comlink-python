@@ -29,7 +29,7 @@ from swgoh_comlink.constants import (
     set_debug,
     get_function_name,
     OPTIONAL,
-    NotSet
+    NotSet,
 )
 from swgoh_comlink.data_builder import DataBuilder, DataBuilderException
 from swgoh_comlink.exceptions import StatCalcRuntimeError, StatCalcException, StatCalcValueError
@@ -728,18 +728,14 @@ class StatCalc:
         # ensure crew is the correct crew
         logger.debug(f"Verifying correct number of crew members ...")
         if len(crew) != len(cls._UNIT_DATA[ship['defId']]['crew']):
-            err_msg = f"Incorrect number of crew members for ship {ship['defId']}."
-            logger.error(err_msg)
-            raise ValueError(err_msg)
+            raise StatCalcValueError(f"Incorrect number of crew members for ship {ship['defId']}.")
 
         logger.debug(f"Verifying correct crew members provided for {ship['defId']} ...")
         for char in crew:
             def_id = _get_def_id(char)
             logger.debug(f"... Verifying crew member {def_id} ...")
             if def_id not in cls._UNIT_DATA[ship['defId']]['crew']:
-                err_msg = f"Unit {char['defId']} is not in {ship['defId']}'s crew."
-                logger.error(err_msg)
-                raise ValueError(err_msg)
+                raise StatCalcValueError(f"Unit {char['defId']} is not in {ship['defId']}'s crew.")
 
         logger.debug(f"Calculating crew rating ...")
         if len(crew) == 0:
@@ -804,56 +800,38 @@ class StatCalc:
             return []
 
     @classmethod
-    def _use_values_ships(cls, ship: dict, crew: list, use_values: StatValues | Sentinel) -> dict:
-        if not use_values:
-            return {'ship': ship, 'crew': crew}
+    def _use_values_ships(
+            cls,
+            ship: dict,
+            crew: list,
+            ship_values: StatValues | Sentinel,
+            crew_values: StatValues | Sentinel
+    ) -> dict:
+        # TODO: Test this to see if it works
+        ship['defId'] = _get_def_id(ship)
 
-        ship = {
-            'defId': ship['defId'],
-            'rarity': use_values.rarity,
-            'level': use_values.level,
-            'skills': cls._set_skills(ship['defId'], use_values.skills)
-        }
+        if ship.get('currentXp'):  # Player roster unit
+            logger.debug(f"Player roster unit detected ...")
+            ship['rarity'] = ship.get('currentRarity')
+            ship['level'] = ship.get('currentLevel')
+            ship['skills'] = [{'id': skill['id'], 'tier': skill['tier'] + 2} for skill in ship['skill']]
+        else:  # Game default ship unit, use max_values_ship
+            logger.debug(f"Default game unit detected ...")
+            ship['rarity'] = ship.get('rarity', Constants.MAX_VALUES['UNIT_RARITY'])
+            ship['level'] = ship.get('maxLevelOverride', Constants.MAX_VALUES['UNIT_LEVEL'])
+            ship['skills'] = cls._set_skills(ship["defId"], 'max')
+
+        if isinstance(ship_values, StatValues):
+            ship['rarity'] = ship_values.rarity
+            ship['level'] = ship_values.level
+            ship['skills'] = cls._set_skills(ship['defId'], ship_values.skills)
 
         chars = []
         for char_id in cls._UNIT_DATA[ship['defId']]['crew']:
             char = next((cmem for cmem in crew if cmem['defId'] == char_id), None)
-            char = {
-                'defId': char_id,
-                'rarity': use_values.rarity,
-                'level': use_values.level,
-                'gear': use_values.gear,
-                'equipped': char['gear'],
-                'skills': cls._set_skills(char_id, use_values.skills),
-                'mods': char.get('mods'),
-                'relic': {'current_tier': use_values.relic if use_values else char.get('relic')}
-            }
-
-            if use_values.equipment == "all":
-                char['equipped'] = [
-                    {'equipmentId': gear_id} for gear_id in cls._UNIT_DATA[char_id]['gear_lvl'][char['gear']]['gear']
-                    if int(gear_id) < 9990
-                ]
-            elif use_values.equipment == "none":
-                char['equipped'] = []
-            elif isinstance(use_values.equipment, list):
-                char['equipped'] = [
-                    cls._UNIT_DATA[char_id]['gear_lvl'][char['gear']]['gear'][int(slot) - 1]
-                    for slot in use_values.equipment
-                ]
-            elif use_values.equipment:
-                char['equipped'] = use_values.equipment
-
-            if use_values.mod_rarity or use_values.mod_level:
-                char['mods'] = [
-                    {
-                        'pips': use_values.mod_rarity if use_values.mod_rarity else cls._DEFAULT_MOD_PIPS,
-                        'level': use_values.mod_level if use_values.mod_level else cls._DEFAULT_MOD_LEVEL,
-                        'tier': use_values.mod_tier if use_values.mod_tier else cls._DEFAULT_MOD_TIER
-                    }
-                    for _ in range(6)
-                ]
+            char = cls._use_values_char(char, crew_values)
             chars.append(char)
+
         return {'ship': ship, 'crew': chars}
 
     @classmethod
@@ -863,7 +841,7 @@ class StatCalc:
 
         logger.info(f"Executing _use_values_char() for {char['defId']} ...")
 
-        if not char.get('baseId'):  # Player roster unit
+        if char.get('currentXp'):  # Player roster unit
             logger.debug(f"Player roster unit detected ...")
             char['rarity'] = char.get('currentRarity')
             char['level'] = char.get('currentLevel')
@@ -1050,29 +1028,41 @@ class StatCalc:
     def calc_char_stats(
             cls,
             char: dict,
+            *,
             options: StatOptions | Sentinel = OPTIONAL,
-            use_values: StatValues | Sentinel = OPTIONAL,
+            values: StatValues | Sentinel = OPTIONAL,
     ) -> dict:
         """Calculate stats for a single character based upon arguments provided.
 
-        Args
-            char: Character object from player roster or 'unit' collection in game data
-            options: Instance of swgoh_comlink.StatCalc.StatOptions
-            use_values: Instance of swgoh_comlink.StatCalc.StatValues
+        The optional keyword arguments 'options' and 'values' can be provided to
+        influence the behavior of the character stat calculations.
 
-        Returns
-            dict: character object dictionary with stats calculated
+        Since the StatValues object defines all the available attributes, each
+        must be explicitly set to the desired value. They will override any value
+        contained in the provided 'char' object.
 
-        Raises
-            ValueError if an unexpected argument type is passed
+            Args
+                char: Character object from player roster or 'unit' collection in game data
+
+            Keyword Args
+                options: Instance of swgoh_comlink.StatCalc.StatOptions
+                values: Instance of swgoh_comlink.StatCalc.StatValues
+
+            Returns
+                dict: character object dictionary with stats calculated
+
+            Raises
+                ValueError if an unexpected argument type is passed
+
         """
+
         if not isinstance(char, dict):
             raise StatCalcValueError(f"'char' argument must be type(dict) not {type(dict)}")
 
         if not isinstance(options, Sentinel) and not isinstance(options, StatOptions):
             raise StatCalcValueError(f"The 'options' argument must be an instance of StatOptions.")
 
-        if not isinstance(use_values, Sentinel) and not isinstance(use_values, StatValues):
+        if not isinstance(values, Sentinel) and not isinstance(values, StatValues):
             raise StatCalcValueError(f"The 'use_values' argument must be an instance of StatValues.")
 
         if not cls.is_initialized:
@@ -1086,7 +1076,7 @@ class StatCalc:
             logger.debug(f"No options provided. Assigning defaults ...")
             options = StatOptions()
 
-        char = cls._use_values_char(char, use_values)
+        char = cls._use_values_char(char, values)
 
         if not options.ONLY_GP:
             stats = cls._get_char_raw_stats(char)
@@ -1106,22 +1096,40 @@ class StatCalc:
     def calc_ship_stats(
             cls,
             ship: dict,
-            crew: list[dict],
+            *,
+            crew: list | None = None,
             options: StatOptions | Sentinel = OPTIONAL,
-            use_values: StatValues | Sentinel = OPTIONAL,
+            ship_values: StatValues | Sentinel = OPTIONAL,
+            crew_values: StatValues | Sentinel = OPTIONAL,
     ) -> dict:
-        """
+        """Calculate stats for a single ship based upon arguments provided.
 
         Args
             ship: Ship object from player roster
-            crew: List of ship crew members objects from player roster
-            options: StatOptions object instance
-            use_values: StatValues object instance
+
+        Keyword Args
+            crew: List of ship crew members objects from player roster. If a crewless ship, leave default
+            options (Optional): StatOptions object instance
+            ship_values (Optional): StatValues object instance with a 'unit_type' attribute value of 'ship'
+            crew_values (Optional): StatValues object instance with a 'unit_type' attribute value of 'crew'
 
         Returns
             dict: Ship object with stats calculated
 
+        Raises
+            ValueError if improper arguments provided
         """
+        if not isinstance(ship, dict):
+            raise StatCalcValueError(f"'ship' argument must be type(dict) not {type(dict)}")
+
+        if not isinstance(options, Sentinel) and not isinstance(options, StatOptions):
+            raise StatCalcValueError(f"The 'options' argument must be an instance of StatOptions.")
+
+        if not isinstance(ship_values, Sentinel) and not isinstance(ship_values, StatValues):
+            raise StatCalcValueError(f"The 'ship_values' argument must be an instance of StatValues, if provided.")
+
+        if not isinstance(crew_values, Sentinel) and not isinstance(crew_values, StatValues):
+            raise StatCalcValueError(f"The 'crew_values' argument must be an instance of StatValues, if provided.")
 
         if not cls.is_initialized:
             raise StatCalcException("StatCalc is not initialized. Please perform the initialization first.")
@@ -1134,10 +1142,8 @@ class StatCalc:
             logger.debug(f"No options provided. Using defaults ...")
             options = StatOptions()
 
-        if isinstance(use_values, StatValues):
-            ship, crew = cls._use_values_ships(ship, crew, use_values)
-        else:
-            logger.debug(f"No StatValues provided. Skipping ...")
+        crew = [] if not crew else crew
+        ship, crew = cls._use_values_ships(ship, crew, ship_values, crew_values)
 
         if not options.ONLY_GP:
             stats = cls._get_ship_raw_stats(ship, crew)
@@ -1163,7 +1169,6 @@ class StatCalc:
 
         Keyword Args
             options: StatOptions instance
-            use_values: StatValues instance
 
         Returns
             List of players with stats included in each player unit roster
@@ -1181,7 +1186,6 @@ class StatCalc:
           players: list,
           *,
           options: StatOptions | Sentinel = OPTIONAL,
-          use_values: StatValues | Sentinel = OPTIONAL,
           ) -> list:
 
         for player in players:
@@ -1191,7 +1195,6 @@ class StatCalc:
                     player['rosterUnit'] = cls.calc_roster_stats(
                         player['rosterUnit'],
                         options=options,
-                        use_values=use_values
                     )
                 else:
                     err_msg = f"The 'rosterUnit' element is missing from player {player.get('name', 'UNKNOWN')}"
@@ -1207,7 +1210,6 @@ class StatCalc:
           player: dict,
           *,
           options: StatOptions | Sentinel = OPTIONAL,
-          use_values: StatValues | Sentinel = OPTIONAL,
           ) -> dict:
 
         logger.info(f"Processing player: {player.get('name', 'UNKNOWN')} ...")
@@ -1215,7 +1217,6 @@ class StatCalc:
             player['rosterUnit'] = cls.calc_roster_stats(
                 player['rosterUnit'],
                 options=options,
-                use_values=use_values
             )
         else:
             raise StatCalcRuntimeError("'rosterUnit' element is missing from player.")
@@ -1227,7 +1228,6 @@ class StatCalc:
             units: list[dict],
             *,
             options: StatOptions | Sentinel = OPTIONAL,
-            use_values: StatValues | Sentinel = OPTIONAL,
     ) -> list:
         """Calculate units stats from SWGOH roster game data
 
@@ -1236,7 +1236,6 @@ class StatCalc:
 
             Keyword Args
                 options: A StatOptions instance
-                use_values: A StatValues instance
 
             Returns
                 Input list with additional elements added containing the results of the stat calculations
@@ -1245,6 +1244,7 @@ class StatCalc:
                 StatCalcException if StatCalc is not yet initialized.
         """
         logger.info(f"*** Entering {get_function_name()} ***")
+
         if not cls.is_initialized:
             raise StatCalcException("StatCalc is not initialized. Please perform the initialization first.")
 
@@ -1265,7 +1265,7 @@ class StatCalc:
                     # Populate dictionary with unit data keyed by unit defId.
                     # Needed for lookup of ship crew members below
                     crew_members[def_id] = unit
-                    temp_units.append(cls.calc_char_stats(unit, use_values=use_values, options=options))
+                    temp_units.append(cls.calc_char_stats(unit, options=options))
             for ship in ships:
                 def_id = _get_def_id(ship)
                 if not ship or not cls._UNIT_DATA[def_id]:
@@ -1273,7 +1273,7 @@ class StatCalc:
                     continue
                 # Get list of crew members for ship (or empty list for crewless)
                 crew_list = [crew_members[def_id] for def_id in cls._UNIT_DATA[def_id].get("crew")]
-                temp_ships.append(cls.calc_ship_stats(ship, crew_list))
+                temp_ships.append(cls.calc_ship_stats(ship, crew=crew_list))
         else:
             raise StatCalcRuntimeError(f"Unsupported data type [{type(units)}] for 'unit' parameter")
         return temp_units + temp_ships
