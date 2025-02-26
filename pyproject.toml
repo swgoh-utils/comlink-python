@@ -44,7 +44,7 @@ version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"   # s
 version_source = "commit"                                                    # Set version source to "commit" so that
 branch = "main"                                                              # branch to make releases of
 changelog_file = "CHANGELOG.md"                                              # changelog file
-build_command = "pip install build && python3 -m build"                      # build dists
+build_command = "pip install -r requirements.tx && pip install build && python3 -m build"                      # build dists
 dist_path = "dist/"                                                          # where to put dists
 upload_to_release = true                                                     # auto-create GitHub release
 upload_to_pypi = false                                                       # don't auto-upload to PyPI
