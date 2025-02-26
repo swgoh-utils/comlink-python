@@ -36,6 +36,10 @@ addopts = [
 version = { attr = "swgoh_comlink.version" }
 
 [tool.semantic_release]
+version_variable = [# List of possible location of version
+    "src/swgoh_comlink/version.py",
+    "pyproject.toml:version"
+]
 version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"   # source location of version string
 version_source = "commit"                                                    # Set version source to "commit" so that
 branch = "main"                                                              # branch to make releases of
