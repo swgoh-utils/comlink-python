@@ -3,37 +3,44 @@ get_events.py
 Sample script to get events from Comlink
 """
 
-from datetime import datetime
-from typing import Any
+from datetime import datetime, timezone
+from typing import Union
 
 from swgoh_comlink import SwgohComlink
 
 
-def convert_time(timestamp: Any) -> str:
+def convert_time(timestamp: Union[int, str]) -> str:
     """
     Convert unix timestamp to human-readable string
     :param timestamp: integer or string representing a unix timestamp value
     :return: str
     """
+
     if not (isinstance(timestamp, str) or isinstance(timestamp, int)):
         return f'Invalid argument {timestamp}, type( {type(timestamp)} ). Expecting type str or int.'
+
     if len(str(timestamp)) > 10:
         # timestamp is in milliseconds
         timestamp = int(timestamp)
         timestamp /= 1000
-    return datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+
+    return datetime.fromtimestamp(int(timestamp), tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
 
-# Create instance of SwgohComlink
+# Create instance of SwgohComlink using default localhost settings
 comlink = SwgohComlink()
 
-# Get all available events
+# Get all available currently available events from game servers
 events = comlink.get_events()
 
 """
 The call above returns a single element dictionary with a key name of 'gameEvent'. The value of this element is a
 list of all the available game events at that time.
 """
+
+if 'gameEvent' not in events:
+    print(f'Unexpected response from game server, check your internet connection. {events}')
+    exit(1)
 
 # Loop through the events and print the ID, status relevant time entries for each occurrence
 for event in events['gameEvent']:

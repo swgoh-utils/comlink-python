@@ -9,13 +9,13 @@ import hmac
 import os
 import re
 import time
-from json import loads, dumps
+from json import dumps, loads
 from typing import Callable
 
 import requests
 import urllib3
-from swgoh_comlink import version
 
+from swgoh_comlink import version
 from .helpers import Constants
 
 __all__ = [
@@ -135,8 +135,7 @@ class SwgohComlink:
 
     def _post(self,
               url_base: str = None,
-              endpoint: str = None,
-              payload: dict = None
+              endpoint: str = None, payload: dict | list = None,
               ) -> dict:
         """
         Execute HTTP POST operation against swgoh-comlink
@@ -174,27 +173,78 @@ class SwgohComlink:
         except Exception as e:
             raise e
 
-    def get_unit_stats(self, request_payload: dict, flags: list = None, language: str = None) -> dict:
+    def get_unit_stats(self, request_payload: dict | list, flags: list[str] = None,
+                       language: str = None) -> list | dict:
         """
-        Calculate unit stats using swgoh-stats service interface to swgoh-comlink
+        Calculate unit stats using the swgoh-stats service interface to swgoh-comlink.
 
-        :param request_payload: Dictionary containing units for which to calculate stats
-        :param flags: List of flags to include in the request URI
-        :param language: String indicating the desired localized language
-        :return: dict
+        This method communicates with an external StatCalc container/service to calculate stats for the
+        given units. If the unit for which stats are being calculated is a ship, the 'request_payload' *MUST*
+        include crew members along with the ship unit.
+
+        The most common use of this method is to provide an entire player roster as the 'request_payload' argument. This
+        action will calculate the stats for each character and ship in the player roster. The resulting stats are
+        included in a new 'stats' key in the result object.
+
+        Args
+            request_payload (list | dict): Dictionary or list of dictionaries containing units for which to calculate stats.
+            flags (list, optional): List of strings specifying which flags to include in the request URI.
+            language (str, optional): String indicating the desired localized language. Default "eng_us".
+
+        Returns
+            list | dict: Input object with the calculated stats for the specified units included.
+
+        Examples
+            ```python
+            >>> from swgoh_comlink import SwgohComlink
+            >>> cl = SwgohComlink(url='http://192.168.68.100:3200', stats_url='http://192.168.68.100:3223')
+            >>> player = cl.get_player(allycode=314927874)
+            >>> player_roster_stats = cl.get_unit_stats(request_payload=player['rosterUnit'], flags=['gameStyle', 'calcGP', 'percentVals'])
+            >>> type(player_roster_stats)
+            <class 'list'>
+            >>> len(player_roster_stats)
+            351
+            >>> sorted(list(player_roster_stats[0].keys()))
+            ['currentLevel', 'currentRarity', 'currentTier', 'currentXp', 'definitionId', 'equipment',
+            'equippedStatMod', 'equippedStatModOld', 'gp', 'id', 'promotionRecipeReference', 'purchasedAbilityId',
+            'relic', 'skill', 'stats', 'unitStat']
+            >>> player_roster_stats[0]['stats']
+            {'final': {'Health': 67532, 'Strength': 2782, 'Agility': 2102, 'Intelligence': 1901, 'Speed': 252,
+            'Physical Damage': 11981, 'Special Damage': 9822, 'Armor': 0.5875121319961177, 'Resistance': 0.32360742705570295,
+            'Armor Penetration': 269, 'Resistance Penetration': 120, 'Dodge Chance': 0.02, 'Deflection Chance': 0.02,
+            'Physical Critical Chance': 0.7909833333333333, 'Special Critical Chance': 0.2864, 'Critical Damage': 1.5,
+            'Potency': 0.69845, 'Tenacity': 0.52018, 'Health Steal': 0.1, 'Protection': 56368, 'Physical Accuracy': 0.18,
+            'Special Accuracy': 0.18, 'Physical Critical Avoidance': 0, 'Special Critical Avoidance': 0, 'Mastery': 60},
+            'mods': {'Health': 11566, 'Speed': 113, 'Physical Damage': 4313, 'Special Damage': 3549, 'Armor': 0.06773812069668272,
+            'Resistance': 0.056787415554840404, 'Potency': 0.19845000000000002, 'Tenacity': 0.02018, 'Physical Critical Chance': 0.16140000000000002,
+            'Special Critical Chance': 0.16140000000000002, 'Protection': 12714}, 'gp': 28941}
+            >>>
+            ```
         """
+        # Define the flags that StatCalc understands
+        _allowed_flags = {"gameStyle", "calcGP", "onlyGP", "withoutModCalc", "percentVals", "useMax", "scaled",
+                "unscaled", "statIDs", "enums", "noSpace"}
+
         query_string = None
         flag_str = None
+
         if flags:
-            if isinstance(flags, list):
+            if isinstance(flags, list) and set(flags).issubset(_allowed_flags):
                 flag_str = 'flags=' + ','.join(flags)
             else:
-                raise RuntimeError('Invalid "flags" parameter. Expecting type "list"')
+                raise ValueError(
+                        f'Invalid argument. <flags> should be a list of strings with one or more of {_allowed_flags} flag values.')
+
         if language:
             language = f'language={language}'
+
         if flag_str or language:
             query_string = f'?' + '&'.join(filter(None, iter([flag_str, language])))
+
         endpoint_string = f'api' + query_string if query_string else 'api'
+
+        if isinstance(request_payload, dict):
+            request_payload = [request_payload]
         return self._post(url_base=self.stats_url_base, endpoint=endpoint_string, payload=request_payload)
 
     def get_enums(self) -> dict:
@@ -232,8 +282,7 @@ class SwgohComlink:
                       include_pve_units: bool = True,
                       request_segment: int = 0,
                       enums: bool = False,
-                      items: str = None,
-                      device_platform="Android"
+                      items: str = None, device_platform: str = "Android"
                       ) -> dict:
         """
         Get game data
@@ -241,8 +290,9 @@ class SwgohComlink:
         :param include_pve_units: boolean [Defaults to True]
         :param request_segment: integer >=0 [Defaults to 0]
         :param enums: boolean [Defaults to False]
-        :param items: string [Defaults to None] bitwise value indicating the collections to retreive from game.
+        :param items: string [Defaults to None] bitwise value indicating the collections to retrieve from game.
                 NOTE: this parameter is mutually exclusive with request_segment.
+        :param device_platform: string [Defaults to "Android"]
         :return: dict
         """
         if version == "":
@@ -281,7 +331,7 @@ class SwgohComlink:
         Get localization data from game
         :param id: latestLocalizationBundleVersion found in game metadata. This method will collect the latest language
                     version if the 'id' argument is not provided.
-        :param locale: string Specify only a specific locale to retreive [for example "ENG_US"]
+        :param locale: string Specify only a specific locale to retrieve [for example "ENG_US"]
         :param unzip: boolean [Defaults to False]
         :param enums: boolean [Defaults to False]
         :return: dict

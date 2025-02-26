@@ -2,6 +2,22 @@
 
 <!--next-version-placeholder-->
 
+## v1.12.4 (2024-08-08)
+
+### Documentation
+
+* Updated get_game_data() example to show use of new 'items' parameter. ([
+  `e4a0eda`](https://github.com/swgoh-utils/comlink-python/commit/e4a0edac8cd59c5152b2e64ebbbcaf995e179f0c))
+* Updated get_localization() example to show use of new 'locale' parameter.
+
+## v1.12.3 (2024-08-08)
+
+### Feature
+
+* Updated get_game_data() method to add new 'items' parameter introduced in the recent game update. ([
+  `645c42c`](https://github.com/swgoh-utils/comlink-python/commit/645c42ca86cb6f6c0817dc705aa9b7f65a441054))
+* Updated get_localization() method to add new 'locale' parameter introduced in the recent game update.
+
 ## v1.12.0 (2023-05-16)
 ### Feature
 * Added get_latest_game_data_version() method for simplified access to game data and language bundle version information ([`dce650f`](https://github.com/swgoh-utils/comlink-python/commit/dce650f29e88758009211039f64689f3ee197e55))
