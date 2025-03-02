@@ -55,8 +55,6 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-/tests/
-/pytests/
 
 
 # Translations

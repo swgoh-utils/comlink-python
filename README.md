@@ -8,7 +8,7 @@ A python wrapper for the [swgoh-comlink](https://github.com/swgoh-utils/swgoh-co
 Install from [PyPi package repository](https://pypi.org/project/swgoh-comlink/) using the following shell command.
 
 ```buildoutcfg
-pip install swgoh_comlink
+uv pip install swgoh_comlink
 ```
 
 ## Usage
@@ -19,10 +19,10 @@ Basic default usage example:
 from swgoh_comlink import SwgohComlink
 
 comlink = SwgohComlink()
-player_data = comlink.get_player(245866537)
+player_data = comlink.get_player(allycode=245866537)
 player_name = player_data['name']
 guild_id = player_data['guildId']
-guild = comlink.get_guild(guild_id)
+guild = comlink.get_guild(guild_id=guild_id)
 guild_name = guild['profile']['name']
 ```
 
@@ -32,10 +32,10 @@ Usage example with non-default settings for a swgoh-comlink service running on t
 from swgoh_comlink import SwgohComlink
 
 comlink = SwgohComlink(url='http://localhost:3500')
-player_data = comlink.get_player(245866537)
+player_data = comlink.get_player(allycode=245866537)
 player_name = player_data['name']
 guild_id = player_data['guildId']
-guild = comlink.get_guild(guild_id)
+guild = comlink.get_guild(guild_id=guild_id)
 guild_name = guild['profile']['name']
 ```
 
@@ -45,7 +45,7 @@ Usage example with non-default settings for a swgoh-comlink service running on t
 from swgoh_comlink import SwgohComlink
 
 comlink = SwgohComlink(url='http://localhost:3500', stats_url='http://localhost:3550')
-player_data = comlink.get_player(245866537)
+player_data = comlink.get_player(allycode=245866537)
 player_roster = player_data['rosterUnit']
 roster_with_stats = comlink.get_unit_stats(player_roster)
 ```
