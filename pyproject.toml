@@ -31,6 +31,7 @@ dependencies = [
     "mkdocstrings-python",
     "mkdocs-material",
     "mkdocs-material-extensions",
+    "orjson>=3.10.15",
 ]
 
 [project.urls]

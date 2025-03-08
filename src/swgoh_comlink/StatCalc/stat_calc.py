@@ -23,14 +23,7 @@ import swgoh_comlink
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink.StatCalc.stat_calc_helpers import raise_invalid_object_type_error
 from swgoh_comlink.StatCalc.stat_values import StatValues, StatOptions, StatValueError
-from swgoh_comlink.constants import (
-    Constants,
-    get_logger,
-    set_debug,
-    get_function_name,
-    OPTIONAL,
-    NotSet,
-)
+from swgoh_comlink.constants import (Constants, get_logger, set_debug, get_function_name, OPTIONAL, NotSet, )
 from swgoh_comlink.data_builder import DataBuilder, DataBuilderException
 from swgoh_comlink.exceptions import StatCalcRuntimeError, StatCalcException, StatCalcValueError
 from swgoh_comlink.utils import validate_file_path, create_localized_unit_name_dictionary
@@ -57,8 +50,7 @@ def _format_stats(stats: dict, level: int = 85, options: StatOptions | Sentinel 
         logger.debug(f"Rounding mod values ... ")
         for stat_id, value in stats['mods'].items():
             stats['mods'][stat_id] = round(value, 6)
-            logger.debug(f"{stat_id} old value: {value}, "
-                         + f"new value: {stats['mods'][stat_id]}")
+            logger.debug(f"{stat_id} old value: {value}, " + f"new value: {stats['mods'][stat_id]}")
 
     if scale != 1:
         logger.debug(f"Scaling stats ... {scale=}")
@@ -67,8 +59,7 @@ def _format_stats(stats: dict, level: int = 85, options: StatOptions | Sentinel 
                 for stat_id in stats[stat_type].keys():
                     original_value = stats[stat_type][stat_id]
                     stats[stat_type][stat_id] *= scale
-                    logger.debug(f"{stat_id} old value: {original_value}, "
-                                 + f"new value: {stats[stat_type][stat_id]}")
+                    logger.debug(f"{stat_id} old value: {original_value}, " + f"new value: {stats[stat_type][stat_id]}")
             else:
                 logger.debug(f"{stat_type} not found in {list(stats.keys())}")
 
@@ -95,30 +86,24 @@ def _format_stats(stats: dict, level: int = 85, options: StatOptions | Sentinel 
                     stats['mods'][stat_id_str] = convert_func(flat) - last
 
         # convert Crit
-        convert_percent('14', lambda val: _convert_flat_stat_to_percent("cc", val,
-                                                                        scale * 1e8))  # Ph. Crit Rating -> Chance
-        convert_percent('15', lambda val: _convert_flat_stat_to_percent("cc", val,
-                                                                        scale * 1e8))  # Sp. Crit Rating -> Chance
+        convert_percent('14',
+                        lambda val: _convert_flat_stat_to_percent("cc", val, scale * 1e8))  # Ph. Crit Rating -> Chance
+        convert_percent('15',
+                        lambda val: _convert_flat_stat_to_percent("cc", val, scale * 1e8))  # Sp. Crit Rating -> Chance
         # convert Def
         convert_percent('8', lambda val: _convert_flat_stat_to_percent("def", val, scale * 1e8, level,
                                                                        bool(stats.get('crew'))))  # Armor
         convert_percent('9', lambda val: _convert_flat_stat_to_percent("def", val, scale * 1e8, level,
                                                                        bool(stats.get('crew'))))  # Resistance
         # convert Acc
-        convert_percent('37', lambda val: _convert_flat_stat_to_percent("acc", val,
-                                                                        scale * 1e8))  # Physical Accuracy
-        convert_percent('38', lambda val: _convert_flat_stat_to_percent("acc", val,
-                                                                        scale * 1e8))  # Special Accuracy
+        convert_percent('37', lambda val: _convert_flat_stat_to_percent("acc", val, scale * 1e8))  # Physical Accuracy
+        convert_percent('38', lambda val: _convert_flat_stat_to_percent("acc", val, scale * 1e8))  # Special Accuracy
         # convert Evasion
-        convert_percent('12', lambda val: _convert_flat_stat_to_percent("acc", val,
-                                                                        scale * 1e8))  # Dodge
-        convert_percent('13', lambda val: _convert_flat_stat_to_percent("acc", val,
-                                                                        scale * 1e8))  # Deflection
+        convert_percent('12', lambda val: _convert_flat_stat_to_percent("acc", val, scale * 1e8))  # Dodge
+        convert_percent('13', lambda val: _convert_flat_stat_to_percent("acc", val, scale * 1e8))  # Deflection
         # convert Crit Avoidance
-        convert_percent('39',
-                        lambda val: _convert_flat_stat_to_percent("cc", val, scale * 1e8))  # Physical Crit Avoid
-        convert_percent('40',
-                        lambda val: _convert_flat_stat_to_percent("cc", val, scale * 1e8))  # Special Crit Avoid
+        convert_percent('39', lambda val: _convert_flat_stat_to_percent("cc", val, scale * 1e8))  # Physical Crit Avoid
+        convert_percent('40', lambda val: _convert_flat_stat_to_percent("cc", val, scale * 1e8))  # Special Crit Avoid
 
     if options.GAME_STYLE:
         gs_stats = {"final": {}}
@@ -160,17 +145,17 @@ def _format_stats(stats: dict, level: int = 85, options: StatOptions | Sentinel 
                         pass
 
                 gs_stats['final'].setdefault(flat_stat_id, 0)  # ensure stat already exists
-                gs_stats['final'][str(flat_stat_id)] += (stats['base'].get(stat_id, 0) +
-                                                         stats['gear'].get(stat_id, 0) +
-                                                         (stats['mods'].get(stat_id, 0) if 'mods' in stats else 0))
+                gs_stats['final'][str(flat_stat_id)] += (
+                        stats['base'].get(stat_id, 0)
+                        + stats['gear'].get(stat_id, 0)
+                        + (stats['mods'].get(stat_id, 0) if 'mods' in stats else 0))
         else:  # Ship
             for stat in stats['crew']:
                 add_stats(stat)  # add stats from crew to list
                 gs_stats['crew'] = stats['crew']  # keep crew stats untouched
 
             for statID in stat_list:
-                gs_stats['final'][statID] = (stats['base'].get(statID, 0) +
-                                             stats['crew'].get(statID, 0))
+                gs_stats['final'][statID] = (stats['base'].get(statID, 0) + stats['crew'].get(statID, 0))
         stats = deepcopy(gs_stats)
         logger.debug(f"Stats: {stats}")
     return stats
@@ -196,14 +181,9 @@ def _floor(value: float, digits: int = 0) -> float:
     return floor_value
 
 
-def _convert_flat_stat_to_percent(
-        stat: str,
-        value: float,
-        scale: float = 1.0,
-        level: int = 85,
-        is_ship: bool = False) -> float:
-    logger.debug(f"*** Converting flat value to percent ({stat=}, {value=}, "
-                 + f"{level=}, {scale=}, {is_ship=}) *** ")
+def _convert_flat_stat_to_percent(stat: str, value: float, scale: float = 1.0, level: int = 85,
+                                  is_ship: bool = False) -> float:
+    logger.debug(f"*** Converting flat value to percent ({stat=}, {value=}, " + f"{level=}, {scale=}, {is_ship=}) *** ")
     val = value / scale
     match stat:
         case "def":
@@ -301,14 +281,11 @@ class StatCalc:
     @classmethod
     def _update_class_attributes(cls, attr_items: dict) -> None:
         # Set allowed parameters and values for argument checking
-        allowed_parameters = {
-            "default_mod_tier": list(range(1, Constants.MAX_VALUES['MOD_TIER'] + 1, 1)),
-            "default_mod_level": list(range(1, Constants.MAX_VALUES['MOD_LEVEL'] + 1, 1)),
-            "default_mod_pips": list(range(1, Constants.MAX_VALUES['MOD_RARITY'] + 1, 1)),
-            "game_data": [None, dict],
-            "language": DataBuilder.get_languages(),
-            "debug": [False, True]
-        }
+        allowed_parameters = {"default_mod_tier":  list(range(1, Constants.MAX_VALUES['MOD_TIER'] + 1, 1)),
+                              "default_mod_level": list(range(1, Constants.MAX_VALUES['MOD_LEVEL'] + 1, 1)),
+                              "default_mod_pips":  list(range(1, Constants.MAX_VALUES['MOD_RARITY'] + 1, 1)),
+                              "game_data":         [None, dict], "language": DataBuilder.get_languages(),
+                              "debug":             [False, True]}
 
         for param, value in attr_items.items():
             if param in allowed_parameters.keys():
@@ -320,9 +297,8 @@ class StatCalc:
                     cls.set_attribute(class_var, value)
                 else:
                     logger.error(
-                        f"Invalid value ({value}) for argument ({param}). "
-                        + f"Allowed values are [{allowed_parameters[param]}]."
-                    )
+                            f"Invalid value ({value}) for argument ({param}). "
+                            + f"Allowed values are [{allowed_parameters[param]}].")
 
     @classmethod
     def set_log_level(cls, log_level: str):
@@ -336,32 +312,22 @@ class StatCalc:
 
         """
         if not cls.is_initialized:
-            raise StatCalcException(
-                "StatCalc is not initialized. Please perform the initialization first."
-            )
+            raise StatCalcException("StatCalc is not initialized. Please perform the initialization first.")
         log_levels = logging.getLevelNamesMapping()
         if log_level in log_levels:
             logger.setLevel(log_levels[log_level])
         else:
             raise StatCalcRuntimeError(
-                f"Invalid log level {log_level}. Available options are {list(log_levels.keys())}"
-            )
+                    f"Invalid log level {log_level}. Available options are {list(log_levels.keys())}")
 
     @classmethod
-    def _load_unit_name_map(cls,
-                            /,
-                            *,
-                            locale: str | Sentinel = OPTIONAL,
-                            ) -> bool:
+    def _load_unit_name_map(cls, /, *, locale: str | Sentinel = OPTIONAL, ) -> bool:
         """Create unit_name_map dictionary"""
         if isinstance(locale, Sentinel):
             locale = cls._LANGUAGE
 
         latest_game_version = cls._COMLINK.get_latest_game_data_version()
-        loc_bundle = cls._COMLINK.get_localization_bundle(
-            id=latest_game_version["language"],
-            locale=locale
-        )
+        loc_bundle = cls._COMLINK.get_localization_bundle(id=latest_game_version["language"], locale=locale)
         loc_bundle_decoded = base64.b64decode(loc_bundle["localizationBundle"])
         logger.info(f"Decompressing data stream...")
         zip_obj = zipfile.ZipFile(io.BytesIO(loc_bundle_decoded))
@@ -378,14 +344,10 @@ class StatCalc:
         try:
             language_file = os.path.join(data_path, cls._LANGUAGE + ".json")
         except Exception as e_str:
-            logger.error(
-                f"An error occurred while attempting to load the stat names map. [{e_str}]"
-            )
+            logger.error(f"An error occurred while attempting to load the stat names map. [{e_str}]")
             return False
         if not validate_file_path(language_file):
-            logger.error(
-                f"Error while validating language file data path ({language_file})"
-            )
+            logger.error(f"Error while validating language file data path ({language_file})")
             return False
         try:
             with open(language_file) as fn:
@@ -432,8 +394,7 @@ class StatCalc:
         for i in ("2", "3", "4"):
             logger.info(f"Processing base stats for {i} ...")
             logger.info(f"{stats['base'][i]=} before")
-            logger.info(f"Adding math_floor({stats['growthModifiers'][i]} * "
-                        + f"{level} * 1e8) / 1e8")
+            logger.info(f"Adding math_floor({stats['growthModifiers'][i]} * " + f"{level} * 1e8) / 1e8")
             stats["base"][i] += _floor(stats["growthModifiers"][i] * level, 8)
             logger.info(f"{stats['base'][i]=} after")
         if stats["base"].get("61"):
@@ -444,9 +405,7 @@ class StatCalc:
                 for stat_id, modifier in mms.items():
                     stats['base'][stat_id] = stats['base'].get(stat_id, 0) + stats['base']["61"] * modifier
             except KeyError as e_str:
-                logger.error(
-                    f"Unable to find mastery modifier key [{mastery_modifier_key}] in crTable."
-                )
+                logger.error(f"Unable to find mastery modifier key [{mastery_modifier_key}] in crTable.")
                 logger.error(e_str)
                 logger.error(f"crTable keys: {sorted(list(cls._CR_TABLES.keys()))}")
 
@@ -454,18 +413,14 @@ class StatCalc:
         logger.debug(f"{stats['base']=}")
         # Calculate effects of primary stats on secondary stats
         primary_stat_name = str(cls._UNIT_DATA[base_id]['primaryStat'])
-        stats['base']['1'] = (stats['base'].get('1', 0) +
-                              stats['base']['2'] * 18)  # Health += STR * 18
-        stats['base']['6'] = _floor(stats['base'].get('6', 0) +
-                                    stats['base'][primary_stat_name] * 1.4, 8)  # Ph. Damage += MainStat * 1.4
-        stats['base']['7'] = _floor(stats['base'].get('7', 0) +
-                                    stats['base']['4'] * 2.4, 8)  # Sp. Damage += TAC * 2.4
-        stats['base']['8'] = _floor(stats['base'].get('8', 0) + stats['base']['2'] * 0.14 +
-                                    stats['base']['3'] * 0.07, 8)  # Armor += STR*0.14 + AGI*0.07
-        stats['base']['9'] = _floor(stats['base'].get('9', 0) +
-                                    stats['base']['4'] * 0.1, 8)  # Resistance += TAC * 0.1
-        stats['base']['14'] = _floor(stats['base'].get('14', 0) +
-                                     stats['base']['3'] * 0.4, 8)  # Ph. Crit += AGI * 0.4
+        stats['base']['1'] = (stats['base'].get('1', 0) + stats['base']['2'] * 18)  # Health += STR * 18
+        stats['base']['6'] = _floor(stats['base'].get('6', 0) + stats['base'][primary_stat_name] * 1.4,
+                                    8)  # Ph. Damage += MainStat * 1.4
+        stats['base']['7'] = _floor(stats['base'].get('7', 0) + stats['base']['4'] * 2.4, 8)  # Sp. Damage += TAC * 2.4
+        stats['base']['8'] = _floor(stats['base'].get('8', 0) + stats['base']['2'] * 0.14 + stats['base']['3'] * 0.07,
+                                    8)  # Armor += STR*0.14 + AGI*0.07
+        stats['base']['9'] = _floor(stats['base'].get('9', 0) + stats['base']['4'] * 0.1, 8)  # Resistance += TAC * 0.1
+        stats['base']['14'] = _floor(stats['base'].get('14', 0) + stats['base']['3'] * 0.4, 8)  # Ph. Crit += AGI * 0.4
 
         logger.info(f"Ensuring core stats are present and at minimum ...")
         # add hard-coded minimums or potentially missing stats
@@ -500,17 +455,16 @@ class StatCalc:
             logger.debug(f"Mod set id: {mod_set_id} ({mod_set_name}), {set_bonus=}")
             if set_bonus:
                 # set bonus already found, increment
-                logger.debug(f"{mod_set_id} ({mod_set_name}) "
-                             + f"already present in set_bonuses list. Incrementing counter.")
+                logger.debug(
+                        f"{mod_set_id} ({mod_set_name}) "
+                        + f"already present in set_bonuses list. Incrementing counter.")
                 set_bonus['count'] += 1
                 if mod['level'] == 15:
                     set_bonus['maxLevel'] += 1
-                logger.debug(f"{set_bonus['count']=}, "
-                             + f"{set_bonus['maxLevel']=}, {mod['level']=}")
+                logger.debug(f"{set_bonus['count']=}, " + f"{set_bonus['maxLevel']=}, {mod['level']=}")
             else:
                 # new set bonus, create object
-                logger.debug(f"Creating new entry for {mod_set_id} "
-                             + f"({mod_set_name}) in set_bonuses list.")
+                logger.debug(f"Creating new entry for {mod_set_id} " + f"({mod_set_name}) in set_bonuses list.")
                 set_bonuses[mod_set_id] = {'count': 1, 'maxLevel': 1 if mod['level'] == 15 else 0}
 
             # add Primary/Secondary stats to data
@@ -552,33 +506,39 @@ class StatCalc:
             if stat_id == 41:  # Offense
                 mod_stats['6'] = mod_stats.get('6', 0) + value  # Ph. Damage
                 mod_stats['7'] = mod_stats.get('7', 0) + value  # Sp. Damage
-                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
-                             + f"{mod_stats['6']=}, {mod_stats['7']=}")
+                logger.debug(
+                        f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
+                        + f"{mod_stats['6']=}, {mod_stats['7']=}")
             elif stat_id == 42:  # Defense
                 mod_stats['8'] = mod_stats.get('8', 0) + value  # Armor
                 mod_stats['9'] = mod_stats.get('9', 0) + value  # Resistance
-                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
-                             + f"{mod_stats['8']=}, {mod_stats['9']=}")
+                logger.debug(
+                        f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
+                        + f"{mod_stats['8']=}, {mod_stats['9']=}")
             elif stat_id == 48:  # Offense %
                 mod_stats['6'] = _floor(mod_stats.get('6', 0) + (base_stats['6'] * 1e-8 * value), 8)  # Ph. Damage
                 mod_stats['7'] = _floor(mod_stats.get('7', 0) + (base_stats['7'] * 1e-8 * value), 8)  # Sp. Damage
-                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
-                             + f"{mod_stats['6']=}, {mod_stats['7']=}")
+                logger.debug(
+                        f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
+                        + f"{mod_stats['6']=}, {mod_stats['7']=}")
             elif stat_id == 49:  # Defense %
                 mod_stats['8'] = _floor(mod_stats.get('8', 0) + (base_stats['8'] * 1e-8 * value), 8)  # Armor
                 mod_stats['9'] = _floor(mod_stats.get('9', 0) + (base_stats['9'] * 1e-8 * value), 8)  # Resistance
-                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=} "
-                             + f"{mod_stats['8']=}, {mod_stats['9']=}")
+                logger.debug(
+                        f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=} "
+                        + f"{mod_stats['8']=}, {mod_stats['9']=}")
             elif stat_id == 53:  # Crit Chance
                 mod_stats['21'] = mod_stats.get('21', 0) + value  # Ph. Crit Chance
                 mod_stats['22'] = mod_stats.get('22', 0) + value  # Sp. Crit Chance
-                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
-                             + f"{mod_stats['21']=}, {mod_stats['22']=}")
+                logger.debug(
+                        f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
+                        + f"{mod_stats['21']=}, {mod_stats['22']=}")
             elif stat_id == 54:  # Crit Avoid
                 mod_stats['35'] = mod_stats.get('35', 0) + value  # Ph. Crit Avoid
                 mod_stats['36'] = mod_stats.get('36', 0) + value  # Ph. Crit Avoid
-                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
-                             + f"{mod_stats['35']=}, {mod_stats['36']=}")
+                logger.debug(
+                        f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
+                        + f"{mod_stats['35']=}, {mod_stats['36']=}")
             elif stat_id == 55:  # Health %
                 mod_stats['1'] = _floor(mod_stats.get('1', 0) + (base_stats['1'] * 1e-8 * value), 8)  # Health
                 logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
@@ -595,8 +555,8 @@ class StatCalc:
             else:
                 # other stats add like flat values
                 mod_stats[str(stat_id)] = mod_stats.get(str(stat_id), 0) + value
-                logger.debug(f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, "
-                             + f"{mod_stats[str(stat_id)]=}")
+                logger.debug(
+                        f"{stat_id=} ({cls._STAT_NAME_MAP[str(stat_id)]}), {value=}, " + f"{mod_stats[str(stat_id)]=}")
         logger.debug(f"{mod_stats=}")
         return mod_stats
 
@@ -606,16 +566,17 @@ class StatCalc:
 
         def calculate_character_cr(crew_rating: float, char: dict) -> float:
             logger.debug(f"{crew_rating=}")
-            crew_rating += (cls._CR_TABLES['unitLevelCR'][str(char['currentLevel'])]
-                            + cls._CR_TABLES['crewRarityCR'][Constants.UNIT_RARITY[char['currentRarity']]])
+            crew_rating += (cls._CR_TABLES['unitLevelCR'][str(char['currentLevel'])] + cls._CR_TABLES['crewRarityCR'][
+                Constants.UNIT_RARITY[char['currentRarity']]])
             logger.debug(f"{crew_rating=}")
             crew_rating += cls._CR_TABLES['gearLevelCR'][str(char['currentTier'])]
 
             if char['currentTier'] < Constants.MAX_VALUES['GEAR_TIER']:
                 equipped_gear_piece_count = len(char.get('equipped', []))
                 gear_tier = str(char['currentTier'])
-                logger.debug(f"{char['defId']} is below max gear level. Adding gear piece crew rating for "
-                             + f"{equipped_gear_piece_count} gear pieces at gear tier {gear_tier}.")
+                logger.debug(
+                        f"{char['defId']} is below max gear level. Adding gear piece crew rating for "
+                        + f"{equipped_gear_piece_count} gear pieces at gear tier {gear_tier}.")
                 crew_rating += cls._CR_TABLES['gearPieceCR'][gear_tier] * equipped_gear_piece_count
 
             crew_rating = functools.reduce(lambda cr, skill: cr + cls._get_skill_crew_rating(skill), char['skill'],
@@ -624,13 +585,13 @@ class StatCalc:
 
             if 'mods' in char:
                 crew_rating = functools.reduce(
-                    lambda cr, mod: cr + cls._CR_TABLES['modRarityLevelCR'][mod['pips']][str(mod['level'])],
-                    char['mods'], crew_rating)
+                        lambda cr, mod: cr + cls._CR_TABLES['modRarityLevelCR'][mod['pips']][str(mod['level'])],
+                        char['mods'], crew_rating)
                 logger.debug(f"Adding mods ... {crew_rating=}")
             elif 'equippedStatMod' in char:
                 crew_rating = functools.reduce(
-                    lambda cr, mod: cr + cls._CR_TABLES['modRarityLevelCR'][mod['definitionId'][1]][str(mod['level'])],
-                    char['equippedStatMod'], crew_rating)
+                        lambda cr, mod: cr + cls._CR_TABLES['modRarityLevelCR'][mod['definitionId'][1]][
+                            str(mod['level'])], char['equippedStatMod'], crew_rating)
                 logger.debug(f"Adding mods ... {crew_rating=}")
 
             if 'relic' in char and char['relic']['currentTier'] > 2:
@@ -655,11 +616,9 @@ class StatCalc:
         # temporarily uses hard-coded multipliers, as the true in-game formula remains a mystery.
         # but these values have experimentally been found accurate for the first 3 crewless ships:
         #     (Vulture Droid, Hyena Bomber, and BTL-B Y-wing)
-        return _floor(
-            cls._CR_TABLES['crewRarityCR'][Constants.UNIT_RARITY[ship['currentRarity']]] +
-            3.5 * cls._CR_TABLES['unitLevelCR'][str(ship['currentLevel'])] +
-            cls._get_crewless_skills_crew_rating(ship['skill'])
-        )
+        return _floor(cls._CR_TABLES['crewRarityCR'][Constants.UNIT_RARITY[ship['currentRarity']]] + 3.5 *
+                      cls._CR_TABLES['unitLevelCR'][str(ship['currentLevel'])] + cls._get_crewless_skills_crew_rating(
+                ship['skill']))
 
     @classmethod
     def _get_crewless_skills_crew_rating(cls, skills: list) -> float:
@@ -673,13 +632,10 @@ class StatCalc:
     def _get_char_raw_stats(cls, char: dict) -> dict:
         """Generate raw stats for character"""
         # Construction stats dictionary using game data for character based on specifics of character data provided
-        stats: dict = {
-            "base": copy(cls._UNIT_DATA[char["defId"]]["gearLvl"][str(char["currentTier"])]["stats"]),
-            "growthModifiers": deepcopy(
-                cls._UNIT_DATA[char["defId"]]["growthModifiers"][str(char["currentRarity"])]
-            ),
-            "gear": {},
-        }
+        stats: dict = {"base":                                                                                 copy(
+                cls._UNIT_DATA[char["defId"]]["gearLvl"][str(char["currentTier"])]["stats"]),
+                "growthModifiers":                                                                             deepcopy(
+                        cls._UNIT_DATA[char["defId"]]["growthModifiers"][str(char["currentRarity"])]), "gear": {}, }
         logger.info(f"raw stats: {stats=}")
         # Calculate stats from current gear
         if isinstance(char['equipment'], list) and len(char["equipment"]) != 0:
@@ -697,19 +653,16 @@ class StatCalc:
                         stats["base"][equipment_stat_id] += stats["base"][equipment_stat_id]
                     else:
                         # Secondary stat applies after mods
-                        stats["gear"][equipment_stat_id] = (equipment_stats[equipment_stat_id] +
-                                                            stats["gear"].get(equipment_stat_id, 0))
+                        stats["gear"][equipment_stat_id] = (
+                                equipment_stats[equipment_stat_id] + stats["gear"].get(equipment_stat_id, 0))
         else:
             logger.info(f"No equipment for {char['defId']}")
 
         if char.get("relic") and char["relic"].get("currentTier", 0) > 2:
             current_relic_tier: int = char["relic"].get("currentTier")
-            logger.info(f"Calculating stats for {char['defId']} relic level: "
-                        + f"{current_relic_tier - 2}")
+            logger.info(f"Calculating stats for {char['defId']} relic level: " + f"{current_relic_tier - 2}")
             # Calculate stats from relics
-            relic_tier_data = cls._RELIC_DATA[
-                cls._UNIT_DATA[char["defId"]]["relic"][str(current_relic_tier)]
-            ]
+            relic_tier_data = cls._RELIC_DATA[cls._UNIT_DATA[char["defId"]]["relic"][str(current_relic_tier)]]
             for r_id in list(relic_tier_data["stats"].keys()):
                 stats["base"][r_id] = relic_tier_data["stats"][r_id] + stats["base"].get(r_id, 0)
                 logger.info(f"{stats['base'][r_id]=}")
@@ -748,11 +701,8 @@ class StatCalc:
         logger.debug(f"{crew_rating=}")
         rarity = str(ship['currentRarity'])
 
-        stats: dict = {
-            'base': deepcopy(cls._UNIT_DATA[ship['defId']]['stats']),
-            'crew': {},
-            'growthModifiers': deepcopy(cls._UNIT_DATA[ship['defId']]['growthModifiers'][rarity])
-        }
+        stats: dict = {'base':            deepcopy(cls._UNIT_DATA[ship['defId']]['stats']), 'crew': {},
+                       'growthModifiers': deepcopy(cls._UNIT_DATA[ship['defId']]['growthModifiers'][rarity])}
 
         logger.debug(f"Initial {stats=}")
         stat_multiplier: float = cls._CR_TABLES['shipRarityFactor'][rarity] * crew_rating
@@ -773,40 +723,25 @@ class StatCalc:
         logger.debug(f"{val=}")
         if val == "max":
             logger.debug(f"Setting skills for {unit_id} (max)")
-            return [
-                {"id": d["id"], "tier": d["maxTier"]}
-                for d in cls._UNIT_DATA[unit_id]["skills"]
-            ]
+            return [{"id": d["id"], "tier": d["maxTier"]} for d in cls._UNIT_DATA[unit_id]["skills"]]
         elif val == "max_no_zeta":
             logger.debug(f"Setting skills for {unit_id} (max_no_zeta)")
-            return [
-                {"id": d["id"], "tier": d["maxTier"] - (1 if d["isZeta"] and not d['isOmicron'] else 0)}
-                for d in cls._UNIT_DATA[unit_id]["skills"]
-            ]
+            return [{"id": d["id"], "tier": d["maxTier"] - (1 if d["isZeta"] and not d['isOmicron'] else 0)} for d in
+                    cls._UNIT_DATA[unit_id]["skills"]]
         elif val == "max_no_omicron":
             logger.debug(f"Setting skills for {unit_id} (max_no_omicron)")
-            return [
-                {"id": d["id"], "tier": d["maxTier"] - (1 if d["isOmicron"] else 0)}
-                for d in cls._UNIT_DATA[unit_id]["skills"]
-            ]
+            return [{"id": d["id"], "tier": d["maxTier"] - (1 if d["isOmicron"] else 0)} for d in
+                    cls._UNIT_DATA[unit_id]["skills"]]
         elif isinstance(val, int):
-            _skills = [
-                {"id": d["id"], "tier": min(val, d["maxTier"])}
-                for d in cls._UNIT_DATA[unit_id]["skills"]
-            ]
+            _skills = [{"id": d["id"], "tier": min(val, d["maxTier"])} for d in cls._UNIT_DATA[unit_id]["skills"]]
             logger.debug(f"Setting {len(_skills)} skills for {unit_id} ")
             return _skills
         else:
             return []
 
     @classmethod
-    def _use_values_ships(
-            cls,
-            ship: dict,
-            crew: list,
-            ship_values: StatValues | Sentinel,
-            crew_values: StatValues | Sentinel
-    ) -> dict:
+    def _use_values_ships(cls, ship: dict, crew: list, ship_values: StatValues | Sentinel,
+                          crew_values: StatValues | Sentinel) -> dict:
         # TODO: Test this to see if it works
         ship['defId'] = _get_def_id(ship)
 
@@ -877,11 +812,8 @@ class StatCalc:
 
         # populate fake mods based on StatValues
         for _ in range(6):
-            char['equippedStatMod'].append({
-                'pips': use_values.rarity,
-                'level': use_values.mod_level,
-                'tier': use_values.mod_tier
-            })
+            char['equippedStatMod'].append(
+                    {'pips': use_values.rarity, 'level': use_values.mod_level, 'tier': use_values.mod_tier})
 
         # populate fake equipment based on StatValues
         _equipment_list: list = copy(cls._UNIT_DATA[char['defId']]['gearLvl'][str(char['gear'])]['gear'])
@@ -903,10 +835,10 @@ class StatCalc:
         logger.debug(f"*** Calculating character GP for {char['defId']} ***")
 
         gp = cls._GP_TABLES['unitLevelGP'][str(char['currentLevel'])]
-        logger.debug(f"Char level: {str(char['currentLevel'])}, "
-                     + f"GP added: {cls._GP_TABLES['unitLevelGP'][str(char['currentLevel'])]}")
-        logger.debug(f"{gp=} after level adjustment "
-                     + f"({cls._GP_TABLES['unitLevelGP'][str(char['currentLevel'])]})")
+        logger.debug(
+                f"Char level: {str(char['currentLevel'])}, "
+                + f"GP added: {cls._GP_TABLES['unitLevelGP'][str(char['currentLevel'])]}")
+        logger.debug(f"{gp=} after level adjustment " + f"({cls._GP_TABLES['unitLevelGP'][str(char['currentLevel'])]})")
 
         gp += cls._GP_TABLES['unitRarityGP'][Constants.UNIT_RARITY[char['currentRarity']]]
         logger.debug(f"{gp=} after rarity adjustment")
@@ -937,8 +869,9 @@ class StatCalc:
 
         logger.debug(f"{gp=} after purchaseAbility adjustment")
 
-        gp += sum(cls._GP_TABLES['modRarityLevelTierGP'][mod['definitionId'][1]][str(mod['level'])][str(mod['tier'])]
-                  for mod in char['equippedStatMod'])
+        gp += sum(
+                cls._GP_TABLES['modRarityLevelTierGP'][mod['definitionId'][1]][str(mod['level'])][str(mod['tier'])] for
+                mod in char['equippedStatMod'])
 
         logger.debug(f"{gp=} after mods adjustment")
 
@@ -984,14 +917,13 @@ class StatCalc:
         a = 0
         r = 0
         for skill in skills:
-            o_tag = next(
-                (s['powerOverrideTags'][skill['tier']] for s in cls._UNIT_DATA[id]['skills'] if s['id'] == skill['id']),
-                None)
+            o_tag = next((s['powerOverrideTags'][skill['tier']] for s in cls._UNIT_DATA[id]['skills'] if
+                          s['id'] == skill['id']), None)
             if o_tag and o_tag.startswith('reinforcement'):
                 r += cls._GP_TABLES['abilitySpecialGP'][o_tag]
             else:
-                a += cls._GP_TABLES['abilitySpecialGP'][o_tag] if o_tag else (
-                    cls._GP_TABLES)['abilityLevelGP'][skill['tier']]
+                a += cls._GP_TABLES['abilitySpecialGP'][o_tag] if (
+                        o_tag) else cls._GP_TABLES['abilityLevelGP'][skill['tier']]
 
         return {'ability': a, 'reinforcement': r}
 
@@ -1002,36 +934,35 @@ class StatCalc:
             if s['id'] == skill['id']:
                 # Convert player unit skill tier to same index scale as base game data unit scale
                 player_unit_skill_tier = str(int(skill['tier']) + 2)
-                logger.debug(f"Original skill tier: {skill['tier']}, "
-                             + f"Adjusted skill tier: {player_unit_skill_tier}")
+                logger.debug(
+                        f"Original skill tier: {skill['tier']}, "
+                        + f"Adjusted skill tier: {player_unit_skill_tier}")
                 logger.debug(f"Found skill {skill['id']} "
                              + f"tier {player_unit_skill_tier} ... ")
                 logger.debug(f"_GP_TABLES skill {s} ")
                 if int(player_unit_skill_tier) > s['maxTier']:
                     temp_skill_tier = player_unit_skill_tier
                     player_unit_skill_tier = str(s['maxTier'])
-                    logger.debug(f"Adjusting skill tier down to maximum.  "
-                                 + f"Original: {temp_skill_tier}, new: {player_unit_skill_tier}.")
+                    logger.debug(
+                            f"Adjusting skill tier down to maximum.  "
+                            + f"Original: {temp_skill_tier}, new: {player_unit_skill_tier}.")
                 power_override_tag = s['powerOverrideTags'].get(player_unit_skill_tier, None)
                 # if 'powerOverrideTags' exists for the player unit skill, use that GP value
                 if power_override_tag:  # 'zeta' or 'omicron' or 'upgrade'
-                    logger.debug(f"{power_override_tag=}, returning "
-                                 + f"{cls._GP_TABLES['abilitySpecialGP'][power_override_tag]}")
+                    logger.debug(
+                            f"{power_override_tag=}, returning "
+                            + f"{cls._GP_TABLES['abilitySpecialGP'][power_override_tag]}")
                     return cls._GP_TABLES['abilitySpecialGP'][power_override_tag]
                 # if no 'powerOverrideTags' exists for the player unit skill, use the GP for skill tier
                 else:
-                    logger.debug(f"No 'powerOverrideTags' found. Using "
-                                 + f"{cls._GP_TABLES['abilityLevelGP'].get(player_unit_skill_tier, '0.0')}")
+                    logger.debug(
+                            f"No 'powerOverrideTags' found. Using "
+                            + f"{cls._GP_TABLES['abilityLevelGP'].get(player_unit_skill_tier, '0.0')}")
                     return cls._GP_TABLES['abilityLevelGP'].get(player_unit_skill_tier, "0")
 
     @classmethod
-    def calc_char_stats(
-            cls,
-            char: dict,
-            *,
-            options: StatOptions | Sentinel = OPTIONAL,
-            values: StatValues | Sentinel = OPTIONAL,
-    ) -> dict:
+    def calc_char_stats(cls, char: dict, *, options: StatOptions | Sentinel = OPTIONAL,
+                        values: StatValues | Sentinel = OPTIONAL, ) -> dict:
         """Calculate stats for a single character based upon arguments provided.
 
         The optional keyword arguments 'options' and 'values' can be provided to
@@ -1059,10 +990,10 @@ class StatCalc:
         if not isinstance(char, dict):
             raise StatCalcValueError(f"'char' argument must be type(dict) not {type(dict)}")
 
-        if not isinstance(options, Sentinel) and not isinstance(options, StatOptions):
+        if not isinstance(options, (Sentinel | StatOptions)):
             raise StatCalcValueError(f"The 'options' argument must be an instance of StatOptions.")
 
-        if not isinstance(values, Sentinel) and not isinstance(values, StatValues):
+        if not isinstance(values, (Sentinel | StatValues)):
             raise StatCalcValueError(f"The 'use_values' argument must be an instance of StatValues.")
 
         if not cls.is_initialized:
@@ -1093,15 +1024,9 @@ class StatCalc:
         return char
 
     @classmethod
-    def calc_ship_stats(
-            cls,
-            ship: dict,
-            *,
-            crew: list | None = None,
-            options: StatOptions | Sentinel = OPTIONAL,
-            ship_values: StatValues | Sentinel = OPTIONAL,
-            crew_values: StatValues | Sentinel = OPTIONAL,
-    ) -> dict:
+    def calc_ship_stats(cls, ship: dict, *, crew: list | None = None, options: StatOptions | Sentinel = OPTIONAL,
+                        ship_values: StatValues | Sentinel = OPTIONAL,
+                        crew_values: StatValues | Sentinel = OPTIONAL, ) -> dict:
         """Calculate stats for a single ship based upon arguments provided.
 
         Args
@@ -1182,20 +1107,13 @@ class StatCalc:
     # noinspection PyNestedDecorators
     @calc_player_stats.register
     @classmethod
-    def _(cls,
-          players: list,
-          *,
-          options: StatOptions | Sentinel = OPTIONAL,
-          ) -> list:
+    def _(cls, players: list, *, options: StatOptions | Sentinel = OPTIONAL, ) -> list:
 
         for player in players:
             logger.info(f"Processing player: {player.get('name', 'UNKNOWN')} ...")
             if isinstance(player, dict):
                 if 'rosterUnit' in player.keys():
-                    player['rosterUnit'] = cls.calc_roster_stats(
-                        player['rosterUnit'],
-                        options=options,
-                    )
+                    player['rosterUnit'] = cls.calc_roster_stats(player['rosterUnit'], options=options, )
                 else:
                     err_msg = f"The 'rosterUnit' element is missing from player {player.get('name', 'UNKNOWN')}"
                     logger.error(err_msg)
@@ -1206,29 +1124,17 @@ class StatCalc:
     # noinspection PyNestedDecorators
     @calc_player_stats.register
     @classmethod
-    def _(cls,
-          player: dict,
-          *,
-          options: StatOptions | Sentinel = OPTIONAL,
-          ) -> dict:
+    def _(cls, player: dict, *, options: StatOptions | Sentinel = OPTIONAL, ) -> dict:
 
         logger.info(f"Processing player: {player.get('name', 'UNKNOWN')} ...")
         if 'rosterUnit' in player.keys():
-            player['rosterUnit'] = cls.calc_roster_stats(
-                player['rosterUnit'],
-                options=options,
-            )
+            player['rosterUnit'] = cls.calc_roster_stats(player['rosterUnit'], options=options, )
         else:
             raise StatCalcRuntimeError("'rosterUnit' element is missing from player.")
         return player
 
     @classmethod
-    def calc_roster_stats(
-            cls,
-            units: list[dict],
-            *,
-            options: StatOptions | Sentinel = OPTIONAL,
-    ) -> list:
+    def calc_roster_stats(cls, units: list[dict], *, options: StatOptions | Sentinel = OPTIONAL, ) -> list:
         """Calculate units stats from SWGOH roster game data
 
             Args
@@ -1279,11 +1185,7 @@ class StatCalc:
         return temp_units + temp_ships
 
     @classmethod
-    def initialize(cls,
-                   cl: SwgohComlink,
-                   language: str = "eng_us",
-                   **kwargs
-                   ) -> bool:
+    def initialize(cls, cl: SwgohComlink, language: str = "eng_us", **kwargs) -> bool:
         """Prepare StatCalc environment for first use. Providing keyword arguments can override default settings.
 
         Args
@@ -1308,8 +1210,7 @@ class StatCalc:
             cls.set_attribute(attr_name='_COMLINK', attr_value=cl)
 
         if language not in DataBuilder.get_languages():
-            logger.warning(f"Provided language {language} is not supported. "
-                           + f"Defaulting to 'eng_us'")
+            logger.warning(f"Provided language {language} is not supported. " + f"Defaulting to 'eng_us'")
         else:
             cls.set_attribute(attr_name='_LANGUAGE', attr_value=language)
 
@@ -1349,12 +1250,9 @@ class StatCalc:
             if not cls._load_unit_name_map(locale=cls._LANGUAGE):
                 raise StatCalcRuntimeError(f"Creation of unit 'nameKey' mapping object failed.")
 
-        logger.info(
-            f"Loading stat ID to localized name mapping for language: {cls._LANGUAGE} ..."
-        )
+        logger.info(f"Loading stat ID to localized name mapping for language: {cls._LANGUAGE} ...")
         if not cls._load_stat_name_map():
-            logger.error(f"Unable to load stat ID to name mapping. "
-                         + f"Stats will be referenced by ID only.")
+            logger.error(f"Unable to load stat ID to name mapping. " + f"Stats will be referenced by ID only.")
         else:
             logger.info(f"Stat ID to localized name mapping loading complete.")
 
@@ -1363,9 +1261,4 @@ class StatCalc:
         return True
 
 
-__all__ = [
-    StatCalc,
-    StatCalcException,
-    StatCalcRuntimeError,
-    StatValueError,
-]
+__all__ = [StatCalc, StatCalcException, StatCalcRuntimeError, StatValueError, ]

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from sentinels import Sentinel
 
-from .constants import (
+from swgoh_comlink.constants import (
     get_logger,
     GIVEN,  # Sentinel
     OPTIONAL,  # Sentinel
@@ -27,6 +27,7 @@ from .constants import (
     Constants,
     Config,
 )
+from swgoh_comlink.exceptions import ComlinkValueError
 
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: ignore
@@ -270,9 +271,7 @@ def create_localized_unit_name_dictionary(locale: str | list | Sentinel = REQUIR
 
     """
     if not isinstance(locale, list) and not isinstance(locale, str):
-        err_msg = f"{_get_function_name()}: locale must be a list of strings or string containing newlines."
-        default_logger.error(err_msg)
-        raise ValueError(err_msg)
+        raise ComlinkValueError(f"'locale' must be a list of strings or string containing newlines.")
 
     unit_name_map = {}
     lines = []
@@ -652,8 +651,8 @@ def get_tw_omicrons(skill_list: list) -> list:
 
     """
     if not isinstance(skill_list, list):
-        raise ValueError(
-            f"{_get_function_name()}, 'skill_list' must be a list, not {type(skill_list)}"
+        raise ComlinkValueError(
+            f"'skill_list' must be a list, not {type(skill_list)}"
         )
     tw_omicrons = []
     for skill in skill_list:

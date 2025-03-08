@@ -1047,7 +1047,15 @@ class DataItems:
         return str(getattr(cls, item)) if getattr(cls, item, None) else None
 
     @classmethod
-    def get_data_collection_names(cls):
+    def get_data_collection_names(cls) -> list:
+        """
+            This class method retrieves the names of all class attributes that are instances
+            of the `DataItems` type.
+
+            Returns:
+                list: A list containing the names of attributes in the class that are instances
+                of the `DataItems` type.
+        """
         return [x for x in list(cls.__dict__.keys()) if isinstance(cls.__dict__[x], DataItems)]
 
 

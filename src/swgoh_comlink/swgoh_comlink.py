@@ -102,7 +102,7 @@ class SwgohComlink(SwgohComlinkBase):
         req_headers = self._construct_request_headers(endpoint, payload)
         self.logger.info(f"Request headers: {req_headers}")
 
-        timeout = self._DEFAULT_CONNECTION_TIMEOUT if timeout is NotSet else timeout
+        timeout = self.client.timeout if timeout is NotSet else timeout
 
         self.logger.debug(f"Sending POST, {endpoint=} {req_headers=} [{stats=}, {timeout=}]")
         self.logger.debug(f"stats_client headers: {self.stats_client.headers}")

@@ -80,10 +80,10 @@ class SwgohComlinkAsync(SwgohComlinkBase):
                     ) -> Any:
         req_headers = self._construct_request_headers(endpoint, payload)
 
-        timeout = self._DEFAULT_CONNECTION_TIMEOUT if timeout is NotSet else timeout
+        timeout = self.client.timeout if timeout is NotSet else timeout
 
         connection_limit = httpx.Limits(keepalive_expiry=None)
-        self.client = httpx.AsyncClient(base_url=self.url_base, verify=False, timeout=self._DEFAULT_CONNECTION_TIMEOUT,
+        self.client = httpx.AsyncClient(base_url=self.url_base, verify=False, timeout=timeout,
                                         limits=connection_limit)
 
         try:
