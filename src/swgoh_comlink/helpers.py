@@ -2,6 +2,125 @@
 """
 Helper objects and functions for swgoh_comlink
 """
+from enum import IntFlag, auto
+
+
+class DataItems(IntFlag):
+    """
+    Integer flag enum class mapping game data collection names to the integer values of their bit positions for use
+    in the `items` parameter of the `get_game_data()` method.
+
+    Since the member values are integers, they can be combined using normal integer arithmetic operations to specify
+    more than one collection in a single call.
+
+    Examples:
+        effect = comlink.get_game_data(items=DataItems.EFFECT)
+        skill_equipment = comlink.get_game_data(items=(DataItems.SKILL + DataItems.EQUIPMENT))
+        units_no_pve = comlink.get_game_data(items=DataItems.UNITS, include_pve_units=False)
+
+    Some of the DataItems members are actually aliases for other members. For example, the `TABLE` member is an
+    alias for the `XP_TABLE` member. This is done because both members represent the same collection in the game data.
+
+    Other members are provided as a convenience. For example, the `SEGMENT1` member is assigned the integer value of
+    all the collections that are included when using the original (request_segment=) style of calling the
+    `get_game_data()` method.
+
+    To retrieve all of the available game data, use the `DataItems.ALL` member.
+
+    A list of the member names of the DataItems class can be retrieved using the `DataItems.members()` class method.
+    """
+
+    ALL = -1
+    CATEGORY = 1
+    UNLOCK_ANNOUNCEMENT_DEFINITION = auto()
+    SKILL = auto()
+    EQUIPMENT = auto()
+    EFFECT = auto()
+    XP_TABLE = auto()
+    TABLE = XP_TABLE
+    BATTLE_ENVIRONMENTS = auto()
+    EVENT_SAMPLING = auto()
+    TARGETING_SET = auto()
+    REQUIREMENT = auto()
+    POWER_UP_BUNDLE = auto()
+    GUILD_BANNER = auto()
+    BATTLE_TARGETING_RULE = auto()
+    PERSISTENT_VFX = auto()
+    MATERIAL = auto()
+    PLAYER_TITLE = auto()
+    PLAYER_PORTRAIT = auto()
+    TIME_ZONE_CHANGE_CONFIG = auto()
+    ENVIRONMENT_COLLECTION = auto()
+    EFFECT_ICON_PRIORITY = auto()
+    SOCIAL_STATUS = auto()
+    ABILITY = auto()
+    STAT_PROGRESSION = auto()
+    CHALLENGE = auto()
+    CHALLENGE_STYLE = CHALLENGE
+    WAR_DEFINITION = auto()
+    STAT_MOD_SET = auto()
+    STAT_MOD = STAT_MOD_SET
+    RECIPE = auto()
+    MOD_RECOMMENDATION = auto()
+    SCAVENGER_CONVERSION_SET = auto()
+    GUILD = auto()
+    RAID_CONFIG = GUILD
+    GUILD_RAID = GUILD
+    GUILD_EXCHANGE_ITEM = GUILD
+    TERRITORY_BATTLE_DEFINITION = GUILD
+    TERRITORY_WAR_DEFINITION = GUILD
+    STARTER_GUILD = GUILD
+    TERRITORY_TOURNAMENT_DEFINITION = GUILD
+    SEASON_DEFINITION = GUILD
+    SEASON_LEAGUE_DEFINITION = GUILD
+    SEASON_DIVISION_DEFINITION = GUILD
+    SEASON_REWARD_TABLE = GUILD
+    TERRITORY_TOURNAMENT_LEAGUE_DEFINITION = GUILD
+    TERRITORY_TOURNAMENT_DIVISION_DEFINITION = GUILD
+    SAVED_SQUAD_CONFIG = GUILD
+    GUILD_RAID_GLOBAL_CONFIG = GUILD
+    MYSTERY_BOX = auto()
+    MYSTERY_STAT_MOD = MYSTERY_BOX
+    COOLDOWN = auto()
+    DAILY_ACTION_CAP = auto()
+    ENERGY_REWARD = auto()
+    UNIT_GUIDE_DEFINITION = auto()
+    GALACTIC_BUNDLE = auto()
+    LINKED_STORE_ITEM = GALACTIC_BUNDLE
+    RELIC_TIER_DEFINITION = auto()
+    UNITS = auto()
+    CAMPAIGN = auto()
+    CONQUEST = auto()
+    CONQUEST_DEFINITION = CONQUEST
+    CONQUEST_MISSION = CONQUEST
+    ARTIFACT_DEFINITION = CONQUEST
+    CONSUMABLE_DEFINITION = CONQUEST
+    CONSUMABLE_TYPE = CONQUEST
+    ARTIFACT_TIER_DEFINITION = CONQUEST
+    CONSUMABLE_TIER_DEFINITION = CONQUEST
+    RECOMMENDED_SQUAD = auto()
+    UNIT_GUIDE_LAYOUT = auto()
+    DAILY_LOGIN_REWARD_DEFINITION = auto()
+    CALENDAR_CATEGORY_DEFINITION = auto()
+    TERRITORY_TOURNAMENT_DAILY_REWARD_TABLE = auto()
+    DATACRON = auto()
+    DATACRON_SET = DATACRON
+    DATACRON_TEMPLATE = DATACRON
+    DATACRON_AFFIX_TEMPLATE_SET = DATACRON
+    DATACRON_HELP_ENTRY = DATACRON
+    DISPLAYABLE_ENEMY = auto()
+    EPISODE_DEFINITION = auto()
+    LINKING_REWARD = auto()
+
+    SEGMENT1 = 2097151
+    SEGMENT2 = 68717379584
+    SEGMENT3 = 206158430208
+    SEGMENT4 = 281200098803712
+
+    @classmethod
+    def members(cls):
+        """Return a list of the member names of the DataItems class."""
+        return cls.__members__.keys()
 
 
 class Constants:
@@ -22,11 +141,12 @@ class Constants:
     PersistentVFX = 8192
     CraftingMaterialDefinitions = 16384
     PlayerTitleDefinitions = 32768
-    PlayerPortaitDefinitions = 65536
+    PlayerPortraitDefinitions = 65536
     TimeZoneChangeConfig = 131072
     EnvironmentCollections = 262144
     PersistentEffectPriorities = 524288
     SocialStatus = 1048576
+
     AbilityDefinitions = 2097152
     StatProgression = 4194304
     Challenge = 8388608
@@ -42,8 +162,10 @@ class Constants:
     EnergyRewards = 8589934592
     UnitGuideDefinitions = 17179869184
     GalacticBundleDefinitions = 34359738368
+
     RelicTierDefinitions = 68719476736
     UnitDefinitions = 137438953472
+
     CampaignDefinitions = 274877906944
     Conquest = 549755813888
     AbilityDecisionTrees = 1099511627776
@@ -54,6 +176,7 @@ class Constants:
     TerritoryTournamentDailyRewards = 35184372088832
     DatacronDefinitions = 70368744177664
     DisplayableEnemyDefinitions = 140737488355328
+
     Help = -9223372036854775808
     Segment1 = 2097151
     Segment2 = 68717379584
