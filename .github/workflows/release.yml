@@ -44,7 +44,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           git_committer_name: "github-actions"
           git_committer_email: "actions@users.noreply.github.com"
-          force: minor
 
       - name: Publish | Upload to GitHub Release Assets
         uses: python-semantic-release/publish-action@v9.21.0
@@ -55,9 +54,6 @@ jobs:
 
       - name: Retrieve release distributions
         uses: actions/download-artifact@v4
-        with:
-          name: release-dists
-          path: dist/
 
       - name: Publish | Upload package to PyPI
         uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
