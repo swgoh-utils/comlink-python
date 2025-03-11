@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
