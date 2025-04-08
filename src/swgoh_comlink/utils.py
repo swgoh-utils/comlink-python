@@ -659,3 +659,46 @@ def get_tw_omicrons(skill_list: list) -> list:
         if skill["omicronMode"] == 8:
             tw_omicrons.append(skill)
     return tw_omicrons
+
+
+def get_raid_leaderboard_ids(campaign_data: list) -> list[str]:
+    """
+    Extracts and returns the raid leaderboard IDs from the provided campaign data.
+
+    This function processes the `campaign_data` to find and extract the IDs of
+    raids associated with the guild campaigns. The IDs are formatted as a string
+    specifying the type and structure of the raid. The function specifically works
+    with the "GUILD" campaign type and retrieves IDs from the "NORMAL_DIFF"
+    difficulty group.
+
+    Args:
+        campaign_data (list): A list of campaign data structures, where each
+            structure represents campaign information. The input data is
+            expected to have nested dictionaries and lists with specific keys
+            such as 'id', 'campaignMap', 'campaignNodeDifficultyGroup', and
+            'campaignNode'.
+
+    Returns:
+        list: A list containing formatted raid leaderboard IDs extracted from the
+        guild campaign data. Each ID is constructed as a string containing the
+        relevant identifiers for the campaign and its raids.
+
+    Raises:
+        KeyError: If any of the required keys (e.g., 'id', 'campaignMap',
+            etc.) are missing in the input data.
+        TypeError: If `campaign_data` is not structured as expected, such as if
+            it is not a list or contains improperly formatted elements.
+    """
+    raid_ids = []
+    guild_campaigns = next((item for item in campaign_data if item.get('id') == 'GUILD'), None)
+    for raid in guild_campaigns['campaignMap'][0]['campaignNodeDifficultyGroup'][0]['campaignNode']:
+        for mission in raid['campaignNodeMission']:
+            elements = [
+                    guild_campaigns['id'],
+                    guild_campaigns['campaignMap'][0]['id'],
+                    "NORMAL_DIFF",
+                    raid['id'],
+                    mission['id']
+            ]
+            raid_ids.append(":".join(elements))
+    return raid_ids

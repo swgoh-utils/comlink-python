@@ -77,7 +77,7 @@ class SwgohComlinkBase:
     __version = __version__
     __comlink_type__ = NotSet
 
-    _DEFAULT_CONNECTION_TIMEOUT: float = 60.0
+    _DEFAULT_CONNECTION_TIMEOUT: float | None = None
 
     _unit_cache: dict = {}
 
