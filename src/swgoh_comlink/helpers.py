@@ -3,6 +3,7 @@
 Helper objects and functions for swgoh_comlink
 """
 from enum import IntFlag, auto
+from math import floor
 
 
 class DataItems(IntFlag):
@@ -235,3 +236,23 @@ def get_raid_leaderboard_ids(campaign_data: list) -> list[str]:
             ]
             raid_ids.append(":".join(elements))
     return raid_ids
+
+
+def get_max_rank_jump(current_rank: int) -> int:
+    """
+    Calculates the maximum rank jump a player can achieve based on their current rank.
+    The calculation is determined by applying different logic according to ranges of
+    the current rank.
+
+    Args:
+        current_rank (int): The player's current rank.
+
+    Returns:
+        int: The maximum rank jump the player can achieve.
+    """
+    if current_rank < 6:
+        return 1
+    elif current_rank < 55:
+        return current_rank - (3 + max(floor((current_rank - 1) / 6), 1))
+    else:
+        return int(round(current_rank * 0.85 - 1))
