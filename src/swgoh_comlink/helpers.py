@@ -218,7 +218,7 @@ def get_raid_leaderboard_ids(campaign_data: list) -> list[str]:
         relevant identifiers for the campaign and its raids.
 
     Raises:
-        KeyError: If any of the required keys (e.g., 'id', 'campaignMap',
+        KeyError: If any of the required keys (shared_status_event_object.g., 'id', 'campaignMap',
             etc.) are missing in the input data.
         TypeError: If `campaign_data` is not structured as expected, such as if
             it is not a list or contains improperly formatted elements.
