@@ -1,4 +1,5 @@
-from __future__ import annotations
+# coding=utf-8
+from __future__ import absolute_import, annotations
 
 import sys
 
@@ -9,6 +10,6 @@ from swgoh_comlink.version import __version__ as version
 from swgoh_comlink.swgoh_comlink import SwgohComlink
 
 __all__ = [
-    'SwgohComlink',
-    'version'
-]
+        'SwgohComlink',
+        'version'
+        ]
