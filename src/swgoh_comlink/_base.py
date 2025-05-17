@@ -77,7 +77,7 @@ class SwgohComlinkBase:
     __version = __version__
     __comlink_type__ = NotSet
 
-    _DEFAULT_CONNECTION_TIMEOUT: float | None = None
+    _DEFAULT_CONNECTION_TIMEOUT: float = 120.0
 
     _unit_cache: dict = {}
 
@@ -453,7 +453,7 @@ class SwgohComlinkBase:
             logger.error(err_str)
             raise ValueError(err_str)
 
-        if not isinstance(request_segment, Sentinel) and not isinstance(items, Sentinel):
+        if isinstance(request_segment, Sentinel) and isinstance(items, Sentinel):
             err_str = f"Either the 'request_segment' or 'items' must be set. [{request_segment=}, {items=}]"
             logger.error(err_str)
             raise ValueError(err_str)

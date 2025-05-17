@@ -15,12 +15,13 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any
 
+import httpcore
 import httpx
 from sentinels import Sentinel
 
 from swgoh_comlink._base import SwgohComlinkBase
 from swgoh_comlink.constants import (
-    REQUIRED,
+    DataItems, REQUIRED,
     OPTIONAL,
     MISSING,
     MutualExclusiveRequired,
@@ -75,6 +76,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             limits=connection_limit
             )
         self.logger.debug(f"Logger for SwgohComlinkAsync is initialized to {self.logger.name}")
+        self.logger.debug(f"HTTP Client: {self.client}")
+        self.logger.debug(f"HTTP Client Timeout: {self.client.timeout}")
+        self.logger.debug(f"Stats HTTP Client: {self.stats_client}")
 
     async def _post(
             self,
@@ -106,6 +110,10 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             self.logger.debug(f"Returning JSON response")
             return resp.json()
         except httpx.RequestError as exc:
+            exc_str = str(exc).replace("\n", "-")
+            self.logger.exception(f"Exception occurred: {exc_str}")
+            raise exc
+        except httpcore.ConnectError as exc:
             exc_str = str(exc).replace("\n", "-")
             self.logger.exception(f"Exception occurred: {exc_str}")
             raise exc
@@ -199,7 +207,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             include_pve_units: bool = True,
             request_segment: int = 0,
             enums: bool = False,
-            items: str | None = None,
+            items: DataItems | str | int | None = None,
             device_platform: str = "Android",
             ) -> dict:
         """Get current game data from servers
@@ -236,6 +244,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
                         items=items,
                         device_platform=device_platform,
                         ),
+                timeout=300.0
                 )
 
     # alias for non PEP usage of direct endpoint calls
@@ -385,6 +394,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             ValueError: if neither an allycode nor player_id is provided
 
         """
+        self.logger.debug(f"{self._get_function_name()}, {allycode=} {player_id=}")
         self._validate_player_args(allycode, player_id)
 
         payload = self._get_player_payload(

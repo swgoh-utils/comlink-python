@@ -26,7 +26,7 @@ from swgoh_comlink.constants import (
     NotSet,  # Sentinel
     Constants,
     Config,
-)
+    )
 from swgoh_comlink.exceptions import ComlinkValueError
 
 if TYPE_CHECKING:
@@ -36,26 +36,26 @@ default_logger = get_logger()
 default_logger.debug("Utils logging is set to %s..." % default_logger.name)
 
 __all__ = [
-    "convert_divisions_to_int",
-    "convert_league_to_int",
-    "convert_relic_tier",
-    "create_localized_unit_name_dictionary",
-    "func_debug_logger",
-    "func_timer",
-    "get_async_player",
-    "get_async_events",
-    "get_current_datacron_sets",
-    "get_current_gac_event",
-    "_get_function_name",
-    "get_gac_brackets",
-    "get_guild_members",
-    "get_tw_omicrons",
-    "human_time",
-    "load_master_map",
-    "sanitize_allycode",
-    "search_gac_brackets",
-    "validate_file_path",
-]
+        "convert_divisions_to_int",
+        "convert_league_to_int",
+        "convert_relic_tier",
+        "create_localized_unit_name_dictionary",
+        "func_debug_logger",
+        "func_timer",
+        "get_async_player",
+        "get_async_events",
+        "get_current_datacron_sets",
+        "get_current_gac_event",
+        "_get_function_name",
+        "get_gac_brackets",
+        "get_guild_members",
+        "get_tw_omicrons",
+        "human_time",
+        "load_master_map",
+        "sanitize_allycode",
+        "search_gac_brackets",
+        "validate_file_path",
+        ]
 
 
 def _get_function_name() -> str:
@@ -84,11 +84,11 @@ def func_debug_logger(f):
     def wrap(*args, **kw):
         """Wrapper function"""
         default_logger.debug(
-            "  [ function %s ] called with args: %s and kwargs: %s",
-            f.__name__,
-            args,
-            kw,
-        )
+                "  [ function %s ] called with args: %s and kwargs: %s",
+                f.__name__,
+                args,
+                kw,
+                )
         result = f(*args, **kw)
         return result
 
@@ -293,10 +293,12 @@ def create_localized_unit_name_dictionary(locale: str | list | Sentinel = REQUIR
 
 
 @func_debug_logger
-async def get_async_player(comlink: SwgohComlinkAsync | Sentinel = REQUIRED,
-                           *,
-                           player_id: str | Sentinel = MutualExclusiveRequired,
-                           allycode: str | int | Sentinel = MutualExclusiveRequired) -> dict:
+async def get_async_player(
+        comlink: SwgohComlinkAsync | Sentinel = REQUIRED,
+        *,
+        player_id: str | Sentinel = MutualExclusiveRequired,
+        allycode: str | int | Sentinel = MutualExclusiveRequired
+        ) -> dict:
     log_msg = f"Beginning async player call with arguments: {comlink=}, {player_id=}, {allycode=}"
     default_logger.debug('[DEFAULT_LOGGER]  ' + log_msg)
 
@@ -359,7 +361,7 @@ async def get_async_player(comlink: SwgohComlinkAsync | Sentinel = REQUIRED,
 async def get_async_guild(
         comlink: SwgohComlinkAsync | Sentinel = REQUIRED,
         guild_id: str | Sentinel = REQUIRED,
-) -> dict:
+        ) -> dict:
     """Return the SwgohComlinkAsync.get_guild() dictionary object
 
     Args:
@@ -377,7 +379,7 @@ def get_guild_members(
         comlink: SwgohComlink | SwgohComlinkAsync | Sentinel = REQUIRED,
         player_id: str | Sentinel = MutualExclusiveRequired,
         allycode: str | int | Sentinel = MutualExclusiveRequired,
-) -> list:
+        ) -> list:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
     Args:
@@ -471,7 +473,8 @@ async def get_async_events(comlink: SwgohComlinkAsync | Sentinel = REQUIRED) -> 
 
 
 def get_current_gac_event(
-        comlink: SwgohComlink | SwgohComlinkAsync | Sentinel = REQUIRED) -> dict:
+        comlink: SwgohComlink | SwgohComlinkAsync | Sentinel = REQUIRED
+        ) -> dict:
     """Return the event object for the current gac season
 
     Args:
@@ -509,9 +512,11 @@ def get_current_gac_event(
     return current_gac_event
 
 
-def get_gac_brackets(comlink: SwgohComlink | Sentinel = REQUIRED,
-                     league: str | Sentinel = REQUIRED,
-                     limit: int | Sentinel = OPTIONAL) -> dict | None:
+def get_gac_brackets(
+        comlink: SwgohComlink | Sentinel = REQUIRED,
+        league: str | Sentinel = REQUIRED,
+        limit: int | Sentinel = OPTIONAL
+        ) -> dict | None:
     """Scan currently running GAC brackets for the requested league and return them as a dictionary
 
     Args:
@@ -544,7 +549,7 @@ def get_gac_brackets(comlink: SwgohComlink | Sentinel = REQUIRED,
 
     if current_gac_event:
         current_event_instance = (
-            f"{current_gac_event['id']}:{current_gac_event['instance'][0]['id']}"
+                f"{current_gac_event['id']}:{current_gac_event['instance'][0]['id']}"
         )
         default_logger.debug(f"{_get_function_name()}: Current GAC event instance is {current_event_instance}")
     else:
@@ -558,10 +563,10 @@ def get_gac_brackets(comlink: SwgohComlink | Sentinel = REQUIRED,
     while number_of_players_in_bracket > 0 and bracket_iteration_limit != bracket:
         group_id = f"{current_event_instance}:{league}:{bracket}"
         group_of_8_players = comlink.get_gac_leaderboard(
-            leaderboard_type=4,
-            event_instance_id=current_event_instance,
-            group_id=group_id,
-        )
+                leaderboard_type=4,
+                event_instance_id=current_event_instance,
+                group_id=group_id,
+                )
         brackets[bracket] = brackets.get(bracket, group_of_8_players["player"])
         bracket += 1
         number_of_players_in_bracket = len(group_of_8_players["player"])
@@ -590,7 +595,7 @@ def search_gac_brackets(gac_brackets: dict, player_name: str) -> dict:
 
 def load_master_map(
         master_map_path: str | Path = Config.DATA_PATH, language: str = "eng_us"
-) -> dict | None:
+        ) -> dict | None:
     """Read master localization key/string mapping file into dictionary and return
 
     Args:
@@ -627,8 +632,8 @@ def get_current_datacron_sets(datacron_list: list) -> list:
     """
     if not isinstance(datacron_list, list):
         raise ValueError(
-            f"{_get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}"
-        )
+                f"{_get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}"
+                )
     import math
     current_datacron_sets = []
     for datacron in datacron_list:
@@ -652,8 +657,8 @@ def get_tw_omicrons(skill_list: list) -> list:
     """
     if not isinstance(skill_list, list):
         raise ComlinkValueError(
-            f"'skill_list' must be a list, not {type(skill_list)}"
-        )
+                f"'skill_list' must be a list, not {type(skill_list)}"
+                )
     tw_omicrons = []
     for skill in skill_list:
         if skill["omicronMode"] == 8:
@@ -699,6 +704,17 @@ def get_raid_leaderboard_ids(campaign_data: list) -> list[str]:
                     "NORMAL_DIFF",
                     raid['id'],
                     mission['id']
-            ]
+                    ]
             raid_ids.append(":".join(elements))
     return raid_ids
+
+
+def get_playable_units(units_collection: list[dict]) -> list[dict]:
+    """Return a list of playable units from game data 'units' collection"""
+    if not isinstance(units_collection, list):
+        raise ComlinkValueError(f"'units_collection' must be a list, not {type(units_collection)}")
+
+    return [unit for unit in units_collection
+            if unit['rarity'] == 7
+            and unit['obtainable'] is True
+            and unit['obtainableTime'] == '0']
