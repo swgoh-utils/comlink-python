@@ -20,7 +20,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "requests"
+    "requests",
+    "sentinels",
 ]
 
 [project.urls]
