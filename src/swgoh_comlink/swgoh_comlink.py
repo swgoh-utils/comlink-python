@@ -11,7 +11,7 @@ import os
 import re
 import time
 from json import dumps, loads
-from typing import Callable
+from typing import Any, Callable
 
 import requests
 import urllib3
@@ -85,6 +85,8 @@ class SwgohComlink:
     Notes:
         If the 'host' and 'port' parameters are provided, the 'url' and 'stats_url' parameters are ignored.
     """
+
+    __comlink_type__ = 'SwgohComlink'
 
     PROTOCOL = 'http'
 
@@ -233,8 +235,15 @@ class SwgohComlink:
     # alias for non PEP usage of direct endpoint calls
     getEvents = get_events
 
-    def get_game_data(self, version: str = "", include_pve_units: bool = True, request_segment: int = 0,
-                      enums: bool = False, items: str = None, device_platform: str = "Android") -> dict:
+    def get_game_data(
+            self,
+            version: str = "",
+            include_pve_units: bool = True,
+            request_segment: int = 0,
+            enums: bool = False,
+            items: str = None,
+            device_platform: str = "Android"
+            ) -> dict:
         """
         Get game data
 
@@ -254,16 +263,26 @@ class SwgohComlink:
             game_version = self._get_game_version()
         else:
             game_version = version
-        payload = {"payload": {"version":         f"{game_version}", "devicePlatform": device_platform,
-                               "includePveUnits": include_pve_units, }, "enums": enums}
+        payload: dict[str, Any] = {
+                "payload": {
+                        "version": f"{game_version}",
+                        "devicePlatform": device_platform,
+                        "includePveUnits": include_pve_units,
+                        },
+                "enums": enums
+                }
 
-        if items:  # presence of 'items' argument overrides the 'request_segment' and 'include_pve_units' arguments
+        if items:  # presence of 'items' argument overrides the 'request_segment' argument
             if isinstance(items, int) and str(abs(items)).isdigit():
                 payload['payload']['items'] = str(items)
             else:
                 payload['payload']['items'] = Constants.get(items) or "-1"
         else:
-            payload['payload']['requestSegment'] = int(request_segment)
+            if request_segment < 0 or request_segment > 4:
+                raise ValueError(
+                        f'Invalid argument. <request_segment> should be an integer between 0 and 4, inclusive.'
+                        )
+            payload['payload']['requestSegment'] = request_segment
 
         return self._post(endpoint='data', payload=payload)
 
@@ -462,7 +481,8 @@ class SwgohComlink:
     # alias for non PEP usage of direct endpoint calls
     getGuildByCriteria = get_guilds_by_criteria
 
-    def get_leaderboard(self, leaderboard_type: int, /, league: int | str = None, division: int | str = None,
+    def get_leaderboard(
+            self, leaderboard_type: int, *, league: int | str = None, division: int | str = None,
                         event_instance_id: str = None, group_id: str = None, enums: bool = False) -> dict:
         """
         Retrieve Grand Arena Championship leaderboard information.
@@ -504,7 +524,7 @@ class SwgohComlink:
             division = divisions[str(division).lower()]
         if isinstance(division, str):
             division = divisions[division.lower()]
-        payload = {"payload": {"leaderboardType": leaderboard_type, }, "enums": enums}
+        payload: dict[str, Any] = {"payload": {"leaderboardType": leaderboard_type, }, "enums": enums}
         if leaderboard_type == 4:
             payload['payload']['eventInstanceId'] = event_instance_id
             payload['payload']['groupId'] = group_id
