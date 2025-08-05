@@ -1857,3 +1857,60 @@ def get_unit_from_skill(unit_list: list[dict], skill: str) -> NamedTuple | None:
         return base_ids[0]
     else:
         return None
+
+
+def get_datacron_dismantle_value(datacron: dict, datacron_set_list: list, recipe_list: list) -> dict:
+    """
+    Retrieves datacron dismantle materials based on the input datacron, datacron sets, and recipes.
+
+    This function calculates the necessary materials required to dismantle a given
+    datacron by leveraging its set information and specific recipes tied to its tier.
+    If proper references are not found in the provided datacron set list or recipe
+    list, the function will return an empty dictionary.
+
+    Arguments:
+        datacron (dict): The datacron object from a player object.
+        datacron_set_list (list): The game data 'datacronSet' collection.
+        recipe_list (list): The game data 'recipe' collection.
+
+    Returns:
+        dict: A dictionary mapping ingredient IDs to their required dismantle material
+              details, which include the quantity and type.
+    """
+    dismantle_materials = {}
+    set_id = datacron.get('setId')
+    focused: bool = datacron.get('focused', False)
+    affix_tier = len(datacron.get('affix', []))
+
+    # Helper function to retrieve an object based on its ID
+    def find_object_by_id(obj_list, obj_id):
+        return next((obj for obj in obj_list if obj.get('id') == obj_id), None)
+
+    # Find datacron set by setId
+    datacron_set = find_object_by_id(datacron_set_list, set_id)
+    if not datacron_set:
+        return dismantle_materials
+
+    # Find dust recipe ID by affix tier
+    tier_element = 'focusedTier' if focused else 'tier'
+    dust_recipe_id = next(
+            (tier.get('dustGrantRecipeId')
+             for tier in datacron_set.get(tier_element, []) if tier.get('id') == affix_tier),
+            None
+            )
+    if not dust_recipe_id:
+        return dismantle_materials
+
+    # Find recipe by dust recipe ID
+    dust_recipe = find_object_by_id(recipe_list, dust_recipe_id)
+    if not dust_recipe:
+        return dismantle_materials
+
+    # Collect dismantle materials
+    for ingredient in dust_recipe.get('ingredients', []):
+        dismantle_materials[ingredient.get('id')] = {
+                "quantity": ingredient.get('maxQuantity'),
+                "type": ingredient.get('type'),
+                "focused": focused,
+                }
+    return dismantle_materials
