@@ -1,5 +1,252 @@
 # CHANGELOG
 
+<!-- insertion marker -->
+
+## [v1.16.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.16.0) - 2025-10-02
+
+<small>[Compare with v1.14.0](https://github.com/swgoh-utils/comlink-python/compare/v1.14.0...v1.16.0)</small>
+
+### Features
+
+- add custom exceptions and
+  logging ([9855b5a](https://github.com/swgoh-utils/comlink-python/commit/9855b5af23d286bb545da12df3472526292371cd) by
+  MarTrepodi).
+- add function to calculate datacron dismantle
+  value ([af0a6a7](https://github.com/swgoh-utils/comlink-python/commit/af0a6a7a46e10227450f9d866ffbb18a9d05a724) by
+  MarTrepodi).
+- enhance typings, validation, and constants
+  support ([eab2851](https://github.com/swgoh-utils/comlink-python/commit/eab2851d2c6c22bebd597dfe3aa3d014a65828f9) by
+  MarTrepodi).
+- add LightspeedToken enum value to DataItems class in
+  helpers.py ([2d22988](https://github.com/swgoh-utils/comlink-python/commit/2d22988ee332f37147a2cbad625625be96d50545)
+  by MarTrepodi).
+- add function to calculate arena payout
+  time ([7eed7c1](https://github.com/swgoh-utils/comlink-python/commit/7eed7c177035ea21d4a95a6777fd2c05f52419c5) by
+  MarTrepodi).
+- add threaded player fetch script for parallel data
+  collection ([ca143b3](https://github.com/swgoh-utils/comlink-python/commit/ca143b313bd8a576c007812228ca872e4e78e6ce)
+  by MarTrepodi).
+- add function to calculate max rank
+  jump ([de28969](https://github.com/swgoh-utils/comlink-python/commit/de289692588236f7c4cecfa1da60386a9920df41) by
+  MarTrepodi).
+
+### Code Refactoring
+
+- update imports and fix formatting in __init__
+  .py ([e42045e](https://github.com/swgoh-utils/comlink-python/commit/e42045e86212049940634b0e429840b8195896d2) by
+  MarTrepodi).
+
+## [v1.14.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.14.0) - 2025-03-09
+
+<small>[Compare with v1.13.0](https://github.com/swgoh-utils/comlink-python/compare/v1.13.0...v1.14.0)</small>
+
+### Bug Fixes
+
+- downgrade urllib3 to v1.26.20 (
+  #43) ([d39c3fd](https://github.com/swgoh-utils/comlink-python/commit/d39c3fdc048637ee1a0c94874b617bb2cde0fe3f) by
+  MarTrepodi).
+- downgrade urllib3 to
+  v1.26.20 ([d6c0676](https://github.com/swgoh-utils/comlink-python/commit/d6c0676b2124506c865a478bf67bbf7f485c9add) by
+  MarTrepodi).
+- update build command and correct version
+  number ([5e4a1d8](https://github.com/swgoh-utils/comlink-python/commit/5e4a1d85811e4aa47a0d58e8c6c831d244cc8260) by
+  MarTrepodi).
+
+### Features
+
+- add DataItems IntFlag enum for game data
+  collection ([629a865](https://github.com/swgoh-utils/comlink-python/commit/629a865f257eaf624087069261026203cf333510)
+  by MarTrepodi).
+
+### Code Refactoring
+
+- simplify code and improve
+  consistency ([7616b0c](https://github.com/swgoh-utils/comlink-python/commit/7616b0c4958f51eac88a20f0024a177e98d4c235)
+  by MarTrepodi).
+- rename tests folder and add new helper
+  function ([9ba58f6](https://github.com/swgoh-utils/comlink-python/commit/9ba58f6aa659f84ca54920178eebe8fb5eebca4b) by
+  MarTrepodi).
+- update method calls with explicit argument
+  names ([c61ba96](https://github.com/swgoh-utils/comlink-python/commit/c61ba967d4bf29c17ef1fb77c7c1162e6d423022) by
+  MarTrepodi).
+
+## [v1.13.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.13.0) - 2025-02-26
+
+<small>[Compare with v1.12.4](https://github.com/swgoh-utils/comlink-python/compare/v1.12.4...v1.13.0)</small>
+
+### Bug Fixes
+
+- fix get_unit_stats() method to properly handle full player roster
+  collection ([015ccc8](https://github.com/swgoh-utils/comlink-python/commit/015ccc8ed80a00caa6366b62c5155ec955961ba4)
+  by MarTrepodi). chore: update minimum supported python version to 3.10 in pyproject.toml
+
+## [v1.12.4](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.12.4) - 2024-08-09
+
+<small>[Compare with v1.12.3](https://github.com/swgoh-utils/comlink-python/compare/v1.12.3...v1.12.4)</small>
+
+## [v1.12.3](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.12.3) - 2024-08-09
+
+<small>[Compare with v1.12.1](https://github.com/swgoh-utils/comlink-python/compare/v1.12.1...v1.12.3)</small>
+
+### Features
+
+- add 'items' parameter to get_game_data() and 'locale' parameter to
+  get_localization() ([a4c3e6b](https://github.com/swgoh-utils/comlink-python/commit/a4c3e6b304e8886466d835b2bf2f525357b05c17)
+  by MarTrepodi).
+
+## [v1.12.1](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.12.1) - 2024-03-26
+
+<small>[Compare with v1.12.0](https://github.com/swgoh-utils/comlink-python/compare/v1.12.0...v1.12.1)</small>
+
+## [v1.12.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.12.0) - 2023-05-16
+
+<small>[Compare with v1.11.1](https://github.com/swgoh-utils/comlink-python/compare/v1.11.1...v1.12.0)</small>
+
+### Features
+
+- added get_latest_game_data_version() method for simplified access to game data and language bundle version
+  information ([dce650f](https://github.com/swgoh-utils/comlink-python/commit/dce650f29e88758009211039f64689f3ee197e55)
+  by MarTrepodi).
+
+## [v1.11.1](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.11.1) - 2023-02-19
+
+<small>[Compare with v1.11.0](https://github.com/swgoh-utils/comlink-python/compare/v1.11.0...v1.11.1)</small>
+
+## [v1.11.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.11.0) - 2023-02-14
+
+<small>[Compare with v1.10.0](https://github.com/swgoh-utils/comlink-python/compare/v1.10.0...v1.11.0)</small>
+
+### Features
+
+- add
+  get_guild_leaderboard() ([402943c](https://github.com/swgoh-utils/comlink-python/commit/402943cb9441154d36537a27f189e987cbe48cd1)
+  by MarTrepodi).
+
+## [v1.10.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.10.0) - 2023-02-07
+
+<small>[Compare with v1.9.0](https://github.com/swgoh-utils/comlink-python/compare/v1.9.0...v1.10.0)</small>
+
+### Features
+
+- add get_leaderboard(). update README.md. add requests package to install_dependencies iin
+  pyproject.toml. ([84f1982](https://github.com/swgoh-utils/comlink-python/commit/84f1982cad26a274cb354f3219f54d2d42b218c9)
+  by MarTrepodi).
+
+## [v1.9.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.9.0) - 2023-01-31
+
+<small>[Compare with v1.8.0](https://github.com/swgoh-utils/comlink-python/compare/v1.8.0...v1.9.0)</small>
+
+### Features
+
+- add get_events(). update get_player_arena to include 'playerDetailsOnly'
+  parameter. ([49189ae](https://github.com/swgoh-utils/comlink-python/commit/49189ae22d71d6923f8e3d21525551d9b3e1d679)
+  by MarTrepodi).
+
+## [v1.8.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.8.0) - 2023-01-31
+
+<small>[Compare with v1.7.7](https://github.com/swgoh-utils/comlink-python/compare/v1.7.7...v1.8.0)</small>
+
+### Build
+
+- add swgoh-stat to test.yml
+  workflow ([5ef5ecf](https://github.com/swgoh-utils/comlink-python/commit/5ef5ecf4474390379603336f5275847ca32f949d) by
+  MarTrepodi).
+
+### Features
+
+- add
+  get_unit_stats() ([c1e46f8](https://github.com/swgoh-utils/comlink-python/commit/c1e46f8af417dc620422040bbafe9c90a90f4cf1)
+  by MarTrepodi).
+- initial get_unit_stat()
+  implementation. ([59cba96](https://github.com/swgoh-utils/comlink-python/commit/59cba96f290de3f12e5e807a50a15044eb53fceb)
+  by MarTrepodi).
+
+## [v1.7.7](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.7.7) - 2023-01-20
+
+<small>[Compare with v1.7.6](https://github.com/swgoh-utils/comlink-python/compare/v1.7.6...v1.7.7)</small>
+
+### Build
+
+- split ci/cd workflow into separate test and release workflows. add link to PyPi package location in README.md. sync
+  file based release version number with GitHub
+  tag. ([4a2f58a](https://github.com/swgoh-utils/comlink-python/commit/4a2f58a137cb0644ea3c43dd882bc34838fb5856) by
+  MarTrepodi).
+
+### Bug Fixes
+
+- replace getGuild() JSON parameter element include_recent_guild_activity_info with
+  includeRecentGuildActivityInfo ([4d58e04](https://github.com/swgoh-utils/comlink-python/commit/4d58e04fb3c3824ffd99b04080a03d178030e61e)
+  by MarTrepodi).
+
+## [v1.7.6](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.7.6) - 2023-01-19
+
+<small>[Compare with v1.7.5](https://github.com/swgoh-utils/comlink-python/compare/v1.7.5...v1.7.6)</small>
+
+### Build
+
+- enable automated release deployment to
+  PyPi ([cf50a74](https://github.com/swgoh-utils/comlink-python/commit/cf50a741c2b0aaa4502826524f001bbbf0cde2cf) by
+  MarTrepodi).
+
+## [v1.7.5](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.7.5) - 2023-01-19
+
+<small>[Compare with v1.7.4](https://github.com/swgoh-utils/comlink-python/compare/v1.7.4...v1.7.5)</small>
+
+### Build
+
+- updated pyproject.toml for setuptool dynamic version
+  extraction ([f7a8c73](https://github.com/swgoh-utils/comlink-python/commit/f7a8c736d8279bb88b724d2ff69dde9418e62b42)
+  by MarTrepodi).
+- updated pyproject.toml for setuptools version extraction from
+  module ([86bc265](https://github.com/swgoh-utils/comlink-python/commit/86bc265955752f497126468cc8441a0395abf159) by
+  MarTrepodi).
+- remove build_command from
+  pyproject.toml ([fe260e0](https://github.com/swgoh-utils/comlink-python/commit/fe260e0a777ba5ab5f01330ffb263c0f9d049512)
+  by MarTrepodi).
+- manually bump release version to sync ci/cd
+  automation ([56c23b2](https://github.com/swgoh-utils/comlink-python/commit/56c23b20c965a7ef41c67c9b702107541224486a)
+  by MarTrepodi).
+- added installation of python build module to ci/cd
+  workflow ([6e1e2b6](https://github.com/swgoh-utils/comlink-python/commit/6e1e2b687ab6368330a1f44cbf4a69b3e9953d09) by
+  MarTrepodi).
+- added version source directive to pull from github
+  tag ([b91f0b4](https://github.com/swgoh-utils/comlink-python/commit/b91f0b47163da90b1abfb0952262427728fcdafa) by
+  MarTrepodi).
+
+## [v1.7.4](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.7.4) - 2023-01-19
+
+<small>[Compare with first commit](https://github.com/swgoh-utils/comlink-python/compare/871ea4be044f19a647a4638e23fc5e42bcf53ea5...v1.7.4)</small>
+
+### Build
+
+- removed publishing of release to PyPi until CD process has been fully
+  validated. ([8e975eb](https://github.com/swgoh-utils/comlink-python/commit/8e975eb1dbd9ea6f2e8c0e5d7b9409a01fd9d672)
+  by MarTrepodi).
+
+### Bug Fixes
+
+- removed asyncio modifications that were committed
+  prematurely ([a7c29e0](https://github.com/swgoh-utils/comlink-python/commit/a7c29e0960e6415863ceac46024df40229cba35d)
+  by MarTrepodi).
+- Fixed instance instantiation syntax for
+  pytests ([ec54bea](https://github.com/swgoh-utils/comlink-python/commit/ec54bea1fdec5a598b0b3c23700090481d88aa70) by
+  MarTrepodi).
+- Added version.py for external version
+  bumping ([dbdc1e1](https://github.com/swgoh-utils/comlink-python/commit/dbdc1e1e4df749ae2ea3c5ceec115663c366b4c2) by
+  MarTrepodi).
+- Updated tests for latest package import
+  refactor ([4204afb](https://github.com/swgoh-utils/comlink-python/commit/4204afb4d9453fb65694fea15253c541ffe06054) by
+  MarTrepodi).
+
+### Features
+
+- added CI/CD
+  workflow ([5519abb](https://github.com/swgoh-utils/comlink-python/commit/5519abb63f56cc1e4ec438c2fbb37d90788a435c) by
+  MarTrepodi).
+- Refactor for single module import from package. Added game version collection at instance instantiation. Game data
+  version parameter for get_game_data() now defaults to current version if not
+  supplied. ([0bfa33a](https://github.com/swgoh-utils/comlink-python/commit/0bfa33a753a2088c801296e4446500fdfb568037) by
+  MarTrepodi).
 
 ## v1.14.0 (2025-03-09)
 

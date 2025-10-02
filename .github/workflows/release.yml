@@ -40,15 +40,18 @@ jobs:
       # Install dependencies
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install hatch
+          python -m pip install uv
+          uv pip install hatch
 
-      # Build the package using python3 -m build
-      - name: Build the package
+      # Update version
+      - name: Update version
+        run: uv run hatch version minor
+
+      # Update CHANGELOG.md
+      - name: Update CHANGELOG.md
         run: |
-          python3 -m pip install --upgrade setuptools wheel build uv
-          python3 -m build
+          uv pip install git-changelog
+          git-changelog -B auto -Tio CHANGELOG.md -c angular -s build,deps,fix,feat,refactor -n semver 
 
       # Tag the release in GitHub
       - name: Tag the release
@@ -58,15 +61,12 @@ jobs:
           git config user.email "$(git log -n 1 --pretty=format:%ae)"
           git tag -a "v$VERSION" -m "Release version $VERSION"
           git push origin "v$VERSION"
-          uv run hatch version "$VERSION"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Update CHANGELOG.md
-      - name: Update CHANGELOG.md
-        run: |
-          python3 install git-changelog
-          git-changelog -B auto -Tio CHANGELOG.md -c angular -s build,deps,fix,feat,refactor -n semver 
+      # Build the package using python3 -m build
+      - name: Build the package
+        run: uv run hatch build
 
     # Publish the package to PyPI
   pypi-publish:
