@@ -70,6 +70,11 @@ player_name = player_data['name']
 - **_access_key_**: The "public" portion of the shared key used in HMAC request signing. Defaults to `None` which disables HMAC signing of requests. Can also be read from the ACCESS_KEY environment variable.
 - **_secret_key_**: The "private" portion of the key used in HMAC request signing. Defaults to `None` which disables HMAC signing of requests. Can also be read from the SECRET_KEY environment variable.
 
+# Logging
+
+Logging is handled by the [python logging module](https://docs.python.org/3/library/logging.html). For details on the
+logging implementation for this package, go [here](docs/logging.md).
+
 See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for more information.
 
 ## Support
