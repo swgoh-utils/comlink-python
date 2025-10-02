@@ -11,12 +11,17 @@ from collections import namedtuple
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import wraps
-from math import floor
 from os import PathLike
 from pathlib import Path
 from typing import Any, NamedTuple, Optional, TYPE_CHECKING
 
+from math import floor
 from sentinels import Sentinel
+
+from .exceptions import SwgohComlinkValueError
+from .globals import get_logger
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: ignore
@@ -155,6 +160,7 @@ class DataItems(IntFlag):
 
 
 class Constants:
+    """Collection of constants used throughout the SwgohComlink project."""
     ALL = -1
     CategoryDefinitions = 1
     UnlockAnnouncements = 2
@@ -223,7 +229,7 @@ class Constants:
     MAX_VALUES: dict[str, int] = {
             "GEAR_TIER": 13,
             "UNIT_LEVEL": 85,
-            "RELIC_TIER": 9,
+            "RELIC_TIER": 10,
             "UNIT_RARITY": 7,
             "MOD_TIER": 5,  # Color
             "MOD_LEVEL": 15,
@@ -1159,6 +1165,7 @@ class Constants:
             "8": "7",
             "9": "8",
             "10": "9",
+            "11": "10"
             }
 
     OMICRON_MODE: dict[int, str] = {
@@ -1281,25 +1288,27 @@ def get_function_name() -> str:
     return f"{inspect.stack()[1].function}()"
 
 
-def func_timer(f):
+def func_timer(func):
     """Decorator to record total execution time of a function to the configured logger using level DEBUG"""
 
-    @wraps(f)
+    @wraps(func)
     def wrap(*args, **kw):
         """Wrapper function"""
-        result = f(*args, **kw)
+        result = func(*args, **kw)
         return result
 
     return wrap
 
 
-def func_debug_logger(f):
+def func_debug_logger(func):
     """Decorator for applying DEBUG logging to a function"""
 
-    @wraps(f)
+    @wraps(func)
     def wrap(*args, **kw):
         """Wrapper function"""
-        result = f(*args, **kw)
+        logger.debug(f"{func.__name__()} called with args: {args} and kwargs: {kw}")
+        result = func(*args, **kw)
+        logger.debug(f"{func.__name__()} Result: {result}")
         return result
 
     return wrap
@@ -1329,7 +1338,7 @@ def validate_file_path(path: str | Path | PathLike) -> bool:
     """
     if path is MISSING or not path:
         err_msg = f"{get_function_name()}: 'path' argument is required."
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
     return os.path.exists(path) and os.path.isfile(path)
 
 
@@ -1357,7 +1366,7 @@ def sanitize_allycode(allycode: str | int | Sentinel = REQUIRED) -> str:
         allycode = allycode.replace("-", "")
     if not allycode.isdigit() or len(allycode) != 9:
         err_msg = f"{get_function_name()}: Invalid ally code: {allycode}"
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
     return allycode
 
 
@@ -1378,16 +1387,16 @@ def human_time(unix_time: int | float | Sentinel = REQUIRED) -> str:
     print(f"unix_time: {unix_time}")
     if unix_time is MISSING or not str(unix_time):
         err_msg = f"{get_function_name()}: The 'unix_time' argument is required."
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
     from datetime import datetime, timezone
     if isinstance(unix_time, float):
         unix_time = int(unix_time)
     if isinstance(unix_time, str):
         try:
             unix_time = int(unix_time)
-        except ValueError:
+        except SwgohComlinkValueError:
             err_msg = f"{get_function_name()}: Unable to convert unix time from {type(unix_time)} to type <int>"
-            raise ValueError(err_msg)
+            raise SwgohComlinkValueError(err_msg)
     if len(str(unix_time)) >= 13:
         unix_time /= 1000
     return datetime.fromtimestamp(unix_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -1405,7 +1414,7 @@ def convert_league_to_int(league: str | Sentinel = REQUIRED) -> int | None:
     """
     if league is MISSING or not league:
         err_msg = f"{get_function_name()}: The 'league' argument is required."
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
 
     if isinstance(league, str) and league.lower() in Constants.LEAGUES:
         return Constants.LEAGUES[league.lower()]
@@ -1425,7 +1434,7 @@ def convert_divisions_to_int(division: int | str | Sentinel = REQUIRED) -> int |
     """
     if division is MISSING or not division:
         err_msg = f"{get_function_name()}: The 'division' argument is required."
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
 
     if isinstance(division, str):
         if division in Constants.DIVISIONS:
@@ -1459,7 +1468,7 @@ def convert_relic_tier(relic_tier: str | int | Sentinel = REQUIRED) -> str | Non
     """
     if not isinstance(relic_tier, str) and not isinstance(relic_tier, int):
         err_msg = f"{get_function_name()}: 'relic_tier' argument is required for conversion."
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
     relic_value = None
     if isinstance(relic_tier, int):
         relic_tier = str(relic_tier)
@@ -1484,7 +1493,7 @@ def create_localized_unit_name_dictionary(locale: str | list | Sentinel = REQUIR
 
     """
     if not isinstance(locale, list) and not isinstance(locale, str):
-        raise ValueError(f"'locale' must be a list of strings or string containing newlines.")
+        raise SwgohComlinkValueError(f"'locale' must be a list of strings or string containing newlines.")
 
     unit_name_map = {}
     lines = []
@@ -1531,15 +1540,15 @@ def get_guild_members(
     if comlink is MISSING or comlink_type != 'SwgohComlink':
         err_msg = (f"{get_function_name()}: The 'comlink' argument is required and must be an "
                    f"instance of SwgohComlink.")
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
 
     if player_id is not MutualExclusiveRequired and allycode is not MutualExclusiveRequired:
         err_msg = f"{get_function_name()}: Either 'player_id' or 'allycode' are allowed arguments, not both."
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
 
     if player_id is MutualExclusiveRequired and allycode is MutualExclusiveRequired:
         err_msg = f"{get_function_name()}: One of either 'player_id' or 'allycode' is required."
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
 
     if isinstance(player_id, str):
         player = comlink.get_player(player_id=player_id)
@@ -1568,7 +1577,7 @@ def get_current_gac_event(
 
     if comlink is MISSING or comlink_type is MISSING:
         err_str = f"{get_function_name()}: comlink instance must be provided."
-        raise ValueError(err_str)
+        raise SwgohComlinkValueError(err_str)
 
     current_events = comlink.get_events()
 
@@ -1597,11 +1606,11 @@ def get_gac_brackets(
         comlink_type = MISSING
     if comlink is MISSING or comlink_type != 'SwgohComlink':
         err_msg = f"{get_function_name()}: Invalid comlink instance."
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
 
     if league is MISSING or not isinstance(league, str):
         err_msg = f"{get_function_name()}: 'league' type <str> argument is required."
-        raise ValueError(err_msg)
+        raise SwgohComlinkValueError(err_msg)
 
     bracket_iteration_limit: int | None = None if limit is NotSet else int(limit)
 
@@ -1658,11 +1667,11 @@ def get_current_datacron_sets(datacron_list: list) -> list:
         Filtered list of only active datacron sets
 
     Raises:
-        ValueError: If datacron list is not a list
+        SwgohComlinkValueError: If datacron list is not a list
 
     """
     if not isinstance(datacron_list, list):
-        raise ValueError(
+        raise SwgohComlinkValueError(
                 f"{get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}"
                 )
     import math
@@ -1683,11 +1692,11 @@ def get_tw_omicrons(skill_list: list) -> list:
         List of territory war omicron abilities
 
     Raises:
-        ValueError: If skill_list is not a list
+        SwgohComlinkValueError: If skill_list is not a list
 
     """
     if not isinstance(skill_list, list):
-        raise ValueError(
+        raise SwgohComlinkValueError(
                 f"'skill_list' must be a list, not {type(skill_list)}"
                 )
 
@@ -1697,7 +1706,7 @@ def get_tw_omicrons(skill_list: list) -> list:
 def get_playable_units(units_collection: list[dict]) -> list[dict]:
     """Return a list of playable units from game data 'units' collection"""
     if not isinstance(units_collection, list):
-        raise ValueError(f"'units_collection' must be a list, not {type(units_collection)}")
+        raise SwgohComlinkValueError(f"'units_collection' must be a list, not {type(units_collection)}")
 
     return [unit for unit in units_collection
             if unit['rarity'] == 7
@@ -1718,14 +1727,14 @@ def get_omicron_skills(skill_list: list, omicron_type: int | list[int]) -> list:
         list: A list of dictionaries representing skills that match the specified omicron type.
 
     Raises:
-        ValueError: If either of the arguments is not of the expected type.
+        SwgohComlinkValueError: If either of the arguments is not of the expected type.
     """
 
     if not isinstance(skill_list, list):
-        raise ValueError(f"'skill_list' must be a list, not {type(skill_list)}")
+        raise SwgohComlinkValueError(f"'skill_list' must be a list, not {type(skill_list)}")
 
     if not isinstance(omicron_type, (int, list)):
-        raise ValueError(f"'omicron_type' must be an integer or list of integers, not {type(omicron_type)}")
+        raise SwgohComlinkValueError(f"'omicron_type' must be an integer or list of integers, not {type(omicron_type)}")
 
     omicron_type_list = [omicron_type] if isinstance(omicron_type, int) else omicron_type
 
@@ -1741,7 +1750,7 @@ def get_omicron_skill_tier(skill: dict) -> int | None:
     It assumes that the 'skill' dictionary contains a 'tier' key which
     is a list of dictionaries, each describing a skill tier.
 
-    Raises a ValueError for invalid input types or missing required keys.
+    Raises a SwgohComlinkValueError for invalid input types or missing required keys.
 
     Parameters:
         skill (dict): A dictionary representing the skill, containing
@@ -1751,14 +1760,14 @@ def get_omicron_skill_tier(skill: dict) -> int | None:
         int: The index of the Omicron skill tier within the 'tier' list or None if not found.
 
     Raises:
-        ValueError: If the input 'skill' is not a dictionary.
-        ValueError: If the required 'tier' key is not present in the 'skill' dictionary.
+        SwgohComlinkValueError: If the input 'skill' is not a dictionary.
+        SwgohComlinkValueError: If the required 'tier' key is not present in the 'skill' dictionary.
     """
     if not isinstance(skill, dict):
-        raise ValueError(f"'skill' must be a dictionary, not {type(skill)}")
+        raise SwgohComlinkValueError(f"'skill' must be a dictionary, not {type(skill)}")
 
     if 'tier' not in skill:
-        raise ValueError(f"'skill' must contain 'tier' key")
+        raise SwgohComlinkValueError(f"'skill' must contain 'tier' key")
 
     skill_tier = [idx for idx, tier in enumerate(skill['tier']) if tier['isOmicronTier'] is True]
 
@@ -1786,22 +1795,22 @@ def is_omicron_skill(
         bool: True if the skill is an Omicron skill, False otherwise.
 
     Raises:
-        ValueError: If either of the arguments is not of the expected type.
+        SwgohComlinkValueError: If either of the arguments is not of the expected type.
     """
     if not isinstance(omicron_skill_list, list):
-        raise ValueError(f"'omicron_skill_list' must be a list, not {type(omicron_skill_list)}")
+        raise SwgohComlinkValueError(f"'omicron_skill_list' must be a list, not {type(omicron_skill_list)}")
 
     if not isinstance(skill_id, str):
-        raise ValueError(f"'skill_id' must be a string, not {type(skill_id)}")
+        raise SwgohComlinkValueError(f"'skill_id' must be a string, not {type(skill_id)}")
 
     if not (skill_id and skill_tier and roster_unit_skill):
-        raise ValueError("Invalid 'skill_id', 'skill_tier', or 'roster_unit_skill' argument.")
+        raise SwgohComlinkValueError("Invalid 'skill_id', 'skill_tier', or 'roster_unit_skill' argument.")
 
     if roster_unit_skill is not None:
         skill_id = roster_unit_skill.get('id')
         skill_tier = roster_unit_skill.get('tier')
         if not skill_id or not skill_tier:
-            raise ValueError("Invalid 'roster_unit_skill' argument.")
+            raise SwgohComlinkValueError("Invalid 'roster_unit_skill' argument.")
 
     omicron_skill = [omi_skill for omi_skill in omicron_skill_list if omi_skill['id'] == skill_id]
 
@@ -1836,14 +1845,14 @@ def get_unit_from_skill(unit_list: list[dict], skill: str) -> NamedTuple | None:
         specified skill, or None if no such unit is found.
 
     Raises:
-      ValueError: If 'unit_list' is not of type list.
-      ValueError: If 'skill' is not of type string.
+      SwgohComlinkValueError: If 'unit_list' is not of type list.
+      SwgohComlinkValueError: If 'skill' is not of type string.
     """
     if not isinstance(unit_list, list):
-        raise ValueError(f"'unit_list' must be a list, not {type(unit_list)}")
+        raise SwgohComlinkValueError(f"'unit_list' must be a list, not {type(unit_list)}")
 
     if not isinstance(skill, str):
-        raise ValueError(f"'skill' must be a string, not {type(skill)}")
+        raise SwgohComlinkValueError(f"'skill' must be a string, not {type(skill)}")
 
     def skill_exists(value, dict_list: list[dict]) -> bool:
         if not dict_list:
@@ -1914,3 +1923,10 @@ def get_datacron_dismantle_value(datacron: dict, datacron_set_list: list, recipe
                 "focused": focused,
                 }
     return dismantle_materials
+
+
+def get_datacron_dismantle_total(datacrons: list, datacron_set_list: list, recipe_list: list) -> list:
+    dismantle_set_list = []
+    for datacron in datacrons:
+        ...
+    return dismantle_set_list

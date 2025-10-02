@@ -17,7 +17,11 @@ import requests
 import urllib3
 
 from swgoh_comlink import version
+from .exceptions import SwgohComlinkException, SwgohComlinkValueError
+from .globals import get_logger
 from .helpers import Constants
+
+logger = get_logger(__name__)
 
 __all__ = ['SwgohComlink']
 
@@ -90,9 +94,11 @@ class SwgohComlink:
 
     PROTOCOL = 'http'
 
-    def __init__(self, url: str = "http://localhost:3000", stats_url: str = "http://localhost:3223",
-                 access_key: str | None = None, secret_key: str | None = None, host: str | None = None,
-                 port: int = 3000, stats_port: int = 3223):
+    def __init__(
+            self, url: str = "http://localhost:3000", stats_url: str = "http://localhost:3223",
+            access_key: str | None = None, secret_key: str | None = None, host: str | None = None,
+            port: int = 3000, stats_port: int = 3223
+            ):
         self.__version__ = version
         self.url_base = sanitize_url(url)
         self.stats_url_base = sanitize_url(stats_url)
@@ -151,10 +157,12 @@ class SwgohComlink:
             r = requests.post(post_url, json=payload, headers=req_headers, verify=False)
             return loads(r.content.decode('utf-8'))
         except Exception as e:
-            raise e
+            raise SwgohComlinkException(e)
 
-    def get_unit_stats(self, request_payload: dict | list, flags: list[str] = None,
-                       language: str = None) -> list | dict:
+    def get_unit_stats(
+            self, request_payload: dict | list, flags: list[str] = None,
+            language: str = None
+            ) -> list | dict:
         """
         Calculate unit stats using the swgoh-stats service interface to swgoh-comlink.
 
@@ -186,9 +194,10 @@ class SwgohComlink:
             if isinstance(flags, list) and set(flags).issubset(_allowed_flags):
                 flag_str = 'flags=' + ','.join(flags)
             else:
-                raise ValueError(
+                raise SwgohComlinkValueError(
                         f'Invalid argument. <flags> should be a list of strings with one or more of "'
-                        f'{_allowed_flags} flag values.')
+                        f'{_allowed_flags} flag values.'
+                        )
 
         if language:
             language = f'language={language}'
@@ -214,7 +223,7 @@ class SwgohComlink:
             r = requests.request('GET', url)
             return loads(r.content.decode('utf-8'))
         except Exception as e:
-            raise e
+            raise SwgohComlinkException(e)
 
     # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums
@@ -279,7 +288,7 @@ class SwgohComlink:
                 payload['payload']['items'] = Constants.get(items) or "-1"
         else:
             if request_segment < 0 or request_segment > 4:
-                raise ValueError(
+                raise SwgohComlinkValueError(
                         f'Invalid argument. <request_segment> should be an integer between 0 and 4, inclusive.'
                         )
             payload['payload']['requestSegment'] = request_segment
@@ -377,8 +386,10 @@ class SwgohComlink:
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
     @param_alias(param="player_details_only", alias='playerDetailsOnly')
-    def get_player_arena(self, allycode: str | int = None, player_id: str = None, player_details_only: bool = False,
-                         enums: bool = False) -> dict:
+    def get_player_arena(
+            self, allycode: str | int = None, player_id: str = None, player_details_only: bool = False,
+            enums: bool = False
+            ) -> dict:
         """
         Get player arena information from game. Either allycode or player_id must be provided.
 
@@ -417,7 +428,8 @@ class SwgohComlink:
         """
         payload = {
                 "payload": {"guildId": guild_id, "includeRecentGuildActivityInfo": include_recent_guild_activity_info},
-                "enums":   enums}
+                "enums": enums
+                }
         guild = self._post(endpoint='guild', payload=payload)
         if 'guild' in guild.keys():
             guild = guild['guild']
@@ -440,15 +452,19 @@ class SwgohComlink:
         Returns:
             A dictionary containing the guild search results.
         """
-        payload = {"payload": {"name": name, "filterType": 4, "startIndex": start_index, "count": count},
-                   "enums":   enums}
+        payload = {
+                "payload": {"name": name, "filterType": 4, "startIndex": start_index, "count": count},
+                "enums": enums
+                }
         return self._post(endpoint='getGuilds', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGuildByName = get_guilds_by_name
 
-    def get_guilds_by_criteria(self, search_criteria: dict, start_index: int = 0, count: int = 10,
-                               enums: bool = False) -> dict:
+    def get_guilds_by_criteria(
+            self, search_criteria: dict, start_index: int = 0, count: int = 10,
+            enums: bool = False
+            ) -> dict:
         """
         Search for guild by guild criteria and return matches.
 
@@ -474,8 +490,12 @@ class SwgohComlink:
             }
 
         """
-        payload = {"payload": {"searchCriteria": search_criteria, "filterType": 5, "startIndex": start_index,
-                               "count":          count}, "enums": enums}
+        payload = {
+                "payload": {
+                        "searchCriteria": search_criteria, "filterType": 5, "startIndex": start_index,
+                        "count": count
+                        }, "enums": enums
+                }
         return self._post(endpoint='getGuilds', payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
@@ -483,7 +503,8 @@ class SwgohComlink:
 
     def get_leaderboard(
             self, leaderboard_type: int, *, league: int | str = None, division: int | str = None,
-                        event_instance_id: str = None, group_id: str = None, enums: bool = False) -> dict:
+            event_instance_id: str = None, group_id: str = None, enums: bool = False
+            ) -> dict:
         """
         Retrieve Grand Arena Championship leaderboard information.
 
@@ -557,13 +578,7 @@ class SwgohComlink:
 
         Returns:
                 A dictionary containing the guild leaderboard data.
-
-        Raises:
-            ValueError
-                If the `leaderboard_id` argument is not of type list.
         """
-        if not isinstance(leaderboard_id, list):
-            raise ValueError(f"leaderboard_id argument should be type list not {type(leaderboard_id)}.")
         payload = dict(payload={'leaderboardId': leaderboard_id, 'count': count}, enums=enums)
         return self._post(endpoint='getGuildLeaderboard', payload=payload)
 
@@ -588,8 +603,10 @@ class SwgohComlink:
             the 'language' key refers to the latestLocalizationBundleVersion.
         """
         current_metadata = self.get_metadata()
-        return {'game':     current_metadata['latestGamedataVersion'],
-                'language': current_metadata['latestLocalizationBundleVersion']}
+        return {
+                'game': current_metadata['latestGamedataVersion'],
+                'language': current_metadata['latestLocalizationBundleVersion']
+                }
 
     # alias for shorthand call
     getVersion = get_latest_game_data_version
