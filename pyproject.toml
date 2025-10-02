@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=75.8.1", "requests>=2.32.4"]
+requires = ["setuptools>=75.8.1", "requests>=2.32.4", "sentinels"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -20,8 +20,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "requests",
+    "hatch>=1.14.2",
+    "hatchling>=1.27.0",
+    "requests>=2.32.4",
     "sentinels",
+    "setuptools>=75.8.1",
 ]
 
 [project.urls]
@@ -35,6 +38,12 @@ addopts = [
 
 [tool.setuptools.dynamic]
 version = { attr = "swgoh_comlink.version" }
+
+[tool.hatch.version]
+path = 'src/swgoh_comlink/version.py'
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/swgoh_comlink"]
 
 [tool.semantic_release]
 version_variable = [# List of possible location of version
