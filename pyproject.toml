@@ -68,3 +68,11 @@ prerelease = false
 match = "2.0-development"
 prerelease = true
 prerelease_token = "rc"
+
+[tool.uv.sources]
+swgoh-comlink = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "swgoh-comlink",
+]

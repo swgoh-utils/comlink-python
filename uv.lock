@@ -627,6 +627,11 @@ dependencies = [
     { name = "setuptools" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "swgoh-comlink" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "hatch", specifier = ">=1.14.2" },
@@ -635,6 +640,9 @@ requires-dist = [
     { name = "sentinels" },
     { name = "setuptools", specifier = ">=75.8.1" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "swgoh-comlink", editable = "." }]
 
 [[package]]
 name = "tomli"
