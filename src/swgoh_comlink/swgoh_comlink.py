@@ -585,6 +585,52 @@ class SwgohComlink:
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
 
+    def get_name_spaces(self, only_compatible: bool = False, enums: bool = False) -> dict:
+        """
+                    *** (PLACEHOLDER) - Actual use is unknown at this time ***
+        Fetches namespaces based on the specified filter criteria.
+
+        Args:
+            only_compatible (bool): Determines whether to fetch only compatible namespaces.
+            enums (bool): Specifies whether enum types should be included in the response.
+
+        Returns:
+            dict: A dictionary containing the information about the retrieved namespaces.
+        """
+        payload = {'payload': {'onlyCompatible': only_compatible}, 'enums': enums}
+        return self._post(endpoint='getNameSpaces', payload=payload)
+
+    def get_segmented_content(
+            self, content_name_space: str = "current", accept_language: str = "ENG_US",
+            enums: bool = False
+            ) -> dict:
+        """
+                     *** (PLACEHOLDER) - Actual use is unknown at this time ***
+        Retrieves segmented content from a specified namespace with the option to localize content
+        based on the provided language preference and control the inclusion of enumerations.
+
+        Args:
+            content_name_space (str): The namespace from which the content is to be retrieved.
+                Defaults to "current".
+            accept_language (str): The language in which the content should be localized. Defaults
+                to "ENG_US".
+            enums (bool): Specifies whether enumerations should be included in the response.
+                Defaults to False.
+
+        Returns:
+            dict: A dictionary containing the segmented content retrieved based on the input
+            parameters.
+        """
+        payload = {
+                'payload': {
+                        'contentNameSpace': content_name_space,
+                        'acceptLanguage': accept_language
+                        },
+                'enums': enums
+                }
+        return self._post(endpoint='getSegmentedContent', payload=payload)
+
+
     """
     Helper methods are below
     """

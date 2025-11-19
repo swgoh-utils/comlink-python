@@ -2,6 +2,16 @@
 
 <!-- insertion marker -->
 
+## [v1.17.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.17.0) - 2025-11-18
+
+<small>[Compare with v1.16.0](https://github.com/swgoh-utils/comlink-python/compare/v1.16.0...v1.17.0)</small>
+
+### Features
+
+- add new namespace and content retrieval methods in support of comlink
+  3.3.1 ([1bf354d](https://github.com/swgoh-utils/comlink-python/commit/1bf354dcebc0f381ba3b4264dbfc75208d16ed93) by
+  MarTrepodi).
+
 ## [v1.16.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.16.0) - 2025-10-02
 
 <small>[Compare with v1.14.0](https://github.com/swgoh-utils/comlink-python/compare/v1.14.0...v1.16.0)</small>
