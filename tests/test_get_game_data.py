@@ -1,10 +1,26 @@
-import os
-from unittest import TestCase, main
+from unittest import TestCase, main, mock
+
 from swgoh_comlink import SwgohComlink
 
 
+def mocked_get_game_metadata(*args, **kwargs):
+    return {
+        'latestGamedataVersion': '0.33.0:aaaabbbb',
+        'latestLocalizationBundleVersion': 'loc_bundle_v1',
+        'serverVersion': '21.04.0',
+    }
+
+
+def mocked_get_game_data(*args, **kwargs):
+    return {
+        'units': [{'id': 'UNIT_001', 'name': 'Test Unit'}],
+    }
+
+
 class TestGetGameData(TestCase):
-    def test_get_game_data(self):
+    @mock.patch.object(SwgohComlink, 'get_game_data', side_effect=mocked_get_game_data)
+    @mock.patch.object(SwgohComlink, 'get_game_metadata', side_effect=mocked_get_game_metadata)
+    def test_get_game_data(self, mock_metadata, mock_game_data):
         """
         Test that game data can be retrieved from game server correctly
         """
