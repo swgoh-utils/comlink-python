@@ -75,4 +75,68 @@ swgoh-comlink = { workspace = true }
 [dependency-groups]
 dev = [
     "swgoh-comlink",
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "ruff>=0.8",
+]
+
+# ── Ruff ─────────────────────────────────────────────────────────────────
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "W",      # pycodestyle warnings
+    "I",      # isort (import sorting)
+    "UP",     # pyupgrade (Python version upgrades)
+    "B",      # flake8-bugbear (common bug patterns)
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line length — enforced at 120 by formatter, not linter
+    "UP009",  # utf-8 encoding declarations — existing codebase convention
+    "SIM108", # ternary operator — style preference, too many existing instances
+    "SIM118", # dict.keys() — style preference, too many existing instances
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Existing violations to address incrementally — do not add new suppressions
+"src/swgoh_comlink/__init__.py" = ["UP036"]   # outdated version block (sys.exit check)
+"src/swgoh_comlink/exceptions.py" = ["B904"]  # raise-without-from (tracked in issue backlog)
+"src/swgoh_comlink/swgoh_comlink.py" = ["B904"]  # raise-without-from in _post() and get_enums()
+"src/swgoh_comlink/helpers.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
+
+[tool.ruff.lint.isort]
+known-first-party = ["swgoh_comlink"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ── Mypy ─────────────────────────────────────────────────────────────────
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+# TODO: tighten these as type annotations improve
+disallow_untyped_defs = false
+check_untyped_defs = true
+
+# ── Coverage ─────────────────────────────────────────────────────────────
+
+[tool.coverage.run]
+source = ["swgoh_comlink"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.",
 ]

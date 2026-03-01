@@ -1,0 +1,30 @@
+# Label definitions for actions/labeler
+# Maps file path patterns to PR labels
+
+code:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/**"
+
+testing:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "tests/**"
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "*.md"
+          - "examples/**"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "pyproject.toml"
+          - "uv.lock"

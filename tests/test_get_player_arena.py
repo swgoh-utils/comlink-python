@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.split(os.getcwd())[0], 'src'))
 from unittest import TestCase, main, mock
+
 from swgoh_comlink import SwgohComlink
 
 

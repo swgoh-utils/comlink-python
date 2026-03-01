@@ -10,13 +10,15 @@ import hmac
 import os
 import re
 import time
+from collections.abc import Callable
 from json import dumps, loads
-from typing import Any, Callable
+from typing import Any
 
 import requests
 import urllib3
 
 from swgoh_comlink import version
+
 from .exceptions import SwgohComlinkException, SwgohComlinkValueError
 from .globals import get_logger
 from .helpers import Constants
@@ -203,9 +205,9 @@ class SwgohComlink:
             language = f'language={language}'
 
         if flag_str or language:
-            query_string = f'?' + '&'.join(filter(None, iter([flag_str, language])))
+            query_string = '?' + '&'.join(filter(None, iter([flag_str, language])))
 
-        endpoint_string = f'api' + query_string if query_string else 'api'
+        endpoint_string = 'api' + query_string if query_string else 'api'
 
         if isinstance(request_payload, dict):
             request_payload = [request_payload]
@@ -289,7 +291,7 @@ class SwgohComlink:
         else:
             if request_segment < 0 or request_segment > 4:
                 raise SwgohComlinkValueError(
-                        f'Invalid argument. <request_segment> should be an integer between 0 and 4, inclusive.'
+                        'Invalid argument. <request_segment> should be an integer between 0 and 4, inclusive.'
                         )
             payload['payload']['requestSegment'] = request_segment
 

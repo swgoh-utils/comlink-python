@@ -11,11 +11,11 @@ from collections import namedtuple
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import wraps
+from math import floor
 from os import PathLike
 from pathlib import Path
-from typing import Any, NamedTuple, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, NamedTuple
 
-from math import floor
 from sentinels import Sentinel
 
 from .exceptions import SwgohComlinkValueError
@@ -24,7 +24,7 @@ from .globals import get_logger
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: ignore
+    from swgoh_comlink import SwgohComlink  # noqa: F401
 
 # Define sentinels used in parameter checking
 OPTIONAL = Sentinel('NotSet')
@@ -1318,9 +1318,9 @@ def get_enum_key_by_value(enum_dict: dict, category: Any, enum_value: Any, defau
     """
     Return the key from enum_dict for the given enum_value.
     """
-    enum_values: Optional[dict] = enum_dict.get(category)
+    enum_values: dict | None = enum_dict.get(category)
     if enum_values:
-        enum_value_match: Optional[list] = [key for key, value in enum_values.items() if value == enum_value]
+        enum_value_match: list | None = [key for key, value in enum_values.items() if value == enum_value]
         return enum_value_match[0] if enum_value_match else default_return
     else:
         return default_return
@@ -1359,7 +1359,7 @@ def sanitize_allycode(allycode: str | int | Sentinel = REQUIRED) -> str:
     """
     _orig_ac = allycode
     if not allycode and allycode is not GIVEN:
-        return str()
+        return ''
     if isinstance(allycode, int):
         allycode = str(allycode)
     if "-" in str(allycode):
@@ -1493,7 +1493,7 @@ def create_localized_unit_name_dictionary(locale: str | list | Sentinel = REQUIR
 
     """
     if not isinstance(locale, list) and not isinstance(locale, str):
-        raise SwgohComlinkValueError(f"'locale' must be a list of strings or string containing newlines.")
+        raise SwgohComlinkValueError("'locale' must be a list of strings or string containing newlines.")
 
     unit_name_map = {}
     lines = []
@@ -1767,7 +1767,7 @@ def get_omicron_skill_tier(skill: dict) -> int | None:
         raise SwgohComlinkValueError(f"'skill' must be a dictionary, not {type(skill)}")
 
     if 'tier' not in skill:
-        raise SwgohComlinkValueError(f"'skill' must contain 'tier' key")
+        raise SwgohComlinkValueError("'skill' must contain 'tier' key")
 
     skill_tier = [idx for idx, tier in enumerate(skill['tier']) if tier['isOmicronTier'] is True]
 
@@ -1779,7 +1779,7 @@ def is_omicron_skill(
         skill_id: str | None = None,
         skill_tier: int | None = None,
         *,
-        roster_unit_skill: Optional[dict] = None
+        roster_unit_skill: dict | None = None
         ) -> bool:
     """
     Check if a given skill is an Omicron skill based on its ID and tier.
