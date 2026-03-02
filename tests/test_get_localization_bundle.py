@@ -3,33 +3,33 @@ from unittest import TestCase, main, mock
 from swgoh_comlink import SwgohComlink
 
 
-def mocked_get_game_metadata(*args, **kwargs):
-    return {
-        'latestGamedataVersion': '0.33.0:aaaabbbb',
-        'latestLocalizationBundleVersion': 'loc_bundle_v1',
-        'serverVersion': '21.04.0',
-    }
-
-
-def mocked_get_localization(*args, **kwargs):
-    return {
-        'localizationBundle': {'en': {'KEY_001': 'Test Value'}},
-    }
-
-
 class TestGetLocalizationBundle(TestCase):
-    @mock.patch.object(SwgohComlink, 'get_localization', side_effect=mocked_get_localization)
-    @mock.patch.object(SwgohComlink, 'get_game_metadata', side_effect=mocked_get_game_metadata)
-    def test_get_localization_bundle(self, mock_metadata, mock_localization):
-        """
-        Test that localization data can be retrieved from game server correctly
-        """
+    @mock.patch.object(SwgohComlink, "_post")
+    def test_get_localization_with_id(self, mock_post):
+        """Test that get_localization() builds correct payload when localization_id is given."""
+        mock_post.return_value = {"localizationBundle": {"en": {}}}
+
         comlink = SwgohComlink()
-        game_metadata = comlink.get_game_metadata()
-        localization_id = game_metadata['latestLocalizationBundleVersion']
-        game_data = comlink.get_localization(id=localization_id)
-        self.assertTrue('localizationBundle' in game_data.keys())
+        result = comlink.get_localization(localization_id="loc_v1")
+
+        mock_post.assert_called_once()
+        call_kwargs = mock_post.call_args
+        payload = call_kwargs.kwargs.get("payload") or call_kwargs[1].get("payload")
+        self.assertEqual(payload["payload"]["id"], "loc_v1")
+        self.assertIn("localizationBundle", result)
+
+    @mock.patch.object(SwgohComlink, "_post")
+    def test_get_localization_with_locale(self, mock_post):
+        """Test that locale is appended to the localization id."""
+        mock_post.return_value = {"localizationBundle": {}}
+
+        comlink = SwgohComlink()
+        comlink.get_localization(localization_id="loc_v1", locale="eng_us")
+
+        call_kwargs = mock_post.call_args
+        payload = call_kwargs.kwargs.get("payload") or call_kwargs[1].get("payload")
+        self.assertEqual(payload["payload"]["id"], "loc_v1:ENG_US")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
