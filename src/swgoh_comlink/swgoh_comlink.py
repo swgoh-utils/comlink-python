@@ -2,6 +2,7 @@
 """
 Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)
 """
+
 from __future__ import annotations
 
 import functools
@@ -10,51 +11,64 @@ import hmac
 import os
 import re
 import time
+from collections.abc import Callable
 from json import dumps, loads
-from typing import Any, Callable
+from typing import Any
 
 import requests
 import urllib3
 
 from swgoh_comlink import version
+
 from .exceptions import SwgohComlinkException, SwgohComlinkValueError
 from .globals import get_logger
 from .helpers import Constants
 
 logger = get_logger(__name__)
 
-__all__ = ['SwgohComlink']
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-url_port_re = re.compile(r'^https://\S+:(\d+)$', re.VERBOSE | re.IGNORECASE)
+__all__ = ["SwgohComlink"]
+url_port_re = re.compile(r"^https://\S+:(\d+)$", re.VERBOSE | re.IGNORECASE)
 
 
-def _get_player_payload(allycode: str | int = None, player_id: str = None, enums: bool = False) -> dict:
+def _get_player_payload(allycode: str | int | None = None, player_id: str | None = None, enums: bool = False) -> dict:
     """
-    Helper function to build payload for get_player functions
-    :param allycode: player allyCode
-    :param player_id: player game ID
-    :param enums: boolean
-    :return: dict
+    Helper function to build payload for get_player functions.
+
+    Args:
+        allycode: player allyCode
+        player_id: player game ID
+        enums: boolean
+
+    Returns:
+        dict: The constructed payload.
+
+    Raises:
+        SwgohComlinkValueError: If neither allycode nor player_id is provided.
     """
+    if not allycode and not player_id:
+        raise SwgohComlinkValueError("Either 'allycode' or 'player_id' must be provided.")
     payload = {"payload": {}, "enums": enums}
     # If player ID is provided use that instead of allyCode
-    if not allycode and player_id:
-        payload['payload']['playerId'] = f'{player_id}'
+    if player_id:
+        payload["payload"]["playerId"] = str(player_id)
     # Otherwise use allyCode to lookup player data
     else:
-        payload['payload']['allyCode'] = f'{allycode}'
+        payload["payload"]["allyCode"] = str(allycode)
     return payload
 
 
 def param_alias(param: str, alias: str) -> Callable:
+    """Decorator to support legacy camelCase parameter aliases.
+
+    Translates a keyword argument from *alias* to *param* so callers
+    can use either spelling.
+    """
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            alias_param_value = kwargs.get(alias)
-            if alias_param_value:
-                kwargs[param] = alias_param_value
-                del kwargs[alias]
+            if alias in kwargs:
+                kwargs[param] = kwargs.pop(alias)
             return func(*args, **kwargs)
 
         return wrapper
@@ -90,79 +104,119 @@ class SwgohComlink:
         If the 'host' and 'port' parameters are provided, the 'url' and 'stats_url' parameters are ignored.
     """
 
-    __comlink_type__ = 'SwgohComlink'
+    __comlink_type__ = "SwgohComlink"
 
-    PROTOCOL = 'http'
+    PROTOCOL = "http"
 
     def __init__(
-            self, url: str = "http://localhost:3000", stats_url: str = "http://localhost:3223",
-            access_key: str | None = None, secret_key: str | None = None, host: str | None = None,
-            port: int = 3000, stats_port: int = 3223
-            ):
+        self,
+        url: str = "http://localhost:3000",
+        stats_url: str = "http://localhost:3223",
+        access_key: str | None = None,
+        secret_key: str | None = None,
+        host: str | None = None,
+        port: int = 3000,
+        stats_port: int = 3223,
+        verify_ssl: bool = True,
+    ):
         self.__version__ = version
         self.url_base = sanitize_url(url)
         self.stats_url_base = sanitize_url(stats_url)
         self.hmac = False  # HMAC use disabled by default
+        self.verify_ssl = verify_ssl
+
+        if not self.verify_ssl:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         # host and port parameters override defaults
         if host:
-            self.url_base = self.PROTOCOL + f'://{host}:{port}'
-            self.stats_url_base = self.PROTOCOL + f'://{host}:{stats_port}'
+            self.url_base = self.PROTOCOL + f"://{host}:{port}"
+            self.stats_url_base = self.PROTOCOL + f"://{host}:{stats_port}"
 
         # Use values passed from client first, otherwise check for environment variables
-        if access_key:
-            self.access_key = access_key
-        elif os.environ.get('ACCESS_KEY'):
-            self.access_key = os.environ.get('ACCESS_KEY')
-        else:
-            self.access_key = None
-        if secret_key:
-            self.secret_key = secret_key
-        elif os.environ.get('SECRET_KEY'):
-            self.secret_key = os.environ.get('SECRET_KEY')
-        else:
-            self.secret_key = None
+        self.access_key = access_key or os.environ.get("ACCESS_KEY")
+        self.secret_key = secret_key or os.environ.get("SECRET_KEY")
         if self.access_key and self.secret_key:
             self.hmac = True
 
     def _get_game_version(self) -> str:
         md = self.get_game_metadata()
-        return md['latestGamedataVersion']
+        return md["latestGamedataVersion"]
 
-    def _post(self, url_base: str = None, endpoint: str = None, payload: dict | list = None, ) -> dict:
+    def _request(
+        self,
+        method: str = "POST",
+        url_base: str | None = None,
+        endpoint: str | None = None,
+        payload: dict | list | None = None,
+    ) -> dict | list:
+        """Send an HTTP request to the comlink service.
+
+        This is the single gateway for all HTTP communication.  Every public
+        method should route through here so that HMAC authentication, TLS
+        verification, and error handling are applied consistently.
+
+        Args:
+            method: HTTP method (``"GET"`` or ``"POST"``).
+            url_base: Base URL to use. Defaults to ``self.url_base``.
+            endpoint: API endpoint path appended to *url_base*.
+            payload: JSON body for the request (ignored for GET requests).
+
+        Returns:
+            Decoded JSON response (dict or list).
+
+        Raises:
+            SwgohComlinkException: On any network or decoding error.
+        """
         if not url_base:
             url_base = self.url_base
-        post_url = url_base + f'/{endpoint}'
+        request_url = url_base + f"/{endpoint}"
         req_headers = {}
         # If access_key and secret_key are set, perform HMAC security
         if self.hmac:
             req_time = str(int(time.time() * 1000))
-            req_headers = {"X-Date": f'{req_time}'}
+            req_headers = {"X-Date": f"{req_time}"}
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
             hmac_obj.update(req_time.encode())
-            hmac_obj.update(b'POST')
-            hmac_obj.update(f'/{endpoint}'.encode())
+            hmac_obj.update(method.upper().encode())
+            hmac_obj.update(f"/{endpoint}".encode())
             # json dumps separators needed for compact string formatting required for compatibility with
             # comlink since it is written with javascript as the primary object model
             # ordered dicts are also required with the 'payload' key listed first for proper MD5 hash calculation
             if payload:
-                payload_string = dumps(payload, separators=(',', ':'))
+                payload_string = dumps(payload, separators=(",", ":"))
             else:
                 payload_string = dumps({})
-            payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()
+            # NOTE: MD5 is used here because the comlink service (JavaScript) requires it for
+            # HMAC payload verification. This is a protocol constraint, not a security choice.
+            payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()  # noqa: S324
             hmac_obj.update(payload_hash_digest.encode())
             hmac_digest = hmac_obj.hexdigest()
-            req_headers['Authorization'] = f'HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}'
+            req_headers["Authorization"] = f"HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}"
         try:
-            r = requests.post(post_url, json=payload, headers=req_headers, verify=False)
-            return loads(r.content.decode('utf-8'))
-        except Exception as e:
-            raise SwgohComlinkException(e)
+            request_kwargs: dict[str, Any] = {"headers": req_headers, "verify": self.verify_ssl}
+            if method.upper() != "GET":
+                request_kwargs["json"] = payload
+            r = requests.request(method.upper(), request_url, **request_kwargs)
+            return loads(r.content.decode("utf-8"))
+        except requests.RequestException as e:
+            raise SwgohComlinkException(e) from e
+
+    def _post(
+        self,
+        url_base: str | None = None,
+        endpoint: str | None = None,
+        payload: dict | list | None = None,
+    ) -> dict | list:
+        """Send a POST request to the comlink service.
+
+        Convenience wrapper around :meth:`_request` for backward compatibility.
+        """
+        return self._request(method="POST", url_base=url_base, endpoint=endpoint, payload=payload)
 
     def get_unit_stats(
-            self, request_payload: dict | list, flags: list[str] = None,
-            language: str = None
-            ) -> list | dict:
+        self, request_payload: dict | list, flags: list[str] = None, language: str = None
+    ) -> list | dict:
         """
         Calculate unit stats using the swgoh-stats service interface to swgoh-comlink.
 
@@ -184,28 +238,39 @@ class SwgohComlink:
 
         """
         # Define the flags that StatCalc understands
-        _allowed_flags = {"gameStyle", "calcGP", "onlyGP", "withoutModCalc", "percentVals", "useMax", "scaled",
-                          "unscaled", "statIDs", "enums", "noSpace"}
+        _allowed_flags = {
+            "gameStyle",
+            "calcGP",
+            "onlyGP",
+            "withoutModCalc",
+            "percentVals",
+            "useMax",
+            "scaled",
+            "unscaled",
+            "statIDs",
+            "enums",
+            "noSpace",
+        }
 
         query_string = None
         flag_str = None
 
         if flags:
             if isinstance(flags, list) and set(flags).issubset(_allowed_flags):
-                flag_str = 'flags=' + ','.join(flags)
+                flag_str = "flags=" + ",".join(flags)
             else:
                 raise SwgohComlinkValueError(
-                        f'Invalid argument. <flags> should be a list of strings with one or more of "'
-                        f'{_allowed_flags} flag values.'
-                        )
+                    f'Invalid argument. <flags> should be a list of strings with one or more of "'
+                    f"{_allowed_flags} flag values."
+                )
 
         if language:
-            language = f'language={language}'
+            language = f"language={language}"
 
         if flag_str or language:
-            query_string = f'?' + '&'.join(filter(None, iter([flag_str, language])))
+            query_string = "?" + "&".join(filter(None, iter([flag_str, language])))
 
-        endpoint_string = f'api' + query_string if query_string else 'api'
+        endpoint_string = "api" + query_string if query_string else "api"
 
         if isinstance(request_payload, dict):
             request_payload = [request_payload]
@@ -213,17 +278,16 @@ class SwgohComlink:
 
     def get_enums(self) -> dict:
         """
-        Get an object containing the game data enums
+        Get an object containing the game data enums.
+
+        Unlike most endpoints, ``/enums`` uses a GET request.  Routing through
+        :meth:`_request` ensures HMAC authentication, ``verify_ssl``, and
+        consistent error handling are applied.
 
         Returns:
             A dictionary containing the game data enums.
         """
-        url = self.url_base + '/enums'
-        try:
-            r = requests.request('GET', url)
-            return loads(r.content.decode('utf-8'))
-        except Exception as e:
-            raise SwgohComlinkException(e)
+        return self._request(method="GET", endpoint="enums")
 
     # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums
@@ -238,21 +302,21 @@ class SwgohComlink:
         Returns:
             A single element dictionary containing a list of the events game data.
         """
-        payload = {'payload': {}, 'enums': enums}
-        return self._post(endpoint='getEvents', payload=payload)
+        payload = {"payload": {}, "enums": enums}
+        return self._post(endpoint="getEvents", payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getEvents = get_events
 
     def get_game_data(
-            self,
-            version: str = "",
-            include_pve_units: bool = True,
-            request_segment: int = 0,
-            enums: bool = False,
-            items: str = None,
-            device_platform: str = "Android"
-            ) -> dict:
+        self,
+        version: str = "",
+        include_pve_units: bool = True,
+        request_segment: int = 0,
+        enums: bool = False,
+        items: str = None,
+        device_platform: str = "Android",
+    ) -> dict:
         """
         Get game data
 
@@ -273,38 +337,40 @@ class SwgohComlink:
         else:
             game_version = version
         payload: dict[str, Any] = {
-                "payload": {
-                        "version": f"{game_version}",
-                        "devicePlatform": device_platform,
-                        "includePveUnits": include_pve_units,
-                        },
-                "enums": enums
-                }
+            "payload": {
+                "version": f"{game_version}",
+                "devicePlatform": device_platform,
+                "includePveUnits": include_pve_units,
+            },
+            "enums": enums,
+        }
 
         if items:  # presence of 'items' argument overrides the 'request_segment' argument
             if isinstance(items, int) and str(abs(items)).isdigit():
-                payload['payload']['items'] = str(items)
+                payload["payload"]["items"] = str(items)
             else:
-                payload['payload']['items'] = Constants.get(items) or "-1"
+                payload["payload"]["items"] = Constants.get(items) or "-1"
         else:
             if request_segment < 0 or request_segment > 4:
                 raise SwgohComlinkValueError(
-                        f'Invalid argument. <request_segment> should be an integer between 0 and 4, inclusive.'
-                        )
-            payload['payload']['requestSegment'] = request_segment
+                    "Invalid argument. <request_segment> should be an integer between 0 and 4, inclusive."
+                )
+            payload["payload"]["requestSegment"] = request_segment
 
-        return self._post(endpoint='data', payload=payload)
+        return self._post(endpoint="data", payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGameData = get_game_data
 
-    def get_localization(self, id: str = None, locale: str = None, unzip: bool = False, enums: bool = False) -> dict:
+    def get_localization(
+        self, localization_id: str | None = None, locale: str | None = None, unzip: bool = False, enums: bool = False
+    ) -> dict:
         """
         Get localization data from game
 
         Args:
-            id: latestLocalizationBundleVersion found in game metadata. This method will collect the latest language
-                    version if the 'id' argument is not provided.
+            localization_id: latestLocalizationBundleVersion found in game metadata. This method will
+                    collect the latest language version if not provided.
             locale: string Specify only a specific locale to retrieve [for example "ENG_US"]
             unzip: boolean [Defaults to False]
             enums: boolean [Defaults to False]
@@ -312,15 +378,15 @@ class SwgohComlink:
         Returns:
             A dictionary containing the localization data.
         """
-        if not id:
+        if not localization_id:
             current_game_version = self.get_latest_game_data_version()
-            id = current_game_version['language']
+            localization_id = current_game_version["language"]
 
         if locale:
-            id = id + ":" + locale.upper()
+            localization_id = localization_id + ":" + locale.upper()
 
-        payload = {'unzip': unzip, 'enums': enums, 'payload': {'id': id}}
-        return self._post(endpoint='localization', payload=payload)
+        payload = {"unzip": unzip, "enums": enums, "payload": {"id": localization_id}}
+        return self._post(endpoint="localization", payload=payload)
 
     # aliases for non PEP usage of direct endpoint calls
     getLocalization = get_localization
@@ -357,7 +423,7 @@ class SwgohComlink:
             payload = {"payload": {"client_specs": client_specs}, "enums": enums}
         else:
             payload = {}
-        return self._post(endpoint='metadata', payload=payload)
+        return self._post(endpoint="metadata", payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGameMetaData = get_game_metadata
@@ -377,7 +443,7 @@ class SwgohComlink:
             A dictionary containing the player information.
         """
         payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
-        return self._post(endpoint='player', payload=payload)
+        return self._post(endpoint="player", payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getPlayer = get_player
@@ -385,11 +451,10 @@ class SwgohComlink:
     # Introduced in 1.12.0
     # Use decorator to alias the player_details_only parameter to 'playerDetailsOnly' to maintain backward compatibility
     # while fixing the original naming format mistake.
-    @param_alias(param="player_details_only", alias='playerDetailsOnly')
+    @param_alias(param="player_details_only", alias="playerDetailsOnly")
     def get_player_arena(
-            self, allycode: str | int = None, player_id: str = None, player_details_only: bool = False,
-            enums: bool = False
-            ) -> dict:
+        self, allycode: str | int = None, player_id: str = None, player_details_only: bool = False, enums: bool = False
+    ) -> dict:
         """
         Get player arena information from game. Either allycode or player_id must be provided.
 
@@ -403,8 +468,8 @@ class SwgohComlink:
             A dictionary containing the player arena information.
         """
         payload = _get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
-        payload['payload']['playerDetailsOnly'] = player_details_only
-        return self._post(endpoint='playerArena', payload=payload)
+        payload["payload"]["playerDetailsOnly"] = player_details_only
+        return self._post(endpoint="playerArena", payload=payload)
 
     # alias to allow for get_arena() calls as a shortcut for get_player_arena() and non PEP variations
     get_arena = get_player_arena
@@ -427,12 +492,12 @@ class SwgohComlink:
             A dictionary containing the guild information.
         """
         payload = {
-                "payload": {"guildId": guild_id, "includeRecentGuildActivityInfo": include_recent_guild_activity_info},
-                "enums": enums
-                }
-        guild = self._post(endpoint='guild', payload=payload)
-        if 'guild' in guild.keys():
-            guild = guild['guild']
+            "payload": {"guildId": guild_id, "includeRecentGuildActivityInfo": include_recent_guild_activity_info},
+            "enums": enums,
+        }
+        guild = self._post(endpoint="guild", payload=payload)
+        if "guild" in guild.keys():
+            guild = guild["guild"]
         return guild
 
     # alias for non PEP usage of direct endpoint calls
@@ -453,18 +518,17 @@ class SwgohComlink:
             A dictionary containing the guild search results.
         """
         payload = {
-                "payload": {"name": name, "filterType": 4, "startIndex": start_index, "count": count},
-                "enums": enums
-                }
-        return self._post(endpoint='getGuilds', payload=payload)
+            "payload": {"name": name, "filterType": 4, "startIndex": start_index, "count": count},
+            "enums": enums,
+        }
+        return self._post(endpoint="getGuilds", payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGuildByName = get_guilds_by_name
 
     def get_guilds_by_criteria(
-            self, search_criteria: dict, start_index: int = 0, count: int = 10,
-            enums: bool = False
-            ) -> dict:
+        self, search_criteria: dict, start_index: int = 0, count: int = 10, enums: bool = False
+    ) -> dict:
         """
         Search for guild by guild criteria and return matches.
 
@@ -491,20 +555,24 @@ class SwgohComlink:
 
         """
         payload = {
-                "payload": {
-                        "searchCriteria": search_criteria, "filterType": 5, "startIndex": start_index,
-                        "count": count
-                        }, "enums": enums
-                }
-        return self._post(endpoint='getGuilds', payload=payload)
+            "payload": {"searchCriteria": search_criteria, "filterType": 5, "startIndex": start_index, "count": count},
+            "enums": enums,
+        }
+        return self._post(endpoint="getGuilds", payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGuildByCriteria = get_guilds_by_criteria
 
     def get_leaderboard(
-            self, leaderboard_type: int, *, league: int | str = None, division: int | str = None,
-            event_instance_id: str = None, group_id: str = None, enums: bool = False
-            ) -> dict:
+        self,
+        leaderboard_type: int,
+        *,
+        league: int | str = None,
+        division: int | str = None,
+        event_instance_id: str = None,
+        group_id: str = None,
+        enums: bool = False,
+    ) -> dict:
         """
         Retrieve Grand Arena Championship leaderboard information.
 
@@ -536,8 +604,8 @@ class SwgohComlink:
         Returns:
             dict: A dictionary containing the leaderboard data.
         """
-        leagues = {'kyber': 100, 'aurodium': 80, 'chromium': 60, 'bronzium': 40, 'carbonite': 20}
-        divisions = {'1': 25, '2': 20, '3': 15, '4': 10, '5': 5}
+        leagues = Constants.LEAGUES
+        divisions = Constants.DIVISIONS
         # Translate parameters if needed
         if isinstance(league, str):
             league = leagues[league.lower()]
@@ -545,14 +613,19 @@ class SwgohComlink:
             division = divisions[str(division).lower()]
         if isinstance(division, str):
             division = divisions[division.lower()]
-        payload: dict[str, Any] = {"payload": {"leaderboardType": leaderboard_type, }, "enums": enums}
+        payload: dict[str, Any] = {
+            "payload": {
+                "leaderboardType": leaderboard_type,
+            },
+            "enums": enums,
+        }
         if leaderboard_type == 4:
-            payload['payload']['eventInstanceId'] = event_instance_id
-            payload['payload']['groupId'] = group_id
+            payload["payload"]["eventInstanceId"] = event_instance_id
+            payload["payload"]["groupId"] = group_id
         elif leaderboard_type == 6:
-            payload['payload']['league'] = league
-            payload['payload']['division'] = division
-        leaderboard = self._post(endpoint='getLeaderboard', payload=payload)
+            payload["payload"]["league"] = league
+            payload["payload"]["division"] = division
+        leaderboard = self._post(endpoint="getLeaderboard", payload=payload)
         return leaderboard
 
     # alias for non PEP usage of direct endpoint calls
@@ -579,8 +652,8 @@ class SwgohComlink:
         Returns:
                 A dictionary containing the guild leaderboard data.
         """
-        payload = dict(payload={'leaderboardId': leaderboard_id, 'count': count}, enums=enums)
-        return self._post(endpoint='getGuildLeaderboard', payload=payload)
+        payload = dict(payload={"leaderboardId": leaderboard_id, "count": count}, enums=enums)
+        return self._post(endpoint="getGuildLeaderboard", payload=payload)
 
     # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
@@ -597,13 +670,12 @@ class SwgohComlink:
         Returns:
             dict: A dictionary containing the information about the retrieved namespaces.
         """
-        payload = {'payload': {'onlyCompatible': only_compatible}, 'enums': enums}
-        return self._post(endpoint='getNameSpaces', payload=payload)
+        payload = {"payload": {"onlyCompatible": only_compatible}, "enums": enums}
+        return self._post(endpoint="getNameSpaces", payload=payload)
 
     def get_segmented_content(
-            self, content_name_space: str = "current", accept_language: str = "ENG_US",
-            enums: bool = False
-            ) -> dict:
+        self, content_name_space: str = "current", accept_language: str = "ENG_US", enums: bool = False
+    ) -> dict:
         """
                      *** (PLACEHOLDER) - Actual use is unknown at this time ***
         Retrieves segmented content from a specified namespace with the option to localize content
@@ -622,14 +694,10 @@ class SwgohComlink:
             parameters.
         """
         payload = {
-                'payload': {
-                        'contentNameSpace': content_name_space,
-                        'acceptLanguage': accept_language
-                        },
-                'enums': enums
-                }
-        return self._post(endpoint='getSegmentedContent', payload=payload)
-
+            "payload": {"contentNameSpace": content_name_space, "acceptLanguage": accept_language},
+            "enums": enums,
+        }
+        return self._post(endpoint="getSegmentedContent", payload=payload)
 
     """
     Helper methods are below
@@ -650,9 +718,9 @@ class SwgohComlink:
         """
         current_metadata = self.get_metadata()
         return {
-                'game': current_metadata['latestGamedataVersion'],
-                'language': current_metadata['latestLocalizationBundleVersion']
-                }
+            "game": current_metadata["latestGamedataVersion"],
+            "language": current_metadata["latestLocalizationBundleVersion"],
+        }
 
     # alias for shorthand call
     getVersion = get_latest_game_data_version

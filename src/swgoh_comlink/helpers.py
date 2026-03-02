@@ -2,6 +2,7 @@
 """
 Helper objects and functions for swgoh_comlink
 """
+
 from __future__ import annotations
 
 import inspect
@@ -11,11 +12,11 @@ from collections import namedtuple
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import wraps
+from math import floor
 from os import PathLike
 from pathlib import Path
-from typing import Any, NamedTuple, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, NamedTuple
 
-from math import floor
 from sentinels import Sentinel
 
 from .exceptions import SwgohComlinkValueError
@@ -24,19 +25,20 @@ from .globals import get_logger
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: ignore
+    from swgoh_comlink import SwgohComlink  # noqa: F401
 
-# Define sentinels used in parameter checking
-OPTIONAL = Sentinel('NotSet')
-NotSet = Sentinel('NotSet')
-EMPTY = Sentinel('NotSet')
-NotGiven = Sentinel('NotGiven')
-REQUIRED = Sentinel('REQUIRED')
-GIVEN = Sentinel('REQUIRED')
-MISSING = Sentinel('REQUIRED')
-SET = Sentinel('NotMissing')
-MutualExclusiveRequired = Sentinel('MutualExclusiveRequired')
-MutualRequiredNotSet = Sentinel('MutualExclusiveRequired')
+# Define sentinels used in parameter checking.
+# Each sentinel has a unique label matching its primary name for clear debugging output.
+OPTIONAL = Sentinel("OPTIONAL")
+NotSet = Sentinel("NotSet")
+EMPTY = Sentinel("EMPTY")
+NotGiven = Sentinel("NotGiven")
+REQUIRED = Sentinel("REQUIRED")
+GIVEN = Sentinel("GIVEN")
+MISSING = Sentinel("MISSING")
+SET = Sentinel("SET")
+MutualExclusiveRequired = Sentinel("MutualExclusiveRequired")
+MutualRequiredNotSet = Sentinel("MutualRequiredNotSet")
 
 
 class DataItems(IntFlag):
@@ -161,6 +163,7 @@ class DataItems(IntFlag):
 
 class Constants:
     """Collection of constants used throughout the SwgohComlink project."""
+
     ALL = -1
     CategoryDefinitions = 1
     UnlockAnnouncements = 2
@@ -227,959 +230,974 @@ class Constants:
     RELIC_OFFSET = 2
 
     MAX_VALUES: dict[str, int] = {
-            "GEAR_TIER": 13,
-            "UNIT_LEVEL": 85,
-            "RELIC_TIER": 10,
-            "UNIT_RARITY": 7,
-            "MOD_TIER": 5,  # Color
-            "MOD_LEVEL": 15,
-            "MOD_RARITY": 6,  # Pips
-            }
+        "GEAR_TIER": 13,
+        "UNIT_LEVEL": 85,
+        "RELIC_TIER": 10,
+        "UNIT_RARITY": 7,
+        "MOD_TIER": 5,  # Color
+        "MOD_LEVEL": 15,
+        "MOD_RARITY": 6,  # Pips
+    }
 
     LEAGUES: dict[str, int] = {
-            "kyber": 100,
-            "aurodium": 80,
-            "chromium": 60,
-            "bronzium": 40,
-            "carbonite": 20,
-            }
+        "kyber": 100,
+        "aurodium": 80,
+        "chromium": 60,
+        "bronzium": 40,
+        "carbonite": 20,
+    }
 
     DIVISIONS: dict[str, int] = {"1": 25, "2": 20, "3": 15, "4": 10, "5": 5}
 
     STAT_ENUMS: dict[str, str] = {
-            "0": "None",
-            "1": "UnitStat_Health",
-            "2": "UnitStat_Strength",
-            "3": "UnitStat_Agility",
-            "4": "UnitStat_Intelligence",
-            "5": "UnitStat_Speed",
-            "6": "UnitStat_AttackDamage",
-            "7": "UnitStat_AbilityPower",
-            "8": "UnitStat_Armor",
-            "9": "UnitStat_Suppression",
-            "10": "UnitStat_ArmorPenetration",
-            "11": "UnitStat_SuppressionPenetration",
-            "12": "UnitStat_DodgeRating_TU5V",
-            "13": "UnitStat_DeflectionRating_TU5V",
-            "14": "UnitStat_AttackCriticalRating_TU5V",
-            "15": "UnitStat_AbilityCriticalRating_TU5V",
-            "16": "UnitStat_CriticalDamage",
-            "17": "UnitStat_Accuracy",
-            "18": "UnitStat_Resistance",
-            "19": "UnitStat_DodgePercentAdditive",
-            "20": "UnitStat_DeflectionPercentAdditive",
-            "21": "UnitStat_AttackCriticalPercentAdditive",
-            "22": "UnitStat_AbilityCriticalPercentAdditive",
-            "23": "UnitStat_ArmorPercentAdditive",
-            "24": "UnitStat_SuppressionPercentAdditive",
-            "25": "UnitStat_ArmorPenetrationPercentAdditive",
-            "26": "UnitStat_SuppressionPenetrationPercentAdditive",
-            "27": "UnitStat_HealthSteal",
-            "28": "UnitStat_MaxShield",
-            "29": "UnitStat_ShieldPenetration",
-            "30": "UnitStat_HealthRegen",
-            "31": "UnitStat_AttackDamagePercentAdditive",
-            "32": "UnitStat_AbilityPowerPercentAdditive",
-            "33": "UnitStat_DodgeNegatePercentAdditive",
-            "34": "UnitStat_DeflectionNegatePercentAdditive",
-            "35": "UnitStat_AttackCriticalNegatePercentAdditive",
-            "36": "UnitStat_AbilityCriticalNegatePercentAdditive",
-            "37": "UnitStat_DodgeNegateRating",
-            "38": "UnitStat_DeflectionNegateRating",
-            "39": "UnitStat_AttackCriticalNegateRating",
-            "40": "UnitStat_AbilityCriticalNegateRating",
-            "41": "UnitStat_Offense",
-            "42": "UnitStat_Defense",
-            "43": "UnitStat_DefensePenetration",
-            "44": "UnitStat_EvasionRating",
-            "45": "UnitStat_CriticalRating",
-            "46": "UnitStat_EvasionNegateRating",
-            "47": "UnitStat_CriticalNegateRating",
-            "48": "UnitStat_OffensePercentAdditive",
-            "49": "UnitStat_DefensePercentAdditive",
-            "50": "UnitStat_DefensePenetrationPercentAdditive",
-            "51": "UnitStat_EvasionPercentAdditive",
-            "52": "UnitStat_EvasionNegatePercentAdditive",
-            "53": "UnitStat_CriticalChancePercentAdditive",
-            "54": "UnitStat_CriticalNegateChancePercentAdditive",
-            "55": "UnitStat_MaxHealthPercentAdditive",
-            "56": "UnitStat_MaxShieldPercentAdditive",
-            "57": "UnitStat_SpeedPercentAdditive",
-            "58": "UnitStat_CounterAttackRating",
-            "59": "UnitStat_Taunt",
-            "60": "UnitStat_DefensePenetrationTargetPercentAdditive",
-            "61": "UNIT_STAT_STAT_VIEW_MASTERY",
-            }
+        "0": "None",
+        "1": "UnitStat_Health",
+        "2": "UnitStat_Strength",
+        "3": "UnitStat_Agility",
+        "4": "UnitStat_Intelligence",
+        "5": "UnitStat_Speed",
+        "6": "UnitStat_AttackDamage",
+        "7": "UnitStat_AbilityPower",
+        "8": "UnitStat_Armor",
+        "9": "UnitStat_Suppression",
+        "10": "UnitStat_ArmorPenetration",
+        "11": "UnitStat_SuppressionPenetration",
+        "12": "UnitStat_DodgeRating_TU5V",
+        "13": "UnitStat_DeflectionRating_TU5V",
+        "14": "UnitStat_AttackCriticalRating_TU5V",
+        "15": "UnitStat_AbilityCriticalRating_TU5V",
+        "16": "UnitStat_CriticalDamage",
+        "17": "UnitStat_Accuracy",
+        "18": "UnitStat_Resistance",
+        "19": "UnitStat_DodgePercentAdditive",
+        "20": "UnitStat_DeflectionPercentAdditive",
+        "21": "UnitStat_AttackCriticalPercentAdditive",
+        "22": "UnitStat_AbilityCriticalPercentAdditive",
+        "23": "UnitStat_ArmorPercentAdditive",
+        "24": "UnitStat_SuppressionPercentAdditive",
+        "25": "UnitStat_ArmorPenetrationPercentAdditive",
+        "26": "UnitStat_SuppressionPenetrationPercentAdditive",
+        "27": "UnitStat_HealthSteal",
+        "28": "UnitStat_MaxShield",
+        "29": "UnitStat_ShieldPenetration",
+        "30": "UnitStat_HealthRegen",
+        "31": "UnitStat_AttackDamagePercentAdditive",
+        "32": "UnitStat_AbilityPowerPercentAdditive",
+        "33": "UnitStat_DodgeNegatePercentAdditive",
+        "34": "UnitStat_DeflectionNegatePercentAdditive",
+        "35": "UnitStat_AttackCriticalNegatePercentAdditive",
+        "36": "UnitStat_AbilityCriticalNegatePercentAdditive",
+        "37": "UnitStat_DodgeNegateRating",
+        "38": "UnitStat_DeflectionNegateRating",
+        "39": "UnitStat_AttackCriticalNegateRating",
+        "40": "UnitStat_AbilityCriticalNegateRating",
+        "41": "UnitStat_Offense",
+        "42": "UnitStat_Defense",
+        "43": "UnitStat_DefensePenetration",
+        "44": "UnitStat_EvasionRating",
+        "45": "UnitStat_CriticalRating",
+        "46": "UnitStat_EvasionNegateRating",
+        "47": "UnitStat_CriticalNegateRating",
+        "48": "UnitStat_OffensePercentAdditive",
+        "49": "UnitStat_DefensePercentAdditive",
+        "50": "UnitStat_DefensePenetrationPercentAdditive",
+        "51": "UnitStat_EvasionPercentAdditive",
+        "52": "UnitStat_EvasionNegatePercentAdditive",
+        "53": "UnitStat_CriticalChancePercentAdditive",
+        "54": "UnitStat_CriticalNegateChancePercentAdditive",
+        "55": "UnitStat_MaxHealthPercentAdditive",
+        "56": "UnitStat_MaxShieldPercentAdditive",
+        "57": "UnitStat_SpeedPercentAdditive",
+        "58": "UnitStat_CounterAttackRating",
+        "59": "UnitStat_Taunt",
+        "60": "UnitStat_DefensePenetrationTargetPercentAdditive",
+        "61": "UNIT_STAT_STAT_VIEW_MASTERY",
+    }
 
     UNIT_STAT_ENUMS_MAP: dict[str, dict[str, str]] = {
-            "0": {"enum": "UnitStat_DEFAULT", "nameKey": "None"},
-            "1": {
-                    "enum": "UNITSTATMAXHEALTH",
-                    "nameKey": "UnitStat_Health",
-                    "tableKey": "MAX_HEALTH",
-                    },
-            "2": {
-                    "enum": "UNITSTATSTRENGTH",
-                    "nameKey": "UnitStat_Strength",
-                    "tableKey": "STRENGTH",
-                    },
-            "3": {
-                    "enum": "UNITSTATAGILITY",
-                    "nameKey": "UnitStat_Agility",
-                    "tableKey": "AGILITY",
-                    },
-            "4": {
-                    "enum": "UNITSTATINTELLIGENCE",
-                    "nameKey": "UnitStat_Intelligence",
-                    "tableKey": "INTELLIGENCE",
-                    },
-            "5": {
-                    "enum": "UNITSTATSPEED",
-                    "nameKey": "UnitStat_Speed",
-                    "tableKey": "SPEED",
-                    },
-            "6": {
-                    "enum": "UNITSTATATTACKDAMAGE",
-                    "nameKey": "UnitStat_AttackDamage",
-                    "tableKey": "ATTACK_DAMAGE",
-                    },
-            "7": {
-                    "enum": "UNITSTATABILITYPOWER",
-                    "nameKey": "UnitStat_AbilityPower",
-                    "tableKey": "ABILITY_POWER",
-                    },
-            "8": {
-                    "enum": "UNITSTATARMOR",
-                    "nameKey": "UnitStat_Armor",
-                    "tableKey": "ARMOR",
-                    },
-            "9": {
-                    "enum": "UNITSTATSUPPRESSION",
-                    "nameKey": "UnitStat_Suppression",
-                    "tableKey": "SUPPRESSION",
-                    },
-            "10": {
-                    "enum": "UNITSTATARMORPENETRATION",
-                    "nameKey": "UnitStat_ArmorPenetration",
-                    "tableKey": "ARMOR_PENETRATION",
-                    },
-            "11": {
-                    "enum": "UNITSTATSUPPRESSIONPENETRATION",
-                    "nameKey": "UnitStat_SuppressionPenetration",
-                    "tableKey": "SUPPRESSION_PENETRATION",
-                    },
-            "12": {
-                    "enum": "UNITSTATDODGERATING",
-                    "nameKey": "UnitStat_DodgeRating_TU5V",
-                    "tableKey": "DODGE_RATING",
-                    },
-            "13": {
-                    "enum": "UNITSTATDEFLECTIONRATING",
-                    "nameKey": "UnitStat_DeflectionRating_TU5V",
-                    "tableKey": "DEFLECTION_RATING",
-                    },
-            "14": {
-                    "enum": "UNITSTATATTACKCRITICALRATING",
-                    "nameKey": "UnitStat_AttackCriticalRating_TU5V",
-                    "tableKey": "ATTACK_CRITICAL_RATING",
-                    },
-            "15": {
-                    "enum": "UNITSTATABILITYCRITICALRATING",
-                    "nameKey": "UnitStat_AbilityCriticalRating_TU5V",
-                    "tableKey": "ABILITY_CRITICAL_RATING",
-                    },
-            "16": {
-                    "enum": "UNITSTATCRITICALDAMAGE",
-                    "nameKey": "UnitStat_CriticalDamage",
-                    "tableKey": "CRITICAL_DAMAGE",
-                    },
-            "17": {
-                    "enum": "UNITSTATACCURACY",
-                    "nameKey": "UnitStat_Accuracy",
-                    "tableKey": "ACCURACY",
-                    },
-            "18": {
-                    "enum": "UNITSTATRESISTANCE",
-                    "nameKey": "UnitStat_Resistance",
-                    "tableKey": "RESISTANCE",
-                    },
-            "19": {
-                    "enum": "UNITSTATDODGEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_DodgePercentAdditive",
-                    "tableKey": "DODGE_PERCENT_ADDITIVE",
-                    },
-            "20": {
-                    "enum": "UNITSTATDEFLECTIONPERCENTADDITIVE",
-                    "nameKey": "UnitStat_DeflectionPercentAdditive",
-                    "tableKey": "DEFLECTION_PERCENT_ADDITIVE",
-                    },
-            "21": {
-                    "enum": "UNITSTATATTACKCRITICALPERCENTADDITIVE",
-                    "nameKey": "UnitStat_AttackCriticalPercentAdditive",
-                    "tableKey": "ATTACK_CRITICAL_PERCENT_ADDITIVE",
-                    },
-            "22": {
-                    "enum": "UNITSTATABILITYCRITICALPERCENTADDITIVE",
-                    "nameKey": "UnitStat_AbilityCriticalPercentAdditive",
-                    "tableKey": "ABILITY_CRITICAL_PERCENT_ADDITIVE",
-                    },
-            "23": {
-                    "enum": "UNITSTATARMORPERCENTADDITIVE",
-                    "nameKey": "UnitStat_ArmorPercentAdditive",
-                    "tableKey": "ARMOR_PERCENT_ADDITIVE",
-                    },
-            "24": {
-                    "enum": "UNITSTATSUPPRESSIONPERCENTADDITIVE",
-                    "nameKey": "UnitStat_SuppressionPercentAdditive",
-                    "tableKey": "SUPPRESSION_PERCENT_ADDITIVE",
-                    },
-            "25": {
-                    "enum": "UNITSTATARMORPENETRATIONPERCENTADDITIVE",
-                    "nameKey": "UnitStat_ArmorPenetrationPercentAdditive",
-                    "tableKey": "ARMOR_PENETRATION_PERCENT_ADDITIVE",
-                    },
-            "26": {
-                    "enum": "UNITSTATSUPPRESSIONPENETRATIONPERCENTADDITIVE",
-                    "nameKey": "UnitStat_SuppressionPenetrationPercentAdditive",
-                    "tableKey": "SUPPRESSION_PENETRATION_PERCENT_ADDITIVE",
-                    },
-            "27": {
-                    "enum": "UNITSTATHEALTHSTEAL",
-                    "nameKey": "UnitStat_HealthSteal",
-                    "tableKey": "HEALTH_STEAL",
-                    },
-            "28": {
-                    "enum": "UNITSTATMAXSHIELD",
-                    "nameKey": "UnitStat_MaxShield",
-                    "tableKey": "MAX_SHIELD",
-                    },
-            "29": {
-                    "enum": "UNITSTATSHIELDPENETRATION",
-                    "nameKey": "UnitStat_ShieldPenetration",
-                    "tableKey": "SHIELD_PENETRATION",
-                    },
-            "30": {
-                    "enum": "UNITSTATHEALTHREGEN",
-                    "nameKey": "UnitStat_HealthRegen",
-                    "tableKey": "HEALTH_REGEN",
-                    },
-            "31": {
-                    "enum": "UNITSTATATTACKDAMAGEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_AttackDamagePercentAdditive",
-                    "tableKey": "ATTACK_DAMAGE_PERCENT_ADDITIVE",
-                    },
-            "32": {
-                    "enum": "UNITSTATABILITYPOWERPERCENTADDITIVE",
-                    "nameKey": "UnitStat_AbilityPowerPercentAdditive",
-                    "tableKey": "ABILITY_POWER_PERCENT_ADDITIVE",
-                    },
-            "33": {
-                    "enum": "UNITSTATDODGENEGATEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_DodgeNegatePercentAdditive",
-                    "tableKey": "DODGE_NEGATE_PERCENT_ADDITIVE",
-                    },
-            "34": {
-                    "enum": "UNITSTATDEFLECTIONNEGATEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_DeflectionNegatePercentAdditive",
-                    "tableKey": "DEFLECTION_NEGATE_PERCENT_ADDITIVE",
-                    },
-            "35": {
-                    "enum": "UNITSTATATTACKCRITICALNEGATEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_AttackCriticalNegatePercentAdditive",
-                    "tableKey": "ATTACK_CRITICAL_NEGATE_PERCENT_ADDITIVE",
-                    },
-            "36": {
-                    "enum": "UNITSTATABILITYCRITICALNEGATEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_AbilityCriticalNegatePercentAdditive",
-                    "tableKey": "ABILITY_CRITICAL_NEGATE_PERCENT_ADDITIVE",
-                    },
-            "37": {
-                    "enum": "UNITSTATDODGENEGATERATING",
-                    "nameKey": "UnitStat_DodgeNegateRating",
-                    "tableKey": "DODGE_NEGATE_RATING",
-                    },
-            "38": {
-                    "enum": "UNITSTATDEFLECTIONNEGATERATING",
-                    "nameKey": "UnitStat_DeflectionNegateRating",
-                    "tableKey": "DEFLECTION_NEGATE_RATING",
-                    },
-            "39": {
-                    "enum": "UNITSTATATTACKCRITICALNEGATERATING",
-                    "nameKey": "UnitStat_AttackCriticalNegateRating",
-                    "tableKey": "ATTACK_CRITICAL_NEGATE_RATING",
-                    },
-            "40": {
-                    "enum": "UNITSTATABILITYCRITICALNEGATERATING",
-                    "nameKey": "UnitStat_AbilityCriticalNegateRating",
-                    "tableKey": "ABILITY_CRITICAL_NEGATE_RATING",
-                    },
-            "41": {
-                    "enum": "UNITSTATOFFENSE",
-                    "nameKey": "UnitStat_Offense",
-                    "tableKey": "OFFENSE",
-                    },
-            "42": {
-                    "enum": "UNITSTATDEFENSE",
-                    "nameKey": "UnitStat_Defense",
-                    "tableKey": "DEFENSE",
-                    },
-            "43": {
-                    "enum": "UNITSTATDEFENSEPENETRATION",
-                    "nameKey": "UnitStat_DefensePenetration",
-                    "tableKey": "DEFENSE_PENETRATION",
-                    },
-            "44": {
-                    "enum": "UNITSTATEVASIONRATING",
-                    "nameKey": "UnitStat_EvasionRating",
-                    "tableKey": "EVASION_RATING",
-                    },
-            "45": {
-                    "enum": "UNITSTATCRITICALRATING",
-                    "nameKey": "UnitStat_CriticalRating",
-                    "tableKey": "CRITICAL_RATING",
-                    },
-            "46": {
-                    "enum": "UNITSTATEVASIONNEGATERATING",
-                    "nameKey": "UnitStat_EvasionNegateRating",
-                    "tableKey": "EVASION_NEGATE_RATING",
-                    },
-            "47": {
-                    "enum": "UNITSTATCRITICALNEGATERATING",
-                    "nameKey": "UnitStat_CriticalNegateRating",
-                    "tableKey": "CRITICAL_NEGATE_RATING",
-                    },
-            "48": {
-                    "enum": "UNITSTATOFFENSEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_OffensePercentAdditive",
-                    "tableKey": "OFFENSE_PERCENT_ADDITIVE",
-                    },
-            "49": {
-                    "enum": "UNITSTATDEFENSEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_DefensePercentAdditive",
-                    "tableKey": "DEFENSE_PERCENT_ADDITIVE",
-                    },
-            "50": {
-                    "enum": "UNITSTATDEFENSEPENETRATIONPERCENTADDITIVE",
-                    "nameKey": "UnitStat_DefensePenetrationPercentAdditive",
-                    "tableKey": "DEFENSE_PENETRATION_PERCENT_ADDITIVE",
-                    },
-            "51": {
-                    "enum": "UNITSTATEVASIONPERCENTADDITIVE",
-                    "nameKey": "UnitStat_EvasionPercentAdditive",
-                    "tableKey": "EVASION_PERCENT_ADDITIVE",
-                    },
-            "52": {
-                    "enum": "UNITSTATEVASIONNEGATEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_EvasionNegatePercentAdditive",
-                    "tableKey": "EVASION_NEGATE_PERCENT_ADDITIVE",
-                    },
-            "53": {
-                    "enum": "UNITSTATCRITICALCHANCEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_CriticalChancePercentAdditive",
-                    "tableKey": "CRITICAL_CHANCE_PERCENT_ADDITIVE",
-                    },
-            "54": {
-                    "enum": "UNITSTATCRITICALNEGATECHANCEPERCENTADDITIVE",
-                    "nameKey": "UnitStat_CriticalNegateChancePercentAdditive",
-                    "tableKey": "CRITICAL_NEGATE_CHANCE_PERCENT_ADDITIVE",
-                    },
-            "55": {
-                    "enum": "UNITSTATMAXHEALTHPERCENTADDITIVE",
-                    "nameKey": "UnitStat_MaxHealthPercentAdditive",
-                    "tableKey": "MAX_HEALTH_PERCENT_ADDITIVE",
-                    },
-            "56": {
-                    "enum": "UNITSTATMAXSHIELDPERCENTADDITIVE",
-                    "nameKey": "UnitStat_MaxShieldPercentAdditive",
-                    "tableKey": "MAX_SHIELD_PERCENT_ADDITIVE",
-                    },
-            "57": {
-                    "enum": "UNITSTATSPEEDPERCENTADDITIVE",
-                    "nameKey": "UnitStat_SpeedPercentAdditive",
-                    "tableKey": "SPEED_PERCENT_ADDITIVE",
-                    },
-            "58": {
-                    "enum": "UNITSTATCOUNTERATTACKRATING",
-                    "nameKey": "UnitStat_CounterAttackRating",
-                    "tableKey": "COUNTER_ATTACK_RATING",
-                    },
-            "59": {
-                    "enum": "UNITSTATTAUNT",
-                    "nameKey": "UnitStat_Taunt",
-                    "tableKey": "TAUNT",
-                    },
-            "60": {
-                    "enum": "UNITSTATDEFENSEPENETRATIONTARGETPERCENTADDITIVE",
-                    "nameKey": "UnitStat_DefensePenetrationTargetPercentAdditive",
-                    "tableKey": "DEFENSE_PENETRATION_TARGET_PERCENT_ADDITIVE",
-                    },
-            "61": {
-                    "enum": "UNITSTATMASTERY",
-                    "nameKey": "UNIT_STAT_STAT_VIEW_MASTERY",
-                    "tableKey": "MASTERY",
-                    },
-            }
+        "0": {"enum": "UnitStat_DEFAULT", "nameKey": "None"},
+        "1": {
+            "enum": "UNITSTATMAXHEALTH",
+            "nameKey": "UnitStat_Health",
+            "tableKey": "MAX_HEALTH",
+        },
+        "2": {
+            "enum": "UNITSTATSTRENGTH",
+            "nameKey": "UnitStat_Strength",
+            "tableKey": "STRENGTH",
+        },
+        "3": {
+            "enum": "UNITSTATAGILITY",
+            "nameKey": "UnitStat_Agility",
+            "tableKey": "AGILITY",
+        },
+        "4": {
+            "enum": "UNITSTATINTELLIGENCE",
+            "nameKey": "UnitStat_Intelligence",
+            "tableKey": "INTELLIGENCE",
+        },
+        "5": {
+            "enum": "UNITSTATSPEED",
+            "nameKey": "UnitStat_Speed",
+            "tableKey": "SPEED",
+        },
+        "6": {
+            "enum": "UNITSTATATTACKDAMAGE",
+            "nameKey": "UnitStat_AttackDamage",
+            "tableKey": "ATTACK_DAMAGE",
+        },
+        "7": {
+            "enum": "UNITSTATABILITYPOWER",
+            "nameKey": "UnitStat_AbilityPower",
+            "tableKey": "ABILITY_POWER",
+        },
+        "8": {
+            "enum": "UNITSTATARMOR",
+            "nameKey": "UnitStat_Armor",
+            "tableKey": "ARMOR",
+        },
+        "9": {
+            "enum": "UNITSTATSUPPRESSION",
+            "nameKey": "UnitStat_Suppression",
+            "tableKey": "SUPPRESSION",
+        },
+        "10": {
+            "enum": "UNITSTATARMORPENETRATION",
+            "nameKey": "UnitStat_ArmorPenetration",
+            "tableKey": "ARMOR_PENETRATION",
+        },
+        "11": {
+            "enum": "UNITSTATSUPPRESSIONPENETRATION",
+            "nameKey": "UnitStat_SuppressionPenetration",
+            "tableKey": "SUPPRESSION_PENETRATION",
+        },
+        "12": {
+            "enum": "UNITSTATDODGERATING",
+            "nameKey": "UnitStat_DodgeRating_TU5V",
+            "tableKey": "DODGE_RATING",
+        },
+        "13": {
+            "enum": "UNITSTATDEFLECTIONRATING",
+            "nameKey": "UnitStat_DeflectionRating_TU5V",
+            "tableKey": "DEFLECTION_RATING",
+        },
+        "14": {
+            "enum": "UNITSTATATTACKCRITICALRATING",
+            "nameKey": "UnitStat_AttackCriticalRating_TU5V",
+            "tableKey": "ATTACK_CRITICAL_RATING",
+        },
+        "15": {
+            "enum": "UNITSTATABILITYCRITICALRATING",
+            "nameKey": "UnitStat_AbilityCriticalRating_TU5V",
+            "tableKey": "ABILITY_CRITICAL_RATING",
+        },
+        "16": {
+            "enum": "UNITSTATCRITICALDAMAGE",
+            "nameKey": "UnitStat_CriticalDamage",
+            "tableKey": "CRITICAL_DAMAGE",
+        },
+        "17": {
+            "enum": "UNITSTATACCURACY",
+            "nameKey": "UnitStat_Accuracy",
+            "tableKey": "ACCURACY",
+        },
+        "18": {
+            "enum": "UNITSTATRESISTANCE",
+            "nameKey": "UnitStat_Resistance",
+            "tableKey": "RESISTANCE",
+        },
+        "19": {
+            "enum": "UNITSTATDODGEPERCENTADDITIVE",
+            "nameKey": "UnitStat_DodgePercentAdditive",
+            "tableKey": "DODGE_PERCENT_ADDITIVE",
+        },
+        "20": {
+            "enum": "UNITSTATDEFLECTIONPERCENTADDITIVE",
+            "nameKey": "UnitStat_DeflectionPercentAdditive",
+            "tableKey": "DEFLECTION_PERCENT_ADDITIVE",
+        },
+        "21": {
+            "enum": "UNITSTATATTACKCRITICALPERCENTADDITIVE",
+            "nameKey": "UnitStat_AttackCriticalPercentAdditive",
+            "tableKey": "ATTACK_CRITICAL_PERCENT_ADDITIVE",
+        },
+        "22": {
+            "enum": "UNITSTATABILITYCRITICALPERCENTADDITIVE",
+            "nameKey": "UnitStat_AbilityCriticalPercentAdditive",
+            "tableKey": "ABILITY_CRITICAL_PERCENT_ADDITIVE",
+        },
+        "23": {
+            "enum": "UNITSTATARMORPERCENTADDITIVE",
+            "nameKey": "UnitStat_ArmorPercentAdditive",
+            "tableKey": "ARMOR_PERCENT_ADDITIVE",
+        },
+        "24": {
+            "enum": "UNITSTATSUPPRESSIONPERCENTADDITIVE",
+            "nameKey": "UnitStat_SuppressionPercentAdditive",
+            "tableKey": "SUPPRESSION_PERCENT_ADDITIVE",
+        },
+        "25": {
+            "enum": "UNITSTATARMORPENETRATIONPERCENTADDITIVE",
+            "nameKey": "UnitStat_ArmorPenetrationPercentAdditive",
+            "tableKey": "ARMOR_PENETRATION_PERCENT_ADDITIVE",
+        },
+        "26": {
+            "enum": "UNITSTATSUPPRESSIONPENETRATIONPERCENTADDITIVE",
+            "nameKey": "UnitStat_SuppressionPenetrationPercentAdditive",
+            "tableKey": "SUPPRESSION_PENETRATION_PERCENT_ADDITIVE",
+        },
+        "27": {
+            "enum": "UNITSTATHEALTHSTEAL",
+            "nameKey": "UnitStat_HealthSteal",
+            "tableKey": "HEALTH_STEAL",
+        },
+        "28": {
+            "enum": "UNITSTATMAXSHIELD",
+            "nameKey": "UnitStat_MaxShield",
+            "tableKey": "MAX_SHIELD",
+        },
+        "29": {
+            "enum": "UNITSTATSHIELDPENETRATION",
+            "nameKey": "UnitStat_ShieldPenetration",
+            "tableKey": "SHIELD_PENETRATION",
+        },
+        "30": {
+            "enum": "UNITSTATHEALTHREGEN",
+            "nameKey": "UnitStat_HealthRegen",
+            "tableKey": "HEALTH_REGEN",
+        },
+        "31": {
+            "enum": "UNITSTATATTACKDAMAGEPERCENTADDITIVE",
+            "nameKey": "UnitStat_AttackDamagePercentAdditive",
+            "tableKey": "ATTACK_DAMAGE_PERCENT_ADDITIVE",
+        },
+        "32": {
+            "enum": "UNITSTATABILITYPOWERPERCENTADDITIVE",
+            "nameKey": "UnitStat_AbilityPowerPercentAdditive",
+            "tableKey": "ABILITY_POWER_PERCENT_ADDITIVE",
+        },
+        "33": {
+            "enum": "UNITSTATDODGENEGATEPERCENTADDITIVE",
+            "nameKey": "UnitStat_DodgeNegatePercentAdditive",
+            "tableKey": "DODGE_NEGATE_PERCENT_ADDITIVE",
+        },
+        "34": {
+            "enum": "UNITSTATDEFLECTIONNEGATEPERCENTADDITIVE",
+            "nameKey": "UnitStat_DeflectionNegatePercentAdditive",
+            "tableKey": "DEFLECTION_NEGATE_PERCENT_ADDITIVE",
+        },
+        "35": {
+            "enum": "UNITSTATATTACKCRITICALNEGATEPERCENTADDITIVE",
+            "nameKey": "UnitStat_AttackCriticalNegatePercentAdditive",
+            "tableKey": "ATTACK_CRITICAL_NEGATE_PERCENT_ADDITIVE",
+        },
+        "36": {
+            "enum": "UNITSTATABILITYCRITICALNEGATEPERCENTADDITIVE",
+            "nameKey": "UnitStat_AbilityCriticalNegatePercentAdditive",
+            "tableKey": "ABILITY_CRITICAL_NEGATE_PERCENT_ADDITIVE",
+        },
+        "37": {
+            "enum": "UNITSTATDODGENEGATERATING",
+            "nameKey": "UnitStat_DodgeNegateRating",
+            "tableKey": "DODGE_NEGATE_RATING",
+        },
+        "38": {
+            "enum": "UNITSTATDEFLECTIONNEGATERATING",
+            "nameKey": "UnitStat_DeflectionNegateRating",
+            "tableKey": "DEFLECTION_NEGATE_RATING",
+        },
+        "39": {
+            "enum": "UNITSTATATTACKCRITICALNEGATERATING",
+            "nameKey": "UnitStat_AttackCriticalNegateRating",
+            "tableKey": "ATTACK_CRITICAL_NEGATE_RATING",
+        },
+        "40": {
+            "enum": "UNITSTATABILITYCRITICALNEGATERATING",
+            "nameKey": "UnitStat_AbilityCriticalNegateRating",
+            "tableKey": "ABILITY_CRITICAL_NEGATE_RATING",
+        },
+        "41": {
+            "enum": "UNITSTATOFFENSE",
+            "nameKey": "UnitStat_Offense",
+            "tableKey": "OFFENSE",
+        },
+        "42": {
+            "enum": "UNITSTATDEFENSE",
+            "nameKey": "UnitStat_Defense",
+            "tableKey": "DEFENSE",
+        },
+        "43": {
+            "enum": "UNITSTATDEFENSEPENETRATION",
+            "nameKey": "UnitStat_DefensePenetration",
+            "tableKey": "DEFENSE_PENETRATION",
+        },
+        "44": {
+            "enum": "UNITSTATEVASIONRATING",
+            "nameKey": "UnitStat_EvasionRating",
+            "tableKey": "EVASION_RATING",
+        },
+        "45": {
+            "enum": "UNITSTATCRITICALRATING",
+            "nameKey": "UnitStat_CriticalRating",
+            "tableKey": "CRITICAL_RATING",
+        },
+        "46": {
+            "enum": "UNITSTATEVASIONNEGATERATING",
+            "nameKey": "UnitStat_EvasionNegateRating",
+            "tableKey": "EVASION_NEGATE_RATING",
+        },
+        "47": {
+            "enum": "UNITSTATCRITICALNEGATERATING",
+            "nameKey": "UnitStat_CriticalNegateRating",
+            "tableKey": "CRITICAL_NEGATE_RATING",
+        },
+        "48": {
+            "enum": "UNITSTATOFFENSEPERCENTADDITIVE",
+            "nameKey": "UnitStat_OffensePercentAdditive",
+            "tableKey": "OFFENSE_PERCENT_ADDITIVE",
+        },
+        "49": {
+            "enum": "UNITSTATDEFENSEPERCENTADDITIVE",
+            "nameKey": "UnitStat_DefensePercentAdditive",
+            "tableKey": "DEFENSE_PERCENT_ADDITIVE",
+        },
+        "50": {
+            "enum": "UNITSTATDEFENSEPENETRATIONPERCENTADDITIVE",
+            "nameKey": "UnitStat_DefensePenetrationPercentAdditive",
+            "tableKey": "DEFENSE_PENETRATION_PERCENT_ADDITIVE",
+        },
+        "51": {
+            "enum": "UNITSTATEVASIONPERCENTADDITIVE",
+            "nameKey": "UnitStat_EvasionPercentAdditive",
+            "tableKey": "EVASION_PERCENT_ADDITIVE",
+        },
+        "52": {
+            "enum": "UNITSTATEVASIONNEGATEPERCENTADDITIVE",
+            "nameKey": "UnitStat_EvasionNegatePercentAdditive",
+            "tableKey": "EVASION_NEGATE_PERCENT_ADDITIVE",
+        },
+        "53": {
+            "enum": "UNITSTATCRITICALCHANCEPERCENTADDITIVE",
+            "nameKey": "UnitStat_CriticalChancePercentAdditive",
+            "tableKey": "CRITICAL_CHANCE_PERCENT_ADDITIVE",
+        },
+        "54": {
+            "enum": "UNITSTATCRITICALNEGATECHANCEPERCENTADDITIVE",
+            "nameKey": "UnitStat_CriticalNegateChancePercentAdditive",
+            "tableKey": "CRITICAL_NEGATE_CHANCE_PERCENT_ADDITIVE",
+        },
+        "55": {
+            "enum": "UNITSTATMAXHEALTHPERCENTADDITIVE",
+            "nameKey": "UnitStat_MaxHealthPercentAdditive",
+            "tableKey": "MAX_HEALTH_PERCENT_ADDITIVE",
+        },
+        "56": {
+            "enum": "UNITSTATMAXSHIELDPERCENTADDITIVE",
+            "nameKey": "UnitStat_MaxShieldPercentAdditive",
+            "tableKey": "MAX_SHIELD_PERCENT_ADDITIVE",
+        },
+        "57": {
+            "enum": "UNITSTATSPEEDPERCENTADDITIVE",
+            "nameKey": "UnitStat_SpeedPercentAdditive",
+            "tableKey": "SPEED_PERCENT_ADDITIVE",
+        },
+        "58": {
+            "enum": "UNITSTATCOUNTERATTACKRATING",
+            "nameKey": "UnitStat_CounterAttackRating",
+            "tableKey": "COUNTER_ATTACK_RATING",
+        },
+        "59": {
+            "enum": "UNITSTATTAUNT",
+            "nameKey": "UnitStat_Taunt",
+            "tableKey": "TAUNT",
+        },
+        "60": {
+            "enum": "UNITSTATDEFENSEPENETRATIONTARGETPERCENTADDITIVE",
+            "nameKey": "UnitStat_DefensePenetrationTargetPercentAdditive",
+            "tableKey": "DEFENSE_PENETRATION_TARGET_PERCENT_ADDITIVE",
+        },
+        "61": {
+            "enum": "UNITSTATMASTERY",
+            "nameKey": "UNIT_STAT_STAT_VIEW_MASTERY",
+            "tableKey": "MASTERY",
+        },
+    }
 
     MOD_SET_IDS: dict[str, str] = {
-            "1": "Health",
-            "2": "Offense",
-            "3": "Defense",
-            "4": "Speed",
-            "5": "Critical Chance",
-            "6": "Critical Damage",
-            "7": "Potency",
-            "8": "Tenacity",
-            }
+        "1": "Health",
+        "2": "Offense",
+        "3": "Defense",
+        "4": "Speed",
+        "5": "Critical Chance",
+        "6": "Critical Damage",
+        "7": "Potency",
+        "8": "Tenacity",
+    }
 
     MOD_SLOTS: dict[str, str] = {
-            "2": "Square",
-            "3": "Arrow",
-            "4": "Diamond",
-            "5": "Triangle",
-            "6": "Circle",
-            "7": "Plus/Cross",
-            }
+        "2": "Square",
+        "3": "Arrow",
+        "4": "Diamond",
+        "5": "Triangle",
+        "6": "Circle",
+        "7": "Plus/Cross",
+    }
 
     STATS: dict[str, dict] = {
-            "1": {
-                    "statId": 1,
-                    "nameKey": "UnitStat_Health",
-                    "descKey": "UnitStatDescription_Health_TU7",
-                    "isDecimal": False,
-                    "name": "Health",
-                    "detailedName": "Max Health"
-                    },
-            "2": {
-                    "statId": 2,
-                    "nameKey": "UnitStat_Strength",
-                    "descKey": "UnitStatDescription_Strength",
-                    "isDecimal": False,
-                    "name": "Strength",
-                    "detailedName": "Strength"
-                    },
-            "3": {
-                    "statId": 3,
-                    "nameKey": "UnitStat_Agility",
-                    "descKey": "UnitStatDescription_Agility",
-                    "isDecimal": False,
-                    "name": "Agility",
-                    "detailedName": "Agility"
-                    },
-            "4": {
-                    "statId": 4,
-                    "nameKey": "UnitStat_Intelligence_TU7",
-                    "descKey": "UnitStatDescription_Intelligence",
-                    "isDecimal": False,
-                    "name": "Tactics",
-                    "detailedName": "Tactics"
-                    },
-            "5": {
-                    "statId": 5,
-                    "nameKey": "UnitStat_Speed",
-                    "descKey": "UnitStatDescription_Speed",
-                    "isDecimal": False,
-                    "name": "Speed",
-                    "detailedName": "Speed"
-                    },
-            "6": {
-                    "statId": 6,
-                    "nameKey": "UnitStat_AttackDamage",
-                    "descKey": "UnitStatDescription_AttackDamage",
-                    "isDecimal": False,
-                    "name": "Physical Damage",
-                    "detailedName": "Physical Damage"
-                    },
-            "7": {
-                    "statId": 7,
-                    "nameKey": "UnitStat_AbilityPower",
-                    "descKey": "UnitStatDescription_AbilityPower",
-                    "isDecimal": False,
-                    "name": "Special Damage",
-                    "detailedName": "Special Damage"
-                    },
-            "8": {
-                    "statId": 8,
-                    "nameKey": "UnitStat_Armor",
-                    "descKey": "UnitStatDescription_Armor",
-                    "isDecimal": False,
-                    "name": "Armor",
-                    "detailedName": "Armor"
-                    },
-            "9": {
-                    "statId": 9,
-                    "nameKey": "UnitStat_Suppression",
-                    "descKey": "UnitStatDescription_Suppression",
-                    "isDecimal": False,
-                    "name": "Resistance",
-                    "detailedName": "Resistance"
-                    },
-            "10": {
-                    "statId": 10,
-                    "nameKey": "UnitStat_ArmorPenetration",
-                    "descKey": "UnitStatDescription_ArmorPenetration",
-                    "isDecimal": False,
-                    "name": "Armor Penetration",
-                    "detailedName": "Armor Penetration"
-                    },
-            "11": {
-                    "statId": 11,
-                    "nameKey": "UnitStat_SuppressionPenetration",
-                    "descKey": "UnitStatDescription_SuppressionPenetration",
-                    "isDecimal": False,
-                    "name": "Resistance Penetration",
-                    "detailedName": "Resistance Penetration"
-                    },
-            "12": {
-                    "statId": 12,
-                    "nameKey": "UnitStat_DodgeRating_TU5V",
-                    "descKey": "UnitStatDescription_DodgeRating",
-                    "isDecimal": False,
-                    "name": "Dodge Chance",
-                    "detailedName": "Dodge Rating"
-                    },
-            "13": {
-                    "statId": 13,
-                    "nameKey": "UnitStat_DeflectionRating_TU5V",
-                    "descKey": "UnitStatDescription_DeflectionRating",
-                    "isDecimal": False,
-                    "name": "Deflection Chance",
-                    "detailedName": "Deflection Rating"
-                    },
-            "14": {
-                    "statId": 14,
-                    "nameKey": "UnitStat_AttackCriticalRating_TU5V",
-                    "descKey": "UnitStatDescription_AttackCriticalRating",
-                    "isDecimal": False,
-                    "name": "Physical Critical Chance",
-                    "detailedName": "Physical Critical Rating"
-                    },
-            "15": {
-                    "statId": 15,
-                    "nameKey": "UnitStat_AbilityCriticalRating_TU5V",
-                    "descKey": "UnitStatDescription_AbilityCriticalRating",
-                    "isDecimal": False,
-                    "name": "Special Critical Chance",
-                    "detailedName": "Special Critical Rating"
-                    },
-            "16": {
-                    "statId": 16,
-                    "nameKey": "UnitStat_CriticalDamage",
-                    "descKey": "UnitStatDescription_CriticalDamage",
-                    "isDecimal": True,
-                    "name": "Critical Damage",
-                    "detailedName": "Critical Damage"
-                    },
-            "17": {
-                    "statId": 17,
-                    "nameKey": "UnitStat_Accuracy",
-                    "descKey": "UnitStatDescription_Accuracy",
-                    "isDecimal": True,
-                    "name": "Potency",
-                    "detailedName": "Potency"
-                    },
-            "18": {
-                    "statId": 18,
-                    "nameKey": "UnitStat_Resistance",
-                    "descKey": "UnitStatDescription_Resistance",
-                    "isDecimal": True,
-                    "name": "Tenacity",
-                    "detailedName": "Tenacity"
-                    },
-            "19": {
-                    "statId": 19,
-                    "nameKey": "UnitStat_DodgePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Dodge",
-                    "detailedName": "Dodge Percent Additive"
-                    },
-            "20": {
-                    "statId": 20,
-                    "nameKey": "UnitStat_DeflectionPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Deflection",
-                    "detailedName": "Deflection Percent Additive"
-                    },
-            "21": {
-                    "statId": 21,
-                    "nameKey": "UnitStat_AttackCriticalPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Physical Critical Chance",
-                    "detailedName": "Physical Critical Percent Additive"
-                    },
-            "22": {
-                    "statId": 22,
-                    "nameKey": "UnitStat_AbilityCriticalPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Special Critical Chance",
-                    "detailedName": "Special Critical Percent Additive"
-                    },
-            "23": {
-                    "statId": 23,
-                    "nameKey": "UnitStat_ArmorPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Armor",
-                    "detailedName": "Armor Percent Additive"
-                    },
-            "24": {
-                    "statId": 24,
-                    "nameKey": "UnitStat_SuppressionPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Resistance",
-                    "detailedName": "Resistance Percent Additive"
-                    },
-            "25": {
-                    "statId": 25,
-                    "nameKey": "UnitStat_ArmorPenetrationPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Armor Penetration",
-                    "detailedName": "Armor Penetration Percent Additive"
-                    },
-            "26": {
-                    "statId": 26,
-                    "nameKey": "UnitStat_SuppressionPenetrationPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Resistance Penetration",
-                    "detailedName": "Resistance Penetration Percent Additive"
-                    },
-            "27": {
-                    "statId": 27,
-                    "nameKey": "UnitStat_HealthSteal",
-                    "descKey": "UnitStatDescription_HealthSteal",
-                    "isDecimal": True,
-                    "name": "Health Steal",
-                    "detailedName": "Health Steal"
-                    },
-            "28": {
-                    "statId": 28,
-                    "nameKey": "UnitStat_MaxShield",
-                    "descKey": "UnitStatDescription_MaxShield",
-                    "isDecimal": False,
-                    "name": "Protection",
-                    "detailedName": "Max Protection"
-                    },
-            "29": {
-                    "statId": 29,
-                    "nameKey": "UnitStat_ShieldPenetration",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Protection Ignore",
-                    "detailedName": "Protection Ignore"
-                    },
-            "30": {
-                    "statId": 30,
-                    "nameKey": "UnitStat_HealthRegen",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Health Regeneration",
-                    "detailedName": "Health Regen"
-                    },
-            "31": {
-                    "statId": 31,
-                    "nameKey": "UnitStat_AttackDamagePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Physical Damage",
-                    "detailedName": "Physical Damage Percent Additive"
-                    },
-            "32": {
-                    "statId": 32,
-                    "nameKey": "UnitStat_AbilityPowerPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Special Damage",
-                    "detailedName": "Special Damage Percent Additive"
-                    },
-            "33": {
-                    "statId": 33,
-                    "nameKey": "UnitStat_DodgeNegatePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Physical Accuracy",
-                    "detailedName": "Dodge Negate Percent Additive"
-                    },
-            "34": {
-                    "statId": 34,
-                    "nameKey": "UnitStat_DeflectionNegatePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Special Accuracy",
-                    "detailedName": "Deflection Negate Percent Additive"
-                    },
-            "35": {
-                    "statId": 35,
-                    "nameKey": "UnitStat_AttackCriticalNegatePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Physical Critical Avoidance",
-                    "detailedName": "Physical Critical Negate Percent Additive"
-                    },
-            "36": {
-                    "statId": 36,
-                    "nameKey": "UnitStat_AbilityCriticalNegatePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Special Critical Avoidance",
-                    "detailedName": "Special Critical Negate Percent Additive"
-                    },
-            "37": {
-                    "statId": 37,
-                    "nameKey": "UnitStat_DodgeNegateRating",
-                    "descKey": "UnitStatDescription_DodgeNegateRating",
-                    "isDecimal": False,
-                    "name": "Physical Accuracy",
-                    "detailedName": "Dodge Negate Rating"
-                    },
-            "38": {
-                    "statId": 38,
-                    "nameKey": "UnitStat_DeflectionNegateRating",
-                    "descKey": "UnitStatDescription_DeflectionNegateRating",
-                    "isDecimal": False,
-                    "name": "Special Accuracy",
-                    "detailedName": "Deflection Negate Rating"
-                    },
-            "39": {
-                    "statId": 39,
-                    "nameKey": "UnitStat_AttackCriticalNegateRating",
-                    "descKey": "UnitStatDescription_AttackCriticalNegateRating",
-                    "isDecimal": False,
-                    "name": "Physical Critical Avoidance",
-                    "detailedName": "Physical Critical Negate Rating"
-                    },
-            "40": {
-                    "statId": 40,
-                    "nameKey": "UnitStat_AbilityCriticalNegateRating",
-                    "descKey": "UnitStatDescription_AbilityCriticalNegateRating",
-                    "isDecimal": False,
-                    "name": "Special Critical Avoidance",
-                    "detailedName": "Special Critical Negate Rating"
-                    },
-            "41": {
-                    "statId": 41,
-                    "nameKey": "UnitStat_Offense",
-                    "descKey": "UnitStatDescription_Offense",
-                    "isDecimal": False,
-                    "name": "Offense",
-                    "detailedName": "Offense"
-                    },
-            "42": {
-                    "statId": 42,
-                    "nameKey": "UnitStat_Defense",
-                    "descKey": "UnitStatDescription_Defense",
-                    "isDecimal": False, "name": "Defense",
-                    "detailedName": "Defense"
-                    },
-            "43": {
-                    "statId": 43,
-                    "nameKey": "UnitStat_DefensePenetration",
-                    "descKey": "UnitStatDescription_DefensePenetration",
-                    "isDecimal": False,
-                    "name": "Defense Penetration",
-                    "detailedName": "Defense Penetration"
-                    },
-            "44": {
-                    "statId": 44,
-                    "nameKey": "UnitStat_EvasionRating",
-                    "descKey": "UnitStatDescription_EvasionRating",
-                    "isDecimal": False,
-                    "name": "Evasion",
-                    "detailedName": "Evasion Rating"
-                    },
-            "45": {
-                    "statId": 45,
-                    "nameKey": "UnitStat_CriticalRating",
-                    "descKey": "UnitStatDescription_CriticalRating",
-                    "isDecimal": False,
-                    "name": "Critical Chance",
-                    "detailedName": "Critical Rating"
-                    },
-            "46": {
-                    "statId": 46,
-                    "nameKey": "UnitStat_EvasionNegateRating",
-                    "descKey": "UnitStatDescription_EvasionNegateRating",
-                    "isDecimal": False,
-                    "name": "Accuracy",
-                    "detailedName": "Evasion Negate Rating"
-                    },
-            "47": {
-                    "statId": 47,
-                    "nameKey": "UnitStat_CriticalNegateRating",
-                    "descKey": "UnitStatDescription_CriticalNegateRating",
-                    "isDecimal": False,
-                    "name": "Critical Avoidance",
-                    "detailedName": "Critical Negate Rating"
-                    },
-            "48": {
-                    "statId": 48,
-                    "nameKey": "UnitStat_OffensePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Offense",
-                    "detailedName": "Offense Percent Additive"
-                    },
-            "49": {
-                    "statId": 49,
-                    "nameKey": "UnitStat_DefensePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Defense",
-                    "detailedName": "Defense Percent Additive"
-                    },
-            "50": {
-                    "statId": 50,
-                    "nameKey": "UnitStat_DefensePenetrationPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Defense Penetration",
-                    "detailedName": "Defense Penetration Percent Additive"
-                    },
-            "51": {
-                    "statId": 51,
-                    "nameKey": "UnitStat_EvasionPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Evasion",
-                    "detailedName": "Evasion Percent Additive"
-                    },
-            "52": {
-                    "statId": 52,
-                    "nameKey": "UnitStat_EvasionNegatePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Accuracy",
-                    "detailedName": "Evasion Negate Percent Additive"
-                    },
-            "53": {
-                    "statId": 53,
-                    "nameKey": "UnitStat_CriticalChancePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Critical Chance",
-                    "detailedName": "Critical Chance Percent Additive"
-                    },
-            "54": {
-                    "statId": 54,
-                    "nameKey": "UnitStat_CriticalNegateChancePercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Critical Avoidance",
-                    "detailedName": "Critical Negate Chance Percent Additive"
-                    },
-            "55": {
-                    "statId": 55,
-                    "nameKey": "UnitStat_MaxHealthPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Health",
-                    "detailedName": "Max Health Percent Additive"
-                    },
-            "56": {
-                    "statId": 56,
-                    "nameKey": "UnitStat_MaxShieldPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Protection",
-                    "detailedName": "Max Protection Percent Additive"
-                    },
-            "57": {
-                    "statId": 57,
-                    "nameKey": "UnitStat_SpeedPercentAdditive",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Speed",
-                    "detailedName": "Speed Percent Additive"
-                    },
-            "58": {
-                    "statId": 58,
-                    "nameKey": "UnitStat_CounterAttackRating",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Counter Attack",
-                    "detailedName": "Counter Attack Rating"
-                    },
-            "59": {
-                    "statId": 59,
-                    "nameKey": "Combat_Buffs_TASK_NAME_2",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Taunt",
-                    "detailedName": "Taunt"
-                    },
-            "60": {
-                    "statId": 60,
-                    "nameKey": "UnitStat_DefensePenetrationTargetPercentAdditive",
-                    "descKey": "UnitStatDescription_DefensePenetrationTargetPercentAdditive",
-                    "isDecimal": True,
-                    "name": "Defense Penetration",
-                    "detailedName": "Target Defense Penetration Percent Additive"
-                    },
-            "61": {
-                    "statId": 61,
-                    "nameKey": "UNIT_STAT_STAT_VIEW_MASTERY",
-                    "descKey": "",
-                    "isDecimal": True,
-                    "name": "Mastery",
-                    "detailedName": "Mastery"
-                    }
-            }
+        "1": {
+            "statId": 1,
+            "nameKey": "UnitStat_Health",
+            "descKey": "UnitStatDescription_Health_TU7",
+            "isDecimal": False,
+            "name": "Health",
+            "detailedName": "Max Health",
+        },
+        "2": {
+            "statId": 2,
+            "nameKey": "UnitStat_Strength",
+            "descKey": "UnitStatDescription_Strength",
+            "isDecimal": False,
+            "name": "Strength",
+            "detailedName": "Strength",
+        },
+        "3": {
+            "statId": 3,
+            "nameKey": "UnitStat_Agility",
+            "descKey": "UnitStatDescription_Agility",
+            "isDecimal": False,
+            "name": "Agility",
+            "detailedName": "Agility",
+        },
+        "4": {
+            "statId": 4,
+            "nameKey": "UnitStat_Intelligence_TU7",
+            "descKey": "UnitStatDescription_Intelligence",
+            "isDecimal": False,
+            "name": "Tactics",
+            "detailedName": "Tactics",
+        },
+        "5": {
+            "statId": 5,
+            "nameKey": "UnitStat_Speed",
+            "descKey": "UnitStatDescription_Speed",
+            "isDecimal": False,
+            "name": "Speed",
+            "detailedName": "Speed",
+        },
+        "6": {
+            "statId": 6,
+            "nameKey": "UnitStat_AttackDamage",
+            "descKey": "UnitStatDescription_AttackDamage",
+            "isDecimal": False,
+            "name": "Physical Damage",
+            "detailedName": "Physical Damage",
+        },
+        "7": {
+            "statId": 7,
+            "nameKey": "UnitStat_AbilityPower",
+            "descKey": "UnitStatDescription_AbilityPower",
+            "isDecimal": False,
+            "name": "Special Damage",
+            "detailedName": "Special Damage",
+        },
+        "8": {
+            "statId": 8,
+            "nameKey": "UnitStat_Armor",
+            "descKey": "UnitStatDescription_Armor",
+            "isDecimal": False,
+            "name": "Armor",
+            "detailedName": "Armor",
+        },
+        "9": {
+            "statId": 9,
+            "nameKey": "UnitStat_Suppression",
+            "descKey": "UnitStatDescription_Suppression",
+            "isDecimal": False,
+            "name": "Resistance",
+            "detailedName": "Resistance",
+        },
+        "10": {
+            "statId": 10,
+            "nameKey": "UnitStat_ArmorPenetration",
+            "descKey": "UnitStatDescription_ArmorPenetration",
+            "isDecimal": False,
+            "name": "Armor Penetration",
+            "detailedName": "Armor Penetration",
+        },
+        "11": {
+            "statId": 11,
+            "nameKey": "UnitStat_SuppressionPenetration",
+            "descKey": "UnitStatDescription_SuppressionPenetration",
+            "isDecimal": False,
+            "name": "Resistance Penetration",
+            "detailedName": "Resistance Penetration",
+        },
+        "12": {
+            "statId": 12,
+            "nameKey": "UnitStat_DodgeRating_TU5V",
+            "descKey": "UnitStatDescription_DodgeRating",
+            "isDecimal": False,
+            "name": "Dodge Chance",
+            "detailedName": "Dodge Rating",
+        },
+        "13": {
+            "statId": 13,
+            "nameKey": "UnitStat_DeflectionRating_TU5V",
+            "descKey": "UnitStatDescription_DeflectionRating",
+            "isDecimal": False,
+            "name": "Deflection Chance",
+            "detailedName": "Deflection Rating",
+        },
+        "14": {
+            "statId": 14,
+            "nameKey": "UnitStat_AttackCriticalRating_TU5V",
+            "descKey": "UnitStatDescription_AttackCriticalRating",
+            "isDecimal": False,
+            "name": "Physical Critical Chance",
+            "detailedName": "Physical Critical Rating",
+        },
+        "15": {
+            "statId": 15,
+            "nameKey": "UnitStat_AbilityCriticalRating_TU5V",
+            "descKey": "UnitStatDescription_AbilityCriticalRating",
+            "isDecimal": False,
+            "name": "Special Critical Chance",
+            "detailedName": "Special Critical Rating",
+        },
+        "16": {
+            "statId": 16,
+            "nameKey": "UnitStat_CriticalDamage",
+            "descKey": "UnitStatDescription_CriticalDamage",
+            "isDecimal": True,
+            "name": "Critical Damage",
+            "detailedName": "Critical Damage",
+        },
+        "17": {
+            "statId": 17,
+            "nameKey": "UnitStat_Accuracy",
+            "descKey": "UnitStatDescription_Accuracy",
+            "isDecimal": True,
+            "name": "Potency",
+            "detailedName": "Potency",
+        },
+        "18": {
+            "statId": 18,
+            "nameKey": "UnitStat_Resistance",
+            "descKey": "UnitStatDescription_Resistance",
+            "isDecimal": True,
+            "name": "Tenacity",
+            "detailedName": "Tenacity",
+        },
+        "19": {
+            "statId": 19,
+            "nameKey": "UnitStat_DodgePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Dodge",
+            "detailedName": "Dodge Percent Additive",
+        },
+        "20": {
+            "statId": 20,
+            "nameKey": "UnitStat_DeflectionPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Deflection",
+            "detailedName": "Deflection Percent Additive",
+        },
+        "21": {
+            "statId": 21,
+            "nameKey": "UnitStat_AttackCriticalPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Physical Critical Chance",
+            "detailedName": "Physical Critical Percent Additive",
+        },
+        "22": {
+            "statId": 22,
+            "nameKey": "UnitStat_AbilityCriticalPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Special Critical Chance",
+            "detailedName": "Special Critical Percent Additive",
+        },
+        "23": {
+            "statId": 23,
+            "nameKey": "UnitStat_ArmorPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Armor",
+            "detailedName": "Armor Percent Additive",
+        },
+        "24": {
+            "statId": 24,
+            "nameKey": "UnitStat_SuppressionPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Resistance",
+            "detailedName": "Resistance Percent Additive",
+        },
+        "25": {
+            "statId": 25,
+            "nameKey": "UnitStat_ArmorPenetrationPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Armor Penetration",
+            "detailedName": "Armor Penetration Percent Additive",
+        },
+        "26": {
+            "statId": 26,
+            "nameKey": "UnitStat_SuppressionPenetrationPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Resistance Penetration",
+            "detailedName": "Resistance Penetration Percent Additive",
+        },
+        "27": {
+            "statId": 27,
+            "nameKey": "UnitStat_HealthSteal",
+            "descKey": "UnitStatDescription_HealthSteal",
+            "isDecimal": True,
+            "name": "Health Steal",
+            "detailedName": "Health Steal",
+        },
+        "28": {
+            "statId": 28,
+            "nameKey": "UnitStat_MaxShield",
+            "descKey": "UnitStatDescription_MaxShield",
+            "isDecimal": False,
+            "name": "Protection",
+            "detailedName": "Max Protection",
+        },
+        "29": {
+            "statId": 29,
+            "nameKey": "UnitStat_ShieldPenetration",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Protection Ignore",
+            "detailedName": "Protection Ignore",
+        },
+        "30": {
+            "statId": 30,
+            "nameKey": "UnitStat_HealthRegen",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Health Regeneration",
+            "detailedName": "Health Regen",
+        },
+        "31": {
+            "statId": 31,
+            "nameKey": "UnitStat_AttackDamagePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Physical Damage",
+            "detailedName": "Physical Damage Percent Additive",
+        },
+        "32": {
+            "statId": 32,
+            "nameKey": "UnitStat_AbilityPowerPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Special Damage",
+            "detailedName": "Special Damage Percent Additive",
+        },
+        "33": {
+            "statId": 33,
+            "nameKey": "UnitStat_DodgeNegatePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Physical Accuracy",
+            "detailedName": "Dodge Negate Percent Additive",
+        },
+        "34": {
+            "statId": 34,
+            "nameKey": "UnitStat_DeflectionNegatePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Special Accuracy",
+            "detailedName": "Deflection Negate Percent Additive",
+        },
+        "35": {
+            "statId": 35,
+            "nameKey": "UnitStat_AttackCriticalNegatePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Physical Critical Avoidance",
+            "detailedName": "Physical Critical Negate Percent Additive",
+        },
+        "36": {
+            "statId": 36,
+            "nameKey": "UnitStat_AbilityCriticalNegatePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Special Critical Avoidance",
+            "detailedName": "Special Critical Negate Percent Additive",
+        },
+        "37": {
+            "statId": 37,
+            "nameKey": "UnitStat_DodgeNegateRating",
+            "descKey": "UnitStatDescription_DodgeNegateRating",
+            "isDecimal": False,
+            "name": "Physical Accuracy",
+            "detailedName": "Dodge Negate Rating",
+        },
+        "38": {
+            "statId": 38,
+            "nameKey": "UnitStat_DeflectionNegateRating",
+            "descKey": "UnitStatDescription_DeflectionNegateRating",
+            "isDecimal": False,
+            "name": "Special Accuracy",
+            "detailedName": "Deflection Negate Rating",
+        },
+        "39": {
+            "statId": 39,
+            "nameKey": "UnitStat_AttackCriticalNegateRating",
+            "descKey": "UnitStatDescription_AttackCriticalNegateRating",
+            "isDecimal": False,
+            "name": "Physical Critical Avoidance",
+            "detailedName": "Physical Critical Negate Rating",
+        },
+        "40": {
+            "statId": 40,
+            "nameKey": "UnitStat_AbilityCriticalNegateRating",
+            "descKey": "UnitStatDescription_AbilityCriticalNegateRating",
+            "isDecimal": False,
+            "name": "Special Critical Avoidance",
+            "detailedName": "Special Critical Negate Rating",
+        },
+        "41": {
+            "statId": 41,
+            "nameKey": "UnitStat_Offense",
+            "descKey": "UnitStatDescription_Offense",
+            "isDecimal": False,
+            "name": "Offense",
+            "detailedName": "Offense",
+        },
+        "42": {
+            "statId": 42,
+            "nameKey": "UnitStat_Defense",
+            "descKey": "UnitStatDescription_Defense",
+            "isDecimal": False,
+            "name": "Defense",
+            "detailedName": "Defense",
+        },
+        "43": {
+            "statId": 43,
+            "nameKey": "UnitStat_DefensePenetration",
+            "descKey": "UnitStatDescription_DefensePenetration",
+            "isDecimal": False,
+            "name": "Defense Penetration",
+            "detailedName": "Defense Penetration",
+        },
+        "44": {
+            "statId": 44,
+            "nameKey": "UnitStat_EvasionRating",
+            "descKey": "UnitStatDescription_EvasionRating",
+            "isDecimal": False,
+            "name": "Evasion",
+            "detailedName": "Evasion Rating",
+        },
+        "45": {
+            "statId": 45,
+            "nameKey": "UnitStat_CriticalRating",
+            "descKey": "UnitStatDescription_CriticalRating",
+            "isDecimal": False,
+            "name": "Critical Chance",
+            "detailedName": "Critical Rating",
+        },
+        "46": {
+            "statId": 46,
+            "nameKey": "UnitStat_EvasionNegateRating",
+            "descKey": "UnitStatDescription_EvasionNegateRating",
+            "isDecimal": False,
+            "name": "Accuracy",
+            "detailedName": "Evasion Negate Rating",
+        },
+        "47": {
+            "statId": 47,
+            "nameKey": "UnitStat_CriticalNegateRating",
+            "descKey": "UnitStatDescription_CriticalNegateRating",
+            "isDecimal": False,
+            "name": "Critical Avoidance",
+            "detailedName": "Critical Negate Rating",
+        },
+        "48": {
+            "statId": 48,
+            "nameKey": "UnitStat_OffensePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Offense",
+            "detailedName": "Offense Percent Additive",
+        },
+        "49": {
+            "statId": 49,
+            "nameKey": "UnitStat_DefensePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Defense",
+            "detailedName": "Defense Percent Additive",
+        },
+        "50": {
+            "statId": 50,
+            "nameKey": "UnitStat_DefensePenetrationPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Defense Penetration",
+            "detailedName": "Defense Penetration Percent Additive",
+        },
+        "51": {
+            "statId": 51,
+            "nameKey": "UnitStat_EvasionPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Evasion",
+            "detailedName": "Evasion Percent Additive",
+        },
+        "52": {
+            "statId": 52,
+            "nameKey": "UnitStat_EvasionNegatePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Accuracy",
+            "detailedName": "Evasion Negate Percent Additive",
+        },
+        "53": {
+            "statId": 53,
+            "nameKey": "UnitStat_CriticalChancePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Critical Chance",
+            "detailedName": "Critical Chance Percent Additive",
+        },
+        "54": {
+            "statId": 54,
+            "nameKey": "UnitStat_CriticalNegateChancePercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Critical Avoidance",
+            "detailedName": "Critical Negate Chance Percent Additive",
+        },
+        "55": {
+            "statId": 55,
+            "nameKey": "UnitStat_MaxHealthPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Health",
+            "detailedName": "Max Health Percent Additive",
+        },
+        "56": {
+            "statId": 56,
+            "nameKey": "UnitStat_MaxShieldPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Protection",
+            "detailedName": "Max Protection Percent Additive",
+        },
+        "57": {
+            "statId": 57,
+            "nameKey": "UnitStat_SpeedPercentAdditive",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Speed",
+            "detailedName": "Speed Percent Additive",
+        },
+        "58": {
+            "statId": 58,
+            "nameKey": "UnitStat_CounterAttackRating",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Counter Attack",
+            "detailedName": "Counter Attack Rating",
+        },
+        "59": {
+            "statId": 59,
+            "nameKey": "Combat_Buffs_TASK_NAME_2",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Taunt",
+            "detailedName": "Taunt",
+        },
+        "60": {
+            "statId": 60,
+            "nameKey": "UnitStat_DefensePenetrationTargetPercentAdditive",
+            "descKey": "UnitStatDescription_DefensePenetrationTargetPercentAdditive",
+            "isDecimal": True,
+            "name": "Defense Penetration",
+            "detailedName": "Target Defense Penetration Percent Additive",
+        },
+        "61": {
+            "statId": 61,
+            "nameKey": "UNIT_STAT_STAT_VIEW_MASTERY",
+            "descKey": "",
+            "isDecimal": True,
+            "name": "Mastery",
+            "detailedName": "Mastery",
+        },
+    }
 
     UNIT_RARITY: dict[int, str] = {
-            1: "ONE_STAR",
-            2: "TWO_STAR",
-            3: "THREE_STAR",
-            4: "FOUR_STAR",
-            5: "FIVE_STAR",
-            6: "SIX_STAR",
-            7: "SEVEN_STAR",
-            }
+        1: "ONE_STAR",
+        2: "TWO_STAR",
+        3: "THREE_STAR",
+        4: "FOUR_STAR",
+        5: "FIVE_STAR",
+        6: "SIX_STAR",
+        7: "SEVEN_STAR",
+    }
 
     UNIT_RARITY_NAMES: dict[str, str] = {
-            "ONE_STAR": "1",
-            "TWO_STAR": "2",
-            "THREE_STAR": "3",
-            "FOUR_STAR": "4",
-            "FIVE_STAR": "5",
-            "SIX_STAR": "6",
-            "SEVEN_STAR": "7",
-            }
+        "ONE_STAR": "1",
+        "TWO_STAR": "2",
+        "THREE_STAR": "3",
+        "FOUR_STAR": "4",
+        "FIVE_STAR": "5",
+        "SIX_STAR": "6",
+        "SEVEN_STAR": "7",
+    }
 
-    LANGUAGES: list[str] = ["chs_cn", "cht_cn", "eng_us", "fre_fr", "ger_de", "ind_id", "ita_it", "jpn_jp", "kor_kr",
-                            "por_br", "rus_ru", "spa_xm", "tha_th", "tur_tr"]
+    LANGUAGES: list[str] = [
+        "chs_cn",
+        "cht_cn",
+        "eng_us",
+        "fre_fr",
+        "ger_de",
+        "ind_id",
+        "ita_it",
+        "jpn_jp",
+        "kor_kr",
+        "por_br",
+        "rus_ru",
+        "spa_xm",
+        "tha_th",
+        "tur_tr",
+    ]
 
     RELIC_TIERS: dict[str, str] = {
-            "0": "LOCKED",
-            "1": "UNLOCKED",
-            "2": "1",
-            "3": "2",
-            "4": "3",
-            "5": "4",
-            "6": "5",
-            "7": "6",
-            "8": "7",
-            "9": "8",
-            "10": "9",
-            "11": "10"
-            }
+        "0": "LOCKED",
+        "1": "UNLOCKED",
+        "2": "1",
+        "3": "2",
+        "4": "3",
+        "5": "4",
+        "6": "5",
+        "7": "6",
+        "8": "7",
+        "9": "8",
+        "10": "9",
+        "11": "10",
+    }
 
     OMICRON_MODE: dict[int, str] = {
-            0: 'Default',
-            1: 'ALL',
-            4: 'Raid',
-            7: 'TB',
-            8: 'TW',
-            9: 'GAC',
-            11: 'Conquest',
-            12: 'Galactic Challenge',
-            14: 'GAC (3v3)',
-            15: 'GAC (5v5)'
-            }
+        0: "Default",
+        1: "ALL",
+        4: "Raid",
+        7: "TB",
+        8: "TW",
+        9: "GAC",
+        11: "Conquest",
+        12: "Galactic Challenge",
+        14: "GAC (3v3)",
+        15: "GAC (5v5)",
+    }
 
     @classmethod
     def get(cls, item):
@@ -1187,8 +1205,11 @@ class Constants:
 
     @classmethod
     def get_names(cls):
-        return [x for x in list(cls.__dict__.keys()) if not x.startswith('_') and
-                not isinstance(cls.__dict__[x], classmethod)]
+        return [
+            x
+            for x in list(cls.__dict__.keys())
+            if not x.startswith("_") and not isinstance(cls.__dict__[x], classmethod)
+        ]
 
 
 def get_raid_leaderboard_ids(campaign_data: list) -> list[str]:
@@ -1220,16 +1241,16 @@ def get_raid_leaderboard_ids(campaign_data: list) -> list[str]:
             it is not a list or contains improperly formatted elements.
     """
     raid_ids = []
-    guild_campaigns = next((item for item in campaign_data if item.get('id') == 'GUILD'), None)
-    for raid in guild_campaigns['campaignMap'][0]['campaignNodeDifficultyGroup'][0]['campaignNode']:
-        for mission in raid['campaignNodeMission']:
+    guild_campaigns = next((item for item in campaign_data if item.get("id") == "GUILD"), None)
+    for raid in guild_campaigns["campaignMap"][0]["campaignNodeDifficultyGroup"][0]["campaignNode"]:
+        for mission in raid["campaignNodeMission"]:
             elements = [
-                    guild_campaigns['id'],
-                    guild_campaigns['campaignMap'][0]['id'],
-                    "NORMAL_DIFF",
-                    raid['id'],
-                    mission['id']
-                    ]
+                guild_campaigns["id"],
+                guild_campaigns["campaignMap"][0]["id"],
+                "NORMAL_DIFF",
+                raid["id"],
+                mission["id"],
+            ]
             raid_ids.append(":".join(elements))
     return raid_ids
 
@@ -1289,26 +1310,29 @@ def get_function_name() -> str:
 
 
 def func_timer(func):
-    """Decorator to record total execution time of a function to the configured logger using level DEBUG"""
+    """Decorator to record total execution time of a function to the configured logger using level DEBUG."""
 
     @wraps(func)
     def wrap(*args, **kw):
         """Wrapper function"""
+        start = time.perf_counter()
         result = func(*args, **kw)
+        elapsed = time.perf_counter() - start
+        logger.debug(f"{func.__name__} executed in {elapsed:.4f}s")
         return result
 
     return wrap
 
 
 def func_debug_logger(func):
-    """Decorator for applying DEBUG logging to a function"""
+    """Decorator for applying DEBUG logging to a function."""
 
     @wraps(func)
     def wrap(*args, **kw):
         """Wrapper function"""
-        logger.debug(f"{func.__name__()} called with args: {args} and kwargs: {kw}")
+        logger.debug(f"{func.__name__} called with args: {args} and kwargs: {kw}")
         result = func(*args, **kw)
-        logger.debug(f"{func.__name__()} Result: {result}")
+        logger.debug(f"{func.__name__} Result: {result}")
         return result
 
     return wrap
@@ -1318,9 +1342,9 @@ def get_enum_key_by_value(enum_dict: dict, category: Any, enum_value: Any, defau
     """
     Return the key from enum_dict for the given enum_value.
     """
-    enum_values: Optional[dict] = enum_dict.get(category)
+    enum_values: dict | None = enum_dict.get(category)
     if enum_values:
-        enum_value_match: Optional[list] = [key for key, value in enum_values.items() if value == enum_value]
+        enum_value_match: list | None = [key for key, value in enum_values.items() if value == enum_value]
         return enum_value_match[0] if enum_value_match else default_return
     else:
         return default_return
@@ -1359,7 +1383,7 @@ def sanitize_allycode(allycode: str | int | Sentinel = REQUIRED) -> str:
     """
     _orig_ac = allycode
     if not allycode and allycode is not GIVEN:
-        return str()
+        return ""
     if isinstance(allycode, int):
         allycode = str(allycode)
     if "-" in str(allycode):
@@ -1384,19 +1408,20 @@ def human_time(unix_time: int | float | Sentinel = REQUIRED) -> str:
         is 1970-01-01 00:00:00
 
     """
-    print(f"unix_time: {unix_time}")
+    logger.debug(f"unix_time: {unix_time}")
     if unix_time is MISSING or not str(unix_time):
         err_msg = f"{get_function_name()}: The 'unix_time' argument is required."
         raise SwgohComlinkValueError(err_msg)
     from datetime import datetime, timezone
+
     if isinstance(unix_time, float):
         unix_time = int(unix_time)
     if isinstance(unix_time, str):
         try:
             unix_time = int(unix_time)
-        except SwgohComlinkValueError:
+        except (ValueError, TypeError) as e:
             err_msg = f"{get_function_name()}: Unable to convert unix time from {type(unix_time)} to type <int>"
-            raise SwgohComlinkValueError(err_msg)
+            raise SwgohComlinkValueError(err_msg) from e
     if len(str(unix_time)) >= 13:
         unix_time /= 1000
     return datetime.fromtimestamp(unix_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -1493,7 +1518,7 @@ def create_localized_unit_name_dictionary(locale: str | list | Sentinel = REQUIR
 
     """
     if not isinstance(locale, list) and not isinstance(locale, str):
-        raise SwgohComlinkValueError(f"'locale' must be a list of strings or string containing newlines.")
+        raise SwgohComlinkValueError("'locale' must be a list of strings or string containing newlines.")
 
     unit_name_map = {}
     lines = []
@@ -1515,10 +1540,10 @@ def create_localized_unit_name_dictionary(locale: str | list | Sentinel = REQUIR
 
 
 def get_guild_members(
-        comlink: SwgohComlink | Sentinel = REQUIRED,
-        player_id: str | Sentinel = MutualExclusiveRequired,
-        allycode: str | int | Sentinel = MutualExclusiveRequired,
-        ) -> list:
+    comlink: SwgohComlink | Sentinel = REQUIRED,
+    player_id: str | Sentinel = MutualExclusiveRequired,
+    allycode: str | int | Sentinel = MutualExclusiveRequired,
+) -> list:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
     Args:
@@ -1533,13 +1558,12 @@ def get_guild_members(
         A player_id or allycode argument is REQUIRED
 
     """
-    if hasattr(comlink, '__comlink_type__'):
+    if hasattr(comlink, "__comlink_type__"):
         comlink_type = comlink.__comlink_type__
     else:
         comlink_type = MISSING
-    if comlink is MISSING or comlink_type != 'SwgohComlink':
-        err_msg = (f"{get_function_name()}: The 'comlink' argument is required and must be an "
-                   f"instance of SwgohComlink.")
+    if comlink is MISSING or comlink_type != "SwgohComlink":
+        err_msg = f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlink."
         raise SwgohComlinkValueError(err_msg)
 
     if player_id is not MutualExclusiveRequired and allycode is not MutualExclusiveRequired:
@@ -1558,9 +1582,7 @@ def get_guild_members(
     return guild["member"] or []
 
 
-def get_current_gac_event(
-        comlink: SwgohComlink | Sentinel = REQUIRED
-        ) -> dict:
+def get_current_gac_event(comlink: SwgohComlink | Sentinel = REQUIRED) -> dict:
     """Return the event object for the current gac season
 
     Args:
@@ -1570,7 +1592,7 @@ def get_current_gac_event(
         Current GAC event object or empty if no event is running
 
     """
-    if hasattr(comlink, '__comlink_type__'):
+    if hasattr(comlink, "__comlink_type__"):
         comlink_type = comlink.__comlink_type__
     else:
         comlink_type = MISSING
@@ -1581,14 +1603,15 @@ def get_current_gac_event(
 
     current_events = comlink.get_events()
 
-    return [event for event in current_events['gameEvent'] if event['type'] == 10][0]
+    gac_events = [event for event in current_events["gameEvent"] if event["type"] == 10]
+    if not gac_events:
+        raise SwgohComlinkValueError(f"{get_function_name()}: No active GAC event found.")
+    return gac_events[0]
 
 
 def get_gac_brackets(
-        comlink: SwgohComlink | Sentinel = REQUIRED,
-        league: str | Sentinel = REQUIRED,
-        limit: int | Sentinel = OPTIONAL
-        ) -> dict | None:
+    comlink: SwgohComlink | Sentinel = REQUIRED, league: str | Sentinel = REQUIRED, limit: int | Sentinel = OPTIONAL
+) -> dict | None:
     """Scan currently running GAC brackets for the requested league and return them as a dictionary
 
     Args:
@@ -1600,11 +1623,11 @@ def get_gac_brackets(
         Dictionary containing each GAC bracket as a key
 
     """
-    if hasattr(comlink, '__comlink_type__'):
+    if hasattr(comlink, "__comlink_type__"):
         comlink_type = comlink.__comlink_type__
     else:
         comlink_type = MISSING
-    if comlink is MISSING or comlink_type != 'SwgohComlink':
+    if comlink is MISSING or comlink_type != "SwgohComlink":
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         raise SwgohComlinkValueError(err_msg)
 
@@ -1628,10 +1651,10 @@ def get_gac_brackets(
     while number_of_players_in_bracket > 0 and bracket_iteration_limit != bracket:
         group_id = f"{current_event_instance}:{league}:{bracket}"
         group_of_8_players = comlink.get_gac_leaderboard(
-                leaderboard_type=4,
-                event_instance_id=current_event_instance,
-                group_id=group_id,
-                )
+            leaderboard_type=4,
+            event_instance_id=current_event_instance,
+            group_id=group_id,
+        )
         brackets[bracket] = brackets.get(bracket, group_of_8_players["player"])
         bracket += 1
         number_of_players_in_bracket = len(group_of_8_players["player"])
@@ -1672,12 +1695,11 @@ def get_current_datacron_sets(datacron_list: list) -> list:
     """
     if not isinstance(datacron_list, list):
         raise SwgohComlinkValueError(
-                f"{get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}"
-                )
-    import math
+            f"{get_function_name()}, 'datacron_list' must be a list, not {type(datacron_list)}"
+        )
     current_datacron_sets = []
     for datacron in datacron_list:
-        if int(datacron["expirationTimeMs"]) > math.floor(time.time() * 1000):
+        if int(datacron["expirationTimeMs"]) > floor(time.time() * 1000):
             current_datacron_sets.append(datacron)
     return current_datacron_sets
 
@@ -1696,9 +1718,7 @@ def get_tw_omicrons(skill_list: list) -> list:
 
     """
     if not isinstance(skill_list, list):
-        raise SwgohComlinkValueError(
-                f"'skill_list' must be a list, not {type(skill_list)}"
-                )
+        raise SwgohComlinkValueError(f"'skill_list' must be a list, not {type(skill_list)}")
 
     return get_omicron_skills(skill_list, 8)
 
@@ -1708,10 +1728,11 @@ def get_playable_units(units_collection: list[dict]) -> list[dict]:
     if not isinstance(units_collection, list):
         raise SwgohComlinkValueError(f"'units_collection' must be a list, not {type(units_collection)}")
 
-    return [unit for unit in units_collection
-            if unit['rarity'] == 7
-            and unit['obtainable'] is True
-            and unit['obtainableTime'] == '0']
+    return [
+        unit
+        for unit in units_collection
+        if unit["rarity"] == 7 and unit["obtainable"] is True and unit["obtainableTime"] == "0"
+    ]
 
 
 def get_omicron_skills(skill_list: list, omicron_type: int | list[int]) -> list:
@@ -1738,7 +1759,7 @@ def get_omicron_skills(skill_list: list, omicron_type: int | list[int]) -> list:
 
     omicron_type_list = [omicron_type] if isinstance(omicron_type, int) else omicron_type
 
-    return [skill for skill in skill_list if skill['omicronMode'] in omicron_type_list]
+    return [skill for skill in skill_list if skill["omicronMode"] in omicron_type_list]
 
 
 def get_omicron_skill_tier(skill: dict) -> int | None:
@@ -1766,21 +1787,21 @@ def get_omicron_skill_tier(skill: dict) -> int | None:
     if not isinstance(skill, dict):
         raise SwgohComlinkValueError(f"'skill' must be a dictionary, not {type(skill)}")
 
-    if 'tier' not in skill:
-        raise SwgohComlinkValueError(f"'skill' must contain 'tier' key")
+    if "tier" not in skill:
+        raise SwgohComlinkValueError("'skill' must contain 'tier' key")
 
-    skill_tier = [idx for idx, tier in enumerate(skill['tier']) if tier['isOmicronTier'] is True]
+    skill_tier = [idx for idx, tier in enumerate(skill["tier"]) if tier["isOmicronTier"] is True]
 
     return skill_tier[0] if skill_tier else None
 
 
 def is_omicron_skill(
-        omicron_skill_list: list[dict],
-        skill_id: str | None = None,
-        skill_tier: int | None = None,
-        *,
-        roster_unit_skill: Optional[dict] = None
-        ) -> bool:
+    omicron_skill_list: list[dict],
+    skill_id: str | None = None,
+    skill_tier: int | None = None,
+    *,
+    roster_unit_skill: dict | None = None,
+) -> bool:
     """
     Check if a given skill is an Omicron skill based on its ID and tier.
 
@@ -1800,19 +1821,22 @@ def is_omicron_skill(
     if not isinstance(omicron_skill_list, list):
         raise SwgohComlinkValueError(f"'omicron_skill_list' must be a list, not {type(omicron_skill_list)}")
 
-    if not isinstance(skill_id, str):
-        raise SwgohComlinkValueError(f"'skill_id' must be a string, not {type(skill_id)}")
-
-    if not (skill_id and skill_tier and roster_unit_skill):
-        raise SwgohComlinkValueError("Invalid 'skill_id', 'skill_tier', or 'roster_unit_skill' argument.")
-
+    # When roster_unit_skill is provided, extract skill_id and skill_tier from it
     if roster_unit_skill is not None:
-        skill_id = roster_unit_skill.get('id')
-        skill_tier = roster_unit_skill.get('tier')
+        skill_id = roster_unit_skill.get("id")
+        skill_tier = roster_unit_skill.get("tier")
         if not skill_id or not skill_tier:
             raise SwgohComlinkValueError("Invalid 'roster_unit_skill' argument.")
+    else:
+        # Validate that skill_id and skill_tier were provided directly
+        if not isinstance(skill_id, str):
+            raise SwgohComlinkValueError(f"'skill_id' must be a string, not {type(skill_id)}")
+        if not skill_id or not skill_tier:
+            raise SwgohComlinkValueError(
+                "'skill_id' and 'skill_tier' are required when 'roster_unit_skill' is not provided."
+            )
 
-    omicron_skill = [omi_skill for omi_skill in omicron_skill_list if omi_skill['id'] == skill_id]
+    omicron_skill = [omi_skill for omi_skill in omicron_skill_list if omi_skill["id"] == skill_id]
 
     if not omicron_skill:
         return False
@@ -1860,8 +1884,11 @@ def get_unit_from_skill(unit_list: list[dict], skill: str) -> NamedTuple | None:
         return any(value in d.values() for d in dict_list)
 
     Unit = namedtuple("Unit", "baseId nameKey")
-    base_ids: list[NamedTuple] = [Unit(unit.get('baseId'), unit.get('nameKey'))
-                                  for unit in unit_list if skill_exists(skill, unit.get('skillReference'))]
+    base_ids: list[NamedTuple] = [
+        Unit(unit.get("baseId"), unit.get("nameKey"))
+        for unit in unit_list
+        if skill_exists(skill, unit.get("skillReference"))
+    ]
     if base_ids:
         return base_ids[0]
     else:
@@ -1887,13 +1914,13 @@ def get_datacron_dismantle_value(datacron: dict, datacron_set_list: list, recipe
               details, which include the quantity and type.
     """
     dismantle_materials = {}
-    set_id = datacron.get('setId')
-    focused: bool = datacron.get('focused', False)
-    affix_tier = len(datacron.get('affix', []))
+    set_id = datacron.get("setId")
+    focused: bool = datacron.get("focused", False)
+    affix_tier = len(datacron.get("affix", []))
 
     # Helper function to retrieve an object based on its ID
     def find_object_by_id(obj_list, obj_id):
-        return next((obj for obj in obj_list if obj.get('id') == obj_id), None)
+        return next((obj for obj in obj_list if obj.get("id") == obj_id), None)
 
     # Find datacron set by setId
     datacron_set = find_object_by_id(datacron_set_list, set_id)
@@ -1901,12 +1928,11 @@ def get_datacron_dismantle_value(datacron: dict, datacron_set_list: list, recipe
         return dismantle_materials
 
     # Find dust recipe ID by affix tier
-    tier_element = 'focusedTier' if focused else 'tier'
+    tier_element = "focusedTier" if focused else "tier"
     dust_recipe_id = next(
-            (tier.get('dustGrantRecipeId')
-             for tier in datacron_set.get(tier_element, []) if tier.get('id') == affix_tier),
-            None
-            )
+        (tier.get("dustGrantRecipeId") for tier in datacron_set.get(tier_element, []) if tier.get("id") == affix_tier),
+        None,
+    )
     if not dust_recipe_id:
         return dismantle_materials
 
@@ -1916,17 +1942,21 @@ def get_datacron_dismantle_value(datacron: dict, datacron_set_list: list, recipe
         return dismantle_materials
 
     # Collect dismantle materials
-    for ingredient in dust_recipe.get('ingredients', []):
-        dismantle_materials[ingredient.get('id')] = {
-                "quantity": ingredient.get('maxQuantity'),
-                "type": ingredient.get('type'),
-                "focused": focused,
-                }
+    for ingredient in dust_recipe.get("ingredients", []):
+        dismantle_materials[ingredient.get("id")] = {
+            "quantity": ingredient.get("maxQuantity"),
+            "type": ingredient.get("type"),
+            "focused": focused,
+        }
     return dismantle_materials
 
 
 def get_datacron_dismantle_total(datacrons: list, datacron_set_list: list, recipe_list: list) -> list:
+    """Calculate total dismantle materials for a list of datacrons.
+
+    .. note:: This function is not yet implemented and always returns an empty list.
+    """
     dismantle_set_list = []
-    for datacron in datacrons:
-        ...
+    for _datacron in datacrons:
+        pass  # TODO: implement datacron dismantle calculation
     return dismantle_set_list
