@@ -143,18 +143,24 @@ class SwgohComlink:
         md = self.get_game_metadata()
         return md["latestGamedataVersion"]
 
-    def _post(
+    def _request(
         self,
+        method: str = "POST",
         url_base: str | None = None,
         endpoint: str | None = None,
         payload: dict | list | None = None,
     ) -> dict | list:
-        """Send a POST request to the comlink service.
+        """Send an HTTP request to the comlink service.
+
+        This is the single gateway for all HTTP communication.  Every public
+        method should route through here so that HMAC authentication, TLS
+        verification, and error handling are applied consistently.
 
         Args:
+            method: HTTP method (``"GET"`` or ``"POST"``).
             url_base: Base URL to use. Defaults to ``self.url_base``.
             endpoint: API endpoint path appended to *url_base*.
-            payload: JSON body for the request.
+            payload: JSON body for the request (ignored for GET requests).
 
         Returns:
             Decoded JSON response (dict or list).
@@ -164,7 +170,7 @@ class SwgohComlink:
         """
         if not url_base:
             url_base = self.url_base
-        post_url = url_base + f"/{endpoint}"
+        request_url = url_base + f"/{endpoint}"
         req_headers = {}
         # If access_key and secret_key are set, perform HMAC security
         if self.hmac:
@@ -172,7 +178,7 @@ class SwgohComlink:
             req_headers = {"X-Date": f"{req_time}"}
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
             hmac_obj.update(req_time.encode())
-            hmac_obj.update(b"POST")
+            hmac_obj.update(method.upper().encode())
             hmac_obj.update(f"/{endpoint}".encode())
             # json dumps separators needed for compact string formatting required for compatibility with
             # comlink since it is written with javascript as the primary object model
@@ -188,10 +194,25 @@ class SwgohComlink:
             hmac_digest = hmac_obj.hexdigest()
             req_headers["Authorization"] = f"HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}"
         try:
-            r = requests.post(post_url, json=payload, headers=req_headers, verify=self.verify_ssl)
+            request_kwargs: dict[str, Any] = {"headers": req_headers, "verify": self.verify_ssl}
+            if method.upper() != "GET":
+                request_kwargs["json"] = payload
+            r = requests.request(method.upper(), request_url, **request_kwargs)
             return loads(r.content.decode("utf-8"))
         except requests.RequestException as e:
             raise SwgohComlinkException(e) from e
+
+    def _post(
+        self,
+        url_base: str | None = None,
+        endpoint: str | None = None,
+        payload: dict | list | None = None,
+    ) -> dict | list:
+        """Send a POST request to the comlink service.
+
+        Convenience wrapper around :meth:`_request` for backward compatibility.
+        """
+        return self._request(method="POST", url_base=url_base, endpoint=endpoint, payload=payload)
 
     def get_unit_stats(
         self, request_payload: dict | list, flags: list[str] = None, language: str = None
@@ -257,17 +278,16 @@ class SwgohComlink:
 
     def get_enums(self) -> dict:
         """
-        Get an object containing the game data enums
+        Get an object containing the game data enums.
+
+        Unlike most endpoints, ``/enums`` uses a GET request.  Routing through
+        :meth:`_request` ensures HMAC authentication, ``verify_ssl``, and
+        consistent error handling are applied.
 
         Returns:
             A dictionary containing the game data enums.
         """
-        url = self.url_base + "/enums"
-        try:
-            r = requests.request("GET", url, verify=self.verify_ssl)
-            return loads(r.content.decode("utf-8"))
-        except requests.RequestException as e:
-            raise SwgohComlinkException(e) from e
+        return self._request(method="GET", endpoint="enums")
 
     # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums
