@@ -78,7 +78,7 @@ Be respectful, constructive, and patient. We're all here because we enjoy the ga
    source .venv/bin/activate    # Linux/macOS
    # .venv\Scripts\activate     # Windows
 
-   uv pip install -e ".[dev]"
+   uv sync
    ```
 
 4. **Verify the installation**
@@ -106,8 +106,18 @@ This starts comlink on `http://localhost:3000`, which is the default URL the lib
 ```
 comlink-python/
 ├── .github/
-│   └── workflows/
-│       └── release.yml          # Semantic release → PyPI publish
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.yml        # Bug report template
+│   │   └── feature_request.yml   # Feature request template
+│   ├── workflows/
+│   │   ├── ci.yml                # CI pipeline (lint, type-check, test, build)
+│   │   ├── commitlint.yml        # Commit message validation
+│   │   ├── labeler.yml           # Auto-label PRs by file path
+│   │   └── release.yml           # Semantic release → PyPI publish
+│   ├── CODEOWNERS                # Code ownership
+│   ├── dependabot.yml            # Automated dependency updates
+│   ├── labeler.yml               # Label-to-path configuration
+│   └── pull_request_template.md  # PR checklist template
 ├── docs/
 │   └── logging.md               # Logging configuration guide
 ├── examples/                    # Usage examples for each endpoint
@@ -122,9 +132,11 @@ comlink-python/
 │       ├── swgoh_comlink.py      # Main SwgohComlink client class
 │       └── version.py            # Package version (managed by hatch)
 ├── tests/                       # Test suite
+├── .commitlintrc.json           # Commit message lint config (local + CI)
 ├── pyproject.toml               # Project metadata, build config, tool settings
 ├── uv.lock                      # Locked dependency versions
 ├── CHANGELOG.md                 # Auto-generated from commit history
+├── CONTRIBUTING.md              # This file
 ├── LICENSE                      # MIT License
 └── README.md
 ```
@@ -384,13 +396,14 @@ Closes #12
    - [ ] Existing tests still pass
    - [ ] Commit messages follow Angular convention
    - [ ] Ruff linter passes (`ruff check src/ tests/`)
+   - [ ] Ruff formatter passes (`ruff format --check src/ tests/`)
    - [ ] No unrelated changes bundled in
 
 7. **After submitting:**
 
    CI checks (lint, tests, commit message validation, build) will run automatically.
-   Address any failures before requesting review — the maintainer will be notified
-   via CODEOWNERS once all checks are green.
+   Address any failures before requesting review — the maintainer is automatically
+   assigned via CODEOWNERS when a PR is opened.
 
    If you need to update your PR after feedback, push additional commits to the same
    branch on your fork. The PR updates automatically:
