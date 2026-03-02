@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-Custom exceptions for logging
+Custom exceptions for swgoh_comlink
 """
 
 from __future__ import annotations
@@ -13,10 +13,11 @@ logger = get_logger(__name__)
 class SwgohComlinkException(Exception):
     """Base class for exceptions in this module."""
 
-    def __init__(self, message) -> None:
+    def __init__(self, message: str | Exception) -> None:
         super().__init__(message)
-        logger.exception(f"SwgohComlinkException: {message}", exc_info=True)
+        # Log at error level; callers are responsible for traceback context
+        logger.error(f"SwgohComlinkException: {message}")
 
 
 class SwgohComlinkValueError(SwgohComlinkException, ValueError):
-    ...
+    """Raised when an argument value is invalid."""

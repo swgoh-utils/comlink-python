@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=75.8.1", "requests>=2.32.4", "sentinels"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
 
 [project]
 name = "swgoh_comlink"
@@ -16,15 +16,13 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "hatch>=1.14.2",
-    "hatchling>=1.27.0",
     "requests>=2.32.4",
-    "sentinels",
-    "setuptools>=75.8.1",
+    "sentinels>=1.0",
 ]
 
 [project.urls]
@@ -34,40 +32,15 @@ dependencies = [
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
+    "--strict-markers",
 ]
-
-[tool.setuptools.dynamic]
-version = { attr = "swgoh_comlink.version" }
+testpaths = ["tests"]
 
 [tool.hatch.version]
 path = 'src/swgoh_comlink/version.py'
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/swgoh_comlink"]
-
-[tool.semantic_release]
-version_variable = [# List of possible location of version
-    "src/swgoh_comlink/version.py",
-]
-version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"   # source location of version string
-version_source = "commit"                                                    # Set version source to "commit" so that
-branch = "main"                                                              # branch to make releases of
-changelog_file = "CHANGELOG.md"                                              # changelog file
-build_command = "pip install -r requirements.txt && pip install build && python3 -m build"  # build dists
-dist_path = "dist/"                                                          # where to put dists
-upload_to_release = false                                                    # auto-create GitHub release
-upload_to_pypi = false                                                       # don't auto-upload to PyPI
-remove_dist = true                                                           # don't remove dists
-patch_without_tag = true                                                     # patch release by default
-
-[tool.semantic_release.branches.main]
-match = "main"
-prerelease = false
-
-[tool.semantic_release.branches.tools]
-match = "2.0-development"
-prerelease = true
-prerelease_token = "rc"
 
 [tool.uv.sources]
 swgoh-comlink = { workspace = true }
@@ -109,7 +82,6 @@ ignore = [
 # Existing violations to address incrementally — do not add new suppressions
 "src/swgoh_comlink/__init__.py" = ["UP036"]   # outdated version block (sys.exit check)
 "src/swgoh_comlink/exceptions.py" = ["B904"]  # raise-without-from (tracked in issue backlog)
-"src/swgoh_comlink/swgoh_comlink.py" = ["B904"]  # raise-without-from in _post() and get_enums()
 "src/swgoh_comlink/helpers.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
 
 [tool.ruff.lint.isort]
@@ -135,6 +107,7 @@ check_untyped_defs = true
 source = ["swgoh_comlink"]
 
 [tool.coverage.report]
+fail_under = 40
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
