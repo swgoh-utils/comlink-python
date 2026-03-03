@@ -197,6 +197,15 @@ Logging is handled by the [python logging module](https://docs.python.org/3/libr
 
 For details on enabling and customizing log output, see [docs/logging.md](docs/logging.md).
 
+## Migrating from v1.x
+
+This release replaces `requests` with `httpx` and changes how logging is configured. If you are upgrading from a previous version, see the [Migration Guide](docs/migration.md) for a walkthrough of required changes:
+
+- Replace `requests` with `httpx` in your dependencies
+- Update `except requests.RequestException` to `except httpx.RequestError` (or catch `SwgohComlinkException`)
+- Update any `get_logger(log_level=...)` calls — configure logging via the standard `logging` module instead
+- Use a context manager (`with SwgohComlink() ...`) or call `close()` to release connections
+
 ## Test Configuration
 
 Integration tests are opt-in and can be enabled with:

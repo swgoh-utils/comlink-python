@@ -34,6 +34,12 @@
 - keep `LoggingFormatter` as an opt-in convenience in `globals.py`.
 - rewrite `docs/logging.md` for the new approach.
 
+### Documentation
+
+- add migration guide (`docs/migration.md`) covering dependency changes, exception
+  handling, logging configuration, and client lifecycle.
+- add migration summary section to README with link to the full guide.
+
 ### Testing
 
 - rewrite unit tests to use `pytest-httpx` mocking instead of `monkeypatch`.

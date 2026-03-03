@@ -8,6 +8,7 @@ theme:
 nav:
   - Home: index.md
   - Guides:
+      - Migration Guide: migration.md
       - Logging: logging.md
   - API:
       - SwgohComlink: api/comlink.md
