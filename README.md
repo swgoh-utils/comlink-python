@@ -7,7 +7,7 @@
 
 ## Description
 
-A python wrapper for the [swgoh-comlink](https://github.com/swgoh-utils/swgoh-comlink) tool.
+A python wrapper for the [swgoh-comlink](https://github.com/swgoh-utils/swgoh-comlink) tool, plus an in-package local stat calculator (`StatCalc`).
 
 **Requires Python 3.10 or higher.**
 
@@ -72,6 +72,38 @@ player_data = comlink.get_player(allycode=245866537)
 player_name = player_data['name']
 ```
 
+Local stat calculation usage example (no external stats service required):
+
+```python
+from swgoh_comlink import SwgohComlink, StatCalc
+
+comlink = SwgohComlink()
+calc = StatCalc()  # fetches latest game data from GitHub on init
+
+# Calculate stats for a full player roster
+player = comlink.get_player(allycode=245866537)
+calc.calc_roster_stats(player['rosterUnit'])
+
+# Or calculate stats for a single character
+unit = {
+    "defId": "BOSSK",
+    "rarity": 7,
+    "level": 85,
+    "gear": 13,
+    "equipped": [],
+    "skills": [],
+}
+calc.calc_char_stats(unit)
+print(unit["stats"])  # final stats, mods, and GP added in-place
+print(unit["gp"])     # galactic power
+```
+
+You can also supply pre-loaded game data for offline use:
+
+```python
+calc = StatCalc(game_data=my_game_data_dict)
+```
+
 ## Parameters
 
 | Parameter | Type | Default | Description |
@@ -103,11 +135,21 @@ player_name = player_data['name']
 | `get_guild_leaderboard(leaderboard_id, count, enums)` | Get guild leaderboard data |
 | `get_unit_stats(request_payload, flags, language)` | Calculate unit stats via swgoh-stats |
 | `get_latest_game_data_version()` | Get latest game data and language versions |
+| `get_name_spaces(only_compatible, enums)` | Get available namespaces |
+| `get_segmented_content(content_name_space, accept_language, enums)` | Retrieve segmented content |
 
 ## Logging
 
 Logging is handled by the [python logging module](https://docs.python.org/3/library/logging.html). For details on the
 logging implementation for this package, go [here](docs/logging.md).
+
+## Test Configuration
+
+Integration tests are opt-in and can be enabled with:
+
+```bash
+RUN_INTEGRATION_TESTS=1 uv run pytest -q
+```
 
 See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for more information.
 

@@ -2,6 +2,45 @@
 
 <!-- insertion marker -->
 
+## [v1.18.0rc1](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.18.0rc1) - 2026-03-03
+
+<small>[Compare with v1.17.0](https://github.com/swgoh-utils/comlink-python/compare/v1.17.0...v1.18.0rc1)</small>
+
+### Features
+
+- add StatCalc module for local stat and GP calculation without an external
+  swgoh-stats service ([a880097](https://github.com/swgoh-utils/comlink-python/commit/a880097889b30e345c80ec99ff207d4e50daa431) by
+  MarTrepodi).
+
+### Bug Fixes
+
+- remove duplicate `_rename_stats` call in `calc_char_stats` that caused
+  `AttributeError` on second pass ([a880097](https://github.com/swgoh-utils/comlink-python/commit/a880097889b30e345c80ec99ff207d4e50daa431) by
+  MarTrepodi).
+- fix `calc_player_stats` type annotations, `isinstance` syntax, and list
+  mutation bug ([a880097](https://github.com/swgoh-utils/comlink-python/commit/a880097889b30e345c80ec99ff207d4e50daa431) by
+  MarTrepodi).
+- remove stray `print()` statements and unnecessary `deepcopy` in
+  `_rename_stats` ([a880097](https://github.com/swgoh-utils/comlink-python/commit/a880097889b30e345c80ec99ff207d4e50daa431) by
+  MarTrepodi).
+
+### Documentation
+
+- expand StatCalc usage guide in README and mkdocs API
+  reference ([a880097](https://github.com/swgoh-utils/comlink-python/commit/a880097889b30e345c80ec99ff207d4e50daa431) by
+  MarTrepodi).
+- add missing `get_name_spaces` and `get_segmented_content` methods to README
+  table ([a880097](https://github.com/swgoh-utils/comlink-python/commit/a880097889b30e345c80ec99ff207d4e50daa431) by
+  MarTrepodi).
+- update CONTRIBUTING.md project structure and key modules for StatCalc and
+  test subdirectories ([a880097](https://github.com/swgoh-utils/comlink-python/commit/a880097889b30e345c80ec99ff207d4e50daa431) by
+  MarTrepodi).
+
+### Chores
+
+- remove unused `scripts/verify-upstream.sh` ([a880097](https://github.com/swgoh-utils/comlink-python/commit/a880097889b30e345c80ec99ff207d4e50daa431) by
+  MarTrepodi).
+
 ## [v1.17.0](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.17.0) - 2025-11-18
 
 <small>[Compare with v1.16.0](https://github.com/swgoh-utils/comlink-python/compare/v1.16.0...v1.17.0)</small>

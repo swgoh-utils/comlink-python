@@ -35,12 +35,27 @@ addopts = [
     "--strict-markers",
 ]
 testpaths = ["tests"]
+markers = [
+    "integration: tests that require an accessible comlink service",
+    "parity: tests that compare python stat calculation against JS baseline",
+]
 
 [tool.hatch.version]
 path = 'src/swgoh_comlink/version.py'
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/swgoh_comlink"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/docs",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/mkdocs.yml",
+]
 
 [tool.uv.sources]
 swgoh-comlink = { workspace = true }
@@ -52,6 +67,10 @@ dev = [
     "pytest-cov>=4.0",
     "mypy>=1.0",
     "ruff>=0.8",
+]
+docs = [
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.28.0",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────
@@ -113,3 +132,29 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "if __name__ == .__main__.",
 ]
+
+# ── Semantic Release ─────────────────────────────────────────────────────
+
+[tool.semantic_release]
+version_variable = [
+    "src/swgoh_comlink/version.py"
+]
+version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"
+version_source = "commit"
+branch = "main"
+changelog_file = "CHANGELOG.md"
+build_command = "uv build"
+dist_path = "dist/"
+upload_to_release = true
+upload_to_pypi = false
+remove_dist = true
+patch_without_tag = true
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
+
+[tool.semantic_release.branches.tools]
+match = "tools"
+prerelease = true
+prerelease_token = "rc"

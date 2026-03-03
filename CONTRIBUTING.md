@@ -119,19 +119,30 @@ comlink-python/
 │   ├── labeler.yml               # Label-to-path configuration
 │   └── pull_request_template.md  # PR checklist template
 ├── docs/
-│   └── logging.md               # Logging configuration guide
+│   ├── api/
+│   │   ├── comlink.md            # SwgohComlink API reference
+│   │   └── statcalc.md           # StatCalc API reference
+│   ├── index.md                  # Documentation home
+│   └── logging.md                # Logging configuration guide
 ├── examples/                    # Usage examples for each endpoint
-├── scripts/
-│   └── verify-upstream.sh       # Pre-release upstream verification
 ├── src/
 │   └── swgoh_comlink/
+│       ├── StatCalc/
+│       │   ├── __init__.py       # StatCalc package exports
+│       │   └── calculator.py     # Local stat/GP calculator
 │       ├── __init__.py           # Package entry point, public exports
 │       ├── exceptions.py         # Custom exception classes
 │       ├── globals.py            # Logging configuration
 │       ├── helpers.py            # Constants, enums, and utility functions
 │       ├── swgoh_comlink.py      # Main SwgohComlink client class
 │       └── version.py            # Package version (managed by hatch)
-├── tests/                       # Test suite
+├── tests/
+│   ├── resources/               # Test fixture data (example-player.json, etc.)
+│   ├── statcalc/                # StatCalc-specific tests (import, parity, offline)
+│   ├── unit/                    # Mocked unit tests for SwgohComlink client
+│   ├── conftest.py              # Shared pytest fixtures and markers
+│   ├── integration_support.py   # Helper for integration test setup
+│   └── test_*.py                # Integration tests (require running comlink)
 ├── .commitlintrc.json           # Commit message lint config (local + CI)
 ├── pyproject.toml               # Project metadata, build config, tool settings
 ├── uv.lock                      # Locked dependency versions
@@ -146,6 +157,7 @@ comlink-python/
 | Module | Purpose |
 |--------|---------|
 | `swgoh_comlink.py` | The `SwgohComlink` class — HTTP client, HMAC signing, all endpoint methods |
+| `StatCalc/calculator.py` | The `StatCalc` class — local stat and GP calculation for game units |
 | `helpers.py` | `DataItems` IntFlag enum, `Constants` class, 25+ utility functions for game data processing |
 | `exceptions.py` | `SwgohComlinkException` and `SwgohComlinkValueError` |
 | `globals.py` | Shared logging setup (`get_logger()`) |
