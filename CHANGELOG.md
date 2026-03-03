@@ -2,7 +2,7 @@
 
 <!-- insertion marker -->
 
-## [Unreleased] - feature/async
+## [v2.0.1rc1 Pending Release] - feature/async
 
 ### Features
 
