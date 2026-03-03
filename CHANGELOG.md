@@ -2,6 +2,49 @@
 
 <!-- insertion marker -->
 
+## [Unreleased] - feature/async
+
+### Features
+
+- add `SwgohComlinkAsync` async client with full API parity to `SwgohComlink`.
+  Both clients inherit from a shared `SwgohComlinkBase` class.
+- replace `requests` library with `httpx` for both sync and async HTTP support.
+- add connection pooling via persistent `httpx.Client` / `httpx.AsyncClient` instances.
+- add context manager support (`with SwgohComlink()` and `async with SwgohComlinkAsync()`).
+
+### Code Refactoring
+
+- extract shared logic (HMAC auth, payload builders, URL sanitization, param_alias decorator)
+  into `_base.py` base class.
+- unify all HTTP communication through a single `_request()` gateway method
+  in both sync and async clients.
+
+### Dependencies
+
+- replace `requests>=2.32.4` with `httpx>=0.28`.
+- add `pytest-httpx>=0.35` and `pytest-asyncio>=0.24` to dev dependencies.
+
+### Logging
+
+- refactor logging to follow Python library best practice: attach only `NullHandler`
+  to the package root logger; remove forced `StreamHandler` and level configuration.
+- remove unused logger instances from `_base.py`, `swgoh_comlink.py`, and
+  `swgoh_comlink_async.py`.
+- switch `exceptions.py` and `helpers.py` to use `logging.getLogger(__name__)` directly.
+- keep `LoggingFormatter` as an opt-in convenience in `globals.py`.
+- rewrite `docs/logging.md` for the new approach.
+
+### Testing
+
+- rewrite unit tests to use `pytest-httpx` mocking instead of `monkeypatch`.
+- add comprehensive async client test suite mirroring sync coverage.
+- add `test_base.py` with tests for base class utilities, HMAC, payload builders,
+  and validation logic.
+- increase test coverage from 38% to 48% (100% on core modules `_base.py`,
+  `swgoh_comlink.py`, and `swgoh_comlink_async.py`).
+
+---
+
 ## [v1.18.0rc1](https://github.com/swgoh-utils/comlink-python/releases/tag/v1.18.0rc1) - 2026-03-03
 
 <small>[Compare with v1.17.0](https://github.com/swgoh-utils/comlink-python/compare/v1.17.0...v1.18.0rc1)</small>

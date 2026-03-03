@@ -6,6 +6,7 @@ Helper objects and functions for swgoh_comlink
 from __future__ import annotations
 
 import inspect
+import logging
 import os
 import time
 from collections import namedtuple
@@ -20,9 +21,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 from sentinels import Sentinel
 
 from .exceptions import SwgohComlinkValueError
-from .globals import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink  # noqa: F401
@@ -1325,12 +1325,22 @@ def func_timer(func):
 
 
 def func_debug_logger(func):
-    """Decorator for applying DEBUG logging to a function."""
+    """Decorator for applying DEBUG logging to a function.
+
+    Sensitive keyword arguments (``secret_key``, ``access_key``) are
+    automatically masked before being written to the log.
+    """
+    from ._base import _SENSITIVE_KEYS
+
+    def _sanitize_kwargs(kw: dict) -> dict:
+        """Return a shallow copy with sensitive values masked."""
+        return {k: ("***" if k in _SENSITIVE_KEYS else v) for k, v in kw.items()}
 
     @wraps(func)
     def wrap(*args, **kw):
         """Wrapper function"""
-        logger.debug(f"{func.__name__} called with args: {args} and kwargs: {kw}")
+        safe_kw = _sanitize_kwargs(kw)
+        logger.debug(f"{func.__name__} called with args: {args} and kwargs: {safe_kw}")
         result = func(*args, **kw)
         logger.debug(f"{func.__name__} Result: {result}")
         return result

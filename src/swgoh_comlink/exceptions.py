@@ -5,9 +5,9 @@ Custom exceptions for swgoh_comlink
 
 from __future__ import annotations
 
-from .globals import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class SwgohComlinkException(Exception):

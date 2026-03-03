@@ -99,6 +99,27 @@ jobs:
           name: coverage-report
           path: coverage.xml
 
+  # ── Docs build ────────────────────────────────────────────────────────
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv pip install --system -e "." mkdocs-material "mkdocstrings[python]>=0.28.0"
+
+      - name: Build docs
+        run: mkdocs build --strict
+
   # ── Build verification ─────────────────────────────────────────────────
   build:
     name: Build

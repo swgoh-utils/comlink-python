@@ -9,6 +9,8 @@
 
 A python wrapper for the [swgoh-comlink](https://github.com/swgoh-utils/swgoh-comlink) tool, plus an in-package local stat calculator (`StatCalc`).
 
+Supports both **synchronous** and **asynchronous** usage via `SwgohComlink` and `SwgohComlinkAsync`.
+
 **Requires Python 3.10 or higher.**
 
 ## Installation
@@ -19,9 +21,9 @@ Install from [PyPi package repository](https://pypi.org/project/swgoh-comlink/) 
 uv pip install swgoh_comlink
 ```
 
-## Usage
+## Synchronous Usage
 
-Basic default usage example:
+Basic default usage:
 
 ```python
 from swgoh_comlink import SwgohComlink
@@ -34,20 +36,16 @@ guild = comlink.get_guild(guild_id=guild_id)
 guild_name = guild['profile']['name']
 ```
 
-Usage example with non-default settings for a swgoh-comlink service running on the local machine at TCP port 3500:
+With a custom comlink URL:
 
 ```python
 from swgoh_comlink import SwgohComlink
 
 comlink = SwgohComlink(url='http://localhost:3500')
 player_data = comlink.get_player(allycode=245866537)
-player_name = player_data['name']
-guild_id = player_data['guildId']
-guild = comlink.get_guild(guild_id=guild_id)
-guild_name = guild['profile']['name']
 ```
 
-Usage example with non-default settings for a swgoh-comlink service running on the local machine at TCP port 3500 and swgoh-stats service running on the local machine at TCP port 3550:
+With an external swgoh-stats service:
 
 ```python
 from swgoh_comlink import SwgohComlink
@@ -58,7 +56,7 @@ player_roster = player_data['rosterUnit']
 roster_with_stats = comlink.get_unit_stats(player_roster)
 ```
 
-Usage example with HMAC enabled:
+With HMAC authentication:
 
 ```python
 from swgoh_comlink import SwgohComlink
@@ -69,10 +67,49 @@ comlink = SwgohComlink(
     secret_key='this_string_should_be_secret'
 )
 player_data = comlink.get_player(allycode=245866537)
-player_name = player_data['name']
 ```
 
-Local stat calculation usage example (no external stats service required):
+As a context manager (auto-closes connections):
+
+```python
+from swgoh_comlink import SwgohComlink
+
+with SwgohComlink() as comlink:
+    player_data = comlink.get_player(allycode=245866537)
+```
+
+## Async Usage
+
+The `SwgohComlinkAsync` class provides the same API with `async`/`await` support. All public methods have identical signatures to the sync client.
+
+```python
+from swgoh_comlink import SwgohComlinkAsync
+
+async with SwgohComlinkAsync() as comlink:
+    player_data = await comlink.get_player(allycode=245866537)
+    player_name = player_data['name']
+    guild_id = player_data['guildId']
+    guild = await comlink.get_guild(guild_id=guild_id)
+    guild_name = guild['profile']['name']
+```
+
+Without a context manager, call `aclose()` when done:
+
+```python
+comlink = SwgohComlinkAsync()
+try:
+    player_data = await comlink.get_player(allycode=245866537)
+finally:
+    await comlink.aclose()
+```
+
+Both clients accept the same constructor parameters and support connection pooling via persistent `httpx` clients.
+
+## StatCalc (Local Stat Calculator)
+
+`StatCalc` calculates unit stats and Galactic Power locally without requiring an external swgoh-stats service. It fetches the latest game data from GitHub on initialization, or you can supply pre-loaded data for offline use.
+
+### Basic usage
 
 ```python
 from swgoh_comlink import SwgohComlink, StatCalc
@@ -98,13 +135,27 @@ print(unit["stats"])  # final stats, mods, and GP added in-place
 print(unit["gp"])     # galactic power
 ```
 
-You can also supply pre-loaded game data for offline use:
+### Offline / pre-loaded game data
 
 ```python
 calc = StatCalc(game_data=my_game_data_dict)
 ```
 
+### StatCalc Methods
+
+| Method | Description |
+|--------|-------------|
+| `calc_char_stats(unit)` | Calculate stats and GP for a single character (modifies in-place) |
+| `calc_ship_stats(unit, crew)` | Calculate stats and GP for a ship with its crew |
+| `calc_roster_stats(units)` | Calculate stats for all units in a roster (list or dict) |
+| `calc_player_stats(players)` | Calculate stats for one or more full player payloads |
+| `calc_char_gp(char)` | Calculate GP for a character |
+| `calc_ship_gp(ship, crew)` | Calculate GP for a ship |
+| `set_game_data(game_data)` | Replace the game data used by the calculator |
+
 ## Parameters
+
+Constructor parameters for `SwgohComlink` and `SwgohComlinkAsync`:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -118,6 +169,8 @@ calc = StatCalc(game_data=my_game_data_dict)
 | `verify_ssl` | `bool` | `True` | Enable TLS certificate verification |
 
 ## Available Methods
+
+Methods available on both `SwgohComlink` and `SwgohComlinkAsync` (async methods use `await`):
 
 | Method | Description |
 |--------|-------------|
@@ -140,8 +193,9 @@ calc = StatCalc(game_data=my_game_data_dict)
 
 ## Logging
 
-Logging is handled by the [python logging module](https://docs.python.org/3/library/logging.html). For details on the
-logging implementation for this package, go [here](docs/logging.md).
+Logging is handled by the [python logging module](https://docs.python.org/3/library/logging.html). The library follows Python best practice by attaching only a `NullHandler` — no output is produced unless your application configures logging.
+
+For details on enabling and customizing log output, see [docs/logging.md](docs/logging.md).
 
 ## Test Configuration
 

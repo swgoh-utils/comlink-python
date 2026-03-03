@@ -11,6 +11,7 @@ nav:
       - Logging: logging.md
   - API:
       - SwgohComlink: api/comlink.md
+      - SwgohComlinkAsync: api/async.md
       - StatCalc: api/statcalc.md
 
 plugins:
@@ -22,6 +23,8 @@ plugins:
             - src
           options:
             docstring_style: google
+            docstring_options:
+              warn_unknown_params: false
             show_source: false
             members_order: source
 
