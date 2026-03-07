@@ -78,13 +78,13 @@ Be respectful, constructive, and patient. We're all here because we enjoy the ga
    source .venv/bin/activate    # Linux/macOS
    # .venv\Scripts\activate     # Windows
 
-   uv sync
+   uv sync --group dev
    ```
 
 4. **Verify the installation**
 
    ```bash
-   python -c "from swgoh_comlink import SwgohComlink; print('OK')"
+   uv run python -c "from swgoh_comlink import SwgohComlink; print('OK')"
    ```
 
 ### Running a Local Comlink Service
@@ -107,48 +107,79 @@ This starts comlink on `http://localhost:3000`, which is the default URL the lib
 comlink-python/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
-│   │   ├── bug_report.yml        # Bug report template
-│   │   └── feature_request.yml   # Feature request template
+│   │   ├── bug_report.yml          # Bug report template
+│   │   └── feature_request.yml     # Feature request template
 │   ├── workflows/
-│   │   ├── ci.yml                # CI pipeline (lint, type-check, test, build)
-│   │   ├── commitlint.yml        # Commit message validation
-│   │   ├── labeler.yml           # Auto-label PRs by file path
-│   │   └── release.yml           # Semantic release → PyPI publish
-│   ├── CODEOWNERS                # Code ownership
-│   ├── dependabot.yml            # Automated dependency updates
-│   ├── labeler.yml               # Label-to-path configuration
-│   └── pull_request_template.md  # PR checklist template
+│   │   ├── ci.yml                  # CI pipeline (lint, type-check, test, docs, build)
+│   │   ├── commit-lint.yml         # Commit message validation (wagoid action)
+│   │   ├── commitlint.yml          # Commit message validation (npm-based)
+│   │   ├── integration.yml         # Integration tests against live comlink services
+│   │   ├── labeler.yml             # Auto-label PRs by file path
+│   │   ├── release.yml             # Semantic release → PyPI publish
+│   │   └── test.yml                # Quick test + docs build
+│   ├── CODEOWNERS                  # Code ownership
+│   ├── dependabot.yml              # Automated dependency updates
+│   ├── labeler.yml                 # Label-to-path configuration
+│   └── pull_request_template.md    # PR checklist template
 ├── docs/
 │   ├── api/
-│   │   ├── comlink.md            # SwgohComlink API reference
-│   │   └── statcalc.md           # StatCalc API reference
-│   ├── index.md                  # Documentation home
-│   └── logging.md                # Logging configuration guide
-├── examples/                    # Usage examples for each endpoint
+│   │   ├── async.md                # SwgohComlinkAsync API reference
+│   │   ├── comlink.md              # SwgohComlink API reference
+│   │   ├── exceptions.md           # Exception classes reference
+│   │   ├── helpers.md              # Helper functions reference
+│   │   └── statcalc.md             # StatCalc API reference
+│   ├── index.md                    # Documentation home
+│   ├── logging.md                  # Logging configuration guide
+│   └── migration.md                # v1.x → v2.x migration guide
+├── examples/                       # Usage examples for each endpoint
 ├── src/
 │   └── swgoh_comlink/
 │       ├── StatCalc/
-│       │   ├── __init__.py       # StatCalc package exports
-│       │   └── calculator.py     # Local stat/GP calculator
-│       ├── __init__.py           # Package entry point, public exports
-│       ├── exceptions.py         # Custom exception classes
-│       ├── globals.py            # Logging configuration
-│       ├── helpers.py            # Constants, enums, and utility functions
-│       ├── swgoh_comlink.py      # Main SwgohComlink client class
-│       └── version.py            # Package version (managed by hatch)
+│       │   ├── data_builder/
+│       │   │   ├── _builder_base.py  # Shared game data transformation logic
+│       │   │   ├── builder.py        # Sync GameDataBuilder
+│       │   │   └── builder_async.py  # Async GameDataBuilderAsync
+│       │   ├── __init__.py           # StatCalc package exports
+│       │   ├── calculator.py         # Local stat/GP calculator (sync)
+│       │   └── calculator_async.py   # Async StatCalcAsync
+│       ├── helpers/
+│       │   ├── __init__.py           # Helpers package exports
+│       │   ├── _arena.py             # Arena payout time calculations
+│       │   ├── _constants.py         # Game constants and enum lookups
+│       │   ├── _data_items.py        # DataItems IntFlag for game data collections
+│       │   ├── _decorators.py        # Timing and debug logging decorators
+│       │   ├── _gac.py               # Grand Arena Championship bracket helpers
+│       │   ├── _game_data.py         # Raid IDs, datacrons, localization, units
+│       │   ├── _guild.py             # Guild member extraction helpers
+│       │   ├── _omicron.py           # Omicron ability detection
+│       │   ├── _sentinels.py         # Sentinel values (REQUIRED, MISSING)
+│       │   ├── _stat_data.py         # Stat name/ID mapping tables
+│       │   └── _utils.py             # Enum lookup, file I/O, path utilities
+│       ├── migrate/
+│       │   ├── __init__.py           # Migration tool entry point
+│       │   └── ...                   # v1 → v2 migration scanner and rules
+│       ├── __init__.py               # Package entry point, public exports
+│       ├── _base.py                  # SwgohComlinkBase (shared sync/async logic)
+│       ├── exceptions.py             # Custom exception classes
+│       ├── globals.py                # Logging configuration
+│       ├── swgoh_comlink.py          # SwgohComlink (sync client)
+│       ├── swgoh_comlink_async.py    # SwgohComlinkAsync (async client)
+│       └── version.py                # Package version (managed by hatch)
 ├── tests/
-│   ├── resources/               # Test fixture data (example-player.json, etc.)
-│   ├── statcalc/                # StatCalc-specific tests (import, parity, offline)
-│   ├── unit/                    # Mocked unit tests for SwgohComlink client
-│   ├── conftest.py              # Shared pytest fixtures and markers
-│   ├── integration_support.py   # Helper for integration test setup
-│   └── test_*.py                # Integration tests (require running comlink)
-├── .commitlintrc.json           # Commit message lint config (local + CI)
-├── pyproject.toml               # Project metadata, build config, tool settings
-├── uv.lock                      # Locked dependency versions
-├── CHANGELOG.md                 # Auto-generated from commit history
-├── CONTRIBUTING.md              # This file
-├── LICENSE                      # MIT License
+│   ├── exhaustive/                   # Comprehensive pre-release validation tests
+│   │   ├── stress/                   # Connection pool and endurance tests
+│   │   └── ...                       # Endpoint, enum, parity tests
+│   ├── integration/                  # Tests requiring a running comlink service
+│   ├── resources/                    # Test fixture data (example-player.json, etc.)
+│   ├── statcalc/                     # StatCalc-specific tests (import, parity, offline)
+│   ├── unit/                         # Mocked unit tests for sync/async clients
+│   ├── conftest.py                   # Shared pytest fixtures and markers
+│   └── test_*.py                     # Additional test modules
+├── pyproject.toml                    # Project metadata, build config, tool settings
+├── uv.lock                           # Locked dependency versions
+├── CHANGELOG.md                      # Auto-generated from commit history
+├── CONTRIBUTING.md                   # This file
+├── LICENSE                           # MIT License
 └── README.md
 ```
 
@@ -156,9 +187,11 @@ comlink-python/
 
 | Module | Purpose |
 |--------|---------|
-| `swgoh_comlink.py` | The `SwgohComlink` class — HTTP client, HMAC signing, all endpoint methods |
-| `StatCalc/calculator.py` | The `StatCalc` class — local stat and GP calculation for game units |
-| `helpers.py` | `DataItems` IntFlag enum, `Constants` class, 25+ utility functions for game data processing |
+| `_base.py` | `SwgohComlinkBase` — shared payload construction, HMAC signing, and config for both clients |
+| `swgoh_comlink.py` | `SwgohComlink` — synchronous HTTP client (all endpoint methods) |
+| `swgoh_comlink_async.py` | `SwgohComlinkAsync` — asynchronous HTTP client (mirrors sync API) |
+| `StatCalc/calculator.py` | `StatCalc` — local stat and GP calculation for game units |
+| `helpers/` | `DataItems` IntFlag enum, `Constants` class, 25+ utility functions split across focused submodules |
 | `exceptions.py` | `SwgohComlinkException` and `SwgohComlinkValueError` |
 | `globals.py` | Shared logging setup (`get_logger()`) |
 | `version.py` | Single `__version__` string, managed by hatch during releases |
@@ -199,7 +232,8 @@ This project follows standard Python conventions. Please keep these in mind:
 **General principles:**
 
 - Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting
-- Use type hints on all public method signatures
+- Use **complete type annotations** on all functions, parameters, and return values — the project enforces `mypy --strict`
+- Use `from __future__ import annotations` at the top of each module for modern annotation syntax
 - Use docstrings (Google style) on all public classes and methods
 - Keep lines to 120 characters max (the project doesn't enforce 79)
 
@@ -213,7 +247,12 @@ This project follows standard Python conventions. Please keep these in mind:
 **Docstring format:**
 
 ```python
-def get_player(self, allycode: str | int = None, player_id: str = None, enums: bool = False) -> dict:
+def get_player(
+    self,
+    allycode: str | int | None = None,
+    player_id: str | None = None,
+    enums: bool = False,
+) -> dict[str, Any]:
     """
     Get player information from game. Either allycode or player_id must be provided.
 
@@ -235,17 +274,17 @@ def get_player(self, allycode: str | int = None, player_id: str = None, enums: b
 
 ### Writing Tests
 
-Tests live in the `tests/` directory and use Python's `unittest` framework. The project also has `pytest` configured in `pyproject.toml`, so you can run tests with either:
+Tests live in the `tests/` directory and use `pytest` (configured in `pyproject.toml`). Both sync and async tests are supported via `pytest-asyncio`. Run tests with:
 
 ```bash
 # Run all tests
-python -m pytest tests/
+uv run pytest tests/
 
 # Run a specific test file
-python -m pytest tests/test_get_player.py
+uv run pytest tests/test_get_player.py
 
 # Run with verbose output
-python -m pytest tests/ -v
+uv run pytest tests/ -v
 ```
 
 **Unit tests vs integration tests:**
@@ -294,7 +333,7 @@ class TestGetPlayer(TestCase):
 - Payload construction — verify the correct JSON payload is built for each method
 - Parameter validation — edge cases, invalid inputs, boundary values
 - Error handling — how the client handles HTTP errors, bad JSON, connection failures
-- Helper functions — each utility function in `helpers.py` should have its own tests
+- Helper functions — each utility function in the `helpers/` package should have its own tests
 
 ### Commit Messages
 
@@ -320,8 +359,9 @@ Other types (`test`, `style`, `ci`) are valid conventional commits but are **not
 
 **Scope** is optional but encouraged. Common scopes:
 
-- `core` — changes to `swgoh_comlink.py` (the main client class)
-- `helpers` — changes to `helpers.py`
+- `core` — changes to the client classes (`swgoh_comlink.py`, `swgoh_comlink_async.py`, `_base.py`)
+- `helpers` — changes to the `helpers/` package
+- `statcalc` — changes to the `StatCalc/` package
 - `deps` — dependency updates
 
 **Examples:**
@@ -371,10 +411,13 @@ Closes #12
 
    ```bash
    # Lint
-   ruff check src/ tests/
+   uvx ruff check src/ tests/
+
+   # Type check
+   uv run mypy src/swgoh_comlink/
 
    # Tests
-   python -m pytest tests/ -v
+   uv run pytest tests/ -v
    ```
 
 3. **Push your branch to your fork:**
@@ -405,10 +448,11 @@ Closes #12
    - [ ] Code follows the project's style conventions
    - [ ] All new public methods have docstrings with type hints
    - [ ] New functionality includes unit tests (mocked, not requiring live comlink)
-   - [ ] Existing tests still pass
+   - [ ] Existing tests still pass (`uv run pytest tests/`)
    - [ ] Commit messages follow Angular convention
-   - [ ] Ruff linter passes (`ruff check src/ tests/`)
-   - [ ] Ruff formatter passes (`ruff format --check src/ tests/`)
+   - [ ] Ruff linter passes (`uvx ruff check src/ tests/`)
+   - [ ] Ruff formatter passes (`uvx ruff format --check src/ tests/`)
+   - [ ] Mypy strict passes (`uv run mypy src/swgoh_comlink/`)
    - [ ] No unrelated changes bundled in
 
 7. **After submitting:**
