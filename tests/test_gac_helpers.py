@@ -2,8 +2,6 @@
 
 import asyncio
 
-import pytest
-
 from swgoh_comlink.helpers._gac import (
     _async_find_bracket_boundary,
     _find_bracket_boundary,

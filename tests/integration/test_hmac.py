@@ -41,9 +41,8 @@ def test_hmac_sync_player_request_succeeds(comlink_hmac):
 
 def test_hmac_no_key_rejected():
     """Sync client without HMAC keys is rejected by the protected endpoint."""
-    with SwgohComlink(url=COMLINK_HMAC_URL) as client:
-        with pytest.raises(SwgohComlinkException):
-            client.get_enums()
+    with SwgohComlink(url=COMLINK_HMAC_URL) as client, pytest.raises(SwgohComlinkException):
+        client.get_enums()
 
 
 def test_hmac_wrong_key_rejected():
@@ -52,9 +51,8 @@ def test_hmac_wrong_key_rejected():
         url=COMLINK_HMAC_URL,
         access_key=HMAC_ACCESS_KEY,
         secret_key="wrong_secret_key",
-    ) as client:
-        with pytest.raises(SwgohComlinkException):
-            client.get_enums()
+    ) as client, pytest.raises(SwgohComlinkException):
+        client.get_enums()
 
 
 # ── Async: valid HMAC ───────────────────────────────────────────────────
