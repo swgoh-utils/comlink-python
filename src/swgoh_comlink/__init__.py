@@ -3,12 +3,20 @@ from __future__ import annotations
 
 import logging
 
-from swgoh_comlink.StatCalc import StatCalc, StatCalcAsync
+from swgoh_comlink.StatCalc import GameDataBuilder, GameDataBuilderAsync, StatCalc, StatCalcAsync
 from swgoh_comlink.swgoh_comlink import SwgohComlink
 from swgoh_comlink.swgoh_comlink_async import SwgohComlinkAsync
 from swgoh_comlink.version import __version__ as version
 
-__all__ = ["StatCalc", "StatCalcAsync", "SwgohComlink", "SwgohComlinkAsync", "version"]
+__all__ = [
+    "GameDataBuilder",
+    "GameDataBuilderAsync",
+    "StatCalc",
+    "StatCalcAsync",
+    "SwgohComlink",
+    "SwgohComlinkAsync",
+    "version",
+]
 
 # Follow Python best practice for library logging:
 # Only add NullHandler so the application controls all logging configuration.

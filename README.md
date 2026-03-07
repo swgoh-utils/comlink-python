@@ -4,6 +4,7 @@
 [![PyPI version](https://badge.fury.io/py/swgoh-comlink.svg)](https://pypi.org/project/swgoh-comlink/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Coverage](https://img.shields.io/badge/coverage-48%25-yellow.svg)](https://github.com/swgoh-utils/comlink-python)
 
 ## Description
 
@@ -108,6 +109,32 @@ Both clients accept the same constructor parameters and support connection pooli
 ## StatCalc / StatCalcAsync (Local Stat Calculator)
 
 `StatCalc` and `StatCalcAsync` calculate unit stats and Galactic Power locally without requiring an external swgoh-stats service. `StatCalc` fetches game data synchronously on initialization; `StatCalcAsync` provides an async factory method (`await StatCalcAsync.create()`) for non-blocking initialization. Both accept pre-loaded data for offline use.
+
+### Building game data from Comlink
+
+Instead of fetching a static `gameData.json` from GitHub, you can build game data
+dynamically from a running Comlink service using `GameDataBuilder` / `GameDataBuilderAsync`:
+
+```python
+from swgoh_comlink import SwgohComlink, StatCalc, GameDataBuilder
+
+comlink = SwgohComlink()
+game_data = GameDataBuilder(comlink).build()
+calc = StatCalc(game_data=game_data)
+```
+
+Async:
+
+```python
+from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync, GameDataBuilderAsync
+
+async with SwgohComlinkAsync() as comlink:
+    game_data = await GameDataBuilderAsync(comlink).build()
+    calc = StatCalcAsync(game_data=game_data)
+```
+
+The builder fetches only the required game data collections in a single API call
+and transforms them into the format `StatCalc` expects.
 
 ### Basic usage
 

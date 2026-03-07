@@ -103,6 +103,36 @@ With pre-loaded data (no async fetch):
 calc = StatCalcAsync(game_data=my_game_data_dict)
 ```
 
+## GameDataBuilder / GameDataBuilderAsync
+
+Instead of fetching game data from a static GitHub file, you can build it
+dynamically from a running Comlink service.
+
+### Sync
+
+```python
+from swgoh_comlink import SwgohComlink, StatCalc, GameDataBuilder
+
+comlink = SwgohComlink()
+game_data = GameDataBuilder(comlink).build()
+calc = StatCalc(game_data=game_data)
+```
+
+### Async
+
+```python
+from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync, GameDataBuilderAsync
+
+async with SwgohComlinkAsync() as comlink:
+    game_data = await GameDataBuilderAsync(comlink).build()
+    calc = StatCalcAsync(game_data=game_data)
+```
+
+The builder fetches only the collections required for stat calculation
+(`units`, `skills`, `equipment`, `tables`, `statProgression`, `statModSets`,
+`relicTierDefinitions`, `categories`) in a single `get_game_data()` call and
+transforms them into the dict format expected by `StatCalc.set_game_data()`.
+
 ## API Reference
 
 ### StatCalc
@@ -131,3 +161,25 @@ calc = StatCalcAsync(game_data=my_game_data_dict)
       members:
         - __init__
         - create
+
+### GameDataBuilder
+
+::: swgoh_comlink.StatCalc.data_builder.builder.GameDataBuilder
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+      show_if_no_docstring: false
+      members:
+        - __init__
+        - build
+
+### GameDataBuilderAsync
+
+::: swgoh_comlink.StatCalc.data_builder.builder_async.GameDataBuilderAsync
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+      show_if_no_docstring: false
+      members:
+        - __init__
+        - build

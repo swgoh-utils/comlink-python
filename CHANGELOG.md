@@ -11,6 +11,9 @@
 - add `StatCalcAsync` async stat calculator with `create()` factory method for
   non-blocking game data initialization. Inherits all calculation methods from
   `StatCalc`.
+- add `GameDataBuilder` / `GameDataBuilderAsync` to build StatCalc game data
+  dynamically from a running Comlink service instead of fetching a static file
+  from GitHub.
 - replace `requests` library with `httpx` for both sync and async HTTP support.
 - add connection pooling via persistent `httpx.Client` / `httpx.AsyncClient` instances.
 - add context manager support (`with SwgohComlink()` and `async with SwgohComlinkAsync()`).

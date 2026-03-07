@@ -5,6 +5,7 @@ This project provides:
 - `SwgohComlink` for synchronous network calls to a running `swgoh-comlink` service.
 - `SwgohComlinkAsync` for asynchronous (`async`/`await`) network calls to the same service.
 - `StatCalc` / `StatCalcAsync` for local stat and GP calculation for game units.
+- `GameDataBuilder` / `GameDataBuilderAsync` for building StatCalc game data dynamically from Comlink.
 
 Both `SwgohComlink` and `SwgohComlinkAsync` share the same constructor parameters and public methods. The async client uses `await` for all requests and should be used inside an `async with` context manager.
 
