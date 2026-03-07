@@ -23,8 +23,11 @@ import time
 
 from swgoh_comlink import SwgohComlinkAsync
 
-# Change this to any valid ally code to look up that player's guild
+# CONFIGURATION
+# Change these to any valid values to look up that player's guild
 ALLY_CODE = 314927874
+COMLINK_HOST = "localhost"
+COMLINK_PORT = 3000
 
 
 async def fetch_member(comlink: SwgohComlinkAsync, player_id: str, index: int, total: int) -> dict:
@@ -40,7 +43,7 @@ async def fetch_member(comlink: SwgohComlinkAsync, player_id: str, index: int, t
 
 
 async def main():
-    async with SwgohComlinkAsync(host="192.168.68.74", port=3200) as comlink:
+    async with SwgohComlinkAsync(host=COMLINK_HOST, port=COMLINK_PORT) as comlink:
         # Step 1: Get the guild ID from a player's profile
         player = await comlink.get_player(allycode=ALLY_CODE)
         guild_id = player.get('guildId')

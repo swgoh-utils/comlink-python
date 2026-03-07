@@ -218,7 +218,7 @@ async def main():
 
         guild_name = guild.get("profile", {}).get("name", guild.get("name", "Unknown"))
         members = guild.get("member", [])
-        member_ids = [m["playerId"] for m in members]
+        member_ids = [m.get("playerId") for m in members if m.get("playerId")]
         total = len(member_ids)
 
         print(f"Guild:  {guild_name}")
