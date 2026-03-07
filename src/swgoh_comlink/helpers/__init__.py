@@ -35,15 +35,11 @@ from ._omicron import (
     is_omicron_skill,
 )
 from ._sentinels import (
-    EMPTY,
     GIVEN,
     MISSING,
     OPTIONAL,
     REQUIRED,
-    SET,
     MutualExclusiveRequired,
-    MutualRequiredNotSet,
-    NotGiven,
     NotSet,
 )
 from ._stat_data import (
@@ -68,16 +64,12 @@ from ._utils import (
 
 __all__ = [
     # Sentinels
-    "EMPTY",
     "GIVEN",
     "MISSING",
     "MutualExclusiveRequired",
-    "MutualRequiredNotSet",
-    "NotGiven",
     "NotSet",
     "OPTIONAL",
     "REQUIRED",
-    "SET",
     # Enums and constants
     "Constants",
     "DataItems",

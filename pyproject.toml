@@ -22,7 +22,6 @@ classifiers = [
 ]
 dependencies = [
     "httpx>=0.28",
-    "sentinels>=1.0",
 ]
 
 [project.scripts]

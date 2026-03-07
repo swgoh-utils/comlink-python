@@ -974,15 +974,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sentinels"
-version = "1.1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6f/9b/07195878aa25fe6ed209ec74bc55ae3e3d263b60a489c6e73fdca3c8fe05/sentinels-1.1.1.tar.gz", hash = "sha256:3c2f64f754187c19e0a1a029b148b74cf58dd12ec27b4e19c0e5d6e22b5a9a86", size = 4393, upload-time = "2025-08-12T07:57:50.26Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/49/65/dea992c6a97074f6d8ff9eab34741298cac2ce23e2b6c74fb7d08afdf85c/sentinels-1.1.1-py3-none-any.whl", hash = "sha256:835d3b28f3b47f5284afa4bf2db6e00f2dc5f80f9923d4b7e7aeeeccf6146a11", size = 3744, upload-time = "2025-08-12T07:57:48.858Z" },
-]
-
-[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -996,7 +987,6 @@ name = "swgoh-comlink"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
-    { name = "sentinels" },
 ]
 
 [package.dev-dependencies]
@@ -1015,10 +1005,7 @@ docs = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "httpx", specifier = ">=0.28" },
-    { name = "sentinels", specifier = ">=1.0" },
-]
+requires-dist = [{ name = "httpx", specifier = ">=0.28" }]
 
 [package.metadata.requires-dev]
 dev = [
