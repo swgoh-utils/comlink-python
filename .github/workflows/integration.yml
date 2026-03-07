@@ -25,10 +25,12 @@ jobs:
           APP_NAME: comlink-python-integration-tests
         ports:
           - 3000:3000
-        healthcheck:
-          test: [ "CMD", "/swgoh-comlink", "--check" ]
-          start_period: 10s
-          start_interval: 0.5s
+        options: >-
+          --health-cmd "/swgoh-comlink --check"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 10s
 
       comlink-hmac:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
@@ -38,10 +40,12 @@ jobs:
           SECRET_KEY: test_secret_key
         ports:
           - 3001:3000
-        healthcheck:
-          test: [ "CMD", "/swgoh-comlink", "--check" ]
-          start_period: 10s
-          start_interval: 0.5s
+        options: >-
+          --health-cmd "/swgoh-comlink --check"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 10s
 
     steps:
       - uses: actions/checkout@v4
