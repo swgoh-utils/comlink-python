@@ -397,7 +397,13 @@ class StatCalc:
         assert self._unit_data is not None
         assert self._gear_data is not None
         assert self._relic_data is not None
-        meta = self._unit_data[char["defId"]]
+        def_id = char["defId"]
+        meta = self._unit_data.get(def_id)
+        if meta is None:
+            raise KeyError(
+                f"Unit '{def_id}' not found in game data. "
+                f"The unit may be non-obtainable or missing from the data build."
+            )
         gear_lvl = self._table_get(meta["gearLvl"], char["gear"], {})
         stats = {
             "base": dict(gear_lvl.get("stats", {})),
@@ -451,7 +457,13 @@ class StatCalc:
     ) -> dict[str, Any]:
         assert self._unit_data is not None
         assert self._cr_tables is not None
-        meta = self._unit_data[ship["defId"]]
+        def_id = ship["defId"]
+        meta = self._unit_data.get(def_id)
+        if meta is None:
+            raise KeyError(
+                f"Ship '{def_id}' not found in game data. "
+                f"The unit may be non-obtainable or missing from the data build."
+            )
 
         if len(crew) != len(meta["crew"]):
             raise ValueError(

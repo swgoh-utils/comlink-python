@@ -247,6 +247,22 @@ class TestBuildGameDataPayload:
             payload = SwgohComlinkBase._build_game_data_payload(game_version="1.0", request_segment=seg)
             assert payload["payload"]["requestSegment"] == seg
 
+    def test_with_numeric_string_items(self):
+        """Numeric strings (e.g. from str(int(IntFlag))) pass through as-is."""
+        payload = SwgohComlinkBase._build_game_data_payload(
+            game_version="1.0", items="206196178989"
+        )
+        assert payload["payload"]["items"] == "206196178989"
+        assert "requestSegment" not in payload["payload"]
+
+    def test_with_negative_numeric_string_items(self):
+        """Negative numeric strings (e.g. '-1' for ALL) pass through as-is."""
+        payload = SwgohComlinkBase._build_game_data_payload(
+            game_version="1.0", items="-1"
+        )
+        assert payload["payload"]["items"] == "-1"
+        assert "requestSegment" not in payload["payload"]
+
 
 # ── _build_unit_stats_endpoint ───────────────────────────────────────────
 

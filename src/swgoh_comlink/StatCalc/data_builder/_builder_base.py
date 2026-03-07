@@ -106,7 +106,7 @@ _TIER_RE = re.compile(r"TIER_0?(\d+)")
 _MASTERY_RE = re.compile(r"_mastery$")
 _ROLE_RE = re.compile(r"^role_(?!leader)([^_]+)$")
 _RELIC_SUFFIX_RE = re.compile(r"(\d+)$")
-_ABILITY_KEY_RE = re.compile(r"^(\w+?)_\w+?(\d)?$")
+
 
 
 # ===================================================================
@@ -132,6 +132,16 @@ class GameDataBuilderBase:
             ``unitData``, ``gearData``, ``modSetData``, ``crTables``,
             ``gpTables``, ``relicData``.
         """
+        logger.debug(
+            "Raw game data keys: %s  |  units=%d  equipment=%d  "
+            "statProgression=%d  skill=%d  relicTierDefinition=%d",
+            sorted(raw.keys()),
+            len(raw.get("units", [])),
+            len(raw.get("equipment", [])),
+            len(raw.get("statProgression", [])),
+            len(raw.get("skill", [])),
+            len(raw.get("relicTierDefinition", [])),
+        )
         stat_tables = _build_stat_tables(raw.get("statProgression", []))
         skills_map = _build_skills_map(raw.get("skill", []))
 
@@ -175,15 +185,23 @@ class GameDataBuilderBase:
 
 def _build_stat_tables(raw_progressions: list[dict[str, Any]]) -> dict[str, dict[str, int | float]]:
     """Parse ``statProgression`` entries into ``{tableId: {statId: value}}``."""
+
+    if len(raw_progressions) == 0:
+        logger.warning("No stat progression data received. Returned empty tables.")
+        return {}
+
     tables: dict[str, dict[str, int | float]] = {}
-    for entry in raw_progressions:
-        table_id = entry.get("id", "")
-        if not table_id.startswith("stattable_"):
-            continue
+
+    # Extract only the stattable items from the raw progression collection
+    stat_progression_tables = [table for table in raw_progressions if
+                               table.get('id', "").startswith('stattable_')]
+
+    for table in stat_progression_tables:
+        table_id = table.get("id", "")
         table_data: dict[str, int | float] = {}
-        for s in entry.get("stat", {}).get("statList", []):
-            table_data[str(s.get("unitStatId", ""))] = _num(
-                s.get("unscaledDecimalValue", 0)
+        for stat in table.get("stat", {}).get("stat", []):
+            table_data[str(stat.get("unitStatId", ""))] = _num(
+                stat.get("unscaledDecimalValue", 0)
             )
         tables[table_id] = table_data
     return tables
@@ -194,7 +212,7 @@ def _build_skills_map(raw_skills: list[dict[str, Any]]) -> dict[str, dict[str, A
     skills: dict[str, dict[str, Any]] = {}
     for skill in raw_skills:
         skill_id = skill.get("id", "")
-        tier_list = skill.get("tierList", [])
+        tier_list = skill.get("tier", [])
         max_tier = len(tier_list) + 1
 
         is_zeta = False
@@ -231,24 +249,30 @@ def _build_unit_data(
     base_units: dict[str, dict[str, Any]] = {}
     stat_prog_map: dict[str, dict[str, str]] = {}
 
-    for unit_group in raw_units:
-        rarity = unit_group.get("rarity", 1)
+    total_units = 0
+
+    # Filter for only obtainable units at rarity 1
+    base_unit_list = [
+            unit for unit in raw_units
+            if unit.get("obtainable", False) and unit.get("obtainableTime") == "0"
+            ]
+
+    for unit in base_unit_list:
+        rarity = unit.get("rarity", 1)
         # Normalize string rarity enums (e.g. "ONE_STAR") to integers
         if isinstance(rarity, str):
             rarity = _RARITY_ENUM.get(rarity, 0)
-        for unit in unit_group.get("unitDef", []):
-            base_id = unit.get("baseId", "")
-            if not base_id:
-                continue
-            if not unit.get("obtainable", False):
-                continue
+        total_units += 1
+        base_id = unit.get("baseId", "")
+        if not base_id:
+            continue
 
-            prog_id = unit.get("statProgressionId", "")
-            if prog_id:
-                stat_prog_map.setdefault(base_id, {})[str(rarity)] = prog_id
+        prog_id = unit.get("statProgressionId", "")
+        if prog_id:
+            stat_prog_map.setdefault(base_id, {})[str(rarity)] = prog_id
 
-            if rarity == 1:
-                base_units[base_id] = unit
+        if rarity == 1:
+            base_units[base_id] = unit
 
     data: dict[str, dict[str, Any]] = {}
     for base_id, unit in base_units.items():
@@ -276,15 +300,15 @@ def _build_character(
 ) -> dict[str, Any]:
     # Gear tiers
     gear_lvl: dict[str, dict[str, Any]] = {}
-    for gt in unit.get("unitTierList", []):
+    for gt in unit.get("unitTier", []):
         tier_num = str(gt.get("tier", 1))
         tier_stats: dict[str, int | float] = {}
-        for s in gt.get("baseStat", {}).get("statList", []):
+        for s in gt.get("baseStat", {}).get("stat", []):
             tier_stats[str(s.get("unitStatId", ""))] = _num(
                 s.get("unscaledDecimalValue", 0)
             )
         gear_lvl[tier_num] = {
-            "gear": gt.get("equipmentSetList", []),
+            "gear": gt.get("equipmentSet", []),
             "stats": tier_stats,
         }
 
@@ -295,18 +319,18 @@ def _build_character(
             growth[rarity_str] = dict(stat_tables[prog_id])
 
     # Skill references
-    skill_refs = _resolve_skills(unit.get("skillReferenceList", []), skills_map)
+    skill_refs = _resolve_skills(unit.get("skillReference", []), skills_map)
 
     # Relic tier mapping
     relic: dict[str, str] = {}
     relic_def = unit.get("relicDefinition") or {}
-    for tier_id in relic_def.get("relicTierDefinitionIdList", []):
+    for tier_id in relic_def.get("relicTierDefinitionId", []):
         m = _RELIC_SUFFIX_RE.search(tier_id)
         if m:
             relic[str(int(m.group(1)) + _RELIC_TIER_OFFSET)] = tier_id
 
     # Mastery modifier
-    mastery_id = _mastery_name(primary_stat, unit.get("categoryIdList", []))
+    mastery_id = _mastery_name(primary_stat, unit.get("categoryId", []))
 
     return {
         "combatType": 1,
@@ -329,7 +353,7 @@ def _build_ship(
 ) -> dict[str, Any]:
     # Base stats
     stats: dict[str, int | float] = {}
-    for s in unit.get("baseStat", {}).get("statList", []):
+    for s in unit.get("baseStat", {}).get("stat", []):
         stats[str(s.get("unitStatId", ""))] = _num(
             s.get("unscaledDecimalValue", 0)
         )
@@ -340,15 +364,21 @@ def _build_ship(
         if prog_id in stat_tables:
             growth[rarity_str] = dict(stat_tables[prog_id])
 
-    # Skill references
-    skill_refs = _resolve_skills(unit.get("skillReferenceList", []), skills_map)
+    # Skill references (ship's own + crew members' skill contributions)
+    skill_refs = _resolve_skills(unit.get("skillReference", []), skills_map)
 
     # Crew contribution stats table
     crew_table_id = unit.get("crewContributionTableId", "")
     crew_stats = dict(stat_tables.get(crew_table_id, {}))
 
-    # Crew member IDs
-    crew = [m.get("unitId", "") for m in unit.get("crewList", [])]
+    # Crew member IDs and their skill references
+    crew: list[str] = []
+    for member in unit.get("crew", []):
+        crew.append(member.get("unitId", ""))
+        crew_skill_refs = _resolve_skills(
+            member.get("skillReference", []), skills_map
+        )
+        skill_refs.extend(crew_skill_refs)
 
     return {
         "combatType": 2,
@@ -364,16 +394,24 @@ def _build_ship(
 def _build_gear_data(raw_equipment: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Build ``{gearId: {stats: {statId: value}}}``."""
     data: dict[str, dict[str, Any]] = {}
+    no_stats = 0
     for gear in raw_equipment:
         gear_id = gear.get("id", "")
-        stat_list = gear.get("equipmentStat", {}).get("statList", [])
-        if stat_list:
+        stat_list = gear.get("equipmentStat", {}).get("stat", [])
+        if len(stat_list) > 0:
             stats: dict[str, int | float] = {}
-            for s in stat_list:
-                stats[str(s.get("unitStatId", ""))] = _num(
-                    s.get("unscaledDecimalValue", 0)
+            for stat in stat_list:
+                stats[str(stat.get("unitStatId", ""))] = _num(
+                    stat.get("unscaledDecimalValue", 0)
                 )
             data[gear_id] = {"stats": stats}
+        else:
+            no_stats += 1
+    if not data:
+        logger.warning(
+            "Gear data is empty: %d equipment items received, %d had no statList",
+            len(raw_equipment), no_stats,
+        )
     return data
 
 
@@ -406,46 +444,46 @@ def _build_cr_gp_tables(
 
     for table in raw_tables:
         tid = table.get("id", "")
-        rows = table.get("rowList", [])
+        rows = table.get("row", [])
 
-        # ---- CR tables ----
+        # ---- CR + shared GP tables ----
         if tid == "crew_rating_per_unit_rarity":
-            cr["crewRarityCR"] = _rarity_rows(rows)
+            parsed = _rarity_rows(rows)
+            cr["crewRarityCR"] = parsed
+            gp["unitRarityGP"] = parsed
         elif tid == "crew_rating_per_gear_piece_at_tier":
             cr["gearPieceCR"] = _tier_rows(rows)
-        elif tid == "crew_rating_per_gear_level":
-            cr["gearLevelCR"] = _int_rows(rows)
+        elif tid == "galactic_power_per_complete_gear_tier_table":
+            parsed = _gear_level_rows(rows)
+            gp["gearLevelGP"] = parsed
+            cr["gearLevelCR"] = parsed
         elif tid == "crew_contribution_multiplier_per_rarity":
-            cr["shipRarityFactor"] = _rarity_rows(rows)
+            parsed = _rarity_rows(rows)
+            cr["shipRarityFactor"] = parsed
+            gp["shipRarityFactor"] = parsed
         elif tid == "crew_rating_per_mod_rarity_level_tier":
             cr["modRarityLevelCR"] = _mod_cr_rows(rows)
+            gp["modRarityLevelTierGP"] = _mod_gp_rows(rows)
         elif tid == "crew_rating_modifier_per_relic_tier":
             cr["relicTierLevelFactor"] = _relic_rows(rows)
         elif tid == "crew_rating_per_relic_tier":
             cr["relicTierCR"] = _relic_rows(rows)
+        elif tid == "crew_rating_modifier_per_ability_crewless_ships":
+            cr["crewlessAbilityFactor"] = _int_rows(rows)
 
-        # ---- Shared CR + GP ----
+        # ---- GP-only tables ----
         elif tid == "galactic_power_per_tagged_ability_level_table":
-            cr["abilitySpecialCR"] = _ability_special_cr(rows)
             gp["abilitySpecialGP"] = _ability_special_gp(rows)
-
-        # ---- GP tables ----
         elif tid == "galactic_power_modifier_per_ship_crew_size_table":
             gp["crewSizeFactor"] = _int_rows(rows)
-        elif tid == "galactic_power_per_unit_rarity":
-            gp["unitRarityGP"] = _rarity_rows(rows)
-        elif tid == "galactic_power_per_gear_level":
-            gp["gearLevelGP"] = _int_rows(rows)
         elif tid == "galactic_power_per_relic_tier":
             gp["relicTierGP"] = _relic_rows(rows)
         elif tid == "galactic_power_modifier_per_relic_tier":
             gp["relicTierLevelFactor"] = _relic_rows(rows)
-        elif tid == "galactic_power_modifier_per_ship_rarity":
-            gp["shipRarityFactor"] = _rarity_rows(rows)
-        elif tid == "galactic_power_per_gear_piece_at_tier":
+        elif tid == "galactic_power_per_tier_slot_table":
             gp["gearPieceGP"] = _gear_piece_gp_rows(rows)
-        elif tid == "galactic_power_per_mod_rarity_level_tier":
-            gp["modRarityLevelTierGP"] = _mod_gp_rows(rows)
+        elif tid == "galactic_power_modifier_per_ability_crewless_ships":
+            gp["crewlessAbilityFactor"] = _int_rows(rows)
 
         # ---- Mastery tables ----
         elif _MASTERY_RE.search(tid):
@@ -454,19 +492,19 @@ def _build_cr_gp_tables(
     # ---- XP tables ----
     for table in raw_xp_tables:
         tid = table.get("id", "")
-        rows = table.get("rowList", [])
+        rows = table.get("row", [])
 
         if tid == "crew_rating_per_unit_level":
-            cr["unitLevelCR"] = _xp_rows(rows)
+            parsed = _xp_rows(rows)
+            cr["unitLevelCR"] = parsed
+            gp["unitLevelGP"] = parsed
         elif tid == "crew_rating_per_ability_level":
-            cr["abilityLevelCR"] = _xp_rows(rows)
-        elif tid == "galactic_power_per_unit_level":
-            gp["unitLevelGP"] = _xp_rows(rows)
-        elif tid == "galactic_power_per_ability_level":
-            gp["abilityLevelGP"] = _xp_rows(rows)
-        elif tid == "galactic_power_per_ship_level":
+            parsed = _xp_rows(rows)
+            cr["abilityLevelCR"] = parsed
+            gp["abilityLevelGP"] = parsed
+        elif tid == "galactic_power_per_ship_level_table":
             gp["shipLevelGP"] = _xp_rows(rows)
-        elif tid == "galactic_power_per_ship_ability_level":
+        elif tid == "galactic_power_per_ship_ability_level_table":
             gp["shipAbilityLevelGP"] = _xp_rows(rows)
 
     return cr, gp
@@ -481,7 +519,7 @@ def _build_relic_data(
     for relic in raw_relic_defs:
         relic_id = relic.get("id", "")
         stats: dict[str, int | float] = {}
-        for s in relic.get("stat", {}).get("statList", []):
+        for s in relic.get("stat", {}).get("stat", []):
             stats[str(s.get("unitStatId", ""))] = _num(
                 s.get("unscaledDecimalValue", 0)
             )
@@ -561,14 +599,17 @@ def _mod_cr_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
 
 
 def _mod_gp_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, float]]]:
-    """Mod GP rows (``pips:level:tier[:set]``).
+    """Mod GP rows (``pips:level:tier:set``); keep only set=0.
 
     Returns ``{pips: {level: {tier: value}}}``.
     """
     out: dict[str, dict[str, dict[str, float]]] = {}
     for r in rows:
-        parts = r.get("key", "").split(":")
-        if len(parts) < 3:
+        key = r.get("key", "")
+        if not key.endswith("0"):
+            continue
+        parts = key.split(":")
+        if len(parts) < 4:
             continue
         pips, level, tier = parts[0], parts[1], parts[2]
         out.setdefault(pips, {}).setdefault(level, {})[tier] = _num(
@@ -577,8 +618,27 @@ def _mod_gp_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, fl
     return out
 
 
+def _gear_level_rows(rows: list[dict[str, Any]]) -> dict[str, float]:
+    """Parse ``galactic_power_per_complete_gear_tier_table`` rows.
+
+    Initialises with ``{"1": 0}`` (gear level 1 has no "complete" tiers)
+    and increments each row key by 1 because "complete gear tier" is one
+    less than the current gear level.
+    """
+    out: dict[str, float] = {"1": 0}
+    for r in rows:
+        m = _TIER_RE.match(r.get("key", ""))
+        if m:
+            tier = str(int(m.group(1)) + 1)
+            out[tier] = _num(r.get("value", 0))
+    return out
+
+
 def _gear_piece_gp_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
     """Gear-piece GP rows (``tier:slot`` or ``TIER_XX:slot``).
+
+    Slot values are decremented by 1 to convert from 1-based (game data)
+    to 0-based indexing (matching the JS reference implementation).
 
     Returns ``{tier: {slot: value}}``.
     """
@@ -587,33 +647,13 @@ def _gear_piece_gp_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, float
         parts = r.get("key", "").split(":")
         if len(parts) < 2:
             continue
-        tier_raw, slot = parts[0], parts[1]
+        tier_raw, slot_raw = parts[0], parts[1]
         m = _TIER_RE.match(tier_raw)
         tier = m.group(1) if m else str(tier_raw)
+        slot = str(int(slot_raw) - 1)
         out.setdefault(tier, {})[slot] = _num(r.get("value", 0))
     return out
 
-
-def _ability_special_cr(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    """Parse ability-special table for CR (grouped contracts/hardware)."""
-    out: dict[str, Any] = {}
-    for r in rows:
-        key = r.get("key", "")
-        value = _num(r.get("value", 0))
-        if key == "zeta":
-            out["zeta"] = value
-            continue
-        m = _ABILITY_KEY_RE.match(key)
-        if not m:
-            continue
-        kind, digit = m.group(1), m.group(2)
-        if kind == "contract":
-            sub = out.setdefault("contract", {})
-            sub[str((int(digit) + 1) if digit else 1)] = value
-        elif kind == "reinforcement":
-            sub = out.setdefault("hardware", {"1": 0})
-            sub[str(int(digit) + 1 if digit else 1)] = value
-    return out
 
 
 def _ability_special_gp(rows: list[dict[str, Any]]) -> dict[str, float]:
@@ -632,12 +672,21 @@ def _xp_rows(rows: list[dict[str, Any]]) -> dict[str, float]:
 
 
 def _num(value: Any) -> int | float:
-    """Coerce *value* to ``int`` or ``float``, defaulting to ``0``."""
-    if isinstance(value, (int, float)):
+    """Coerce *value* to ``int`` or ``float``, defaulting to ``0``.
+
+    Whole-number floats (e.g. ``10.0``) are normalised to ``int`` so that
+    the output matches the JS reference (which has no int/float distinction).
+    """
+    if isinstance(value, float):
+        return int(value) if value == int(value) else value
+    if isinstance(value, int):
         return value
     try:
         s = str(value)
-        return float(s) if "." in s else int(s)
+        f = float(s) if "." in s else int(s)
+        if isinstance(f, float) and f == int(f):
+            return int(f)
+        return f
     except (ValueError, TypeError):
         return 0
 

@@ -216,9 +216,14 @@ class SwgohComlinkBase:
             "enums": enums,
         }
         if items:
-            if isinstance(items, int) and str(abs(items)).isdigit():
+            if isinstance(items, int):
+                # Direct integer (e.g. from IntFlag arithmetic)
                 payload["payload"]["items"] = str(items)
+            elif items.lstrip("-").isdigit():
+                # Numeric string — pass through as-is
+                payload["payload"]["items"] = items
             else:
+                # Named constant — resolve via Constants lookup
                 payload["payload"]["items"] = Constants.get(items) or "-1"
         else:
             if request_segment < 0 or request_segment > 4:
