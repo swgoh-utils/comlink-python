@@ -8,6 +8,7 @@ These examples use the `SwgohComlinkAsync` async client. All methods must be `aw
 |------|-------------|
 | `calc_stats_local.py` | Calculate character stats locally using `StatCalcAsync` |
 | `get_events.py` | Retrieve current game events with timestamps and status |
+| `get_gac_brackets.py` | Scan GAC brackets for a league and search for a player (parallel batches) |
 | `get_gac_leaderboard.py` | Get GAC bracket or league/division leaderboards |
 | `get_game_data.py` | Retrieve game data collections (all, by segment, or by name) |
 | `get_guild.py` | Look up guild info from a player's ally code |

@@ -166,9 +166,6 @@ comlink-python/
 │       ├── swgoh_comlink_async.py    # SwgohComlinkAsync (async client)
 │       └── version.py                # Package version (managed by hatch)
 ├── tests/
-│   ├── exhaustive/                   # Comprehensive pre-release validation tests
-│   │   ├── stress/                   # Connection pool and endurance tests
-│   │   └── ...                       # Endpoint, enum, parity tests
 │   ├── integration/                  # Tests requiring a running comlink service
 │   ├── resources/                    # Test fixture data (example-player.json, etc.)
 │   ├── statcalc/                     # StatCalc-specific tests (import, parity, offline)
