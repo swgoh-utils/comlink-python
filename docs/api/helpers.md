@@ -342,8 +342,6 @@ def my_func(param=REQUIRED):
 |----------|---------|
 | `REQUIRED` | Default for required parameters |
 | `MISSING` | Indicates a value was not provided |
-| `OPTIONAL` | Default for optional parameters |
-| `NotSet` | Indicates a value has not been set |
 | `GIVEN` | Indicates a value was explicitly provided |
 | `MutualExclusiveRequired` | Marks mutually exclusive required parameters |
 

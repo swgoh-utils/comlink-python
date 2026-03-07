@@ -2,7 +2,17 @@
 
 <!-- insertion marker -->
 
-## [v2.0.1rc1 Pending Release] - feature/async
+## [v2.0.0 Pending Release] - feature/async
+
+### Breaking Changes
+
+- remove `OPTIONAL` and `NotSet` sentinel exports from `swgoh_comlink.helpers`.
+  Replace any usage with plain `None` defaults or `int` defaults as appropriate.
+- remove external `sentinels` library dependency. The package now uses an inline
+  `Sentinel` class. Code importing sentinels from `swgoh_comlink.helpers` should
+  remove references to `OPTIONAL` and `NotSet`.
+- change `get_gac_brackets()` and `async_get_gac_brackets()` `limit` parameter
+  from sentinel-based default to `int` with default `0` (meaning no limit).
 
 ### Features
 
@@ -17,9 +27,19 @@
 - replace `requests` library with `httpx` for both sync and async HTTP support.
 - add connection pooling via persistent `httpx.Client` / `httpx.AsyncClient` instances.
 - add context manager support (`with SwgohComlink()` and `async with SwgohComlinkAsync()`).
+- add async helper variants: `async_get_current_gac_event()`, `async_get_gac_brackets()`,
+  and `async_get_guild_members()` for use with `SwgohComlinkAsync`.
+- add exponential probing with binary search for GAC bracket boundary discovery,
+  reducing HTTP requests from O(n) to O(log n).
+- add parallel batch fetching via `asyncio.gather` in `async_get_gac_brackets()`
+  for significantly faster bracket collection.
+- add comprehensive Helpers API reference and Exceptions documentation pages.
 
 ### Code Refactoring
 
+- replace external `sentinels` library with inline `Sentinel` class; remove
+  unused sentinels (`OPTIONAL`, `NotSet`, `EMPTY`, `NotGiven`, `SET`,
+  `MutualRequiredNotSet`).
 - extract shared logic (HMAC auth, payload builders, URL sanitization, param_alias decorator)
   into `_base.py` base class.
 - unify all HTTP communication through a single `_request()` gateway method

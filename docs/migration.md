@@ -211,6 +211,41 @@ comlink = SwgohComlink(host="myhost", port=3000)
 
 Same changes as `_request()` — `url_base` replaced by `stats` and `timeout`.
 
+## 7. Removed sentinels
+
+The `OPTIONAL` and `NotSet` sentinel objects have been removed from
+`swgoh_comlink.helpers`. If your code imports these, remove the imports.
+
+```diff
+  from swgoh_comlink.helpers import (
+      REQUIRED,
+      MISSING,
+      GIVEN,
+-     OPTIONAL,
+-     NotSet,
+  )
+```
+
+The remaining sentinels (`REQUIRED`, `MISSING`, `GIVEN`, `MutualExclusiveRequired`)
+are unchanged.
+
+## 8. GAC bracket helpers
+
+`get_gac_brackets()` and `async_get_gac_brackets()` have two changes:
+
+1. The `limit` parameter changed from a sentinel default to `int` with default `0`
+   (where `0` means "no limit"):
+
+    ```diff
+    - get_gac_brackets(comlink, league="KYBER", limit=OPTIONAL)
+    + get_gac_brackets(comlink, league="KYBER", limit=0)
+    ```
+
+2. Bracket boundary discovery now uses exponential probing with binary search,
+   reducing HTTP requests from O(n) to O(log n). The async variant also fetches
+   brackets in parallel batches via `asyncio.gather`. No code changes are needed
+   on your side — the return format is identical.
+
 ## Summary of changes
 
 | Area | Before (v1.x) | After |
@@ -224,4 +259,7 @@ Same changes as `_request()` — `url_base` replaced by `stats` and `timeout`.
 | Local stat calc | Not available | `StatCalc` (sync) / `StatCalcAsync` (async) |
 | `_request(url_base=)` | `url_base` parameter | `stats` bool + `timeout` |
 | `helpers.py` | Single 1,970-line file | `helpers/` subpackage (all imports preserved) |
+| `OPTIONAL` / `NotSet` sentinels | Exported from helpers | Removed |
+| `get_gac_brackets(limit=)` | Sentinel default | `int` default `0` (0 = no limit) |
+| GAC bracket scanning | Linear O(n) | Exponential probe + binary search O(log n) |
 | Migration checker | Not available | `swgoh-migrate` CLI / `python -m swgoh_comlink.migrate` |

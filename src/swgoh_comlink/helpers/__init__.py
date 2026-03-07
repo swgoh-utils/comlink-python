@@ -39,10 +39,8 @@ from ._omicron import (
 from ._sentinels import (
     GIVEN,
     MISSING,
-    OPTIONAL,
     REQUIRED,
     MutualExclusiveRequired,
-    NotSet,
 )
 from ._stat_data import (
     LANGUAGES,
@@ -69,8 +67,6 @@ __all__ = [
     "GIVEN",
     "MISSING",
     "MutualExclusiveRequired",
-    "NotSet",
-    "OPTIONAL",
     "REQUIRED",
     # Enums and constants
     "Constants",

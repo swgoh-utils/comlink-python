@@ -20,8 +20,6 @@ class Sentinel:
 
 
 # Define sentinels used in parameter checking.
-OPTIONAL = Sentinel("OPTIONAL")
-NotSet = Sentinel("NotSet")
 REQUIRED = Sentinel("REQUIRED")
 GIVEN = Sentinel("GIVEN")
 MISSING = Sentinel("MISSING")
