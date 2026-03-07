@@ -171,17 +171,37 @@ def get_datacron_dismantle_value(datacron: dict, datacron_set_list: list, recipe
         dismantle_materials[ingredient.get("id")] = {
             "quantity": ingredient.get("maxQuantity"),
             "type": ingredient.get("type"),
-            "focused": focused,
         }
+    dismantle_materials['focused'] = focused
     return dismantle_materials
 
 
-def get_datacron_dismantle_total(datacrons: list, datacron_set_list: list, recipe_list: list) -> list:
-    """Calculate total dismantle materials for a list of datacrons.
+def get_datacron_dismantle_total(datacrons: list, datacron_set_list: list, recipe_list: list) -> dict:
+    """Calculate aggregated dismantle materials across all datacrons.
 
-    .. note:: This function is not yet implemented and always returns an empty list.
+    Calls :func:`get_datacron_dismantle_value` for each datacron and sums
+    the quantities per ingredient ID.
+
+    Arguments:
+        datacrons (list): List of datacron objects from a player object.
+        datacron_set_list (list): The game data ``datacronSet`` collection.
+        recipe_list (list): The game data ``recipe`` collection.
+
+    Returns:
+        dict: A dictionary mapping ingredient IDs to total quantity and type,
+              e.g. ``{"mat_id": {"quantity": 150, "type": 3}}``.
     """
-    dismantle_set_list = []
-    for _datacron in datacrons:
-        pass  # TODO: implement datacron dismantle calculation
-    return dismantle_set_list
+    totals: dict = {}
+    for datacron in datacrons:
+        materials = get_datacron_dismantle_value(datacron, datacron_set_list, recipe_list)
+        for ingredient_id, info in materials.items():
+            if ingredient_id == "focused":
+                continue
+            if ingredient_id in totals:
+                totals[ingredient_id]["quantity"] += info.get("quantity", 0)
+            else:
+                totals[ingredient_id] = {
+                    "quantity": info.get("quantity", 0),
+                    "type": info.get("type"),
+                }
+    return totals
