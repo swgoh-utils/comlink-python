@@ -152,7 +152,7 @@ class SwgohComlinkBase:
             if payload:
                 payload_string = dumps(payload, separators=(",", ":"))
             else:
-                payload_string = dumps({})
+                payload_string = dumps("")
             # NOTE: MD5 is used here because the comlink service (JavaScript) requires it for
             # HMAC payload verification. This is a protocol constraint, not a security choice.
             payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()  # noqa: S324

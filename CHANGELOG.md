@@ -14,6 +14,11 @@
 - change `get_gac_brackets()` and `async_get_gac_brackets()` `limit` parameter
   from sentinel-based default to `int` with default `0` (meaning no limit).
 
+### Bug Fixes
+
+- fix HMAC empty payload serialization to use empty string (`""`) instead of
+  empty object (`{}`) for compatibility with comlink v4 (#51).
+
 ### Features
 
 - add `SwgohComlinkAsync` async client with full API parity to `SwgohComlink`.

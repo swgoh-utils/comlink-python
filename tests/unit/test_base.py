@@ -1,7 +1,9 @@
 """Tests for the SwgohComlinkBase class and related utilities in _base.py."""
 from __future__ import annotations
 
+import hashlib
 import logging
+from json import dumps
 
 import pytest
 
@@ -136,6 +138,42 @@ class TestHmacHeaders:
         sig1 = h1["Authorization"].split("Signature=")[1]
         sig2 = h2["Authorization"].split("Signature=")[1]
         assert sig1 != sig2
+        client.close()
+
+    def test_hmac_empty_payload_uses_empty_string(self, monkeypatch):
+        """Verify empty payload is serialized as '""' not '{}' for comlink v4 compatibility (#51).
+
+        This test validates the "after" behavior (empty string) matches and the
+        "before" behavior (empty dict) would produce a different, incorrect signature.
+        """
+        import hmac as hmac_mod
+        import time
+
+        fixed_time = 1700000000.0
+        monkeypatch.setattr(time, "time", lambda: fixed_time)
+
+        client = SwgohComlink(access_key="mykey", secret_key="mysecret")
+        headers = client._construct_request_headers("POST", "enums")
+        actual_sig = headers["Authorization"].split("Signature=")[1]
+
+        req_time = str(int(fixed_time * 1000))
+
+        def _compute_sig(payload_string: str) -> str:
+            hmac_obj = hmac_mod.new(key=b"mysecret", digestmod=hashlib.sha256)
+            hmac_obj.update(req_time.encode())
+            hmac_obj.update(b"POST")
+            hmac_obj.update(b"/enums")
+            payload_hash = hashlib.md5(payload_string.encode()).hexdigest()  # noqa: S324
+            hmac_obj.update(payload_hash.encode())
+            return hmac_obj.hexdigest()
+
+        # "after" — comlink v4: empty body serialized as dumps("")
+        expected_sig = _compute_sig(dumps(""))
+        assert actual_sig == expected_sig
+
+        # "before" — pre-v4: empty body serialized as dumps({})
+        old_sig = _compute_sig(dumps({}))
+        assert actual_sig != old_sig
         client.close()
 
 
