@@ -2,7 +2,7 @@ name: Integration Tests
 
 on:
   pull_request:
-    branches: [main, 2.0-development]
+    branches: [main, 1.0-maintenance]
   push:
     branches: [main]
   workflow_dispatch:
@@ -25,14 +25,24 @@ jobs:
           APP_NAME: comlink-python-integration-tests
         ports:
           - 3000:3000
+        healthcheck:
+          test: [ "CMD", "/swgoh-comlink", "--check" ]
+          start_period: 10s
+          start_interval: 0.5s
+
       comlink-hmac:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
-          APP_NAME: comlink-python-integration-tests
+          APP_NAME: comlink-python-hmac-integration-tests
           ACCESS_KEY: test_public_key
           SECRET_KEY: test_secret_key
         ports:
           - 3001:3000
+        healthcheck:
+          test: [ "CMD", "/swgoh-comlink", "--check" ]
+          start_period: 10s
+          start_interval: 0.5s
+
     steps:
       - uses: actions/checkout@v4
 
@@ -51,9 +61,9 @@ jobs:
         run: |
           comlink_ready=false
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:3000/metadata > /dev/null 2>&1; then
+            if curl -sf http://localhost:3000/readyz > /dev/null 2>&1; then
               comlink_ready=true
-              echo "Comlink is ready!"
+              echo "✓ comlink is ready"
               break
             fi
             echo "Waiting for Comlink... ($i/30)"
@@ -67,9 +77,9 @@ jobs:
 
           hmac_ready=false
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:3001/metadata > /dev/null 2>&1; then
+            if curl -sf http://localhost:3001/readyz > /dev/null 2>&1; then
               hmac_ready=true
-              echo "Comlink HMAC is ready!"
+              echo "✓ comlink is ready"
               break
             fi
             echo "Waiting for Comlink HMAC... ($i/30)"
