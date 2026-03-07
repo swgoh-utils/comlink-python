@@ -1,7 +1,7 @@
-# StatCalc API
+# StatCalc / StatCalcAsync API
 
-`StatCalc` performs local stat and Galactic Power (GP) calculations for game
-units without requiring an external `swgoh-stats` service.
+`StatCalc` and `StatCalcAsync` perform local stat and Galactic Power (GP)
+calculations for game units without requiring an external `swgoh-stats` service.
 
 ## Quick Start
 
@@ -81,7 +81,31 @@ gp = calc.calc_char_gp(unit)
 ship_gp = calc.calc_ship_gp(ship_unit, crew_list)
 ```
 
+## Async Usage (`StatCalcAsync`)
+
+`StatCalcAsync` inherits all calculation methods from `StatCalc`. The only
+difference is initialization: use the async `create()` factory to fetch game
+data without blocking the event loop.
+
+```python
+from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync
+
+async with SwgohComlinkAsync() as comlink:
+    calc = await StatCalcAsync.create()  # async fetch from GitHub
+
+    player = await comlink.get_player(allycode=245866537)
+    calc.calc_roster_stats(player["rosterUnit"])
+```
+
+With pre-loaded data (no async fetch):
+
+```python
+calc = StatCalcAsync(game_data=my_game_data_dict)
+```
+
 ## API Reference
+
+### StatCalc
 
 ::: swgoh_comlink.StatCalc.calculator.StatCalc
     options:
@@ -96,3 +120,14 @@ ship_gp = calc.calc_ship_gp(ship_unit, crew_list)
         - calc_player_stats
         - calc_char_gp
         - calc_ship_gp
+
+### StatCalcAsync
+
+::: swgoh_comlink.StatCalc.calculator_async.StatCalcAsync
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+      show_if_no_docstring: false
+      members:
+        - __init__
+        - create

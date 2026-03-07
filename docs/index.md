@@ -4,9 +4,11 @@ This project provides:
 
 - `SwgohComlink` for synchronous network calls to a running `swgoh-comlink` service.
 - `SwgohComlinkAsync` for asynchronous (`async`/`await`) network calls to the same service.
-- `StatCalc` for local stat and GP calculation for game units.
+- `StatCalc` / `StatCalcAsync` for local stat and GP calculation for game units.
 
 Both `SwgohComlink` and `SwgohComlinkAsync` share the same constructor parameters and public methods. The async client uses `await` for all requests and should be used inside an `async with` context manager.
+
+Similarly, `StatCalcAsync` provides an async factory method for non-blocking game data initialization, while inheriting all calculation methods from `StatCalc`.
 
 ## Quick Start
 
@@ -22,9 +24,10 @@ calc = StatCalc()
 Asynchronous:
 
 ```python
-from swgoh_comlink import SwgohComlinkAsync
+from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync
 
 async with SwgohComlinkAsync() as comlink:
+    calc = await StatCalcAsync.create()
     player = await comlink.get_player(allycode=245866537)
 ```
 

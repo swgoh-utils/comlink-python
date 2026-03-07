@@ -23,6 +23,22 @@ finally:
     await comlink.aclose()
 ```
 
+## Async Stat Calculation
+
+For local stat calculation in async code, use `StatCalcAsync` which fetches
+game data without blocking the event loop:
+
+```python
+from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync
+
+async with SwgohComlinkAsync() as comlink:
+    calc = await StatCalcAsync.create()
+    player = await comlink.get_player(allycode=245866537)
+    calc.calc_roster_stats(player["rosterUnit"])
+```
+
+See the [StatCalc API](statcalc.md) for full details.
+
 ## API Reference
 
 ::: swgoh_comlink.swgoh_comlink_async.SwgohComlinkAsync

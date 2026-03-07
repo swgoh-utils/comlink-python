@@ -2,6 +2,8 @@
 
 from swgoh_comlink import StatCalc
 
+# TODO: expand example to include variations with skills and mods as well as actual player roster data
+
 calc = StatCalc()
 unit = {
     "defId": "BOSSK",

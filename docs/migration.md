@@ -166,5 +166,5 @@ Same changes as `_request()` — `url_base` replaced by `stats` and `timeout`.
 | Default log output | Console output at INFO level | Silent (NullHandler only) |
 | Client lifecycle | No close needed | Use `with` or call `close()` |
 | Async support | Not available | `SwgohComlinkAsync` |
-| Local stat calc | Not available | `StatCalc` |
+| Local stat calc | Not available | `StatCalc` (sync) / `StatCalcAsync` (async) |
 | `_request(url_base=)` | `url_base` parameter | `stats` bool + `timeout` |

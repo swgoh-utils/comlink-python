@@ -105,9 +105,9 @@ finally:
 
 Both clients accept the same constructor parameters and support connection pooling via persistent `httpx` clients.
 
-## StatCalc (Local Stat Calculator)
+## StatCalc / StatCalcAsync (Local Stat Calculator)
 
-`StatCalc` calculates unit stats and Galactic Power locally without requiring an external swgoh-stats service. It fetches the latest game data from GitHub on initialization, or you can supply pre-loaded data for offline use.
+`StatCalc` and `StatCalcAsync` calculate unit stats and Galactic Power locally without requiring an external swgoh-stats service. `StatCalc` fetches game data synchronously on initialization; `StatCalcAsync` provides an async factory method (`await StatCalcAsync.create()`) for non-blocking initialization. Both accept pre-loaded data for offline use.
 
 ### Basic usage
 
@@ -141,7 +141,27 @@ print(unit["gp"])     # galactic power
 calc = StatCalc(game_data=my_game_data_dict)
 ```
 
-### StatCalc Methods
+### Async usage (`StatCalcAsync`)
+
+`StatCalcAsync` provides an async factory method for fetching game data without blocking the event loop. All calculation methods are inherited from `StatCalc` and remain synchronous (they are pure computation).
+
+```python
+from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync
+
+async with SwgohComlinkAsync() as comlink:
+    calc = await StatCalcAsync.create()  # fetches game data from GitHub async
+
+    player = await comlink.get_player(allycode=245866537)
+    calc.calc_roster_stats(player['rosterUnit'])
+```
+
+With pre-loaded game data (no async fetch needed):
+
+```python
+calc = StatCalcAsync(game_data=my_game_data_dict)
+```
+
+### StatCalc / StatCalcAsync Methods
 
 | Method | Description |
 |--------|-------------|
