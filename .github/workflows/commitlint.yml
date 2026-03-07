@@ -2,7 +2,7 @@ name: Commit Lint
 
 on:
   pull_request:
-    branches: [main, 2.0-development]
+    branches: [main, 1.0-maintenance]
 
 permissions:
   contents: read
