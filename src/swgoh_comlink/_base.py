@@ -29,16 +29,16 @@ DEFAULT_TIMEOUT: float = 120.0
 GAME_DATA_TIMEOUT: float = 300.0
 
 
-def param_alias(param: str, alias: str) -> Callable:
+def param_alias(param: str, alias: str) -> Callable[..., Any]:
     """Decorator to support legacy camelCase parameter aliases.
 
     Translates a keyword argument from *alias* to *param* so callers
     can use either spelling.
     """
 
-    def decorator(func):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             if alias in kwargs:
                 kwargs[param] = kwargs.pop(alias)
             return func(*args, **kwargs)
@@ -90,7 +90,7 @@ class SwgohComlinkBase:
             f"secret_key={self._mask(self.secret_key)!r})"
         )
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any) -> SwgohComlinkBase:
         """Prevent instances of this base class from being created directly."""
         if cls is SwgohComlinkBase:
             raise TypeError(f"Only subclasses of '{cls.__name__}' may be instantiated.")
@@ -127,8 +127,8 @@ class SwgohComlinkBase:
             self.hmac = True
 
     def _construct_request_headers(
-        self, method: str, endpoint: str, payload: dict | list | None = None
-    ) -> dict:
+        self, method: str, endpoint: str, payload: dict[str, Any] | list[Any] | None = None
+    ) -> dict[str, str]:
         """Create HTTP request headers with optional HMAC authentication.
 
         Args:
@@ -143,6 +143,7 @@ class SwgohComlinkBase:
         if self.hmac:
             req_time = str(int(time.time() * 1000))
             req_headers = {"X-Date": f"{req_time}"}
+            assert self.secret_key is not None
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
             hmac_obj.update(req_time.encode())
             hmac_obj.update(method.upper().encode())
@@ -166,7 +167,7 @@ class SwgohComlinkBase:
     @staticmethod
     def _get_player_payload(
         allycode: str | int | None = None, player_id: str | None = None, enums: bool = False
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Build payload for get_player functions.
 
         Args:
@@ -186,7 +187,10 @@ class SwgohComlinkBase:
         if player_id:
             payload["payload"]["playerId"] = str(player_id)
         else:
-            payload["payload"]["allyCode"] = str(allycode)
+            code_str = str(allycode).replace("-", "")
+            if not code_str.isdigit() or len(code_str) != 9:
+                raise SwgohComlinkValueError("Allycode must be a 9-digit number.")
+            payload["payload"]["allyCode"] = code_str
         return payload
 
     @staticmethod
@@ -197,7 +201,7 @@ class SwgohComlinkBase:
         enums: bool = False,
         items: str | None = None,
         device_platform: str = "Android",
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Build payload for get_game_data().
 
         Raises:

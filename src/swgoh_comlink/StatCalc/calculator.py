@@ -28,7 +28,7 @@ class StatCalc:
     )
     _LOGGER = logging.getLogger(__name__)
 
-    STATS_NAME_MAP: dict[str, dict] = _CANONICAL_STATS
+    STATS_NAME_MAP: dict[str, dict[str, Any]] = _CANONICAL_STATS
 
     def __init__(self, game_data: dict[str, Any] | None = None) -> None:
         """Initialize a calculator instance.
@@ -63,6 +63,9 @@ class StatCalc:
         self._cr_tables = game_data["crTables"]
         self._gp_tables = game_data["gpTables"]
         self._relic_data = game_data["relicData"]
+        assert self._unit_data is not None
+        assert self._gear_data is not None
+        assert self._mod_set_data is not None
         self._LOGGER.info(
             "Game data loaded: units=%d gear=%d mod_sets=%d",
             len(self._unit_data),
@@ -137,6 +140,7 @@ class StatCalc:
             Input object with `stats` and `gp` fields added for each unit.
         """
         self._require_game_data()
+        assert self._unit_data is not None
         self._LOGGER.debug("Calculating roster stats")
 
         if isinstance(units, list):
@@ -192,7 +196,7 @@ class StatCalc:
 
         return units
 
-    def calc_player_stats(self, players: dict | list[dict]) -> dict | list[dict]:
+    def calc_player_stats(self, players: dict[str, Any] | list[dict[str, Any]]) -> dict[str, Any] | list[dict[str, Any]]:
         """Calculate stats for one or more player payloads.
 
         Args:
@@ -285,10 +289,12 @@ class StatCalc:
         if not unit:
             return None
         if unit.get("defId"):
-            return unit["defId"]
+            result: str = str(unit["defId"])
+            return result
         definition_id = unit.get("definitionId")
         if definition_id:
-            return definition_id.split(":")[0]
+            result = str(definition_id).split(":")[0]
+            return result
         return None
 
     @staticmethod
@@ -388,6 +394,9 @@ class StatCalc:
         return normalized_ship, normalized_crew
 
     def _get_char_raw_stats(self, char: dict[str, Any]) -> dict[str, Any]:
+        assert self._unit_data is not None
+        assert self._gear_data is not None
+        assert self._relic_data is not None
         meta = self._unit_data[char["defId"]]
         gear_lvl = self._table_get(meta["gearLvl"], char["gear"], {})
         stats = {
@@ -407,8 +416,9 @@ class StatCalc:
                 if isinstance(gear_piece, dict)
                 else gear_piece
             )
-            gear_entry = self._gear_data.get(str(gear_id)) or self._gear_data.get(
-                gear_id
+            gear_id_str = str(gear_id)
+            gear_entry = self._gear_data.get(gear_id_str) or self._gear_data.get(
+                gear_id_str
             )
             if not gear_entry:
                 continue
@@ -424,9 +434,10 @@ class StatCalc:
                 meta.get("relic", []), relic["currentTier"], None
             )
             if relic_def:
+                relic_def_str = str(relic_def)
                 relic_entry = self._relic_data.get(
-                    str(relic_def)
-                ) or self._relic_data.get(relic_def)
+                    relic_def_str
+                ) or self._relic_data.get(relic_def_str)
                 if relic_entry:
                     for stat_id, value in relic_entry.get("stats", {}).items():
                         self._add_stat(base, stat_id, value)
@@ -438,6 +449,8 @@ class StatCalc:
     def _get_ship_raw_stats(
         self, ship: dict[str, Any], crew: list[dict[str, Any]]
     ) -> dict[str, Any]:
+        assert self._unit_data is not None
+        assert self._cr_tables is not None
         meta = self._unit_data[ship["defId"]]
 
         if len(crew) != len(meta["crew"]):
@@ -479,7 +492,8 @@ class StatCalc:
         return stats
 
     def _get_crew_rating(self, crew: list[dict[str, Any]]) -> float:
-        total_cr = 0
+        assert self._cr_tables is not None
+        total_cr: float = 0
         for char in crew:
             total_cr += self._table_get(self._cr_tables["unitLevelCR"], char["level"])
             total_cr += self._table_get(self._cr_tables["crewRarityCR"], char["rarity"])
@@ -520,9 +534,12 @@ class StatCalc:
         return total_cr
 
     def _get_skill_crew_rating(self, skill: dict[str, Any]) -> float:
-        return self._table_get(self._cr_tables["abilityLevelCR"], skill["tier"])
+        assert self._cr_tables is not None
+        value: float = self._table_get(self._cr_tables["abilityLevelCR"], skill["tier"])
+        return value
 
     def _get_crewless_crew_rating(self, ship: dict[str, Any]) -> float:
+        assert self._cr_tables is not None
         return self._floor(
             self._table_get(self._cr_tables["crewRarityCR"], ship["rarity"])
             + 3.5 * self._table_get(self._cr_tables["unitLevelCR"], ship["level"])
@@ -530,6 +547,7 @@ class StatCalc:
         )
 
     def _get_crewless_skills_crew_rating(self, skills: list[dict[str, Any]]) -> float:
+        assert self._cr_tables is not None
         cr = 0.0
         for skill in skills:
             mult = 0.696 if str(skill["id"]).startswith("hardware") else 2.46
@@ -541,6 +559,8 @@ class StatCalc:
     def _calculate_base_stats(
         self, stats: dict[str, Any], level: int, base_id: str
     ) -> dict[str, Any]:
+        assert self._unit_data is not None
+        assert self._cr_tables is not None
         base = stats["base"]
         gms = stats["growthModifiers"]
 
@@ -926,7 +946,7 @@ class StatCalc:
 
         return stats
 
-    def _rename_stats(self, stats: dict, lang: str = "eng_us") -> dict:
+    def _rename_stats(self, stats: dict[str, Any], lang: str = "eng_us") -> dict[str, Any]:
         rn_stats = {}
         for stat_type, stat_values in stats.items():
             if not isinstance(stat_values, dict):
@@ -968,6 +988,7 @@ class StatCalc:
                 stats["mods"][sid] = convert_func(flat) - last
 
     def _calc_char_gp(self, char: dict[str, Any]) -> int:
+        assert self._gp_tables is not None
         gp = self._table_get(self._gp_tables["unitLevelGP"], char["level"])
         gp += self._table_get(self._gp_tables["unitRarityGP"], char["rarity"])
         gp += self._table_get(self._gp_tables["gearLevelGP"], char["gear"])
@@ -1023,6 +1044,8 @@ class StatCalc:
         return int(self._floor(gp * 1.5))
 
     def _get_skill_gp(self, unit_id: str, skill: dict[str, Any]) -> float:
+        assert self._unit_data is not None
+        assert self._gp_tables is not None
         skill_def = next(
             (s for s in self._unit_data[unit_id]["skills"] if s["id"] == skill["id"]),
             None,
@@ -1033,12 +1056,16 @@ class StatCalc:
             skill_def.get("powerOverrideTags", {}), skill["tier"], None
         )
         if power_override:
-            return self._table_get(self._gp_tables["abilitySpecialGP"], power_override)
-        return self._table_get(self._gp_tables["abilityLevelGP"], skill["tier"], 0)
+            gp_value: float = self._table_get(self._gp_tables["abilitySpecialGP"], power_override)
+            return gp_value
+        gp_value = self._table_get(self._gp_tables["abilityLevelGP"], skill["tier"], 0)
+        return gp_value
 
     def _calc_ship_gp(
         self, ship: dict[str, Any], crew: list[dict[str, Any]] | None = None
     ) -> int:
+        assert self._unit_data is not None
+        assert self._gp_tables is not None
         if crew is None:
             crew = []
 
@@ -1077,6 +1104,8 @@ class StatCalc:
     def _get_crewless_skills_gp(
         self, unit_id: str, skills: list[dict[str, Any]]
     ) -> dict[str, float]:
+        assert self._unit_data is not None
+        assert self._gp_tables is not None
         ability = 0.0
         reinforcement = 0.0
 
@@ -1112,7 +1141,8 @@ class StatCalc:
     @staticmethod
     def _floor(value: float, digits: int = 0) -> float:
         factor = 10**digits
-        return math.floor(value / factor) * factor
+        result: float = math.floor(value / factor) * factor
+        return result
 
     @staticmethod
     def _convert_flat_def_to_percent(

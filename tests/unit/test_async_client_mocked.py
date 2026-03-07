@@ -261,7 +261,7 @@ async def test_get_player_arena(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"arena": {}})
 
     client = SwgohComlinkAsync(url="http://localhost:3000")
-    await client.get_player_arena(allycode=123, player_details_only=True)
+    await client.get_player_arena(allycode=123456789, player_details_only=True)
 
     body = json.loads(httpx_mock.get_request().content)
     assert body["payload"]["playerDetailsOnly"] is True
@@ -274,7 +274,7 @@ async def test_get_player_arena_camel_case_alias(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"arena": {}})
 
     client = SwgohComlinkAsync(url="http://localhost:3000")
-    await client.get_player_arena(allycode=123, playerDetailsOnly=True)
+    await client.get_player_arena(allycode=123456789, playerDetailsOnly=True)
 
     body = json.loads(httpx_mock.get_request().content)
     assert body["payload"]["playerDetailsOnly"] is True

@@ -138,7 +138,7 @@ def convert_divisions_to_int(division: int | str | Any = REQUIRED) -> int | None
 # ── Event helpers ─────────────────────────────────────────────────────
 
 
-def get_current_gac_event(comlink: Any = REQUIRED) -> dict:
+def get_current_gac_event(comlink: Any = REQUIRED) -> dict[str, Any]:
     """Return the event object for the current gac season
 
     Args:
@@ -162,10 +162,11 @@ def get_current_gac_event(comlink: Any = REQUIRED) -> dict:
     gac_events = [event for event in current_events["gameEvent"] if event["type"] == 10]
     if not gac_events:
         raise SwgohComlinkValueError(f"{get_function_name()}: No active GAC event found.")
-    return gac_events[0]
+    result: dict[str, Any] = gac_events[0]
+    return result
 
 
-async def async_get_current_gac_event(comlink: Any = REQUIRED) -> dict:
+async def async_get_current_gac_event(comlink: Any = REQUIRED) -> dict[str, Any]:
     """Return the event object for the current gac season (async version).
 
     Args:
@@ -189,7 +190,8 @@ async def async_get_current_gac_event(comlink: Any = REQUIRED) -> dict:
     gac_events = [event for event in current_events["gameEvent"] if event["type"] == 10]
     if not gac_events:
         raise SwgohComlinkValueError(f"{get_function_name()}: No active GAC event found.")
-    return gac_events[0]
+    result: dict[str, Any] = gac_events[0]
+    return result
 
 
 # ── Bracket scanning ─────────────────────────────────────────────────
@@ -197,7 +199,7 @@ async def async_get_current_gac_event(comlink: Any = REQUIRED) -> dict:
 
 def get_gac_brackets(
     comlink: Any = REQUIRED, league: str | Any = REQUIRED, limit: int = 0
-) -> dict | None:
+) -> dict[int, Any] | None:
     """Scan currently running GAC brackets for the requested league.
 
     Uses exponential probing with binary search to find the last non-empty
@@ -243,7 +245,7 @@ def get_gac_brackets(
 
     end = min(last_bracket, limit - 1) if limit > 0 else last_bracket
 
-    brackets: dict = {}
+    brackets: dict[int, Any] = {}
     for i in range(end + 1):
         group_id = f"{event_instance}:{league}:{i}"
         result = comlink.get_gac_leaderboard(
@@ -256,7 +258,7 @@ def get_gac_brackets(
 
 async def async_get_gac_brackets(
     comlink: Any = REQUIRED, league: str | Any = REQUIRED, limit: int = 0
-) -> dict | None:
+) -> dict[int, Any] | None:
     """Scan currently running GAC brackets for the requested league (async version).
 
     Uses exponential probing with binary search to find the last non-empty
@@ -303,14 +305,14 @@ async def async_get_gac_brackets(
 
     end = min(last_bracket, limit - 1) if limit > 0 else last_bracket
 
-    async def _fetch(index: int) -> tuple[int, list]:
+    async def _fetch(index: int) -> tuple[int, list[Any]]:
         group_id = f"{event_instance}:{league}:{index}"
         result = await comlink.get_gac_leaderboard(
             leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
         )
         return index, result["player"]
 
-    brackets: dict = {}
+    brackets: dict[int, Any] = {}
     for start in range(0, end + 1, _DEFAULT_BATCH_SIZE):
         batch_end = min(start + _DEFAULT_BATCH_SIZE, end + 1)
         results = await asyncio.gather(*[_fetch(i) for i in range(start, batch_end)])
@@ -323,7 +325,7 @@ async def async_get_gac_brackets(
 # ── Bracket search ────────────────────────────────────────────────────
 
 
-def search_gac_brackets(gac_brackets: dict, player_name: str) -> dict:
+def search_gac_brackets(gac_brackets: dict[int, Any], player_name: str) -> dict[str, Any]:
     """Search the provided gac brackets data for a specific player
 
     Args:
@@ -334,7 +336,7 @@ def search_gac_brackets(gac_brackets: dict, player_name: str) -> dict:
         dict: GAC bracket and player information or empty if no match is found
 
     """
-    match_data: dict = {}
+    match_data: dict[str, Any] = {}
     for bracket in gac_brackets:
         for player in gac_brackets[bracket]:
             if player_name.lower() == player["name"].lower():

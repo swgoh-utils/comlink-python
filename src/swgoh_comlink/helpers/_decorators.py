@@ -5,16 +5,18 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable
 from functools import wraps
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def func_timer(func):
+def func_timer(func: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator to record total execution time of a function to the configured logger using level DEBUG."""
 
     @wraps(func)
-    def wrap(*args, **kw):
+    def wrap(*args: Any, **kw: Any) -> Any:
         """Wrapper function"""
         start = time.perf_counter()
         result = func(*args, **kw)
@@ -25,7 +27,7 @@ def func_timer(func):
     return wrap
 
 
-def func_debug_logger(func):
+def func_debug_logger(func: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator for applying DEBUG logging to a function.
 
     Sensitive keyword arguments (``secret_key``, ``access_key``) are
@@ -33,12 +35,12 @@ def func_debug_logger(func):
     """
     from .._base import _SENSITIVE_KEYS
 
-    def _sanitize_kwargs(kw: dict) -> dict:
+    def _sanitize_kwargs(kw: dict[str, Any]) -> dict[str, Any]:
         """Return a shallow copy with sensitive values masked."""
         return {k: ("***" if k in _SENSITIVE_KEYS else v) for k, v in kw.items()}
 
     @wraps(func)
-    def wrap(*args, **kw):
+    def wrap(*args: Any, **kw: Any) -> Any:
         """Wrapper function"""
         safe_kw = _sanitize_kwargs(kw)
         logger.debug(f"{func.__name__} called with args: {args} and kwargs: {safe_kw}")

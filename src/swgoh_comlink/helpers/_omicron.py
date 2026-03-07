@@ -4,12 +4,12 @@
 from __future__ import annotations
 
 from collections import namedtuple
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from ..exceptions import SwgohComlinkValueError
 
 
-def get_tw_omicrons(skill_list: list) -> list:
+def get_tw_omicrons(skill_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return a list of territory war omicrons
 
     Args:
@@ -28,7 +28,7 @@ def get_tw_omicrons(skill_list: list) -> list:
     return get_omicron_skills(skill_list, 8)
 
 
-def get_omicron_skills(skill_list: list, omicron_type: int | list[int]) -> list:
+def get_omicron_skills(skill_list: list[dict[str, Any]], omicron_type: int | list[int]) -> list[dict[str, Any]]:
     """
     Filters and retrieves omicron skills from a given skill list based on the specified omicron type.
 
@@ -55,7 +55,7 @@ def get_omicron_skills(skill_list: list, omicron_type: int | list[int]) -> list:
     return [skill for skill in skill_list if skill["omicronMode"] in omicron_type_list]
 
 
-def get_omicron_skill_tier(skill: dict) -> int | None:
+def get_omicron_skill_tier(skill: dict[str, Any]) -> int | None:
     """
     Return the omicron tier index for the given skill.
 
@@ -82,11 +82,11 @@ def get_omicron_skill_tier(skill: dict) -> int | None:
 
 
 def is_omicron_skill(
-    omicron_skill_list: list[dict],
+    omicron_skill_list: list[dict[str, Any]],
     skill_id: str | None = None,
     skill_tier: int | None = None,
     *,
-    roster_unit_skill: dict | None = None,
+    roster_unit_skill: dict[str, Any] | None = None,
 ) -> bool:
     """
     Check if a given skill is an Omicron skill based on its ID and tier.
@@ -131,10 +131,11 @@ def is_omicron_skill(
     if skill_omicron_tier is None:
         return False
 
-    return skill_omicron_tier == skill_tier
+    result: bool = skill_omicron_tier == skill_tier
+    return result
 
 
-def get_unit_from_skill(unit_list: list[dict], skill: str) -> NamedTuple | None:
+def get_unit_from_skill(unit_list: list[dict[str, Any]], skill: str) -> NamedTuple | None:
     """
     Extracts the base ID and name key of a unit from a list of units based on a specific skill.
 
@@ -156,7 +157,7 @@ def get_unit_from_skill(unit_list: list[dict], skill: str) -> NamedTuple | None:
     if not isinstance(skill, str):
         raise SwgohComlinkValueError(f"'skill' must be a string, not {type(skill)}")
 
-    def skill_exists(value, dict_list: list[dict]) -> bool:
+    def skill_exists(value: Any, dict_list: list[dict[str, Any]] | None) -> bool:
         if not dict_list:
             return False
         return any(value in d.values() for d in dict_list)

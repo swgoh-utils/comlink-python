@@ -45,7 +45,8 @@ def get_arena_payout(offset: int, fleet: bool = False) -> datetime:
         datetime: The computed next payout time as a datetime object.
     """
     payout = datetime.now()
-    local_offset = -(payout.astimezone().utcoffset().total_seconds() / 60)
+    utc_offset = payout.astimezone().utcoffset()
+    local_offset = -(utc_offset.total_seconds() / 60) if utc_offset is not None else 0.0
     if fleet:
         payout = payout.replace(hour=19, minute=0, second=0, microsecond=0)
     else:

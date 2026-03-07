@@ -173,14 +173,14 @@ class GameDataBuilderBase:
 # ===================================================================
 
 
-def _build_stat_tables(raw_progressions: list[dict]) -> dict[str, dict[str, int]]:
+def _build_stat_tables(raw_progressions: list[dict[str, Any]]) -> dict[str, dict[str, int | float]]:
     """Parse ``statProgression`` entries into ``{tableId: {statId: value}}``."""
-    tables: dict[str, dict[str, int]] = {}
+    tables: dict[str, dict[str, int | float]] = {}
     for entry in raw_progressions:
         table_id = entry.get("id", "")
         if not table_id.startswith("stattable_"):
             continue
-        table_data: dict[str, int] = {}
+        table_data: dict[str, int | float] = {}
         for s in entry.get("stat", {}).get("statList", []):
             table_data[str(s.get("unitStatId", ""))] = _num(
                 s.get("unscaledDecimalValue", 0)
@@ -189,7 +189,7 @@ def _build_stat_tables(raw_progressions: list[dict]) -> dict[str, dict[str, int]
     return tables
 
 
-def _build_skills_map(raw_skills: list[dict]) -> dict[str, dict[str, Any]]:
+def _build_skills_map(raw_skills: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Build ``{skillId: {id, maxTier, isZeta, powerOverrideTags}}``."""
     skills: dict[str, dict[str, Any]] = {}
     for skill in raw_skills:
@@ -217,8 +217,8 @@ def _build_skills_map(raw_skills: list[dict]) -> dict[str, dict[str, Any]]:
 
 
 def _build_unit_data(
-    raw_units: list[dict],
-    stat_tables: dict[str, dict[str, int]],
+    raw_units: list[dict[str, Any]],
+    stat_tables: dict[str, dict[str, int | float]],
     skills_map: dict[str, dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
     """Build per-unit metadata for characters and ships.
@@ -228,11 +228,14 @@ def _build_unit_data(
     definitions (gear tiers, skills, etc.); all rarities contribute
     ``statProgressionId`` for growth modifier tables.
     """
-    base_units: dict[str, dict] = {}
+    base_units: dict[str, dict[str, Any]] = {}
     stat_prog_map: dict[str, dict[str, str]] = {}
 
     for unit_group in raw_units:
         rarity = unit_group.get("rarity", 1)
+        # Normalize string rarity enums (e.g. "ONE_STAR") to integers
+        if isinstance(rarity, str):
+            rarity = _RARITY_ENUM.get(rarity, 0)
         for unit in unit_group.get("unitDef", []):
             base_id = unit.get("baseId", "")
             if not base_id:
@@ -265,17 +268,17 @@ def _build_unit_data(
 
 def _build_character(
     base_id: str,
-    unit: dict,
+    unit: dict[str, Any],
     primary_stat: int,
     stat_prog_map: dict[str, dict[str, str]],
-    stat_tables: dict[str, dict[str, int]],
+    stat_tables: dict[str, dict[str, int | float]],
     skills_map: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
     # Gear tiers
     gear_lvl: dict[str, dict[str, Any]] = {}
     for gt in unit.get("unitTierList", []):
         tier_num = str(gt.get("tier", 1))
-        tier_stats: dict[str, int] = {}
+        tier_stats: dict[str, int | float] = {}
         for s in gt.get("baseStat", {}).get("statList", []):
             tier_stats[str(s.get("unitStatId", ""))] = _num(
                 s.get("unscaledDecimalValue", 0)
@@ -286,7 +289,7 @@ def _build_character(
         }
 
     # Growth modifiers per rarity
-    growth: dict[str, dict[str, int]] = {}
+    growth: dict[str, dict[str, int | float]] = {}
     for rarity_str, prog_id in stat_prog_map.get(base_id, {}).items():
         if prog_id in stat_tables:
             growth[rarity_str] = dict(stat_tables[prog_id])
@@ -318,21 +321,21 @@ def _build_character(
 
 def _build_ship(
     base_id: str,
-    unit: dict,
+    unit: dict[str, Any],
     primary_stat: int,
     stat_prog_map: dict[str, dict[str, str]],
-    stat_tables: dict[str, dict[str, int]],
+    stat_tables: dict[str, dict[str, int | float]],
     skills_map: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
     # Base stats
-    stats: dict[str, int] = {}
+    stats: dict[str, int | float] = {}
     for s in unit.get("baseStat", {}).get("statList", []):
         stats[str(s.get("unitStatId", ""))] = _num(
             s.get("unscaledDecimalValue", 0)
         )
 
     # Growth modifiers per rarity
-    growth: dict[str, dict[str, int]] = {}
+    growth: dict[str, dict[str, int | float]] = {}
     for rarity_str, prog_id in stat_prog_map.get(base_id, {}).items():
         if prog_id in stat_tables:
             growth[rarity_str] = dict(stat_tables[prog_id])
@@ -358,14 +361,14 @@ def _build_ship(
     }
 
 
-def _build_gear_data(raw_equipment: list[dict]) -> dict[str, dict[str, Any]]:
+def _build_gear_data(raw_equipment: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Build ``{gearId: {stats: {statId: value}}}``."""
     data: dict[str, dict[str, Any]] = {}
     for gear in raw_equipment:
         gear_id = gear.get("id", "")
         stat_list = gear.get("equipmentStat", {}).get("statList", [])
         if stat_list:
-            stats: dict[str, int] = {}
+            stats: dict[str, int | float] = {}
             for s in stat_list:
                 stats[str(s.get("unitStatId", ""))] = _num(
                     s.get("unscaledDecimalValue", 0)
@@ -374,7 +377,7 @@ def _build_gear_data(raw_equipment: list[dict]) -> dict[str, dict[str, Any]]:
     return data
 
 
-def _build_mod_set_data(raw_mod_sets: list[dict]) -> dict[str, dict[str, Any]]:
+def _build_mod_set_data(raw_mod_sets: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Build ``{setId: {id, count, value}}``."""
     data: dict[str, dict[str, Any]] = {}
     for ms in raw_mod_sets:
@@ -389,8 +392,8 @@ def _build_mod_set_data(raw_mod_sets: list[dict]) -> dict[str, dict[str, Any]]:
 
 
 def _build_cr_gp_tables(
-    raw_tables: list[dict],
-    raw_xp_tables: list[dict],
+    raw_tables: list[dict[str, Any]],
+    raw_xp_tables: list[dict[str, Any]],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Build crew-rating and galactic-power lookup tables.
 
@@ -470,14 +473,14 @@ def _build_cr_gp_tables(
 
 
 def _build_relic_data(
-    raw_relic_defs: list[dict],
-    stat_tables: dict[str, dict[str, int]],
+    raw_relic_defs: list[dict[str, Any]],
+    stat_tables: dict[str, dict[str, int | float]],
 ) -> dict[str, dict[str, Any]]:
     """Build ``{relicDefId: {stats: {...}, gms: {...}}}``."""
     data: dict[str, dict[str, Any]] = {}
     for relic in raw_relic_defs:
         relic_id = relic.get("id", "")
-        stats: dict[str, int] = {}
+        stats: dict[str, int | float] = {}
         for s in relic.get("stat", {}).get("statList", []):
             stats[str(s.get("unitStatId", ""))] = _num(
                 s.get("unscaledDecimalValue", 0)
@@ -492,7 +495,7 @@ def _build_relic_data(
 # ===================================================================
 
 
-def _rarity_rows(rows: list[dict]) -> dict[str, float]:
+def _rarity_rows(rows: list[dict[str, Any]]) -> dict[str, float]:
     """Rows keyed by rarity enum strings (``ONE_STAR`` … ``SEVEN_STAR``)."""
     out: dict[str, float] = {}
     for r in rows:
@@ -502,7 +505,7 @@ def _rarity_rows(rows: list[dict]) -> dict[str, float]:
     return out
 
 
-def _tier_rows(rows: list[dict]) -> dict[str, float]:
+def _tier_rows(rows: list[dict[str, Any]]) -> dict[str, float]:
     """Rows keyed by ``TIER_01``, ``TIER_02``, etc."""
     out: dict[str, float] = {}
     for r in rows:
@@ -512,12 +515,12 @@ def _tier_rows(rows: list[dict]) -> dict[str, float]:
     return out
 
 
-def _int_rows(rows: list[dict]) -> dict[str, float]:
+def _int_rows(rows: list[dict[str, Any]]) -> dict[str, float]:
     """Rows with plain integer keys."""
     return {str(r.get("key", "")): _num(r.get("value", 0)) for r in rows}
 
 
-def _relic_rows(rows: list[dict]) -> dict[str, float]:
+def _relic_rows(rows: list[dict[str, Any]]) -> dict[str, float]:
     """Rows with 0-based index keys, shifted by ``_RELIC_TIER_OFFSET``."""
     out: dict[str, float] = {}
     for r in rows:
@@ -529,7 +532,7 @@ def _relic_rows(rows: list[dict]) -> dict[str, float]:
     return out
 
 
-def _stat_enum_rows(rows: list[dict]) -> dict[str, float]:
+def _stat_enum_rows(rows: list[dict[str, Any]]) -> dict[str, float]:
     """Rows keyed by stat enum strings (``STRENGTH``, ``MAX_HEALTH``, …)."""
     out: dict[str, float] = {}
     for r in rows:
@@ -539,7 +542,7 @@ def _stat_enum_rows(rows: list[dict]) -> dict[str, float]:
     return out
 
 
-def _mod_cr_rows(rows: list[dict]) -> dict[str, dict[str, float]]:
+def _mod_cr_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
     """Mod CR rows (``pips:level:tier:set``); keep only tier=1, set=0.
 
     Returns ``{pips: {level: value}}``.
@@ -557,7 +560,7 @@ def _mod_cr_rows(rows: list[dict]) -> dict[str, dict[str, float]]:
     return out
 
 
-def _mod_gp_rows(rows: list[dict]) -> dict[str, dict[str, dict[str, float]]]:
+def _mod_gp_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, float]]]:
     """Mod GP rows (``pips:level:tier[:set]``).
 
     Returns ``{pips: {level: {tier: value}}}``.
@@ -574,7 +577,7 @@ def _mod_gp_rows(rows: list[dict]) -> dict[str, dict[str, dict[str, float]]]:
     return out
 
 
-def _gear_piece_gp_rows(rows: list[dict]) -> dict[str, dict[str, float]]:
+def _gear_piece_gp_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
     """Gear-piece GP rows (``tier:slot`` or ``TIER_XX:slot``).
 
     Returns ``{tier: {slot: value}}``.
@@ -591,7 +594,7 @@ def _gear_piece_gp_rows(rows: list[dict]) -> dict[str, dict[str, float]]:
     return out
 
 
-def _ability_special_cr(rows: list[dict]) -> dict[str, Any]:
+def _ability_special_cr(rows: list[dict[str, Any]]) -> dict[str, Any]:
     """Parse ability-special table for CR (grouped contracts/hardware)."""
     out: dict[str, Any] = {}
     for r in rows:
@@ -613,12 +616,12 @@ def _ability_special_cr(rows: list[dict]) -> dict[str, Any]:
     return out
 
 
-def _ability_special_gp(rows: list[dict]) -> dict[str, float]:
+def _ability_special_gp(rows: list[dict[str, Any]]) -> dict[str, float]:
     """Parse ability-special table for GP (flat key→value)."""
     return {r.get("key", ""): _num(r.get("value", 0)) for r in rows}
 
 
-def _xp_rows(rows: list[dict]) -> dict[str, float]:
+def _xp_rows(rows: list[dict[str, Any]]) -> dict[str, float]:
     """XP-table rows (0-indexed ``index`` → 1-indexed output keys)."""
     return {str(r.get("index", 0) + 1): _num(r.get("xp", 0)) for r in rows}
 
@@ -640,7 +643,7 @@ def _num(value: Any) -> int | float:
 
 
 def _resolve_skills(
-    refs: list[dict], skills_map: dict[str, dict[str, Any]]
+    refs: list[dict[str, Any]], skills_map: dict[str, dict[str, Any]]
 ) -> list[dict[str, Any]]:
     """Map ``skillReferenceList`` entries to resolved skill dicts."""
     out: list[dict[str, Any]] = []

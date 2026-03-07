@@ -55,7 +55,7 @@ class GameDataBuilder(GameDataBuilderBase):
         """
         logger.info("Fetching game data from Comlink (items=%d)", _REQUIRED_ITEMS)
         raw = self._client.get_game_data(
-            items=_REQUIRED_ITEMS,
+            items=str(_REQUIRED_ITEMS),
             include_pve_units=False,
         )
         return self._build_game_data(raw)

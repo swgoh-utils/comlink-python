@@ -17,7 +17,7 @@ def get_guild_members(
     comlink: Any = REQUIRED,
     player_id: str | Any = MutualExclusiveRequired,
     allycode: str | int | Any = MutualExclusiveRequired,
-) -> list:
+) -> list[Any]:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
     Args:
@@ -60,7 +60,7 @@ async def async_get_guild_members(
     comlink: Any = REQUIRED,
     player_id: str | Any = MutualExclusiveRequired,
     allycode: str | int | Any = MutualExclusiveRequired,
-) -> list:
+) -> list[Any]:
     """Return list of guild member player allycodes based upon provided player ID or allycode (async version).
 
     Args:

@@ -15,7 +15,7 @@ from ._utils import get_function_name
 logger = logging.getLogger(__name__)
 
 
-def get_raid_leaderboard_ids(campaign_data: list) -> list[str]:
+def get_raid_leaderboard_ids(campaign_data: list[dict[str, Any]]) -> list[str]:
     """
     Extracts and returns the raid leaderboard IDs from the provided campaign data.
 
@@ -42,8 +42,10 @@ def get_raid_leaderboard_ids(campaign_data: list) -> list[str]:
         TypeError: If `campaign_data` is not structured as expected, such as if
             it is not a list or contains improperly formatted elements.
     """
-    raid_ids = []
+    raid_ids: list[str] = []
     guild_campaigns = next((item for item in campaign_data if item.get("id") == "GUILD"), None)
+    if guild_campaigns is None:
+        return raid_ids
     for raid in guild_campaigns["campaignMap"][0]["campaignNodeDifficultyGroup"][0]["campaignNode"]:
         for mission in raid["campaignNodeMission"]:
             elements = [
@@ -57,7 +59,7 @@ def get_raid_leaderboard_ids(campaign_data: list) -> list[str]:
     return raid_ids
 
 
-def create_localized_unit_name_dictionary(locale: str | list | Any = REQUIRED) -> dict:
+def create_localized_unit_name_dictionary(locale: str | list[Any] | Any = REQUIRED) -> dict[str, str]:
     """Create localized translation mapping for unit names
 
     Take a localization element from the SwgohComlink.get_localization() result dictionary and
@@ -94,7 +96,7 @@ def create_localized_unit_name_dictionary(locale: str | list | Any = REQUIRED) -
     return unit_name_map
 
 
-def get_playable_units(units_collection: list[dict]) -> list[dict]:
+def get_playable_units(units_collection: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return a list of playable units from game data 'units' collection"""
     if not isinstance(units_collection, list):
         raise SwgohComlinkValueError(f"'units_collection' must be a list, not {type(units_collection)}")
@@ -106,7 +108,7 @@ def get_playable_units(units_collection: list[dict]) -> list[dict]:
     ]
 
 
-def get_current_datacron_sets(datacron_list: list) -> list:
+def get_current_datacron_sets(datacron_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Get the currently active datacron sets
 
     Args:
@@ -130,7 +132,7 @@ def get_current_datacron_sets(datacron_list: list) -> list:
     return current_datacron_sets
 
 
-def get_datacron_dismantle_value(datacron: dict, datacron_set_list: list, recipe_list: list) -> dict:
+def get_datacron_dismantle_value(datacron: dict[str, Any], datacron_set_list: list[dict[str, Any]], recipe_list: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Retrieves datacron dismantle materials based on the input datacron, datacron sets, and recipes.
 
@@ -143,12 +145,12 @@ def get_datacron_dismantle_value(datacron: dict, datacron_set_list: list, recipe
         dict: A dictionary mapping ingredient IDs to their required dismantle material
               details, which include the quantity and type.
     """
-    dismantle_materials = {}
+    dismantle_materials: dict[str, Any] = {}
     set_id = datacron.get("setId")
     focused: bool = datacron.get("focused", False)
     affix_tier = len(datacron.get("affix", []))
 
-    def find_object_by_id(obj_list, obj_id):
+    def find_object_by_id(obj_list: list[dict[str, Any]], obj_id: Any) -> dict[str, Any] | None:
         return next((obj for obj in obj_list if obj.get("id") == obj_id), None)
 
     datacron_set = find_object_by_id(datacron_set_list, set_id)
@@ -176,7 +178,7 @@ def get_datacron_dismantle_value(datacron: dict, datacron_set_list: list, recipe
     return dismantle_materials
 
 
-def get_datacron_dismantle_total(datacrons: list, datacron_set_list: list, recipe_list: list) -> dict:
+def get_datacron_dismantle_total(datacrons: list[dict[str, Any]], datacron_set_list: list[dict[str, Any]], recipe_list: list[dict[str, Any]]) -> dict[str, Any]:
     """Calculate aggregated dismantle materials across all datacrons.
 
     Calls :func:`get_datacron_dismantle_value` for each datacron and sums
@@ -191,7 +193,7 @@ def get_datacron_dismantle_total(datacrons: list, datacron_set_list: list, recip
         dict: A dictionary mapping ingredient IDs to total quantity and type,
               e.g. ``{"mat_id": {"quantity": 150, "type": 3}}``.
     """
-    totals: dict = {}
+    totals: dict[str, Any] = {}
     for datacron in datacrons:
         materials = get_datacron_dismantle_value(datacron, datacron_set_list, recipe_list)
         for ingredient_id, info in materials.items():

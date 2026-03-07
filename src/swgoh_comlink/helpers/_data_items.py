@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections.abc import KeysView
 from enum import IntFlag
 
 
@@ -121,6 +122,6 @@ class DataItems(IntFlag):
     SEGMENT4 = 281200098803712
 
     @classmethod
-    def members(cls):
+    def members(cls) -> KeysView[str]:
         """Return a list of the member names of the DataItems class."""
         return cls.__members__.keys()

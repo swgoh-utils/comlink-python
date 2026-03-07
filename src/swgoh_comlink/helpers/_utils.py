@@ -22,19 +22,19 @@ def get_function_name() -> str:
     return f"{inspect.stack()[1].function}()"
 
 
-def get_enum_key_by_value(enum_dict: dict, category: Any, enum_value: Any, default_return: Any = None) -> Any:
+def get_enum_key_by_value(enum_dict: dict[str, Any], category: Any, enum_value: Any, default_return: Any = None) -> Any:
     """
     Return the key from enum_dict for the given enum_value.
     """
-    enum_values: dict | None = enum_dict.get(category)
+    enum_values: dict[str, Any] | None = enum_dict.get(category)
     if enum_values:
-        enum_value_match: list | None = [key for key, value in enum_values.items() if value == enum_value]
+        enum_value_match: list[Any] | None = [key for key, value in enum_values.items() if value == enum_value]
         return enum_value_match[0] if enum_value_match else default_return
     else:
         return default_return
 
 
-def validate_file_path(path: str | Path | PathLike) -> bool:
+def validate_file_path(path: str | Path | PathLike[Any]) -> bool:
     """Test whether provided path exists or not
 
     Args:
@@ -44,7 +44,7 @@ def validate_file_path(path: str | Path | PathLike) -> bool:
         True if exists, False otherwise.
 
     """
-    if path is MISSING or not path:
+    if not path:
         err_msg = f"{get_function_name()}: 'path' argument is required."
         raise SwgohComlinkValueError(err_msg)
     return os.path.exists(path) and os.path.isfile(path)

@@ -194,8 +194,12 @@ class TestGetPlayerPayload:
         assert "allyCode" not in payload["payload"]
 
     def test_with_enums(self):
-        payload = SwgohComlinkBase._get_player_payload(allycode=123, enums=True)
+        payload = SwgohComlinkBase._get_player_payload(allycode=123456789, enums=True)
         assert payload["enums"] is True
+
+    def test_invalid_allycode_raises(self):
+        with pytest.raises(SwgohComlinkValueError, match="9-digit"):
+            SwgohComlinkBase._get_player_payload(allycode=12345)
 
     def test_no_args_raises(self):
         with pytest.raises(SwgohComlinkValueError, match="allycode"):

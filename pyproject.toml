@@ -41,6 +41,17 @@ testpaths = ["tests"]
 markers = [
     "integration: tests that require an accessible comlink service",
     "parity: tests that compare python stat calculation against JS baseline",
+    "exhaustive: comprehensive pre-release validation tests",
+    "cat_endpoints: sync and async endpoint functional tests",
+    "cat_enums: enums=True parameter verification across endpoints",
+    "cat_localization: localization bundle gzip/unzip processing tests",
+    "cat_parity: sync vs async response parity verification",
+    "cat_statcalc: StatCalc live calculation tests",
+    "cat_builder: GameDataBuilder validation tests",
+    "cat_helpers: helper function integration tests",
+    "cat_errors: error handling and edge case tests",
+    "cat_schemas: response structure contract validation",
+    "cat_stress: load endurance and connection pool tests",
 ]
 
 [tool.hatch.version]

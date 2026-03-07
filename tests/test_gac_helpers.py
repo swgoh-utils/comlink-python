@@ -1,5 +1,7 @@
 """Tests for GAC bracket boundary probing and scanning helpers."""
 
+import asyncio
+
 import pytest
 
 from swgoh_comlink.helpers._gac import (
@@ -91,30 +93,27 @@ class TestFindBracketBoundary:
 
 
 class TestAsyncFindBracketBoundary:
-    @pytest.mark.asyncio
-    async def test_typical_league(self):
-        boundary = await _async_find_bracket_boundary(_make_async_probe(6250))
+    def test_typical_league(self):
+        boundary = asyncio.run(_async_find_bracket_boundary(_make_async_probe(6250)))
         assert boundary == 6249
 
-    @pytest.mark.asyncio
-    async def test_empty(self):
-        boundary = await _async_find_bracket_boundary(_make_async_probe(0))
+    def test_empty(self):
+        boundary = asyncio.run(_async_find_bracket_boundary(_make_async_probe(0)))
         assert boundary == -1
 
-    @pytest.mark.asyncio
-    async def test_small_league(self):
-        boundary = await _async_find_bracket_boundary(_make_async_probe(100))
+    def test_small_league(self):
+        boundary = asyncio.run(_async_find_bracket_boundary(_make_async_probe(100)))
         assert boundary == 99
 
-    @pytest.mark.asyncio
-    async def test_one_bracket(self):
-        boundary = await _async_find_bracket_boundary(_make_async_probe(1))
+    def test_one_bracket(self):
+        boundary = asyncio.run(_async_find_bracket_boundary(_make_async_probe(1)))
         assert boundary == 0
 
-    @pytest.mark.asyncio
-    async def test_matches_sync(self):
+    def test_matches_sync(self):
         """Async and sync produce identical results across various sizes."""
-        for n in [0, 1, 2, 50, 500, 6250, 18750]:
-            sync_result = _find_bracket_boundary(_make_probe(n))
-            async_result = await _async_find_bracket_boundary(_make_async_probe(n))
-            assert sync_result == async_result, f"Mismatch for n={n}"
+        async def _run():
+            for n in [0, 1, 2, 50, 500, 6250, 18750]:
+                sync_result = _find_bracket_boundary(_make_probe(n))
+                async_result = await _async_find_bracket_boundary(_make_async_probe(n))
+                assert sync_result == async_result, f"Mismatch for n={n}"
+        asyncio.run(_run())

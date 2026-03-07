@@ -10,11 +10,13 @@ module load time.
 
 from __future__ import annotations
 
+from typing import Any
+
 # ---------------------------------------------------------------------------
 # Canonical stat definitions
 # ---------------------------------------------------------------------------
 
-STATS: dict[str, dict] = {
+STATS: dict[str, dict[str, Any]] = {
     "0": {
         "statId": 0,
         "nameKey": "None",
