@@ -21,11 +21,14 @@ jobs:
     services:
       comlink:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
+        env:
+          APP_NAME: comlink-python-integration-tests
         ports:
           - 3000:3000
       comlink-hmac:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
+          APP_NAME: comlink-python-integration-tests
           ACCESS_KEY: test_public_key
           SECRET_KEY: test_secret_key
         ports:
@@ -46,16 +49,37 @@ jobs:
 
       - name: Wait for Comlink services
         run: |
+          comlink_ready=false
           for i in $(seq 1 30); do
-            curl -sf http://localhost:3000/metadata && break
+            if curl -sf http://localhost:3000/metadata > /dev/null 2>&1; then
+              comlink_ready=true
+              echo "Comlink is ready!"
+              break
+            fi
             echo "Waiting for Comlink... ($i/30)"
             sleep 2
           done
+          if [ "$comlink_ready" != "true" ]; then
+            echo "::error::Comlink service failed to start within 60 seconds"
+            docker ps -a
+            exit 1
+          fi
+
+          hmac_ready=false
           for i in $(seq 1 30); do
-            curl -sf http://localhost:3001/metadata && break
+            if curl -sf http://localhost:3001/metadata > /dev/null 2>&1; then
+              hmac_ready=true
+              echo "Comlink HMAC is ready!"
+              break
+            fi
             echo "Waiting for Comlink HMAC... ($i/30)"
             sleep 2
           done
+          if [ "$hmac_ready" != "true" ]; then
+            echo "::error::Comlink HMAC service failed to start within 60 seconds"
+            docker ps -a
+            exit 1
+          fi
 
       - name: Run integration tests
         env:
