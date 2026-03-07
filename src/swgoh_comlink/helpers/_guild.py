@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from ..exceptions import SwgohComlinkValueError
-from ._sentinels import MISSING, MutualExclusiveRequired, MutualRequiredNotSet, REQUIRED
+from ._sentinels import MISSING, REQUIRED, MutualExclusiveRequired
 from ._utils import get_function_name, sanitize_allycode
 
 if TYPE_CHECKING:

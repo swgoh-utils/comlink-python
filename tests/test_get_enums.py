@@ -1,7 +1,5 @@
 """Tests for get_enums() endpoint."""
 
-import json
-
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock

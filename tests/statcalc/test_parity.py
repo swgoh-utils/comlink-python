@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from parity.scripts.run_player_parity import run
 
 pytestmark = pytest.mark.parity

@@ -49,7 +49,7 @@ class StatCalcAsync(StatCalc):
         super().__init__(game_data=game_data)
 
     @classmethod
-    async def create(cls, game_data: dict[str, Any] | None = None) -> "StatCalcAsync":
+    async def create(cls, game_data: dict[str, Any] | None = None) -> StatCalcAsync:
         """Factory method to create a :class:`StatCalcAsync` instance.
 
         If *game_data* is ``None``, the latest payload is fetched

@@ -46,6 +46,17 @@ from ._sentinels import (
     NotGiven,
     NotSet,
 )
+from ._stat_data import (
+    LANGUAGES,
+    MOD_SET_IDS,
+    MOD_SLOTS,
+    OMICRON_MODE,
+    STAT_ENUMS,
+    STATS,
+    UNIT_RARITY,
+    UNIT_RARITY_NAMES,
+    UNIT_STAT_ENUMS_MAP,
+)
 from ._utils import (
     convert_relic_tier,
     get_enum_key_by_value,
@@ -70,6 +81,16 @@ __all__ = [
     # Enums and constants
     "Constants",
     "DataItems",
+    # Stat data
+    "LANGUAGES",
+    "MOD_SET_IDS",
+    "MOD_SLOTS",
+    "OMICRON_MODE",
+    "STAT_ENUMS",
+    "STATS",
+    "UNIT_RARITY",
+    "UNIT_RARITY_NAMES",
+    "UNIT_STAT_ENUMS_MAP",
     # Decorators
     "func_debug_logger",
     "func_timer",
