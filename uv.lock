@@ -997,11 +997,19 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-httpx" },
     { name = "ruff" },
-    { name = "swgoh-comlink" },
 ]
 docs = [
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
+]
+test = [
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-httpx" },
+]
+typecheck = [
+    { name = "mypy" },
 ]
 
 [package.metadata]
@@ -1015,12 +1023,18 @@ dev = [
     { name = "pytest-cov", specifier = ">=4.0" },
     { name = "pytest-httpx", specifier = ">=0.35" },
     { name = "ruff", specifier = ">=0.8" },
-    { name = "swgoh-comlink", editable = "." },
 ]
 docs = [
     { name = "mkdocs-material", specifier = ">=9.5.0" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.28.0" },
 ]
+test = [
+    { name = "pytest", specifier = ">=7.0" },
+    { name = "pytest-asyncio", specifier = ">=0.24" },
+    { name = "pytest-cov", specifier = ">=4.0" },
+    { name = "pytest-httpx", specifier = ">=0.35" },
+]
+typecheck = [{ name = "mypy", specifier = ">=1.0" }]
 
 [[package]]
 name = "tomli"

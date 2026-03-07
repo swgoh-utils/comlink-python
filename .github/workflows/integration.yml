@@ -55,7 +55,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: uv pip install --system -e "." pytest pytest-asyncio
+        run: uv sync --group test
 
       - name: Wait for Comlink services
         run: |
@@ -94,4 +94,4 @@ jobs:
       - name: Run integration tests
         env:
           RUN_INTEGRATION_TESTS: "1"
-        run: python -m pytest tests/integration/ -v
+        run: uv run python -m pytest tests/integration/ -v
