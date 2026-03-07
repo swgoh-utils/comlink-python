@@ -24,6 +24,16 @@
   into `_base.py` base class.
 - unify all HTTP communication through a single `_request()` gateway method
   in both sync and async clients.
+- refactor monolithic `helpers.py` (1,970 lines) into a focused `helpers/` subpackage
+  with domain-specific modules (`_arena.py`, `_gac.py`, `_game_data.py`, `_guild.py`,
+  `_omicron.py`, `_utils.py`, `_decorators.py`, `_sentinels.py`, `_data_items.py`,
+  `_stat_data.py`, `_constants.py`). All existing import paths are preserved via
+  backward-compatible re-export shim in `helpers/__init__.py`.
+- consolidate 4 duplicate copies of stat data (Constants.STAT_ENUMS,
+  Constants.UNIT_STAT_ENUMS_MAP, Constants.STATS, StatCalc.STATS_NAME_MAP) into a
+  single canonical `STATS` dict in `helpers/_stat_data.py` with derived views.
+- replace 489-line inline `STATS_NAME_MAP` dict in `StatCalc/calculator.py` with
+  import from `helpers/_stat_data`.
 
 ### Dependencies
 
@@ -39,6 +49,13 @@
 - switch `exceptions.py` and `helpers.py` to use `logging.getLogger(__name__)` directly.
 - keep `LoggingFormatter` as an opt-in convenience in `globals.py`.
 - rewrite `docs/logging.md` for the new approach.
+
+### Tools
+
+- add `swgoh-migrate` CLI tool (`python -m swgoh_comlink.migrate`) for scanning
+  user codebases and identifying deprecated import patterns, API changes, and
+  migration steps needed when upgrading from v1.x. Supports `--severity`,
+  `--no-color`, and `--exclude` options.
 
 ### Documentation
 

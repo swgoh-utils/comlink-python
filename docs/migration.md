@@ -119,7 +119,62 @@ finally:
 Existing code that does not call `close()` will still work — connections are cleaned up
 on garbage collection — but explicitly closing is preferred to avoid resource warnings.
 
-## 5. Subclass and internal API changes
+## 5. Helpers module refactoring
+
+The monolithic `helpers.py` file has been refactored into a `helpers/` subpackage.
+**All existing import paths continue to work** — a backward-compatible re-export shim
+ensures no breaking changes.
+
+### What moved
+
+| Before | After (internal location) |
+|--------|--------------------------|
+| `helpers.py` (single file) | `helpers/` subpackage with focused modules |
+| `Constants.STAT_ENUMS` | `helpers/_stat_data.STAT_ENUMS` (re-exported) |
+| `Constants.STATS` | `helpers/_stat_data.STATS` (re-exported) |
+| `StatCalc.STATS_NAME_MAP` | Now imports from `helpers/_stat_data.STATS` |
+
+### Constants.get() changes
+
+`Constants.get()` still works for all legacy PascalCase names (e.g., `"UnitDefinitions"`)
+as well as the new UPPER_SNAKE_CASE `DataItems` names (e.g., `"UNITS"`):
+
+```python
+from swgoh_comlink.helpers import Constants
+
+# All three forms still work:
+Constants.get("UnitDefinitions")  # -> '137438953472' (legacy name)
+Constants.get("UNITS")            # -> '137438953472' (DataItems name)
+Constants.get("Segment1")         # -> '206158430208' (class attribute)
+```
+
+**Recommendation:** Prefer using `DataItems` enum values directly for type safety:
+
+```python
+from swgoh_comlink.helpers import DataItems
+
+items = DataItems.UNITS | DataItems.CATEGORY
+data = comlink.get_game_data(items=items)
+```
+
+### Migration checker CLI
+
+A CLI tool is included to scan your codebase for patterns that may need updating:
+
+```bash
+# Scan a project directory
+python -m swgoh_comlink.migrate /path/to/your/project
+
+# Or use the console script
+swgoh-migrate /path/to/your/project
+
+# Filter by severity and exclude directories
+swgoh-migrate . --severity=WARNING --exclude .venv dist
+```
+
+The tool reports deprecated imports, removed APIs, and suggests replacements.
+
+## 6. Subclass and internal API changes
 
 These only matter if you subclass `SwgohComlink` or call private methods directly.
 
@@ -168,3 +223,5 @@ Same changes as `_request()` — `url_base` replaced by `stats` and `timeout`.
 | Async support | Not available | `SwgohComlinkAsync` |
 | Local stat calc | Not available | `StatCalc` (sync) / `StatCalcAsync` (async) |
 | `_request(url_base=)` | `url_base` parameter | `stats` bool + `timeout` |
+| `helpers.py` | Single 1,970-line file | `helpers/` subpackage (all imports preserved) |
+| Migration checker | Not available | `swgoh-migrate` CLI / `python -m swgoh_comlink.migrate` |

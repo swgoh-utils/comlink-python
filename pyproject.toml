@@ -25,6 +25,9 @@ dependencies = [
     "sentinels>=1.0",
 ]
 
+[project.scripts]
+swgoh-migrate = "swgoh_comlink.migrate:main"
+
 [project.urls]
 "Homepage" = "https://github.com/swgoh-utils/comlink-python"
 "Bug Tracker" = "https://github.com/swgoh-utils/comlink-python/issues"
@@ -104,7 +107,7 @@ ignore = [
 # Existing violations to address incrementally — do not add new suppressions
 "src/swgoh_comlink/__init__.py" = ["UP036"]   # outdated version block (sys.exit check)
 "src/swgoh_comlink/exceptions.py" = ["B904"]  # raise-without-from (tracked in issue backlog)
-"src/swgoh_comlink/helpers.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
+"src/swgoh_comlink/helpers/*.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
 
 [tool.ruff.lint.isort]
 known-first-party = ["swgoh_comlink"]
