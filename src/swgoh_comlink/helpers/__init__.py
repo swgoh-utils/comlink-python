@@ -12,6 +12,8 @@ from ._constants import Constants
 from ._data_items import DataItems
 from ._decorators import func_debug_logger, func_timer
 from ._gac import (
+    async_get_current_gac_event,
+    async_get_gac_brackets,
     convert_divisions_to_int,
     convert_league_to_int,
     get_current_gac_event,
@@ -26,7 +28,7 @@ from ._game_data import (
     get_playable_units,
     get_raid_leaderboard_ids,
 )
-from ._guild import get_guild_members
+from ._guild import async_get_guild_members, get_guild_members
 from ._omicron import (
     get_omicron_skill_tier,
     get_omicron_skills,
@@ -97,6 +99,8 @@ __all__ = [
     "get_arena_payout",
     "get_max_rank_jump",
     # GAC
+    "async_get_current_gac_event",
+    "async_get_gac_brackets",
     "convert_divisions_to_int",
     "convert_league_to_int",
     "get_current_gac_event",
@@ -110,6 +114,7 @@ __all__ = [
     "get_playable_units",
     "get_raid_leaderboard_ids",
     # Guild
+    "async_get_guild_members",
     "get_guild_members",
     # Omicron
     "get_omicron_skill_tier",

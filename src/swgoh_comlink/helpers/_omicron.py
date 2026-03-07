@@ -34,8 +34,8 @@ def get_omicron_skills(skill_list: list, omicron_type: int | list[int]) -> list:
 
     Args:
         skill_list (list): A list of dictionaries representing skills. The 'skill' collection in game data.
-        omicron_type (int | list): The omicron mode type to filter the skills by. The 'OmicronMode' in the game data
-        enums.
+        omicron_type (int | list): The omicron mode type to filter the skills by.
+            The 'OmicronMode' in the game data enums.
 
     Returns:
         list: A list of dictionaries representing skills that match the specified omicron type.

@@ -14,6 +14,8 @@ nav:
       - SwgohComlink: api/comlink.md
       - SwgohComlinkAsync: api/async.md
       - StatCalc: api/statcalc.md
+      - Helpers: api/helpers.md
+      - Exceptions: api/exceptions.md
 
 plugins:
   - search

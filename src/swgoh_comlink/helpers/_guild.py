@@ -10,7 +10,7 @@ from ._sentinels import MISSING, REQUIRED, MutualExclusiveRequired
 from ._utils import get_function_name, sanitize_allycode
 
 if TYPE_CHECKING:
-    from swgoh_comlink import SwgohComlink  # noqa: F401
+    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: F401
 
 
 def get_guild_members(
@@ -53,4 +53,47 @@ def get_guild_members(
     else:
         player = comlink.get_player(allycode=sanitize_allycode(allycode))
     guild = comlink.get_guild(guild_id=player["guildId"])
+    return guild["member"] or []
+
+
+async def async_get_guild_members(
+    comlink: Any = REQUIRED,
+    player_id: str | Any = MutualExclusiveRequired,
+    allycode: str | int | Any = MutualExclusiveRequired,
+) -> list:
+    """Return list of guild member player allycodes based upon provided player ID or allycode (async version).
+
+    Args:
+        comlink: Instance of SwgohComlinkAsync
+        player_id: Player's ID
+        allycode: Player's allycode
+
+    Returns:
+        list of guild members objects
+
+    Note:
+        A player_id or allycode argument is REQUIRED
+
+    """
+    if hasattr(comlink, "__comlink_type__"):
+        comlink_type = comlink.__comlink_type__
+    else:
+        comlink_type = MISSING
+    if comlink is MISSING or comlink_type != "SwgohComlinkAsync":
+        err_msg = f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlinkAsync."
+        raise SwgohComlinkValueError(err_msg)
+
+    if player_id is not MutualExclusiveRequired and allycode is not MutualExclusiveRequired:
+        err_msg = f"{get_function_name()}: Either 'player_id' or 'allycode' are allowed arguments, not both."
+        raise SwgohComlinkValueError(err_msg)
+
+    if player_id is MutualExclusiveRequired and allycode is MutualExclusiveRequired:
+        err_msg = f"{get_function_name()}: One of either 'player_id' or 'allycode' is required."
+        raise SwgohComlinkValueError(err_msg)
+
+    if isinstance(player_id, str):
+        player = await comlink.get_player(player_id=player_id)
+    else:
+        player = await comlink.get_player(allycode=sanitize_allycode(allycode))
+    guild = await comlink.get_guild(guild_id=player["guildId"])
     return guild["member"] or []
