@@ -10,7 +10,6 @@ import pytest
 from swgoh_comlink.exceptions import SwgohComlinkValueError
 from swgoh_comlink.helpers._sentinels import GIVEN, MISSING
 
-
 # ── _utils ──────────────────────────────────────────────────────────────
 
 
@@ -195,9 +194,9 @@ class TestGetMaxRankJump:
         assert result == 6 - (3 + max(5 // 6, 1))
 
     def test_rank_54(self):
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
-
         from math import floor
+
+        from swgoh_comlink.helpers._arena import get_max_rank_jump
 
         result = get_max_rank_jump(54)
         assert result == 54 - (3 + max(floor(53 / 6), 1))

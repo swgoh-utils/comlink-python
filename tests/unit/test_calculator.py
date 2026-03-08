@@ -320,7 +320,6 @@ class TestGearPieceAggregation:
     def test_equipped_gear_adds_stats(self, calc, game_data, player):
         """Use a normalized char with synthetic equipped gear to cover lines 419-435."""
         char = _find_char(player["rosterUnit"], relic_min=3)
-        defid = char["definitionId"].split(":")[0]
 
         # Pick a real gear ID from gearData
         gear_id = next(iter(game_data["gearData"]))

@@ -1,15 +1,12 @@
 """Tests for helper functions that require mocked HTTP calls."""
 from __future__ import annotations
 
-import json
-
 import pytest
 from pytest_httpx import HTTPXMock
 
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 from swgoh_comlink.exceptions import SwgohComlinkValueError
 from swgoh_comlink.helpers._sentinels import MISSING
-
 
 # ── Shared fixtures ─────────────────────────────────────────────────────
 

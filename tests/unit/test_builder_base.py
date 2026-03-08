@@ -6,8 +6,6 @@ All tests use inline fixture data and require no running Comlink service.
 
 from __future__ import annotations
 
-import pytest
-
 from swgoh_comlink.StatCalc.data_builder._builder_base import (
     GameDataBuilderBase,
     _ability_special_gp,
@@ -30,7 +28,6 @@ from swgoh_comlink.StatCalc.data_builder._builder_base import (
     _tier_rows,
     _xp_rows,
 )
-
 
 # ===================================================================
 # Group A — Utility functions
