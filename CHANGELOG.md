@@ -2,7 +2,7 @@
 
 <!-- insertion marker -->
 
-## [v2.0.0 Pending Release] - feature/async
+## [v2.0.3 Pending Release] - feature/async
 
 ### Breaking Changes
 
@@ -18,6 +18,14 @@
 
 - fix HMAC empty payload serialization to use empty string (`""`) instead of
   empty object (`{}`) for compatibility with comlink v4 (#51).
+- fix `GameDataBuilder` output to match the JS `gameData.json` reference:
+  correct field name mappings (`tierList`→`tier`, `unitTierList`→`unitTier`,
+  `statList`→`stat`, `equipmentSetList`→`equipmentSet`, `crewMemberList`→`crewMember`),
+  flatten unit iteration to use `obtainable`/`obtainableTime` filters instead of
+  nested `unitDef` groups, share CR and GP table references where the JS implementation
+  does, fix slot decrementing in `_gear_piece_gp_rows()`, add `set=0` filter in
+  `_mod_gp_rows()`, and normalize whole-number floats to `int` via `_num()`.
+- fix numeric string and negative value handling in `_build_game_data_payload`.
 
 ### Features
 
@@ -87,6 +95,9 @@
 - add migration guide (`docs/migration.md`) covering dependency changes, exception
   handling, logging configuration, and client lifecycle.
 - add migration summary section to README with link to the full guide.
+- add GAC bracket helper examples for sync and async clients
+  (`examples/Sync/get_gac_brackets.py`, `examples/Async/get_gac_brackets.py`).
+- remove exhaustive test documentation from published docs.
 
 ### Testing
 
@@ -94,8 +105,19 @@
 - add comprehensive async client test suite mirroring sync coverage.
 - add `test_base.py` with tests for base class utilities, HMAC, payload builders,
   and validation logic.
-- increase test coverage from 38% to 48% (100% on core modules `_base.py`,
-  `swgoh_comlink.py`, and `swgoh_comlink_async.py`).
+- add 96 offline unit tests for `GameDataBuilder` transformation logic covering
+  all row parsers, builder functions, and utility helpers (`test_builder_base.py`).
+- add 68 offline unit tests for `StatCalc` calculator covering stat computation,
+  GP calculation, mod formats, gear aggregation, and ship stats (`test_calculator.py`).
+- add 107 pure helper function tests covering `_utils`, `_arena`, `_omicron`,
+  `_game_data`, `_gac`, `_constants`, `_decorators`, and `globals` (`test_helpers.py`).
+- add 29 mocked helper tests for GAC event/bracket scanning and guild member
+  retrieval, both sync and async variants (`test_helpers_mocked.py`).
+- add 18 migration tool tests covering rules, scanner, reporter, and CLI
+  (`test_migrate.py`).
+- add 8 tests for `StatCalcAsync`, `GameDataBuilder`, and `GameDataBuilderAsync`
+  (`test_statcalc_async.py`).
+- increase test coverage from 38% to 96% (440 total unit tests).
 
 ---
 
