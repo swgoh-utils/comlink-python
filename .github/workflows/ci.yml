@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, 2.0-development]
+    branches: [main, 1.0-maintenance, 2.0-development]
   push:
     branches: [main]
 
@@ -54,13 +54,10 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: uv pip install --system -e "." mypy
+        run: uv sync --group typecheck
 
       - name: Run mypy
-        # NOTE: 38 existing errors (mostly implicit Optional). Set continue-on-error
-        # to false once type annotations are cleaned up (see pyproject.toml TODO).
-        continue-on-error: true
-        run: mypy src/swgoh_comlink/
+        run: uv run mypy src/swgoh_comlink/
 
   # ── Test ───────────────────────────────────────────────────────────────
   test:
@@ -82,11 +79,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv pip install --system -e "." pytest pytest-cov
+        run: uv sync --group test
 
       - name: Run tests with coverage
         run: |
-          python -m pytest tests/ \
+          uv run python -m pytest tests/ \
             --cov=swgoh_comlink \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
@@ -98,6 +95,27 @@ jobs:
         with:
           name: coverage-report
           path: coverage.xml
+
+  # ── Docs build ────────────────────────────────────────────────────────
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --group docs
+
+      - name: Build docs
+        run: uv run mkdocs build
 
   # ── Build verification ─────────────────────────────────────────────────
   build:
@@ -114,13 +132,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install hatch
-        run: uv pip install --system hatch
-
       - name: Build package
-        run: hatch build
+        run: uvx hatch build
 
       - name: Verify wheel contents
         run: |
-          pip install dist/*.whl
+          uv pip install --system dist/*.whl
           python -c "from swgoh_comlink import SwgohComlink; print('Import OK')"

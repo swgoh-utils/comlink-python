@@ -1,0 +1,37 @@
+site_name: swgoh_comlink
+site_description: Python interfaces for swgoh-comlink and built-in StatCalc
+repo_name: comlink-python
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Guides:
+      - Migration Guide: migration.md
+      - Logging: logging.md
+  - API:
+      - SwgohComlink: api/comlink.md
+      - SwgohComlinkAsync: api/async.md
+      - StatCalc: api/statcalc.md
+      - Helpers: api/helpers.md
+      - Exceptions: api/exceptions.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+          options:
+            docstring_style: google
+            docstring_options:
+              warn_unknown_params: false
+            show_source: false
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true

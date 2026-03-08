@@ -1,43 +1,46 @@
-from unittest import TestCase, main, mock
+"""Tests for get_unit_stats() endpoint."""
+
+import json
+
+import pytest
+from pytest_httpx import HTTPXMock
 
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink.exceptions import SwgohComlinkValueError
 
 
-class TestGetUnitStats(TestCase):
-    @mock.patch.object(SwgohComlink, "_post")
-    def test_get_unit_stats_with_list(self, mock_post):
-        """Test that get_unit_stats() posts to stats endpoint with correct payload."""
-        mock_post.return_value = {"stats": {"gp": 12345}}
+def test_get_unit_stats_with_list(httpx_mock: HTTPXMock):
+    """Test that get_unit_stats() posts to the stats endpoint with correct payload."""
+    httpx_mock.add_response(json={"stats": {"gp": 12345}})
 
-        comlink = SwgohComlink()
-        roster = [{"id": "UNIT_001", "defId": "DARTHMALGUS"}]
-        result = comlink.get_unit_stats(roster, flags=["calcGP", "gameStyle"])
+    client = SwgohComlink(
+        url="http://localhost:3000", stats_url="http://localhost:3223"
+    )
+    roster = [{"id": "UNIT_001", "defId": "DARTHMALGUS"}]
+    result = client.get_unit_stats(roster, flags=["calcGP", "gameStyle"])
 
-        mock_post.assert_called_once()
-        call_kwargs = mock_post.call_args
-        self.assertEqual(call_kwargs.kwargs.get("url_base") or call_kwargs[1].get("url_base"), "http://localhost:3223")
-        self.assertIn("calcGP", call_kwargs.kwargs.get("endpoint") or call_kwargs[1].get("endpoint"))
-        self.assertIn("gp", result["stats"])
-
-    @mock.patch.object(SwgohComlink, "_post")
-    def test_get_unit_stats_dict_wrapped_as_list(self, mock_post):
-        """Test that a dict payload is automatically wrapped in a list."""
-        mock_post.return_value = {}
-
-        comlink = SwgohComlink()
-        comlink.get_unit_stats({"id": "UNIT_001"})
-
-        call_kwargs = mock_post.call_args
-        payload = call_kwargs.kwargs.get("payload") or call_kwargs[1].get("payload")
-        self.assertIsInstance(payload, list)
-
-    def test_get_unit_stats_invalid_flags(self):
-        """Test that invalid flags raise SwgohComlinkValueError."""
-        comlink = SwgohComlink()
-        with self.assertRaises(SwgohComlinkValueError):
-            comlink.get_unit_stats([{}], flags=["invalidFlag"])
+    request = httpx_mock.get_request()
+    assert str(request.url).startswith("http://localhost:3223/")
+    assert "calcGP" in str(request.url)
+    assert "gp" in result["stats"]
 
 
-if __name__ == "__main__":
-    main()
+def test_get_unit_stats_dict_wrapped_as_list(httpx_mock: HTTPXMock):
+    """Test that a dict payload is automatically wrapped in a list."""
+    httpx_mock.add_response(json={})
+
+    client = SwgohComlink(
+        url="http://localhost:3000", stats_url="http://localhost:3223"
+    )
+    client.get_unit_stats({"id": "UNIT_001"})
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert isinstance(body, list)
+
+
+def test_get_unit_stats_invalid_flags():
+    """Test that invalid flags raise SwgohComlinkValueError."""
+    client = SwgohComlink(url="http://localhost:3000")
+    with pytest.raises(SwgohComlinkValueError):
+        client.get_unit_stats([{}], flags=["invalidFlag"])
