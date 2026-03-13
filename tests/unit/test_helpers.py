@@ -102,10 +102,20 @@ class TestSanitizeAllycode:
         with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
             sanitize_allycode("12345abcd")
 
-    def test_falsy_returns_empty(self):
+    def test_zero_raises(self):
         from swgoh_comlink.helpers._utils import sanitize_allycode
 
-        assert sanitize_allycode(0) == ""
+        # 0 is falsy but is not the REQUIRED sentinel, so it falls
+        # through to validation and raises (not a valid 9-digit allycode).
+        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
+            sanitize_allycode(0)
+
+    def test_default_sentinel_returns_empty(self):
+        from swgoh_comlink.helpers._utils import sanitize_allycode
+
+        # Calling with no argument uses the REQUIRED sentinel default,
+        # which triggers the early "" return.
+        assert sanitize_allycode() == ""
 
     def test_given_sentinel_bypasses_empty_return(self):
         from swgoh_comlink.helpers._utils import sanitize_allycode

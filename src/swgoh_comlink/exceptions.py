@@ -16,8 +16,12 @@ class SwgohComlinkException(Exception):
     def __init__(self, message: str | Exception) -> None:
         super().__init__(message)
         # Log at error level; callers are responsible for traceback context
-        logger.error(f"SwgohComlinkException: {message}")
+        logger.exception(f"SwgohComlinkException: {message}")
 
 
 class SwgohComlinkValueError(SwgohComlinkException, ValueError):
     """Raised when an argument value is invalid."""
+
+
+class SwgohComlinkTypeError(SwgohComlinkException, TypeError):
+    """Raised when an argument type is invalid."""
