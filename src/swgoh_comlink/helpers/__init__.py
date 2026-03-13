@@ -60,6 +60,7 @@ from ._utils import (
     human_time,
     sanitize_allycode,
     validate_file_path,
+    parse_swgoh_string,
 )
 
 __all__ = [
@@ -91,6 +92,7 @@ __all__ = [
     "human_time",
     "sanitize_allycode",
     "validate_file_path",
+    "parse_swgoh_string",
     # Arena
     "get_arena_payout",
     "get_max_rank_jump",

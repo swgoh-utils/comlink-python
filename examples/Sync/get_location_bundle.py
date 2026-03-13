@@ -20,7 +20,7 @@ game_data_versions = comlink.get_latest_game_data_version()
 # Get the language bundle using the latest game data language version
 # By default, Comlink compresses the data and encodes it into a BASE64 string for smaller payload and faster delivery.
 # The result is a string value that must be decoded before using.
-location_bundle = comlink.get_localization_bundle(id=game_data_versions['language'])
+location_bundle = comlink.get_localization_bundle(localization_id=game_data_versions['language'])
 
 # Decode the Base64 result
 loc_bundle_decoded = base64.b64decode(location_bundle['localizationBundle'])
