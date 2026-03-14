@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any
 
 from ..exceptions import SwgohComlinkValueError
 from ._constants import Constants
-from ._sentinels import MISSING, REQUIRED
 from ._utils import get_function_name
 
 if TYPE_CHECKING:
@@ -20,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 _DEFAULT_INITIAL_STEP = 1024
 _DEFAULT_BATCH_SIZE = 50
+
+Leagues: tuple[str, ...] = tuple(Constants.LEAGUES.keys())
 
 
 # ── Boundary probing helpers ──────────────────────────────────────────
@@ -58,8 +59,8 @@ def _find_bracket_boundary(probe_fn: Callable[[int], bool], initial_step: int = 
 
 
 async def _async_find_bracket_boundary(
-    probe_fn: Callable[[int], Any], initial_step: int = _DEFAULT_INITIAL_STEP
-) -> int:
+        probe_fn: Callable[[int], Any], initial_step: int = _DEFAULT_INITIAL_STEP
+        ) -> int:
     """Async version of :func:`_find_bracket_boundary`.
 
     Args:
@@ -92,7 +93,7 @@ async def _async_find_bracket_boundary(
 # ── Pure conversion helpers ───────────────────────────────────────────
 
 
-def convert_league_to_int(league: str | Any = REQUIRED) -> int | None:
+def convert_league_to_int(league: str) -> int | None:
     """Convert GAC leagues to integer
 
     Args:
@@ -102,17 +103,14 @@ def convert_league_to_int(league: str | Any = REQUIRED) -> int | None:
         GAC league identifier as used in game data
 
     """
-    if league is MISSING or not league:
+    if not isinstance(league, str):
         err_msg = f"{get_function_name()}: The 'league' argument is required."
         raise SwgohComlinkValueError(err_msg)
 
-    if isinstance(league, str) and league.lower() in Constants.LEAGUES:
-        return Constants.LEAGUES[league.lower()]
-    else:
-        return None
+    return Constants.LEAGUES.get(league.lower())
 
 
-def convert_divisions_to_int(division: int | str | Any = REQUIRED) -> int | None:
+def convert_divisions_to_int(division: int | str) -> int | None:
     """Convert GAC divisions to integer
 
     Args:
@@ -122,23 +120,17 @@ def convert_divisions_to_int(division: int | str | Any = REQUIRED) -> int | None
         GAC division identifier as used within game data
 
     """
-    if division is MISSING or not division:
+    if not isinstance(division, (str, int)):
         err_msg = f"{get_function_name()}: The 'division' argument is required."
         raise SwgohComlinkValueError(err_msg)
 
-    if isinstance(division, str):
-        if division in Constants.DIVISIONS:
-            return Constants.DIVISIONS[division]
-    if isinstance(division, int) and len(str(division)) == 1:
-        if str(division) in Constants.DIVISIONS:
-            return Constants.DIVISIONS[str(division)]
-    return None
+    return Constants.DIVISIONS.get(division)
 
 
 # ── Event helpers ─────────────────────────────────────────────────────
 
 
-def get_current_gac_event(comlink: Any = REQUIRED) -> dict[str, Any]:
+def get_current_gac_event(comlink: SwgohComlink) -> dict[str, Any]:
     """Return the event object for the current gac season
 
     Args:
@@ -148,25 +140,17 @@ def get_current_gac_event(comlink: Any = REQUIRED) -> dict[str, Any]:
         Current GAC event object or empty if no event is running
 
     """
-    if hasattr(comlink, "__comlink_type__"):
-        comlink_type = comlink.__comlink_type__
-    else:
-        comlink_type = MISSING
-
-    if comlink is MISSING or comlink_type is MISSING:
+    if not isinstance(comlink, SwgohComlink):
         err_str = f"{get_function_name()}: comlink instance must be provided."
         raise SwgohComlinkValueError(err_str)
 
     current_events = comlink.get_events()
 
-    gac_events = [event for event in current_events["gameEvent"] if event["type"] == 10]
-    if not gac_events:
-        raise SwgohComlinkValueError(f"{get_function_name()}: No active GAC event found.")
-    result: dict[str, Any] = gac_events[0]
-    return result
+    gac_events = [event for event in current_events.get("gameEvent", []) if event["type"] == 10]
+    return gac_events[0] if gac_events else {}
 
 
-async def async_get_current_gac_event(comlink: Any = REQUIRED) -> dict[str, Any]:
+async def async_get_current_gac_event(comlink: SwgohComlinkAsync) -> dict[str, Any]:
     """Return the event object for the current gac season (async version).
 
     Args:
@@ -176,30 +160,24 @@ async def async_get_current_gac_event(comlink: Any = REQUIRED) -> dict[str, Any]
         Current GAC event object or empty if no event is running
 
     """
-    if hasattr(comlink, "__comlink_type__"):
-        comlink_type = comlink.__comlink_type__
-    else:
-        comlink_type = MISSING
-
-    if comlink is MISSING or comlink_type is MISSING:
-        err_str = f"{get_function_name()}: comlink instance must be provided."
+    if not isinstance(comlink, SwgohComlinkAsync):
+        err_str = f"{get_function_name()}: async comlink instance must be provided."
         raise SwgohComlinkValueError(err_str)
 
     current_events = await comlink.get_events()
 
-    gac_events = [event for event in current_events["gameEvent"] if event["type"] == 10]
-    if not gac_events:
-        raise SwgohComlinkValueError(f"{get_function_name()}: No active GAC event found.")
-    result: dict[str, Any] = gac_events[0]
-    return result
+    gac_events = [event for event in current_events.get("gameEvent", []) if event["type"] == 10]
+    return gac_events[0] if gac_events else {}
 
 
 # ── Bracket scanning ─────────────────────────────────────────────────
 
 
 def get_gac_brackets(
-    comlink: Any = REQUIRED, league: str | Any = REQUIRED, limit: int = 0
-) -> dict[int, Any] | None:
+        comlink: SwgohComlink,
+        league: str,
+        limit: int = 0
+        ) -> dict[int, Any] | None:
     """Scan currently running GAC brackets for the requested league.
 
     Uses exponential probing with binary search to find the last non-empty
@@ -214,15 +192,11 @@ def get_gac_brackets(
         Dictionary mapping bracket index to player list, or None if no GAC event is running.
 
     """
-    if hasattr(comlink, "__comlink_type__"):
-        comlink_type = comlink.__comlink_type__
-    else:
-        comlink_type = MISSING
-    if comlink is MISSING or comlink_type != "SwgohComlink":
+    if not isinstance(comlink, SwgohComlink):
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         raise SwgohComlinkValueError(err_msg)
 
-    if league is MISSING or not isinstance(league, str):
+    if not isinstance(league, str):
         err_msg = f"{get_function_name()}: 'league' type <str> argument is required."
         raise SwgohComlinkValueError(err_msg)
 
@@ -235,8 +209,8 @@ def get_gac_brackets(
     def _probe(index: int) -> bool:
         group_id = f"{event_instance}:{league}:{index}"
         result = comlink.get_gac_leaderboard(
-            leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
-        )
+                leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
+                )
         return len(result["player"]) > 0
 
     last_bracket = _find_bracket_boundary(_probe)
@@ -249,16 +223,18 @@ def get_gac_brackets(
     for i in range(end + 1):
         group_id = f"{event_instance}:{league}:{i}"
         result = comlink.get_gac_leaderboard(
-            leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
-        )
+                leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
+                )
         brackets[i] = result["player"]
 
     return brackets
 
 
 async def async_get_gac_brackets(
-    comlink: Any = REQUIRED, league: str | Any = REQUIRED, limit: int = 0
-) -> dict[int, Any] | None:
+        comlink: SwgohComlinkAsync,
+        league: str,
+        limit: int = 0
+        ) -> dict[int, Any] | None:
     """Scan currently running GAC brackets for the requested league (async version).
 
     Uses exponential probing with binary search to find the last non-empty
@@ -274,15 +250,11 @@ async def async_get_gac_brackets(
         Dictionary mapping bracket index to player list, or None if no GAC event is running.
 
     """
-    if hasattr(comlink, "__comlink_type__"):
-        comlink_type = comlink.__comlink_type__
-    else:
-        comlink_type = MISSING
-    if comlink is MISSING or comlink_type != "SwgohComlinkAsync":
+    if not isinstance(comlink, SwgohComlinkAsync):
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         raise SwgohComlinkValueError(err_msg)
 
-    if league is MISSING or not isinstance(league, str):
+    if not isinstance(league, str):
         err_msg = f"{get_function_name()}: 'league' type <str> argument is required."
         raise SwgohComlinkValueError(err_msg)
 
@@ -295,8 +267,8 @@ async def async_get_gac_brackets(
     async def _probe(index: int) -> bool:
         group_id = f"{event_instance}:{league}:{index}"
         result = await comlink.get_gac_leaderboard(
-            leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
-        )
+                leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
+                )
         return len(result["player"]) > 0
 
     last_bracket = await _async_find_bracket_boundary(_probe)
@@ -308,8 +280,8 @@ async def async_get_gac_brackets(
     async def _fetch(index: int) -> tuple[int, list[Any]]:
         group_id = f"{event_instance}:{league}:{index}"
         result = await comlink.get_gac_leaderboard(
-            leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
-        )
+                leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
+                )
         return index, result["player"]
 
     brackets: dict[int, Any] = {}
