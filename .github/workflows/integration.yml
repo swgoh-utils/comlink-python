@@ -1,0 +1,101 @@
+name: Integration Tests
+
+on:
+  pull_request:
+    branches: [main, 1.0-maintenance]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      comlink:
+        image: ghcr.io/swgoh-utils/swgoh-comlink:latest
+        env:
+          APP_NAME: comlink-python-integration-tests
+        ports:
+          - 3000:3000
+        options: >-
+          --health-cmd "/swgoh-comlink --check"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 10s
+
+      comlink-hmac:
+        image: ghcr.io/swgoh-utils/swgoh-comlink:latest
+        env:
+          APP_NAME: comlink-python-hmac-integration-tests
+          ACCESS_KEY: test_public_key
+          SECRET_KEY: test_secret_key
+        ports:
+          - 3001:3000
+        options: >-
+          --health-cmd "/swgoh-comlink --check"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 10s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --group test
+
+      - name: Wait for Comlink services
+        run: |
+          comlink_ready=false
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/readyz > /dev/null 2>&1; then
+              comlink_ready=true
+              echo "✓ comlink is ready"
+              break
+            fi
+            echo "Waiting for Comlink... ($i/30)"
+            sleep 2
+          done
+          if [ "$comlink_ready" != "true" ]; then
+            echo "::error::Comlink service failed to start within 60 seconds"
+            docker ps -a
+            exit 1
+          fi
+
+          hmac_ready=false
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/readyz > /dev/null 2>&1; then
+              hmac_ready=true
+              echo "✓ comlink is ready"
+              break
+            fi
+            echo "Waiting for Comlink HMAC... ($i/30)"
+            sleep 2
+          done
+          if [ "$hmac_ready" != "true" ]; then
+            echo "::error::Comlink HMAC service failed to start within 60 seconds"
+            docker ps -a
+            exit 1
+          fi
+
+      - name: Run integration tests
+        env:
+          RUN_INTEGRATION_TESTS: "1"
+        run: uv run python -m pytest tests/integration/ -v
