@@ -2,7 +2,30 @@
 
 <!-- insertion marker -->
 
-## [v2.0.3 Pending Release] - feature/async
+## [v2.0.4 Pending Release] - feature/async
+
+### Features
+
+- add `parse_loc_zip()` utility for parsing SWGOH localization bundle ZIP data
+  into structured dictionaries.
+- add `_localization.py` module with SWGOH string parsing utilities for extracting
+  and transforming game localization data.
+- improve error handling with enhanced exception hierarchy in `exceptions.py`.
+
+### Code Refactoring
+
+- simplify GAC helpers (`_gac.py`) by reducing complexity and improving type
+  checks ([61aa92b](https://github.com/swgoh-utils/comlink-python/commit/61aa92b)).
+- extract localization helpers from `_utils.py` into dedicated `_localization.py`
+  module and update `helpers/__init__.py` exports.
+
+### Testing
+
+- add unit tests for `parse_loc_zip` and SWGOH string parsing utilities
+  (`test_parse_loc_zip.py`).
+- add advanced localization bundle example (`examples/Sync/get_location_bundle_adv.py`).
+- add `gameData.json` test fixture to `tests/resources`.
+- remove unused imports and minor cleanup across unit test files.
 
 ### Breaking Changes
 
