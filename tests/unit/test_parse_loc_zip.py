@@ -150,8 +150,8 @@ class TestParseLoczipMultiFile(TestCase):
         """ZipInfo entries that are directories must not produce output files."""
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf_write:
-            # Add a directory entry
-            zf_write.mkdir("subdir/")
+            # Add a directory entry (use writestr with trailing slash for <3.12 compat)
+            zf_write.writestr(zipfile.ZipInfo("subdir/"), "")
             zf_write.writestr("subdir/file.txt", "K|V\n")
 
         zf = zipfile.ZipFile(io.BytesIO(buf.getvalue()))
