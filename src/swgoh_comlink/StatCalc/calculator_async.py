@@ -79,8 +79,6 @@ class StatCalcAsync(StatCalc):
                 payload = response.json()
         except Exception as exc:
             cls._LOGGER.exception("Failed to fetch game data from GitHub")
-            raise RuntimeError(
-                f"Unable to retrieve game data from {cls._DEFAULT_GAMEDATA_URL}"
-            ) from exc
+            raise RuntimeError(f"Unable to retrieve game data from {cls._DEFAULT_GAMEDATA_URL}") from exc
 
         return cls._normalize_game_data_payload(payload)

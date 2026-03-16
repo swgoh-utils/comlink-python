@@ -1,5 +1,6 @@
 # coding=utf-8
 """Utility functions for parsing localization strings."""
+
 from __future__ import annotations
 
 import re
@@ -23,7 +24,7 @@ def _hex_to_ansi_truecolor(hex_color: str) -> str:
     return f"\033[38;2;{r};{g};{b}m"
 
 
-def _parse_tokens(text: str) -> list[dict]:
+def _parse_tokens(text: str) -> list[dict[str, str]]:
     """
     Tokenize a SWGOH BBCode string into a list of tokens.
     Each token is a dict with a 'type' and relevant fields.
@@ -40,10 +41,7 @@ def _parse_tokens(text: str) -> list[dict]:
       - 'newline':      \\n literal escape in the source string
     """
     # Tag pattern: [TAG] where TAG is /c, -c, -, b, /b, i, /i, or a hex color
-    TAG_RE = re.compile(
-            r'(\[(?:/c|-c|-|/b|/i|b|i|c|[0-9A-Fa-f]{6})\])',
-            re.IGNORECASE
-            )
+    TAG_RE = re.compile(r"(\[(?:/c|-c|-|/b|/i|b|i|c|[0-9A-Fa-f]{6})\])", re.IGNORECASE)
 
     tokens = []
     parts = TAG_RE.split(text)
@@ -70,7 +68,7 @@ def _parse_tokens(text: str) -> list[dict]:
                 tokens.append({"type": "italic_open"})
             elif lower == "/i":
                 tokens.append({"type": "italic_close"})
-            elif re.fullmatch(r'[0-9A-Fa-f]{6}', inner):
+            elif re.fullmatch(r"[0-9A-Fa-f]{6}", inner):
                 tokens.append({"type": "color", "hex": inner.upper()})
         else:
             # Split on literal \n sequences in the source
@@ -88,14 +86,14 @@ def parse_swgoh_string(text: str, output: OutputFormat = "bare") -> str:
     """
     Parse a SWGOH BBCode-style rich text string and convert it to the
     specified output format.
-    
+
     Args:
         text:   Raw SWGOH localization string containing BBCode markup.
         output: One of 'terminal', 'discord', 'web', or 'bare'. [Default: 'bare']
-    
+
     Returns:
         A formatted string in the target format.
-    
+
     Supported tags:
         [c]          - Open color block
         [RRGGBB]     - Set hex color (must follow [c])
@@ -104,7 +102,7 @@ def parse_swgoh_string(text: str, output: OutputFormat = "bare") -> str:
         [b] [/b]     - Bold
         [i] [/i]     - Italic
         \\n           - Newline (literal backslash-n in source)
-    
+
     Output formats:
         terminal  - ANSI truecolor escape codes
         discord   - Discord markdown (**bold**, *italic*, no color support)
@@ -114,10 +112,10 @@ def parse_swgoh_string(text: str, output: OutputFormat = "bare") -> str:
     tokens = _parse_tokens(text)
     state = _FormattingState()
     result = []
-    
+
     for token in tokens:
         token_type = token["type"]
-        
+
         if token_type == "text":
             result.append(token["value"])
         elif token_type == "newline":
@@ -138,20 +136,21 @@ def parse_swgoh_string(text: str, output: OutputFormat = "bare") -> str:
             _handle_italic_open(output, state, result)
         elif token_type == "italic_close":
             _handle_italic_close(output, state, result)
-    
+
     return _finalize_output(output, state, result)
 
 
 class _FormattingState:
     """Tracks the current formatting state during parsing."""
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.active_color: str | None = None
         self.in_color_block = False
         self.bold_depth = 0
         self.italic_depth = 0
 
 
-def _handle_color(token: dict, output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
+def _handle_color(token: dict[str, str], output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     """Handle color token."""
     state.active_color = token["hex"]
     if output == "terminal":
@@ -245,10 +244,10 @@ def _finalize_output(output: OutputFormat, state: _FormattingState, result: list
     """Finalize and return the formatted output."""
     if output == "terminal" and (state.active_color or state.bold_depth or state.italic_depth):
         result.append(ANSI_RESET)
-    
+
     formatted = "".join(result)
-    
+
     if output == "web":
         return f"<p>{formatted}</p>"
-    
+
     return formatted

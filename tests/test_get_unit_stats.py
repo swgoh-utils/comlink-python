@@ -13,9 +13,7 @@ def test_get_unit_stats_with_list(httpx_mock: HTTPXMock):
     """Test that get_unit_stats() posts to the stats endpoint with correct payload."""
     httpx_mock.add_response(json={"stats": {"gp": 12345}})
 
-    client = SwgohComlink(
-        url="http://localhost:3000", stats_url="http://localhost:3223"
-    )
+    client = SwgohComlink(url="http://localhost:3000", stats_url="http://localhost:3223")
     roster = [{"id": "UNIT_001", "defId": "DARTHMALGUS"}]
     result = client.get_unit_stats(roster, flags=["calcGP", "gameStyle"])
 
@@ -29,9 +27,7 @@ def test_get_unit_stats_dict_wrapped_as_list(httpx_mock: HTTPXMock):
     """Test that a dict payload is automatically wrapped in a list."""
     httpx_mock.add_response(json={})
 
-    client = SwgohComlink(
-        url="http://localhost:3000", stats_url="http://localhost:3223"
-    )
+    client = SwgohComlink(url="http://localhost:3000", stats_url="http://localhost:3223")
     client.get_unit_stats({"id": "UNIT_001"})
 
     request = httpx_mock.get_request()

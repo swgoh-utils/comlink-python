@@ -132,7 +132,9 @@ def get_current_datacron_sets(datacron_list: list[dict[str, Any]]) -> list[dict[
     return current_datacron_sets
 
 
-def get_datacron_dismantle_value(datacron: dict[str, Any], datacron_set_list: list[dict[str, Any]], recipe_list: list[dict[str, Any]]) -> dict[str, Any]:
+def get_datacron_dismantle_value(
+    datacron: dict[str, Any], datacron_set_list: list[dict[str, Any]], recipe_list: list[dict[str, Any]]
+) -> dict[str, Any]:
     """
     Retrieves datacron dismantle materials based on the input datacron, datacron sets, and recipes.
 
@@ -174,11 +176,13 @@ def get_datacron_dismantle_value(datacron: dict[str, Any], datacron_set_list: li
             "quantity": ingredient.get("maxQuantity"),
             "type": ingredient.get("type"),
         }
-    dismantle_materials['focused'] = focused
+    dismantle_materials["focused"] = focused
     return dismantle_materials
 
 
-def get_datacron_dismantle_total(datacrons: list[dict[str, Any]], datacron_set_list: list[dict[str, Any]], recipe_list: list[dict[str, Any]]) -> dict[str, Any]:
+def get_datacron_dismantle_total(
+    datacrons: list[dict[str, Any]], datacron_set_list: list[dict[str, Any]], recipe_list: list[dict[str, Any]]
+) -> dict[str, Any]:
     """Calculate aggregated dismantle materials across all datacrons.
 
     Calls :func:`get_datacron_dismantle_value` for each datacron and sums

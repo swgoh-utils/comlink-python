@@ -261,7 +261,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     getLocalizationBundle = get_localization
     get_localization_bundle = get_localization
 
-    async def get_game_metadata(self, client_specs: dict[str, Any] | None = None, enums: bool = False) -> dict[str, Any]:
+    async def get_game_metadata(
+        self, client_specs: dict[str, Any] | None = None, enums: bool = False
+    ) -> dict[str, Any]:
         """
         Get the game metadata. Game metadata contains the current game and localization versions.
 
@@ -283,7 +285,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     getMetaData = get_game_metadata
     get_metadata = get_game_metadata
 
-    async def get_player(self, allycode: str | int | None = None, player_id: str | None = None, enums: bool = False) -> dict[str, Any]:
+    async def get_player(
+        self, allycode: str | int | None = None, player_id: str | None = None, enums: bool = False
+    ) -> dict[str, Any]:
         """
         Get player information from game. Either allycode or player_id must be provided.
 
@@ -303,7 +307,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     @param_alias(param="player_details_only", alias="playerDetailsOnly")
     async def get_player_arena(
-        self, allycode: str | int | None = None, player_id: str | None = None, player_details_only: bool = False, enums: bool = False
+        self,
+        allycode: str | int | None = None,
+        player_id: str | None = None,
+        player_details_only: bool = False,
+        enums: bool = False,
     ) -> dict[str, Any]:
         """
         Get player arena information from game. Either allycode or player_id must be provided.
@@ -328,7 +336,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     getPlayerArenaProfile = get_player_arena
 
     @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
-    async def get_guild(self, guild_id: str, include_recent_guild_activity_info: bool = False, enums: bool = False) -> dict[str, Any]:
+    async def get_guild(
+        self, guild_id: str, include_recent_guild_activity_info: bool = False, enums: bool = False
+    ) -> dict[str, Any]:
         """
         Get guild information for a specific Guild ID.
 
@@ -354,7 +364,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     # alias for non PEP usage of direct endpoint calls
     getGuild = get_guild
 
-    async def get_guilds_by_name(self, name: str, start_index: int = 0, count: int = 10, enums: bool = False) -> dict[str, Any]:
+    async def get_guilds_by_name(
+        self, name: str, start_index: int = 0, count: int = 10, enums: bool = False
+    ) -> dict[str, Any]:
         """
         Search for guild by name and return match.
 
@@ -451,7 +463,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     get_gac_leaderboard = get_leaderboard
     getGacLeaderboard = get_leaderboard
 
-    async def get_guild_leaderboard(self, leaderboard_id: list[dict[str, Any]], count: int = 200, enums: bool = False) -> dict[str, Any]:
+    async def get_guild_leaderboard(
+        self, leaderboard_id: list[dict[str, Any]], count: int = 200, enums: bool = False
+    ) -> dict[str, Any]:
         """
         Fetches the guild leaderboard data for given leaderboard ID.
 

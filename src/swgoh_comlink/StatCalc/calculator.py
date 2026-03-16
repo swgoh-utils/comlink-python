@@ -23,9 +23,7 @@ class StatCalc:
     _FIXED_PERCENT_VALS = True
     _FIXED_CALC_GP = True
 
-    _DEFAULT_GAMEDATA_URL = (
-        "https://raw.githubusercontent.com/swgoh-utils/gamedata/main/gameData.json"
-    )
+    _DEFAULT_GAMEDATA_URL = "https://raw.githubusercontent.com/swgoh-utils/gamedata/main/gameData.json"
     _LOGGER = logging.getLogger(__name__)
 
     STATS_NAME_MAP: dict[str, dict[str, Any]] = _CANONICAL_STATS
@@ -102,9 +100,7 @@ class StatCalc:
 
         return unit
 
-    def calc_ship_stats(
-        self, unit: dict[str, Any], crew_member: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def calc_ship_stats(self, unit: dict[str, Any], crew_member: list[dict[str, Any]]) -> dict[str, Any]:
         """Calculate stats and GP for a ship unit.
 
         Args:
@@ -170,7 +166,6 @@ class StatCalc:
                 crw = [crew[cid] for cid in meta["crew"] if cid in crew]
                 unit = self.calc_ship_stats(ship, crw)
 
-
         elif isinstance(units, dict):
             for unit_id, unit_list in units.items():
                 is_char = self._unit_data.get(unit_id, {}).get("combatType") == 1
@@ -182,9 +177,7 @@ class StatCalc:
                         "rarity": unit.get("currentRarity"),
                         "level": unit.get("currentLevel"),
                         "gear": unit.get("currentTier"),
-                        "equipped": [
-                            {"equipmentId": gid} for gid in unit.get("gear", [])
-                        ],
+                        "equipped": [{"equipmentId": gid} for gid in unit.get("gear", [])],
                         "mods": unit.get("equippedStatMod"),
                         "skills": unit.get("skill", []),
                     }
@@ -196,7 +189,9 @@ class StatCalc:
 
         return units
 
-    def calc_player_stats(self, players: dict[str, Any] | list[dict[str, Any]]) -> dict[str, Any] | list[dict[str, Any]]:
+    def calc_player_stats(
+        self, players: dict[str, Any] | list[dict[str, Any]]
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         """Calculate stats for one or more player payloads.
 
         Args:
@@ -263,15 +258,11 @@ class StatCalc:
     def _fetch_game_data_from_github(cls) -> dict[str, Any]:
         try:
             cls._LOGGER.info("Fetching game data from %s", cls._DEFAULT_GAMEDATA_URL)
-            with urllib.request.urlopen(
-                cls._DEFAULT_GAMEDATA_URL, timeout=30
-            ) as response:
+            with urllib.request.urlopen(cls._DEFAULT_GAMEDATA_URL, timeout=30) as response:
                 payload = json.loads(response.read().decode("utf-8"))
         except Exception as exc:  # pragma: no cover - network failure path
             cls._LOGGER.exception("Failed to fetch game data from GitHub")
-            raise RuntimeError(
-                f"Unable to retrieve game data from {cls._DEFAULT_GAMEDATA_URL}"
-            ) from exc
+            raise RuntimeError(f"Unable to retrieve game data from {cls._DEFAULT_GAMEDATA_URL}") from exc
 
         return cls._normalize_game_data_payload(payload)
 
@@ -335,10 +326,7 @@ class StatCalc:
                 "equipped": char.get("equipment", []),
                 "equippedStatMod": char.get("equippedStatMod"),
                 "relic": char.get("relic"),
-                "skills": [
-                    {"id": skill["id"], "tier": skill["tier"] + 2}
-                    for skill in char.get("skill", [])
-                ],
+                "skills": [{"id": skill["id"], "tier": skill["tier"] + 2} for skill in char.get("skill", [])],
             }
         else:
             normalized = copy.deepcopy(char)
@@ -357,10 +345,7 @@ class StatCalc:
                 "defId": ship["definitionId"].split(":")[0],
                 "rarity": ship["currentRarity"],
                 "level": ship["currentLevel"],
-                "skills": [
-                    {"id": skill["id"], "tier": skill["tier"] + 2}
-                    for skill in ship.get("skill", [])
-                ],
+                "skills": [{"id": skill["id"], "tier": skill["tier"] + 2} for skill in ship.get("skill", [])],
             }
             normalized_crew = []
             for c in crew:
@@ -374,10 +359,7 @@ class StatCalc:
                         "equippedStatMod": c.get("equippedStatMod"),
                         "mods": c.get("mods"),
                         "relic": c.get("relic"),
-                        "skills": [
-                            {"id": s["id"], "tier": s["tier"] + 2}
-                            for s in c.get("skill", [])
-                        ],
+                        "skills": [{"id": s["id"], "tier": s["tier"] + 2} for s in c.get("skill", [])],
                         "gp": c.get("gp"),
                     }
                 )
@@ -407,9 +389,7 @@ class StatCalc:
         gear_lvl = self._table_get(meta["gearLvl"], char["gear"], {})
         stats = {
             "base": dict(gear_lvl.get("stats", {})),
-            "growthModifiers": dict(
-                self._table_get(meta["growthModifiers"], char["rarity"], {})
-            ),
+            "growthModifiers": dict(self._table_get(meta["growthModifiers"], char["rarity"], {})),
             "gear": {},
         }
 
@@ -417,15 +397,9 @@ class StatCalc:
         gear_agg = stats["gear"]
 
         for gear_piece in char.get("equipped", []):
-            gear_id = (
-                gear_piece.get("equipmentId")
-                if isinstance(gear_piece, dict)
-                else gear_piece
-            )
+            gear_id = gear_piece.get("equipmentId") if isinstance(gear_piece, dict) else gear_piece
             gear_id_str = str(gear_id)
-            gear_entry = self._gear_data.get(gear_id_str) or self._gear_data.get(
-                gear_id_str
-            )
+            gear_entry = self._gear_data.get(gear_id_str) or self._gear_data.get(gear_id_str)
             if not gear_entry:
                 continue
             for stat_id, value in gear_entry.get("stats", {}).items():
@@ -436,14 +410,10 @@ class StatCalc:
 
         relic = char.get("relic")
         if relic and relic.get("currentTier", 0) > 2:
-            relic_def = self._table_get(
-                meta.get("relic", []), relic["currentTier"], None
-            )
+            relic_def = self._table_get(meta.get("relic", []), relic["currentTier"], None)
             if relic_def:
                 relic_def_str = str(relic_def)
-                relic_entry = self._relic_data.get(
-                    relic_def_str
-                ) or self._relic_data.get(relic_def_str)
+                relic_entry = self._relic_data.get(relic_def_str) or self._relic_data.get(relic_def_str)
                 if relic_entry:
                     for stat_id, value in relic_entry.get("stats", {}).items():
                         self._add_stat(base, stat_id, value)
@@ -452,9 +422,7 @@ class StatCalc:
 
         return stats
 
-    def _get_ship_raw_stats(
-        self, ship: dict[str, Any], crew: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def _get_ship_raw_stats(self, ship: dict[str, Any], crew: list[dict[str, Any]]) -> dict[str, Any]:
         assert self._unit_data is not None
         assert self._cr_tables is not None
         def_id = ship["defId"]
@@ -466,40 +434,25 @@ class StatCalc:
             )
 
         if len(crew) != len(meta["crew"]):
-            raise ValueError(
-                f"Incorrect number of crew members for ship {ship['defId']}"
-            )
+            raise ValueError(f"Incorrect number of crew members for ship {ship['defId']}")
 
         for char in crew:
             if char["defId"] not in meta["crew"]:
-                raise ValueError(
-                    f"Unit {char['defId']} is not in {ship['defId']}'s crew"
-                )
+                raise ValueError(f"Unit {char['defId']} is not in {ship['defId']}'s crew")
 
-        crew_rating = (
-            self._get_crewless_crew_rating(ship)
-            if len(crew) == 0
-            else self._get_crew_rating(crew)
-        )
+        crew_rating = self._get_crewless_crew_rating(ship) if len(crew) == 0 else self._get_crew_rating(crew)
 
         stats = {
             "base": dict(meta.get("stats", {})),
             "crew": {},
-            "growthModifiers": dict(
-                self._table_get(meta["growthModifiers"], ship["rarity"], {})
-            ),
+            "growthModifiers": dict(self._table_get(meta["growthModifiers"], ship["rarity"], {})),
         }
 
-        stat_multiplier = (
-            self._table_get(self._cr_tables["shipRarityFactor"], ship["rarity"])
-            * crew_rating
-        )
+        stat_multiplier = self._table_get(self._cr_tables["shipRarityFactor"], ship["rarity"]) * crew_rating
         for stat_id, stat_value in meta.get("crewStats", {}).items():
             sid = int(stat_id)
             precision = 8 if (sid < 16 or sid == 28) else 0
-            stats["crew"][str(stat_id)] = self._floor(
-                stat_value * stat_multiplier, precision
-            )
+            stats["crew"][str(stat_id)] = self._floor(stat_value * stat_multiplier, precision)
 
         return stats
 
@@ -520,9 +473,7 @@ class StatCalc:
             if char.get("mods"):
                 for mod in char["mods"]:
                     total_cr += self._table_get(
-                        self._table_get(
-                            self._cr_tables["modRarityLevelCR"], mod["pips"]
-                        ),
+                        self._table_get(self._cr_tables["modRarityLevelCR"], mod["pips"]),
                         mod["level"],
                     )
             elif char.get("equippedStatMod"):
@@ -539,9 +490,7 @@ class StatCalc:
             if relic and relic.get("currentTier", 0) > 2:
                 tier = relic["currentTier"]
                 total_cr += self._table_get(self._cr_tables["relicTierCR"], tier)
-                total_cr += char["level"] * self._table_get(
-                    self._cr_tables["relicTierLevelFactor"], tier
-                )
+                total_cr += char["level"] * self._table_get(self._cr_tables["relicTierLevelFactor"], tier)
 
         return total_cr
 
@@ -563,14 +512,10 @@ class StatCalc:
         cr = 0.0
         for skill in skills:
             mult = 0.696 if str(skill["id"]).startswith("hardware") else 2.46
-            cr += mult * self._table_get(
-                self._cr_tables["abilityLevelCR"], skill["tier"]
-            )
+            cr += mult * self._table_get(self._cr_tables["abilityLevelCR"], skill["tier"])
         return cr
 
-    def _calculate_base_stats(
-        self, stats: dict[str, Any], level: int, base_id: str
-    ) -> dict[str, Any]:
+    def _calculate_base_stats(self, stats: dict[str, Any], level: int, base_id: str) -> dict[str, Any]:
         assert self._unit_data is not None
         assert self._cr_tables is not None
         base = stats["base"]
@@ -592,8 +537,7 @@ class StatCalc:
             base,
             6,
             self._floor(
-                self._table_get(base, 6)
-                + (self._table_get(base, ud["primaryStat"]) * 1.4),
+                self._table_get(base, 6) + (self._table_get(base, ud["primaryStat"]) * 1.4),
                 8,
             )
             - self._table_get(base, 6),
@@ -601,16 +545,13 @@ class StatCalc:
         self._add_stat(
             base,
             7,
-            self._floor(self._table_get(base, 7) + (self._table_get(base, 4) * 2.4), 8)
-            - self._table_get(base, 7),
+            self._floor(self._table_get(base, 7) + (self._table_get(base, 4) * 2.4), 8) - self._table_get(base, 7),
         )
         self._add_stat(
             base,
             8,
             self._floor(
-                self._table_get(base, 8)
-                + (self._table_get(base, 2) * 0.14)
-                + (self._table_get(base, 3) * 0.07),
+                self._table_get(base, 8) + (self._table_get(base, 2) * 0.14) + (self._table_get(base, 3) * 0.07),
                 8,
             )
             - self._table_get(base, 8),
@@ -618,14 +559,12 @@ class StatCalc:
         self._add_stat(
             base,
             9,
-            self._floor(self._table_get(base, 9) + (self._table_get(base, 4) * 0.1), 8)
-            - self._table_get(base, 9),
+            self._floor(self._table_get(base, 9) + (self._table_get(base, 4) * 0.1), 8) - self._table_get(base, 9),
         )
         self._add_stat(
             base,
             14,
-            self._floor(self._table_get(base, 14) + (self._table_get(base, 3) * 0.4), 8)
-            - self._table_get(base, 14),
+            self._floor(self._table_get(base, 14) + (self._table_get(base, 3) * 0.4), 8) - self._table_get(base, 14),
         )
 
         self._add_stat(base, 12, 24 * 1e8)
@@ -636,9 +575,7 @@ class StatCalc:
 
         return stats
 
-    def _calculate_mod_stats(
-        self, base_stats: dict[str, Any], char: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _calculate_mod_stats(self, base_stats: dict[str, Any], char: dict[str, Any]) -> dict[str, Any]:
         if not char.get("mods") and not char.get("equippedStatMod"):
             return {}
 
@@ -665,9 +602,7 @@ class StatCalc:
                     for stat in mod["stat"]:
                         sid, sval = stat
                         key = str(sid)
-                        raw_mod_stats[key] = raw_mod_stats.get(
-                            key, 0
-                        ) + self._scale_mod_stat_value(sid, sval)
+                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(sid, sval)
                 else:
                     stat = mod.get("primaryStat")
                     secondary = mod.get("secondaryStat", [])
@@ -675,9 +610,7 @@ class StatCalc:
                     while stat:
                         sid = stat["unitStat"]
                         key = str(sid)
-                        raw_mod_stats[key] = raw_mod_stats.get(
-                            key, 0
-                        ) + self._scale_mod_stat_value(sid, stat["value"])
+                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(sid, stat["value"])
                         if i >= len(secondary):
                             break
                         stat = secondary[i]
@@ -702,9 +635,7 @@ class StatCalc:
                 while stat:
                     sid = stat["unitStatId"]
                     key = str(sid)
-                    raw_mod_stats[key] = raw_mod_stats.get(key, 0) + float(
-                        stat["unscaledDecimalValue"]
-                    )
+                    raw_mod_stats[key] = raw_mod_stats.get(key, 0) + float(stat["unscaledDecimalValue"])
                     if i >= len(secondary):
                         break
                     stat = secondary[i].get("stat")
@@ -714,13 +645,9 @@ class StatCalc:
             set_def = self._table_get(self._mod_set_data, set_id, None)
             if not set_def:
                 continue
-            multiplier = (bonus["count"] // set_def["count"]) + (
-                bonus["maxLevel"] // set_def["count"]
-            )
+            multiplier = (bonus["count"] // set_def["count"]) + (bonus["maxLevel"] // set_def["count"])
             key = str(set_def["id"])
-            raw_mod_stats[key] = raw_mod_stats.get(key, 0) + (
-                set_def["value"] * multiplier
-            )
+            raw_mod_stats[key] = raw_mod_stats.get(key, 0) + (set_def["value"] * multiplier)
 
         mod_stats: dict[str, float] = {}
         for stat_id_str, value in raw_mod_stats.items():
@@ -736,8 +663,7 @@ class StatCalc:
                     mod_stats,
                     6,
                     self._floor(
-                        self._table_get(mod_stats, 6)
-                        + (self._table_get(base_stats, 6) * 1e-8 * value),
+                        self._table_get(mod_stats, 6) + (self._table_get(base_stats, 6) * 1e-8 * value),
                         8,
                     )
                     - self._table_get(mod_stats, 6),
@@ -746,8 +672,7 @@ class StatCalc:
                     mod_stats,
                     7,
                     self._floor(
-                        self._table_get(mod_stats, 7)
-                        + (self._table_get(base_stats, 7) * 1e-8 * value),
+                        self._table_get(mod_stats, 7) + (self._table_get(base_stats, 7) * 1e-8 * value),
                         8,
                     )
                     - self._table_get(mod_stats, 7),
@@ -757,8 +682,7 @@ class StatCalc:
                     mod_stats,
                     8,
                     self._floor(
-                        self._table_get(mod_stats, 8)
-                        + (self._table_get(base_stats, 8) * 1e-8 * value),
+                        self._table_get(mod_stats, 8) + (self._table_get(base_stats, 8) * 1e-8 * value),
                         8,
                     )
                     - self._table_get(mod_stats, 8),
@@ -767,8 +691,7 @@ class StatCalc:
                     mod_stats,
                     9,
                     self._floor(
-                        self._table_get(mod_stats, 9)
-                        + (self._table_get(base_stats, 9) * 1e-8 * value),
+                        self._table_get(mod_stats, 9) + (self._table_get(base_stats, 9) * 1e-8 * value),
                         8,
                     )
                     - self._table_get(mod_stats, 9),
@@ -784,8 +707,7 @@ class StatCalc:
                     mod_stats,
                     1,
                     self._floor(
-                        self._table_get(mod_stats, 1)
-                        + (self._table_get(base_stats, 1) * 1e-8 * value),
+                        self._table_get(mod_stats, 1) + (self._table_get(base_stats, 1) * 1e-8 * value),
                         8,
                     )
                     - self._table_get(mod_stats, 1),
@@ -795,8 +717,7 @@ class StatCalc:
                     mod_stats,
                     28,
                     self._floor(
-                        self._table_get(mod_stats, 28)
-                        + (self._table_get(base_stats, 28) * 1e-8 * value),
+                        self._table_get(mod_stats, 28) + (self._table_get(base_stats, 28) * 1e-8 * value),
                         8,
                     )
                     - self._table_get(mod_stats, 28),
@@ -806,8 +727,7 @@ class StatCalc:
                     mod_stats,
                     5,
                     self._floor(
-                        self._table_get(mod_stats, 5)
-                        + (self._table_get(base_stats, 5) * 1e-8 * value),
+                        self._table_get(mod_stats, 5) + (self._table_get(base_stats, 5) * 1e-8 * value),
                         8,
                     )
                     - self._table_get(mod_stats, 5),
@@ -859,17 +779,13 @@ class StatCalc:
             self._convert_percent(
                 stats,
                 8,
-                lambda val: self._convert_flat_def_to_percent(
-                    val, level, scale * 1e8, "crew" in stats
-                ),
+                lambda val: self._convert_flat_def_to_percent(val, level, scale * 1e8, "crew" in stats),
                 level,
             )
             self._convert_percent(
                 stats,
                 9,
-                lambda val: self._convert_flat_def_to_percent(
-                    val, level, scale * 1e8, "crew" in stats
-                ),
+                lambda val: self._convert_flat_def_to_percent(val, level, scale * 1e8, "crew" in stats),
                 level,
             )
             self._convert_percent(
@@ -938,11 +854,7 @@ class StatCalc:
                     gs_stats["final"][key] = gs_stats["final"].get(key, 0) + (
                         self._table_get(stats["base"], stat_id)
                         + self._table_get(stats["gear"], stat_id)
-                        + (
-                            self._table_get(stats["mods"], stat_id)
-                            if "mods" in stats
-                            else 0
-                        )
+                        + (self._table_get(stats["mods"], stat_id) if "mods" in stats else 0)
                     )
             else:
                 for sid in stats.get("crew", {}).keys():
@@ -950,9 +862,9 @@ class StatCalc:
                 gs_stats["crew"] = stats.get("crew", {})
 
                 for stat_id in stat_list:
-                    gs_stats["final"][str(stat_id)] = self._table_get(
-                        stats["base"], stat_id
-                    ) + self._table_get(stats["crew"], stat_id)
+                    gs_stats["final"][str(stat_id)] = self._table_get(stats["base"], stat_id) + self._table_get(
+                        stats["crew"], stat_id
+                    )
 
             stats = gs_stats
 
@@ -1016,9 +928,7 @@ class StatCalc:
             gp += self._get_skill_gp(char["defId"], skill)
 
         if char.get("purchasedAbilityId"):
-            gp += len(char["purchasedAbilityId"]) * self._table_get(
-                self._gp_tables["abilitySpecialGP"], "ultimate"
-            )
+            gp += len(char["purchasedAbilityId"]) * self._table_get(self._gp_tables["abilitySpecialGP"], "ultimate")
 
         if char.get("mods"):
             for mod in char["mods"]:
@@ -1049,9 +959,7 @@ class StatCalc:
         if relic and relic.get("currentTier", 0) > 2:
             tier = relic["currentTier"]
             gp += self._table_get(self._gp_tables["relicTierGP"], tier)
-            gp += char["level"] * self._table_get(
-                self._gp_tables["relicTierLevelFactor"], tier
-            )
+            gp += char["level"] * self._table_get(self._gp_tables["relicTierLevelFactor"], tier)
 
         return int(self._floor(gp * 1.5))
 
@@ -1064,18 +972,14 @@ class StatCalc:
         )
         if not skill_def:
             return 0
-        power_override = self._table_get(
-            skill_def.get("powerOverrideTags", {}), skill["tier"], None
-        )
+        power_override = self._table_get(skill_def.get("powerOverrideTags", {}), skill["tier"], None)
         if power_override:
             gp_value: float = self._table_get(self._gp_tables["abilitySpecialGP"], power_override)
             return gp_value
         gp_value = self._table_get(self._gp_tables["abilityLevelGP"], skill["tier"], 0)
         return gp_value
 
-    def _calc_ship_gp(
-        self, ship: dict[str, Any], crew: list[dict[str, Any]] | None = None
-    ) -> int:
+    def _calc_ship_gp(self, ship: dict[str, Any], crew: list[dict[str, Any]] | None = None) -> int:
         assert self._unit_data is not None
         assert self._gp_tables is not None
         if crew is None:
@@ -1083,39 +987,31 @@ class StatCalc:
 
         expected = self._unit_data[ship["defId"]]["crew"]
         if len(crew) != len(expected):
-            raise ValueError(
-                f"Incorrect number of crew members for ship {ship['defId']}"
-            )
+            raise ValueError(f"Incorrect number of crew members for ship {ship['defId']}")
 
         for char in crew:
             if char["defId"] not in expected:
-                raise ValueError(
-                    f"Unit {char['defId']} is not in {ship['defId']}'s crew"
-                )
+                raise ValueError(f"Unit {char['defId']} is not in {ship['defId']}'s crew")
 
         if len(crew) == 0:
             gps = self._get_crewless_skills_gp(ship["defId"], ship.get("skills", []))
-            gps["level"] = self._table_get(
-                self._gp_tables["unitLevelGP"], ship["level"]
+            gps["level"] = self._table_get(self._gp_tables["unitLevelGP"], ship["level"])
+            gp = (gps["level"] * 3.5 + gps["ability"] * 5.74 + gps["reinforcement"] * 1.61) * self._table_get(
+                self._gp_tables["shipRarityFactor"], ship["rarity"]
             )
-            gp = (
-                gps["level"] * 3.5 + gps["ability"] * 5.74 + gps["reinforcement"] * 1.61
-            ) * self._table_get(self._gp_tables["shipRarityFactor"], ship["rarity"])
             gp += gps["level"] + gps["ability"] + gps["reinforcement"]
         else:
             gp = sum(c["gp"] for c in crew)
-            gp *= self._table_get(
-                self._gp_tables["shipRarityFactor"], ship["rarity"]
-            ) * self._table_get(self._gp_tables["crewSizeFactor"], len(crew))
+            gp *= self._table_get(self._gp_tables["shipRarityFactor"], ship["rarity"]) * self._table_get(
+                self._gp_tables["crewSizeFactor"], len(crew)
+            )
             gp += self._table_get(self._gp_tables["unitLevelGP"], ship["level"])
             for skill in ship.get("skills", []):
                 gp += self._get_skill_gp(ship["defId"], skill)
 
         return int(self._floor(gp * 1.5))
 
-    def _get_crewless_skills_gp(
-        self, unit_id: str, skills: list[dict[str, Any]]
-    ) -> dict[str, float]:
+    def _get_crewless_skills_gp(self, unit_id: str, skills: list[dict[str, Any]]) -> dict[str, float]:
         assert self._unit_data is not None
         assert self._gp_tables is not None
         ability = 0.0
@@ -1123,29 +1019,19 @@ class StatCalc:
 
         for skill in skills:
             skill_def = next(
-                (
-                    s
-                    for s in self._unit_data[unit_id]["skills"]
-                    if s["id"] == skill["id"]
-                ),
+                (s for s in self._unit_data[unit_id]["skills"] if s["id"] == skill["id"]),
                 None,
             )
             if not skill_def:
                 continue
-            o_tag = self._table_get(
-                skill_def.get("powerOverrideTags", {}), skill["tier"], None
-            )
+            o_tag = self._table_get(skill_def.get("powerOverrideTags", {}), skill["tier"], None)
             if o_tag and str(o_tag).startswith("reinforcement"):
-                reinforcement += self._table_get(
-                    self._gp_tables["abilitySpecialGP"], o_tag
-                )
+                reinforcement += self._table_get(self._gp_tables["abilitySpecialGP"], o_tag)
             else:
                 ability += (
                     self._table_get(self._gp_tables["abilitySpecialGP"], o_tag)
                     if o_tag
-                    else self._table_get(
-                        self._gp_tables["abilityLevelGP"], skill["tier"]
-                    )
+                    else self._table_get(self._gp_tables["abilityLevelGP"], skill["tier"])
                 )
 
         return {"ability": ability, "reinforcement": reinforcement}

@@ -37,9 +37,7 @@ def test_get_enums_with_hmac(httpx_mock: HTTPXMock):
     assert str(request.url) == "http://localhost:3000/enums"
     assert "x-date" in request.headers
     assert "authorization" in request.headers
-    assert request.headers["authorization"].startswith(
-        "HMAC-SHA256 Credential=test_access,Signature="
-    )
+    assert request.headers["authorization"].startswith("HMAC-SHA256 Credential=test_access,Signature=")
 
 
 def test_get_enums_respects_verify_ssl(httpx_mock: HTTPXMock):

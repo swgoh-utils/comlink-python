@@ -1,4 +1,5 @@
 """Tests for the SwgohComlinkBase class and related utilities in _base.py."""
+
 from __future__ import annotations
 
 import hashlib
@@ -12,6 +13,7 @@ from swgoh_comlink._base import _SENSITIVE_KEYS, SwgohComlinkBase, param_alias, 
 from swgoh_comlink.exceptions import SwgohComlinkValueError
 
 # ── sanitize_url ─────────────────────────────────────────────────────────
+
 
 class TestSanitizeUrl:
     def test_strips_trailing_slash(self):
@@ -31,6 +33,7 @@ class TestSanitizeUrl:
 
 
 # ── param_alias ──────────────────────────────────────────────────────────
+
 
 class TestParamAlias:
     def test_alias_is_translated(self):
@@ -60,6 +63,7 @@ class TestParamAlias:
 
 # ── SwgohComlinkBase direct instantiation ────────────────────────────────
 
+
 class TestBaseDirectInstantiation:
     def test_cannot_instantiate_base_directly(self):
         with pytest.raises(TypeError, match="Only subclasses"):
@@ -67,6 +71,7 @@ class TestBaseDirectInstantiation:
 
 
 # ── Constructor ──────────────────────────────────────────────────────────
+
 
 class TestConstructor:
     def test_host_override(self):
@@ -108,6 +113,7 @@ class TestConstructor:
 
 
 # ── HMAC header construction ─────────────────────────────────────────────
+
 
 class TestHmacHeaders:
     def test_no_hmac_returns_empty_headers(self):
@@ -179,6 +185,7 @@ class TestHmacHeaders:
 
 # ── _get_player_payload ──────────────────────────────────────────────────
 
+
 class TestGetPlayerPayload:
     def test_with_allycode(self):
         payload = SwgohComlinkBase._get_player_payload(allycode=123456789)
@@ -207,6 +214,7 @@ class TestGetPlayerPayload:
 
 
 # ── _build_game_data_payload ─────────────────────────────────────────────
+
 
 class TestBuildGameDataPayload:
     def test_default_payload(self):
@@ -249,22 +257,19 @@ class TestBuildGameDataPayload:
 
     def test_with_numeric_string_items(self):
         """Numeric strings (e.g. from str(int(IntFlag))) pass through as-is."""
-        payload = SwgohComlinkBase._build_game_data_payload(
-            game_version="1.0", items="206196178989"
-        )
+        payload = SwgohComlinkBase._build_game_data_payload(game_version="1.0", items="206196178989")
         assert payload["payload"]["items"] == "206196178989"
         assert "requestSegment" not in payload["payload"]
 
     def test_with_negative_numeric_string_items(self):
         """Negative numeric strings (e.g. '-1' for ALL) pass through as-is."""
-        payload = SwgohComlinkBase._build_game_data_payload(
-            game_version="1.0", items="-1"
-        )
+        payload = SwgohComlinkBase._build_game_data_payload(game_version="1.0", items="-1")
         assert payload["payload"]["items"] == "-1"
         assert "requestSegment" not in payload["payload"]
 
 
 # ── _build_unit_stats_endpoint ───────────────────────────────────────────
+
 
 class TestBuildUnitStatsEndpoint:
     def test_no_flags_no_language(self):
@@ -299,6 +304,7 @@ class TestBuildUnitStatsEndpoint:
 
 # ── _mask ─────────────────────────────────────────────────────────────────
 
+
 class TestMask:
     def test_none_returns_none_string(self):
         assert SwgohComlinkBase._mask(None) == "None"
@@ -317,6 +323,7 @@ class TestMask:
 
 
 # ── __repr__ ──────────────────────────────────────────────────────────────
+
 
 class TestRepr:
     def test_repr_masks_keys(self):
@@ -344,6 +351,7 @@ class TestRepr:
 
 
 # ── Sensitive key masking in logs ─────────────────────────────────────────
+
 
 class TestSensitiveKeyMasking:
     def test_sensitive_keys_set_contains_expected(self):

@@ -162,9 +162,10 @@ class TestRarityRows:
     """Tests for _rarity_rows() rarity enum parsing."""
 
     def test_all_seven_rarities(self):
-        rows = [{"key": f"{name}_STAR", "value": i * 10}
-                for name, i in [("ONE", 1), ("TWO", 2), ("THREE", 3), ("FOUR", 4),
-                                ("FIVE", 5), ("SIX", 6), ("SEVEN", 7)]]
+        rows = [
+            {"key": f"{name}_STAR", "value": i * 10}
+            for name, i in [("ONE", 1), ("TWO", 2), ("THREE", 3), ("FOUR", 4), ("FIVE", 5), ("SIX", 6), ("SEVEN", 7)]
+        ]
         result = _rarity_rows(rows)
         assert len(result) == 7
         assert result["1"] == 10
@@ -420,13 +421,17 @@ class TestBuildStatTables:
         assert result == {}
 
     def test_single_table(self):
-        entries = [{
-            "id": "stattable_foo",
-            "stat": {"stat": [
-                {"unitStatId": 2, "unscaledDecimalValue": 100},
-                {"unitStatId": 3, "unscaledDecimalValue": "50.0"},
-            ]},
-        }]
+        entries = [
+            {
+                "id": "stattable_foo",
+                "stat": {
+                    "stat": [
+                        {"unitStatId": 2, "unscaledDecimalValue": 100},
+                        {"unitStatId": 3, "unscaledDecimalValue": "50.0"},
+                    ]
+                },
+            }
+        ]
         result = _build_stat_tables(entries)
         assert "stattable_foo" in result
         assert result["stattable_foo"]["2"] == 100
@@ -456,28 +461,32 @@ class TestBuildSkillsMap:
         assert result["basic01"]["powerOverrideTags"] == {}
 
     def test_skill_with_zeta(self):
-        skills = [{
-            "id": "special01",
-            "tier": [
-                {"powerOverrideTag": ""},
-                {"powerOverrideTag": ""},
-                {"powerOverrideTag": "zeta"},
-            ],
-        }]
+        skills = [
+            {
+                "id": "special01",
+                "tier": [
+                    {"powerOverrideTag": ""},
+                    {"powerOverrideTag": ""},
+                    {"powerOverrideTag": "zeta"},
+                ],
+            }
+        ]
         result = _build_skills_map(skills)
         assert result["special01"]["isZeta"] is True
         assert result["special01"]["maxTier"] == 4
 
     def test_power_override_tags_collected(self):
-        skills = [{
-            "id": "unique01",
-            "tier": [
-                {"powerOverrideTag": ""},
-                {"powerOverrideTag": "zeta"},
-                {"powerOverrideTag": ""},
-                {"powerOverrideTag": "omicron"},
-            ],
-        }]
+        skills = [
+            {
+                "id": "unique01",
+                "tier": [
+                    {"powerOverrideTag": ""},
+                    {"powerOverrideTag": "zeta"},
+                    {"powerOverrideTag": ""},
+                    {"powerOverrideTag": "omicron"},
+                ],
+            }
+        ]
         result = _build_skills_map(skills)
         tags = result["unique01"]["powerOverrideTags"]
         assert tags == {"3": "zeta", "5": "omicron"}
@@ -490,13 +499,17 @@ class TestBuildGearData:
         assert _build_gear_data([]) == {}
 
     def test_gear_with_stats(self):
-        equipment = [{
-            "id": "gear001",
-            "equipmentStat": {"stat": [
-                {"unitStatId": 1, "unscaledDecimalValue": 500},
-                {"unitStatId": 6, "unscaledDecimalValue": 25},
-            ]},
-        }]
+        equipment = [
+            {
+                "id": "gear001",
+                "equipmentStat": {
+                    "stat": [
+                        {"unitStatId": 1, "unscaledDecimalValue": 500},
+                        {"unitStatId": 6, "unscaledDecimalValue": 25},
+                    ]
+                },
+            }
+        ]
         result = _build_gear_data(equipment)
         assert "gear001" in result
         assert result["gear001"]["stats"]["1"] == 500
@@ -527,14 +540,18 @@ class TestBuildModSetData:
         assert _build_mod_set_data([]) == {}
 
     def test_single_mod_set(self):
-        mod_sets = [{
-            "id": "1",
-            "setCount": 4,
-            "completeBonus": {"stat": {
-                "unitStatId": 1,
-                "unscaledDecimalValue": "0.05",
-            }},
-        }]
+        mod_sets = [
+            {
+                "id": "1",
+                "setCount": 4,
+                "completeBonus": {
+                    "stat": {
+                        "unitStatId": 1,
+                        "unscaledDecimalValue": "0.05",
+                    }
+                },
+            }
+        ]
         result = _build_mod_set_data(mod_sets)
         assert "1" in result
         assert result["1"]["id"] == 1
@@ -542,14 +559,18 @@ class TestBuildModSetData:
         assert result["1"]["value"] == 0.05
 
     def test_value_coercion(self):
-        mod_sets = [{
-            "id": "2",
-            "setCount": 2,
-            "completeBonus": {"stat": {
-                "unitStatId": 5,
-                "unscaledDecimalValue": "10.0",
-            }},
-        }]
+        mod_sets = [
+            {
+                "id": "2",
+                "setCount": 2,
+                "completeBonus": {
+                    "stat": {
+                        "unitStatId": 5,
+                        "unscaledDecimalValue": "10.0",
+                    }
+                },
+            }
+        ]
         result = _build_mod_set_data(mod_sets)
         assert result["2"]["value"] == 10
         assert isinstance(result["2"]["value"], int)
@@ -562,13 +583,17 @@ class TestBuildRelicData:
         assert _build_relic_data([], {}) == {}
 
     def test_relic_with_stats_and_gms(self):
-        relic_defs = [{
-            "id": "relic_tier_01",
-            "stat": {"stat": [
-                {"unitStatId": 1, "unscaledDecimalValue": 1000},
-            ]},
-            "relicStatTable": "stattable_relic_01",
-        }]
+        relic_defs = [
+            {
+                "id": "relic_tier_01",
+                "stat": {
+                    "stat": [
+                        {"unitStatId": 1, "unscaledDecimalValue": 1000},
+                    ]
+                },
+                "relicStatTable": "stattable_relic_01",
+            }
+        ]
         stat_tables = {
             "stattable_relic_01": {"2": 50, "3": 30},
         }
@@ -578,11 +603,13 @@ class TestBuildRelicData:
         assert result["relic_tier_01"]["gms"] == {"2": 50, "3": 30}
 
     def test_relic_missing_stat_table(self):
-        relic_defs = [{
-            "id": "relic_tier_02",
-            "stat": {"stat": []},
-            "relicStatTable": "nonexistent_table",
-        }]
+        relic_defs = [
+            {
+                "id": "relic_tier_02",
+                "stat": {"stat": []},
+                "relicStatTable": "nonexistent_table",
+            }
+        ]
         result = _build_relic_data(relic_defs, {})
         assert result["relic_tier_02"]["gms"] == {}
 
@@ -592,19 +619,23 @@ class TestBuildCrGpTables:
 
     def test_empty_inputs(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
+
         cr, gp = _build_cr_gp_tables([], [])
         assert cr == {}
         assert gp == {}
 
     def test_shared_table_populates_both(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-        tables = [{
-            "id": "crew_rating_per_unit_rarity",
-            "row": [
-                {"key": "ONE_STAR", "value": 10},
-                {"key": "SEVEN_STAR", "value": 70},
-            ],
-        }]
+
+        tables = [
+            {
+                "id": "crew_rating_per_unit_rarity",
+                "row": [
+                    {"key": "ONE_STAR", "value": 10},
+                    {"key": "SEVEN_STAR", "value": 70},
+                ],
+            }
+        ]
         cr, gp = _build_cr_gp_tables(tables, [])
         assert "crewRarityCR" in cr
         assert "unitRarityGP" in gp
@@ -612,23 +643,29 @@ class TestBuildCrGpTables:
 
     def test_mastery_table(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-        tables = [{
-            "id": "strength_role_attacker_mastery",
-            "row": [{"key": "STRENGTH", "value": 5}],
-        }]
+
+        tables = [
+            {
+                "id": "strength_role_attacker_mastery",
+                "row": [{"key": "STRENGTH", "value": 5}],
+            }
+        ]
         cr, gp = _build_cr_gp_tables(tables, [])
         assert "strength_role_attacker_mastery" in cr
         assert cr["strength_role_attacker_mastery"]["2"] == 5
 
     def test_xp_tables_shared(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-        xp_tables = [{
-            "id": "crew_rating_per_unit_level",
-            "row": [
-                {"index": 0, "xp": 100},
-                {"index": 1, "xp": 200},
-            ],
-        }]
+
+        xp_tables = [
+            {
+                "id": "crew_rating_per_unit_level",
+                "row": [
+                    {"index": 0, "xp": 100},
+                    {"index": 1, "xp": 200},
+                ],
+            }
+        ]
         cr, gp = _build_cr_gp_tables([], xp_tables)
         assert "unitLevelCR" in cr
         assert "unitLevelGP" in gp
@@ -637,20 +674,26 @@ class TestBuildCrGpTables:
 
     def test_gp_only_tables(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-        tables = [{
-            "id": "galactic_power_modifier_per_ship_crew_size_table",
-            "row": [{"key": "1", "value": 0.5}, {"key": "2", "value": 0.75}],
-        }]
+
+        tables = [
+            {
+                "id": "galactic_power_modifier_per_ship_crew_size_table",
+                "row": [{"key": "1", "value": 0.5}, {"key": "2", "value": 0.75}],
+            }
+        ]
         cr, gp = _build_cr_gp_tables(tables, [])
         assert "crewSizeFactor" in gp
         assert "crewSizeFactor" not in cr
 
     def test_gear_level_shared(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-        tables = [{
-            "id": "galactic_power_per_complete_gear_tier_table",
-            "row": [{"key": "TIER_01", "value": 42}],
-        }]
+
+        tables = [
+            {
+                "id": "galactic_power_per_complete_gear_tier_table",
+                "row": [{"key": "TIER_01", "value": 42}],
+            }
+        ]
         cr, gp = _build_cr_gp_tables(tables, [])
         assert "gearLevelGP" in gp
         assert "gearLevelCR" in cr
@@ -664,23 +707,28 @@ class TestBuildCharacter:
 
     def test_basic_character_structure(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
-        units = [{
-            "baseId": "BOSSK",
-            "obtainable": True,
-            "obtainableTime": "0",
-            "rarity": 1,
-            "combatType": 1,
-            "primaryUnitStat": 2,
-            "unitTier": [{
-                "tier": 1,
-                "baseStat": {"stat": [{"unitStatId": 1, "unscaledDecimalValue": 100}]},
-                "equipmentSet": ["eq001"],
-            }],
-            "skillReference": [],
-            "categoryId": ["role_tank"],
-            "relicDefinition": {"relicTierDefinitionId": []},
-            "statProgressionId": "stattable_bossk",
-        }]
+
+        units = [
+            {
+                "baseId": "BOSSK",
+                "obtainable": True,
+                "obtainableTime": "0",
+                "rarity": 1,
+                "combatType": 1,
+                "primaryUnitStat": 2,
+                "unitTier": [
+                    {
+                        "tier": 1,
+                        "baseStat": {"stat": [{"unitStatId": 1, "unscaledDecimalValue": 100}]},
+                        "equipmentSet": ["eq001"],
+                    }
+                ],
+                "skillReference": [],
+                "categoryId": ["role_tank"],
+                "relicDefinition": {"relicTierDefinitionId": []},
+                "statProgressionId": "stattable_bossk",
+            }
+        ]
         stat_tables = {"stattable_bossk": {"2": 50}}
         result = _build_unit_data(units, stat_tables, {})
         assert "BOSSK" in result
@@ -695,43 +743,49 @@ class TestBuildCharacter:
 
     def test_gear_tiers_parsed(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
-        units = [{
-            "baseId": "VADER",
-            "obtainable": True,
-            "obtainableTime": "0",
-            "rarity": 1,
-            "combatType": 1,
-            "primaryUnitStat": 2,
-            "unitTier": [
-                {"tier": 1, "baseStat": {"stat": []}, "equipmentSet": ["a"]},
-                {"tier": 2, "baseStat": {"stat": []}, "equipmentSet": ["b"]},
-            ],
-            "skillReference": [],
-            "categoryId": [],
-            "relicDefinition": {"relicTierDefinitionId": []},
-            "statProgressionId": "",
-        }]
+
+        units = [
+            {
+                "baseId": "VADER",
+                "obtainable": True,
+                "obtainableTime": "0",
+                "rarity": 1,
+                "combatType": 1,
+                "primaryUnitStat": 2,
+                "unitTier": [
+                    {"tier": 1, "baseStat": {"stat": []}, "equipmentSet": ["a"]},
+                    {"tier": 2, "baseStat": {"stat": []}, "equipmentSet": ["b"]},
+                ],
+                "skillReference": [],
+                "categoryId": [],
+                "relicDefinition": {"relicTierDefinitionId": []},
+                "statProgressionId": "",
+            }
+        ]
         result = _build_unit_data(units, {}, {})
         assert "1" in result["VADER"]["gearLvl"]
         assert "2" in result["VADER"]["gearLvl"]
 
     def test_relic_tier_ids_offset(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
-        units = [{
-            "baseId": "CHAR1",
-            "obtainable": True,
-            "obtainableTime": "0",
-            "rarity": 1,
-            "combatType": 1,
-            "primaryUnitStat": 2,
-            "unitTier": [],
-            "skillReference": [],
-            "categoryId": [],
-            "relicDefinition": {
-                "relicTierDefinitionId": ["relic_def_01_tier_0", "relic_def_01_tier_1"],
-            },
-            "statProgressionId": "",
-        }]
+
+        units = [
+            {
+                "baseId": "CHAR1",
+                "obtainable": True,
+                "obtainableTime": "0",
+                "rarity": 1,
+                "combatType": 1,
+                "primaryUnitStat": 2,
+                "unitTier": [],
+                "skillReference": [],
+                "categoryId": [],
+                "relicDefinition": {
+                    "relicTierDefinitionId": ["relic_def_01_tier_0", "relic_def_01_tier_1"],
+                },
+                "statProgressionId": "",
+            }
+        ]
         result = _build_unit_data(units, {}, {})
         relic = result["CHAR1"]["relic"]
         # tier 0 + offset 2 = key "2", tier 1 + offset 2 = key "3"
@@ -744,21 +798,26 @@ class TestBuildShip:
 
     def test_basic_ship_structure(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
-        units = [{
-            "baseId": "YOURSHIP",
-            "obtainable": True,
-            "obtainableTime": "0",
-            "rarity": 1,
-            "combatType": 2,
-            "primaryUnitStat": 2,
-            "baseStat": {"stat": [
-                {"unitStatId": 1, "unscaledDecimalValue": 5000},
-            ]},
-            "skillReference": [],
-            "crewContributionTableId": "",
-            "crew": [],
-            "statProgressionId": "",
-        }]
+
+        units = [
+            {
+                "baseId": "YOURSHIP",
+                "obtainable": True,
+                "obtainableTime": "0",
+                "rarity": 1,
+                "combatType": 2,
+                "primaryUnitStat": 2,
+                "baseStat": {
+                    "stat": [
+                        {"unitStatId": 1, "unscaledDecimalValue": 5000},
+                    ]
+                },
+                "skillReference": [],
+                "crewContributionTableId": "",
+                "crew": [],
+                "statProgressionId": "",
+            }
+        ]
         result = _build_unit_data(units, {}, {})
         assert "YOURSHIP" in result
         ship = result["YOURSHIP"]
@@ -772,25 +831,28 @@ class TestBuildShip:
 
     def test_crew_members_collected(self):
         from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
+
         skills_map = {
             "crew_skill_1": {"id": "crew_skill_1", "maxTier": 3, "isZeta": False, "powerOverrideTags": {}},
         }
-        units = [{
-            "baseId": "SHIP1",
-            "obtainable": True,
-            "obtainableTime": "0",
-            "rarity": 1,
-            "combatType": 2,
-            "primaryUnitStat": 2,
-            "baseStat": {"stat": []},
-            "skillReference": [],
-            "crewContributionTableId": "",
-            "crew": [
-                {"unitId": "PILOT_A", "skillReference": [{"skillId": "crew_skill_1"}]},
-                {"unitId": "PILOT_B", "skillReference": []},
-            ],
-            "statProgressionId": "",
-        }]
+        units = [
+            {
+                "baseId": "SHIP1",
+                "obtainable": True,
+                "obtainableTime": "0",
+                "rarity": 1,
+                "combatType": 2,
+                "primaryUnitStat": 2,
+                "baseStat": {"stat": []},
+                "skillReference": [],
+                "crewContributionTableId": "",
+                "crew": [
+                    {"unitId": "PILOT_A", "skillReference": [{"skillId": "crew_skill_1"}]},
+                    {"unitId": "PILOT_B", "skillReference": []},
+                ],
+                "statProgressionId": "",
+            }
+        ]
         result = _build_unit_data(units, {}, skills_map)
         ship = result["SHIP1"]
         assert ship["crew"] == ["PILOT_A", "PILOT_B"]
@@ -813,12 +875,16 @@ class TestBuildGameData:
 
     def test_minimal_raw_produces_nonempty_gear(self):
         raw = {
-            "equipment": [{
-                "id": "gear001",
-                "equipmentStat": {"stat": [
-                    {"unitStatId": 1, "unscaledDecimalValue": 100},
-                ]},
-            }],
+            "equipment": [
+                {
+                    "id": "gear001",
+                    "equipmentStat": {
+                        "stat": [
+                            {"unitStatId": 1, "unscaledDecimalValue": 100},
+                        ]
+                    },
+                }
+            ],
         }
         result = GameDataBuilderBase._build_game_data(raw)
         assert len(result["gearData"]) == 1

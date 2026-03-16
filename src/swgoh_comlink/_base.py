@@ -83,7 +83,7 @@ class SwgohComlinkBase:
     def __repr__(self) -> str:
         cls_name = type(self).__name__
         return (
-            f"{cls_name}("
+            f"{cls_name} version {self.__version__!r} ("
             f"url={self.url_base!r}, "
             f"hmac={self.hmac}, "
             f"access_key={self._mask(self.access_key)!r}, "
@@ -234,9 +234,7 @@ class SwgohComlinkBase:
         return payload
 
     @staticmethod
-    def _build_unit_stats_endpoint(
-        flags: list[str] | None = None, language: str | None = None
-    ) -> str:
+    def _build_unit_stats_endpoint(flags: list[str] | None = None, language: str | None = None) -> str:
         """Build the stats endpoint string with query parameters.
 
         Returns:
@@ -276,3 +274,15 @@ class SwgohComlinkBase:
             query_string = "?" + "&".join(filter(None, iter([flag_str, lang_str])))
 
         return "api" + query_string if query_string else "api"
+
+    @property
+    def version(self) -> str:
+        return self.__version__
+
+    @version.setter
+    def version(self, value: str) -> None:
+        raise AttributeError("Module 'version' is read-only")
+
+    @version.deleter
+    def version(self) -> None:
+        raise AttributeError("Module 'version' is read-only")

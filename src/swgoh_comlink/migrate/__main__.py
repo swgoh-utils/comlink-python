@@ -62,10 +62,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Filter by minimum severity
     min_severity = _SEVERITY_ORDER[args.severity]
-    findings = [
-        f for f in findings
-        if _SEVERITY_ORDER[f.rule.severity] >= min_severity
-    ]
+    findings = [f for f in findings if _SEVERITY_ORDER[f.rule.severity] >= min_severity]
 
     report = format_findings(findings, use_color=not args.no_color)
     print(report)

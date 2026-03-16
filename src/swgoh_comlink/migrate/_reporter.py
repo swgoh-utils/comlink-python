@@ -35,10 +35,7 @@ def format_findings(findings: list[Finding], *, use_color: bool = True) -> str:
 
     # Summary header
     lines.append(f"Found {len(findings)} migration issue(s) in {len(grouped)} file(s):")
-    lines.append(
-        f"  {counts['ERROR']} error(s), {counts['WARNING']} warning(s), "
-        f"{counts['INFO']} info"
-    )
+    lines.append(f"  {counts['ERROR']} error(s), {counts['WARNING']} warning(s), {counts['INFO']} info")
     lines.append("")
 
     for file_path, file_findings in sorted(grouped.items()):
@@ -49,9 +46,7 @@ def format_findings(findings: list[Finding], *, use_color: bool = True) -> str:
                 sev_str = f"{_COLORS[sev]}{sev}{_COLORS['RESET']}"
             else:
                 sev_str = sev
-            lines.append(
-                f"  Line {f.line_number}: [{sev_str}] {f.rule.id}: {f.rule.message}"
-            )
+            lines.append(f"  Line {f.line_number}: [{sev_str}] {f.rule.id}: {f.rule.message}")
             lines.append(f"    {f.line_text}")
             lines.append(f"    -> {f.rule.suggestion}")
             lines.append("")

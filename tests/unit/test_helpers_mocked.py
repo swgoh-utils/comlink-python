@@ -1,4 +1,5 @@
 """Tests for helper functions that require mocked HTTP calls."""
+
 from __future__ import annotations
 
 import pytest

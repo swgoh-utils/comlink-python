@@ -1,4 +1,5 @@
 """Tests for StatCalcAsync and GameDataBuilder/Async."""
+
 from __future__ import annotations
 
 import json

@@ -6,8 +6,10 @@ directory skipping, encoding support, and output file creation.
 """
 
 import base64
+import contextlib
 import io
 import json
+import tempfile
 import zipfile
 from pathlib import Path
 from unittest import TestCase, main
@@ -48,27 +50,19 @@ def _import_parse_loc_zip():
         mock.patch("pathlib.Path.mkdir"),
     ):
         import sys
-        import types
 
         # Provide the missing _VERSIONS_FILE so the module can load
         # even though the original script forgot to define it.
         spec = importlib.util.spec_from_file_location(
             "get_location_bundle_adv",
-            Path(__file__).resolve().parents[2]
-            / "examples"
-            / "Sync"
-            / "get_location_bundle_adv.py",
+            Path(__file__).resolve().parents[2] / "examples" / "Sync" / "get_location_bundle_adv.py",
         )
         mod = importlib.util.module_from_spec(spec)
         # Inject _VERSIONS_FILE before exec so the NameError is avoided
         # at import time (it is only used inside __main__ guard anyway).
         sys.modules[spec.name] = mod
-        try:
+        with contextlib.suppress(NameError):
             spec.loader.exec_module(mod)
-        except NameError:
-            # _VERSIONS_FILE is undefined in the example; safe to ignore
-            # because it's only referenced inside the if __name__ == "__main__" block.
-            pass
         return mod.parse_loc_zip
 
 
@@ -79,7 +73,9 @@ parse_loc_zip = _import_parse_loc_zip()
 class TestParseLoczipBasic(TestCase):
     """Core parse_loc_zip behaviour."""
 
-    def test_single_file_creates_json(self, ):
+    def test_single_file_creates_json(
+        self,
+    ):
         """A single-entry zip produces one .json file with correct content."""
         zf = _make_zip(("Loc_ENG_US.txt", "UNIT_NAME|Darth Vader\nUNIT_DESC|Sith Lord\n"))
 
@@ -285,9 +281,6 @@ class TestEdgeCases(TestCase):
 
 
 # ── helpers ──────────────────────────────────────────────────────────
-
-import contextlib
-import tempfile
 
 
 @contextlib.contextmanager

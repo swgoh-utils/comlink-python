@@ -20,11 +20,22 @@ class Finding:
     rule: MigrationRule
 
 
-_DEFAULT_EXCLUDES = frozenset({
-    ".venv", "venv", "__pycache__", ".git", "node_modules",
-    ".tox", ".mypy_cache", ".pytest_cache", "dist", "build",
-    ".eggs", "*.egg-info",
-})
+_DEFAULT_EXCLUDES = frozenset(
+    {
+        ".venv",
+        "venv",
+        "__pycache__",
+        ".git",
+        "node_modules",
+        ".tox",
+        ".mypy_cache",
+        ".pytest_cache",
+        "dist",
+        "build",
+        ".eggs",
+        "*.egg-info",
+    }
+)
 
 
 def scan_file(file_path: Path) -> list[Finding]:
@@ -40,12 +51,14 @@ def scan_file(file_path: Path) -> list[Finding]:
     for line_no, line in enumerate(text.splitlines(), start=1):
         for pattern, rule in compiled:
             if pattern.search(line):
-                findings.append(Finding(
-                    file=str(file_path),
-                    line_number=line_no,
-                    line_text=line.strip(),
-                    rule=rule,
-                ))
+                findings.append(
+                    Finding(
+                        file=str(file_path),
+                        line_number=line_no,
+                        line_text=line.strip(),
+                        rule=rule,
+                    )
+                )
     return findings
 
 

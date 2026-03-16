@@ -1,4 +1,5 @@
 """Tests for pure helper functions that need no HTTP mocking."""
+
 from __future__ import annotations
 
 import logging

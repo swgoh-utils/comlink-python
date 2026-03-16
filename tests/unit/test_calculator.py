@@ -72,11 +72,7 @@ def _find_ship(
             continue
         if not with_crew and crew_ids:
             continue
-        crew = [
-            copy.deepcopy(c)
-            for c in roster
-            if c["definitionId"].split(":")[0] in crew_ids
-        ]
+        crew = [copy.deepcopy(c) for c in roster if c["definitionId"].split(":")[0] in crew_ids]
         if with_crew and len(crew) != len(crew_ids):
             continue
         return copy.deepcopy(u), crew
@@ -213,9 +209,7 @@ class TestNormalization:
         assert normalized.get("equipped") == []
 
     def test_normalize_ship_raw_format(self, calc, player, game_data):
-        ship_raw, crew_raw = _find_ship(
-            player["rosterUnit"], game_data["unitData"], with_crew=True
-        )
+        ship_raw, crew_raw = _find_ship(player["rosterUnit"], game_data["unitData"], with_crew=True)
         ship, crew = calc._normalize_ship_and_crew(ship_raw, crew_raw)
         assert ship["defId"] == ship_raw["definitionId"].split(":")[0]
         assert len(crew) == len(crew_raw)
@@ -286,9 +280,7 @@ class TestCalcCharStats:
             "equipped": [],
             "equippedStatMod": raw.get("equippedStatMod"),
             "relic": raw.get("relic"),
-            "skills": [
-                {"id": s["id"], "tier": s["tier"] + 2} for s in raw.get("skill", [])
-            ],
+            "skills": [{"id": s["id"], "tier": s["tier"] + 2} for s in raw.get("skill", [])],
         }
         result = calc.calc_char_stats(normalized)
         assert "stats" in result
@@ -386,9 +378,7 @@ class TestModFormats:
         ]
 
         base_stats = calc._get_char_raw_stats(normalized)
-        base_stats = calc._calculate_base_stats(
-            base_stats, normalized["level"], normalized["defId"]
-        )
+        base_stats = calc._calculate_base_stats(base_stats, normalized["level"], normalized["defId"])
         mod_stats = calc._calculate_mod_stats(base_stats["base"], normalized)
         assert isinstance(mod_stats, dict)
         assert len(mod_stats) > 0
@@ -413,9 +403,7 @@ class TestModFormats:
         ]
 
         base_stats = calc._get_char_raw_stats(normalized)
-        base_stats = calc._calculate_base_stats(
-            base_stats, normalized["level"], normalized["defId"]
-        )
+        base_stats = calc._calculate_base_stats(base_stats, normalized["level"], normalized["defId"])
         mod_stats = calc._calculate_mod_stats(base_stats["base"], normalized)
         assert isinstance(mod_stats, dict)
 
@@ -426,9 +414,7 @@ class TestModFormats:
         normalized["mods"] = None
 
         base_stats = calc._get_char_raw_stats(normalized)
-        base_stats = calc._calculate_base_stats(
-            base_stats, normalized["level"], normalized["defId"]
-        )
+        base_stats = calc._calculate_base_stats(base_stats, normalized["level"], normalized["defId"])
         result = calc._calculate_mod_stats(base_stats["base"], normalized)
         assert result == {}
 
@@ -438,33 +424,25 @@ class TestModFormats:
 
 class TestCalcShipStats:
     def test_ship_with_crew(self, calc, game_data, processed_player):
-        ship, crew = _find_ship(
-            processed_player["rosterUnit"], game_data["unitData"], with_crew=True
-        )
+        ship, crew = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=True)
         result = calc.calc_ship_stats(ship, crew)
         assert "stats" in result
         assert result["gp"] > 0
 
     def test_crewless_ship(self, calc, game_data, processed_player):
-        ship, crew = _find_ship(
-            processed_player["rosterUnit"], game_data["unitData"], with_crew=False
-        )
+        ship, crew = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=False)
         assert crew == []
         result = calc.calc_ship_stats(ship, [])
         assert "stats" in result
         assert result["gp"] > 0
 
     def test_wrong_crew_count_raises(self, calc, game_data, player):
-        ship, _ = _find_ship(
-            player["rosterUnit"], game_data["unitData"], with_crew=True
-        )
+        ship, _ = _find_ship(player["rosterUnit"], game_data["unitData"], with_crew=True)
         with pytest.raises(ValueError, match="Incorrect number"):
             calc.calc_ship_stats(ship, [])
 
     def test_wrong_crew_member_raises(self, calc, game_data, player):
-        ship, crew = _find_ship(
-            player["rosterUnit"], game_data["unitData"], with_crew=True
-        )
+        ship, crew = _find_ship(player["rosterUnit"], game_data["unitData"], with_crew=True)
         # Swap in a wrong crew member
         fake_crew = [_find_char(player["rosterUnit"])] * len(crew)
         # Only raises if fake_crew defIds are not in meta["crew"]
@@ -487,9 +465,7 @@ class TestCalcGP:
         assert gp > 0
 
     def test_ship_gp_with_crew(self, calc, game_data, processed_player):
-        ship, crew = _find_ship(
-            processed_player["rosterUnit"], game_data["unitData"], with_crew=True
-        )
+        ship, crew = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=True)
         gp = calc.calc_ship_gp(ship, crew)
         assert isinstance(gp, int)
         assert gp > 0
@@ -508,10 +484,7 @@ class TestCalcGP:
                     "gear": raw["currentTier"],
                     "equipped": [],
                     "relic": raw.get("relic"),
-                    "skills": [
-                        {"id": s["id"], "tier": s["tier"] + 2}
-                        for s in raw.get("skill", [])
-                    ],
+                    "skills": [{"id": s["id"], "tier": s["tier"] + 2} for s in raw.get("skill", [])],
                     "purchasedAbilityId": raw["purchasedAbilityId"],
                     "equippedStatMod": raw.get("equippedStatMod"),
                 }
@@ -534,12 +507,9 @@ class TestCalcGP:
             "gear": char["currentTier"],
             "equipped": [],
             "relic": char.get("relic"),
-            "skills": [
-                {"id": s["id"], "tier": s["tier"] + 2} for s in char.get("skill", [])
-            ],
+            "skills": [{"id": s["id"], "tier": s["tier"] + 2} for s in char.get("skill", [])],
             "mods": [
-                {"set": 1, "level": 15, "pips": 5, "tier": 5,
-                 "stat": [(5, 100.0)]},
+                {"set": 1, "level": 15, "pips": 5, "tier": 5, "stat": [(5, 100.0)]},
             ],
         }
         gp = calc._calc_char_gp(normalized)
@@ -551,9 +521,7 @@ class TestCalcGP:
 
 class TestCrewRating:
     def test_crew_rating_positive(self, calc, game_data, processed_player):
-        _, crew = _find_ship(
-            processed_player["rosterUnit"], game_data["unitData"], with_crew=True
-        )
+        _, crew = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=True)
         # Normalize crew for _get_crew_rating
         norm_crew = []
         for c in crew:
@@ -562,18 +530,14 @@ class TestCrewRating:
         assert rating > 0
 
     def test_crewless_crew_rating(self, calc, game_data, processed_player):
-        ship, _ = _find_ship(
-            processed_player["rosterUnit"], game_data["unitData"], with_crew=False
-        )
+        ship, _ = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=False)
         norm_ship, _ = calc._normalize_ship_and_crew(ship, [])
         rating = calc._get_crewless_crew_rating(norm_ship)
         assert rating > 0
 
     def test_crewless_skills_hardware_multiplier(self, calc, game_data, processed_player):
         """Ensure hardware skills use the 0.696 multiplier."""
-        ship, _ = _find_ship(
-            processed_player["rosterUnit"], game_data["unitData"], with_crew=False
-        )
+        ship, _ = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=False)
         norm_ship, _ = calc._normalize_ship_and_crew(ship, [])
         cr = calc._get_crewless_skills_crew_rating(norm_ship.get("skills", []))
         assert cr > 0
@@ -646,9 +610,7 @@ class TestFormatStats:
         assert "final" in result["stats"]
 
     def test_ship_format_has_crew_key(self, calc, game_data, processed_player):
-        ship, crew = _find_ship(
-            processed_player["rosterUnit"], game_data["unitData"], with_crew=True
-        )
+        ship, crew = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=True)
         result = calc.calc_ship_stats(ship, crew)
         assert "crew" in result["stats"]
         assert "final" in result["stats"]
@@ -664,9 +626,7 @@ class TestGetSkillGP:
             for skill in meta.get("skills", []):
                 if skill.get("powerOverrideTags"):
                     tier = next(iter(skill["powerOverrideTags"]))
-                    gp = calc._get_skill_gp(
-                        defid, {"id": skill["id"], "tier": int(tier)}
-                    )
+                    gp = calc._get_skill_gp(defid, {"id": skill["id"], "tier": int(tier)})
                     assert gp > 0
                     return
         pytest.skip("No skill with powerOverrideTags found")
@@ -675,9 +635,7 @@ class TestGetSkillGP:
         for defid, meta in game_data["unitData"].items():
             for skill in meta.get("skills", []):
                 if not skill.get("powerOverrideTags"):
-                    gp = calc._get_skill_gp(
-                        defid, {"id": skill["id"], "tier": 8}
-                    )
+                    gp = calc._get_skill_gp(defid, {"id": skill["id"], "tier": 8})
                     assert gp >= 0
                     return
 
@@ -692,9 +650,7 @@ class TestGetSkillGP:
 
 class TestCrewlessSkillsGP:
     def test_reinforcement_vs_ability_split(self, calc, game_data, processed_player):
-        ship, _ = _find_ship(
-            processed_player["rosterUnit"], game_data["unitData"], with_crew=False
-        )
+        ship, _ = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=False)
         defid = ship["definitionId"].split(":")[0]
         norm_ship, _ = calc._normalize_ship_and_crew(ship, [])
         gps = calc._get_crewless_skills_gp(defid, norm_ship.get("skills", []))

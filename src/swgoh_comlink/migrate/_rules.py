@@ -35,8 +35,7 @@ RULES: list[MigrationRule] = [
         severity="WARNING",
         message="Import of 'requests' library detected.",
         suggestion=(
-            "swgoh_comlink v2.x uses httpx instead of requests. "
-            "Replace 'import requests' with 'import httpx'."
+            "swgoh_comlink v2.x uses httpx instead of requests. Replace 'import requests' with 'import httpx'."
         ),
     ),
     MigrationRule(
@@ -44,9 +43,7 @@ RULES: list[MigrationRule] = [
         pattern=r"requests\.RequestException",
         severity="WARNING",
         message="Use of requests.RequestException detected.",
-        suggestion=(
-            "Replace with httpx.RequestError or catch SwgohComlinkException."
-        ),
+        suggestion=("Replace with httpx.RequestError or catch SwgohComlinkException."),
     ),
     MigrationRule(
         id="DEP004",
@@ -64,8 +61,7 @@ RULES: list[MigrationRule] = [
         severity="INFO",
         message="Import of get_logger from globals.",
         suggestion=(
-            "get_logger() is a thin wrapper around logging.getLogger(). "
-            "Consider using logging.getLogger() directly."
+            "get_logger() is a thin wrapper around logging.getLogger(). Consider using logging.getLogger() directly."
         ),
     ),
     # ── Constants collection attribute usage ───────────────────────────
@@ -106,8 +102,7 @@ RULES: list[MigrationRule] = [
         severity="INFO",
         message="Use of Constants.SegmentN detected.",
         suggestion=(
-            "Consider using DataItems.SEGMENT1, DataItems.SEGMENT2, etc. "
-            "Constants.SegmentN still works via the facade."
+            "Consider using DataItems.SEGMENT1, DataItems.SEGMENT2, etc. Constants.SegmentN still works via the facade."
         ),
     ),
     MigrationRule(
@@ -165,9 +160,6 @@ RULES: list[MigrationRule] = [
         pattern=r"(?<!with\s)SwgohComlink\(\)",
         severity="INFO",
         message="SwgohComlink instantiation without context manager.",
-        suggestion=(
-            "Consider using 'with SwgohComlink() as comlink:' for automatic "
-            "connection cleanup."
-        ),
+        suggestion=("Consider using 'with SwgohComlink() as comlink:' for automatic connection cleanup."),
     ),
 ]

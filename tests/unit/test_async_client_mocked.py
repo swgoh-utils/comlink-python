@@ -1,4 +1,5 @@
 """Tests for the asynchronous SwgohComlinkAsync client."""
+
 from __future__ import annotations
 
 import json
@@ -11,6 +12,7 @@ from swgoh_comlink import SwgohComlinkAsync
 from swgoh_comlink.exceptions import SwgohComlinkException
 
 # ── Core request tests ───────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_player_posts_expected_payload(httpx_mock: HTTPXMock):
@@ -169,6 +171,7 @@ async def test_async_context_manager(httpx_mock: HTTPXMock):
 
 # ── Events ───────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_events(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"events": [{"id": "event1"}]})
@@ -183,6 +186,7 @@ async def test_get_events(httpx_mock: HTTPXMock):
 
 
 # ── Localization ─────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_localization_with_id(httpx_mock: HTTPXMock):
@@ -210,10 +214,12 @@ async def test_get_localization_with_locale(httpx_mock: HTTPXMock):
 
 @pytest.mark.asyncio
 async def test_get_localization_auto_version(httpx_mock: HTTPXMock):
-    httpx_mock.add_response(json={
-        "latestGamedataVersion": "game-v1",
-        "latestLocalizationBundleVersion": "lang-v1",
-    })
+    httpx_mock.add_response(
+        json={
+            "latestGamedataVersion": "game-v1",
+            "latestLocalizationBundleVersion": "lang-v1",
+        }
+    )
     httpx_mock.add_response(json={"localization": {}})
 
     client = SwgohComlinkAsync(url="http://localhost:3000")
@@ -227,6 +233,7 @@ async def test_get_localization_auto_version(httpx_mock: HTTPXMock):
 
 
 # ── Game Metadata ────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_game_metadata_default(httpx_mock: HTTPXMock):
@@ -256,6 +263,7 @@ async def test_get_game_metadata_with_client_specs(httpx_mock: HTTPXMock):
 
 # ── Player Arena ─────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_player_arena(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"arena": {}})
@@ -282,6 +290,7 @@ async def test_get_player_arena_camel_case_alias(httpx_mock: HTTPXMock):
 
 
 # ── Guilds by name/criteria ──────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_guilds_by_name(httpx_mock: HTTPXMock):
@@ -316,14 +325,13 @@ async def test_get_guilds_by_criteria(httpx_mock: HTTPXMock):
 
 # ── Leaderboard ──────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_leaderboard_type_4(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"leaderboard": []})
 
     client = SwgohComlinkAsync(url="http://localhost:3000")
-    await client.get_leaderboard(
-        leaderboard_type=4, event_instance_id="event1", group_id="group1"
-    )
+    await client.get_leaderboard(leaderboard_type=4, event_instance_id="event1", group_id="group1")
 
     body = json.loads(httpx_mock.get_request().content)
     assert body["payload"]["leaderboardType"] == 4
@@ -361,6 +369,7 @@ async def test_get_leaderboard_type_6_with_int_division(httpx_mock: HTTPXMock):
 
 # ── Guild Leaderboard ────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_guild_leaderboard(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"leaderboard": []})
@@ -378,6 +387,7 @@ async def test_get_guild_leaderboard(httpx_mock: HTTPXMock):
 
 
 # ── Namespaces & Segmented Content ───────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_name_spaces(httpx_mock: HTTPXMock):
@@ -407,6 +417,7 @@ async def test_get_segmented_content(httpx_mock: HTTPXMock):
 
 
 # ── Unit Stats ───────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_unit_stats_with_dict(httpx_mock: HTTPXMock):
@@ -439,9 +450,7 @@ async def test_get_unit_stats_with_flags(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json=[{}])
 
     client = SwgohComlinkAsync(url="http://localhost:3000", stats_url="http://localhost:3223")
-    await client.get_unit_stats(
-        request_payload=[{"unit": "data"}], flags=["calcGP"], language="eng_us"
-    )
+    await client.get_unit_stats(request_payload=[{"unit": "data"}], flags=["calcGP"], language="eng_us")
 
     request = httpx_mock.get_request()
     assert "flags=calcGP" in str(request.url)
@@ -451,12 +460,15 @@ async def test_get_unit_stats_with_flags(httpx_mock: HTTPXMock):
 
 # ── Latest Version ───────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_latest_game_data_version(httpx_mock: HTTPXMock):
-    httpx_mock.add_response(json={
-        "latestGamedataVersion": "game-v2",
-        "latestLocalizationBundleVersion": "lang-v2",
-    })
+    httpx_mock.add_response(
+        json={
+            "latestGamedataVersion": "game-v2",
+            "latestLocalizationBundleVersion": "lang-v2",
+        }
+    )
 
     client = SwgohComlinkAsync(url="http://localhost:3000")
     out = await client.get_latest_game_data_version()
@@ -467,13 +479,12 @@ async def test_get_latest_game_data_version(httpx_mock: HTTPXMock):
 
 # ── HMAC integration test ───────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_hmac_headers_sent_on_request(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"CombatType": 1})
 
-    client = SwgohComlinkAsync(
-        url="http://localhost:3000", access_key="pub", secret_key="priv"
-    )
+    client = SwgohComlinkAsync(url="http://localhost:3000", access_key="pub", secret_key="priv")
     await client.get_enums()
 
     request = httpx_mock.get_request()

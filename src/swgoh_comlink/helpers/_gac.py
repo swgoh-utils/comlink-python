@@ -6,14 +6,12 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ..exceptions import SwgohComlinkValueError
 from ._constants import Constants
+from ._sentinels import MISSING
 from ._utils import get_function_name
-
-if TYPE_CHECKING:
-    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +57,8 @@ def _find_bracket_boundary(probe_fn: Callable[[int], bool], initial_step: int = 
 
 
 async def _async_find_bracket_boundary(
-        probe_fn: Callable[[int], Any], initial_step: int = _DEFAULT_INITIAL_STEP
-        ) -> int:
+    probe_fn: Callable[[int], Any], initial_step: int = _DEFAULT_INITIAL_STEP
+) -> int:
     """Async version of :func:`_find_bracket_boundary`.
 
     Args:
@@ -103,7 +101,7 @@ def convert_league_to_int(league: str) -> int | None:
         GAC league identifier as used in game data
 
     """
-    if not isinstance(league, str):
+    if not isinstance(league, str) or not league:
         err_msg = f"{get_function_name()}: The 'league' argument is required."
         raise SwgohComlinkValueError(err_msg)
 
@@ -120,64 +118,73 @@ def convert_divisions_to_int(division: int | str) -> int | None:
         GAC division identifier as used within game data
 
     """
-    if not isinstance(division, (str, int)):
+    if not isinstance(division, (str, int)) or (isinstance(division, str) and not division):
         err_msg = f"{get_function_name()}: The 'division' argument is required."
         raise SwgohComlinkValueError(err_msg)
 
-    return Constants.DIVISIONS.get(division)
+    key = str(division) if isinstance(division, int) else division
+    return Constants.DIVISIONS.get(key)
 
 
 # ── Event helpers ─────────────────────────────────────────────────────
 
 
-def get_current_gac_event(comlink: SwgohComlink) -> dict[str, Any]:
+def get_current_gac_event(comlink: Any) -> dict[str, Any]:
     """Return the event object for the current gac season
 
     Args:
         comlink: Instance of SwgohComlink
 
     Returns:
-        Current GAC event object or empty if no event is running
+        Current GAC event object
+
+    Raises:
+        SwgohComlinkValueError: If no active GAC event is found
 
     """
-    if not isinstance(comlink, SwgohComlink):
+    comlink_type = getattr(comlink, "__comlink_type__", MISSING)
+    if comlink is MISSING or comlink_type != "SwgohComlink":
         err_str = f"{get_function_name()}: comlink instance must be provided."
         raise SwgohComlinkValueError(err_str)
 
     current_events = comlink.get_events()
 
-    gac_events = [event for event in current_events.get("gameEvent", []) if event["type"] == 10]
-    return gac_events[0] if gac_events else {}
+    gac_events: list[dict[str, Any]] = [event for event in current_events.get("gameEvent", []) if event["type"] == 10]
+    if not gac_events:
+        raise SwgohComlinkValueError(f"{get_function_name()}: No active GAC event found.")
+    return gac_events[0]
 
 
-async def async_get_current_gac_event(comlink: SwgohComlinkAsync) -> dict[str, Any]:
+async def async_get_current_gac_event(comlink: Any) -> dict[str, Any]:
     """Return the event object for the current gac season (async version).
 
     Args:
         comlink: Instance of SwgohComlinkAsync
 
     Returns:
-        Current GAC event object or empty if no event is running
+        Current GAC event object
+
+    Raises:
+        SwgohComlinkValueError: If no active GAC event is found
 
     """
-    if not isinstance(comlink, SwgohComlinkAsync):
+    comlink_type = getattr(comlink, "__comlink_type__", MISSING)
+    if comlink is MISSING or comlink_type != "SwgohComlinkAsync":
         err_str = f"{get_function_name()}: async comlink instance must be provided."
         raise SwgohComlinkValueError(err_str)
 
     current_events = await comlink.get_events()
 
-    gac_events = [event for event in current_events.get("gameEvent", []) if event["type"] == 10]
-    return gac_events[0] if gac_events else {}
+    gac_events: list[dict[str, Any]] = [event for event in current_events.get("gameEvent", []) if event["type"] == 10]
+    if not gac_events:
+        raise SwgohComlinkValueError(f"{get_function_name()}: No active GAC event found.")
+    return gac_events[0]
 
 
 # ── Bracket scanning ─────────────────────────────────────────────────
 
 
-def get_gac_brackets(
-        comlink: SwgohComlink,
-        league: str,
-        limit: int = 0
-        ) -> dict[int, Any] | None:
+def get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> dict[int, Any] | None:
     """Scan currently running GAC brackets for the requested league.
 
     Uses exponential probing with binary search to find the last non-empty
@@ -192,7 +199,8 @@ def get_gac_brackets(
         Dictionary mapping bracket index to player list, or None if no GAC event is running.
 
     """
-    if not isinstance(comlink, SwgohComlink):
+    comlink_type = getattr(comlink, "__comlink_type__", MISSING)
+    if comlink is MISSING or comlink_type != "SwgohComlink":
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         raise SwgohComlinkValueError(err_msg)
 
@@ -208,9 +216,7 @@ def get_gac_brackets(
 
     def _probe(index: int) -> bool:
         group_id = f"{event_instance}:{league}:{index}"
-        result = comlink.get_gac_leaderboard(
-                leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
-                )
+        result = comlink.get_gac_leaderboard(leaderboard_type=4, event_instance_id=event_instance, group_id=group_id)
         return len(result["player"]) > 0
 
     last_bracket = _find_bracket_boundary(_probe)
@@ -222,19 +228,13 @@ def get_gac_brackets(
     brackets: dict[int, Any] = {}
     for i in range(end + 1):
         group_id = f"{event_instance}:{league}:{i}"
-        result = comlink.get_gac_leaderboard(
-                leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
-                )
+        result = comlink.get_gac_leaderboard(leaderboard_type=4, event_instance_id=event_instance, group_id=group_id)
         brackets[i] = result["player"]
 
     return brackets
 
 
-async def async_get_gac_brackets(
-        comlink: SwgohComlinkAsync,
-        league: str,
-        limit: int = 0
-        ) -> dict[int, Any] | None:
+async def async_get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> dict[int, Any] | None:
     """Scan currently running GAC brackets for the requested league (async version).
 
     Uses exponential probing with binary search to find the last non-empty
@@ -250,7 +250,8 @@ async def async_get_gac_brackets(
         Dictionary mapping bracket index to player list, or None if no GAC event is running.
 
     """
-    if not isinstance(comlink, SwgohComlinkAsync):
+    comlink_type = getattr(comlink, "__comlink_type__", MISSING)
+    if comlink is MISSING or comlink_type != "SwgohComlinkAsync":
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         raise SwgohComlinkValueError(err_msg)
 
@@ -267,8 +268,8 @@ async def async_get_gac_brackets(
     async def _probe(index: int) -> bool:
         group_id = f"{event_instance}:{league}:{index}"
         result = await comlink.get_gac_leaderboard(
-                leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
-                )
+            leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
+        )
         return len(result["player"]) > 0
 
     last_bracket = await _async_find_bracket_boundary(_probe)
@@ -280,8 +281,8 @@ async def async_get_gac_brackets(
     async def _fetch(index: int) -> tuple[int, list[Any]]:
         group_id = f"{event_instance}:{league}:{index}"
         result = await comlink.get_gac_leaderboard(
-                leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
-                )
+            leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
+        )
         return index, result["player"]
 
     brackets: dict[int, Any] = {}

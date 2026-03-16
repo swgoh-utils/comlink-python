@@ -47,11 +47,14 @@ def test_hmac_no_key_rejected():
 
 def test_hmac_wrong_key_rejected():
     """Sync client with wrong secret key is rejected by the protected endpoint."""
-    with SwgohComlink(
-        url=COMLINK_HMAC_URL,
-        access_key=HMAC_ACCESS_KEY,
-        secret_key="wrong_secret_key",
-    ) as client, pytest.raises(SwgohComlinkException):
+    with (
+        SwgohComlink(
+            url=COMLINK_HMAC_URL,
+            access_key=HMAC_ACCESS_KEY,
+            secret_key="wrong_secret_key",
+        ) as client,
+        pytest.raises(SwgohComlinkException),
+    ):
         client.get_enums()
 
 
@@ -110,7 +113,5 @@ def test_hmac_headers_present():
     headers = client._construct_request_headers("GET", "enums", None)
     assert "Authorization" in headers
     assert "X-Date" in headers
-    assert headers["Authorization"].startswith(
-        f"HMAC-SHA256 Credential={HMAC_ACCESS_KEY},Signature="
-    )
+    assert headers["Authorization"].startswith(f"HMAC-SHA256 Credential={HMAC_ACCESS_KEY},Signature=")
     client.close()

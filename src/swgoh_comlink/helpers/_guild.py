@@ -80,7 +80,9 @@ async def async_get_guild_members(
     else:
         comlink_type = MISSING
     if comlink is MISSING or comlink_type != "SwgohComlinkAsync":
-        err_msg = f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlinkAsync."
+        err_msg = (
+            f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlinkAsync."
+        )
         raise SwgohComlinkValueError(err_msg)
 
     if player_id is not MutualExclusiveRequired and allycode is not MutualExclusiveRequired:

@@ -9,8 +9,9 @@ import os
 from pathlib import Path
 from typing import Any
 
-from ..exceptions import SwgohComlinkValueError, SwgohComlinkTypeError
+from ..exceptions import SwgohComlinkTypeError, SwgohComlinkValueError
 from ._constants import Constants
+from ._sentinels import MISSING, Sentinel
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def get_enum_key_by_value(enum_dict: dict[str, Any], category: Any, enum_value: 
         return default_return
 
 
-def validate_file_path(path: str | Path | os.PathLike) -> bool:
+def validate_file_path(path: str | Path | os.PathLike[str]) -> bool:
     """Test whether provided path exists or not
 
     Args:
@@ -48,7 +49,7 @@ def validate_file_path(path: str | Path | os.PathLike) -> bool:
     return os.path.exists(path) and os.path.isfile(path)
 
 
-def sanitize_allycode(allycode: str | int) -> str:
+def sanitize_allycode(allycode: str | int | Sentinel = MISSING) -> str:
     """Sanitize a player allycode
 
     Ensure that allycode does not:
@@ -63,11 +64,9 @@ def sanitize_allycode(allycode: str | int) -> str:
         Player allycode in the proper format
 
     """
-    if not allycode and not isinstance(allycode, (int, str)):
+    if allycode is MISSING:
         logger.warning(f"{get_function_name()}: Invalid ally code: {allycode}")
         return ""
-
-    _orig_ac = allycode
 
     # Handle string input validation
     if isinstance(allycode, str):
@@ -78,12 +77,14 @@ def sanitize_allycode(allycode: str | int) -> str:
         return allycode
 
     if isinstance(allycode, int):
-        try:
-            allycode = str(allycode)
-        except ValueError:
+        allycode = str(allycode)
+        if len(allycode) != 9:
             err_msg = f"{get_function_name()}: Invalid ally code: {allycode}"
             raise SwgohComlinkValueError(err_msg)
-    return allycode
+        return allycode
+
+    err_msg = f"{get_function_name()}: Invalid ally code: {allycode}"
+    raise SwgohComlinkValueError(err_msg)
 
 
 def human_time(unix_time: int | float) -> str:

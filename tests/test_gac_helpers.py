@@ -109,9 +109,11 @@ class TestAsyncFindBracketBoundary:
 
     def test_matches_sync(self):
         """Async and sync produce identical results across various sizes."""
+
         async def _run():
             for n in [0, 1, 2, 50, 500, 6250, 18750]:
                 sync_result = _find_bracket_boundary(_make_probe(n))
                 async_result = await _async_find_bracket_boundary(_make_async_probe(n))
                 assert sync_result == async_result, f"Mismatch for n={n}"
+
         asyncio.run(_run())
