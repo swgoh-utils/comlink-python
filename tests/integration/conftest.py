@@ -1,13 +1,15 @@
 """Shared fixtures for integration tests against a live Comlink service."""
 
+import os
+
 import pytest
 
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 
 COMLINK_URL = "http://localhost:3000"
 COMLINK_HMAC_URL = "http://localhost:3001"
-HMAC_ACCESS_KEY = "test_public_key"
-HMAC_SECRET_KEY = "test_secret_key"
+HMAC_ACCESS_KEY = os.environ.get("HMAC_ACCESS_KEY", "")
+HMAC_SECRET_KEY = os.environ.get("HMAC_SECRET_KEY", "")
 
 # Known public allycode used in example scripts
 TEST_ALLYCODE = 314927874

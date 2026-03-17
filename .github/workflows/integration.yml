@@ -26,26 +26,26 @@ jobs:
         ports:
           - 3000:3000
         options: >-
-          --health-cmd "/swgoh-comlink --check"
-          --health-interval 1s
-          --health-timeout 5s
+          --health-cmd "wget --no-verbose --tries=1 -O /dev/null http://localhost:3000/readyz || exit 1"
+          --health-interval 5s
+          --health-timeout 10s
           --health-retries 10
-          --health-start-period 10s
+          --health-start-period 15s
 
       comlink-hmac:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
         env:
           APP_NAME: comlink-python-hmac-integration-tests
-          ACCESS_KEY: test_public_key
-          SECRET_KEY: test_secret_key
+          ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
+          SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
         ports:
           - 3001:3000
         options: >-
-          --health-cmd "/swgoh-comlink --check"
-          --health-interval 1s
-          --health-timeout 5s
+          --health-cmd "wget --no-verbose --tries=1 -O /dev/null http://localhost:3000/readyz || exit 1"
+          --health-interval 5s
+          --health-timeout 10s
           --health-retries 10
-          --health-start-period 10s
+          --health-start-period 15s
 
     steps:
       - uses: actions/checkout@v6
@@ -64,4 +64,6 @@ jobs:
       - name: Run integration tests
         env:
           RUN_INTEGRATION_TESTS: "1"
+          HMAC_ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
+          HMAC_SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
         run: uv run python -m pytest tests/integration/ -v
