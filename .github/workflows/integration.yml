@@ -25,12 +25,6 @@ jobs:
           APP_NAME: comlink-python-integration-tests
         ports:
           - 3000:3000
-        options: >-
-          --health-cmd "wget --no-verbose --tries=1 -O /dev/null http://localhost:3000/readyz || exit 1"
-          --health-interval 5s
-          --health-timeout 10s
-          --health-retries 10
-          --health-start-period 15s
 
       comlink-hmac:
         image: ghcr.io/swgoh-utils/swgoh-comlink:latest
@@ -40,14 +34,25 @@ jobs:
           SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
         ports:
           - 3001:3000
-        options: >-
-          --health-cmd "wget --no-verbose --tries=1 -O /dev/null http://localhost:3000/readyz || exit 1"
-          --health-interval 5s
-          --health-timeout 10s
-          --health-retries 10
-          --health-start-period 15s
 
     steps:
+      - name: Wait for Comlink services
+        run: |
+          for port in 3000 3001; do
+            echo "Waiting for service on port $port..."
+            for i in $(seq 1 30); do
+              if curl -sf http://localhost:$port/readyz > /dev/null 2>&1; then
+                echo "Service on port $port is ready."
+                break
+              fi
+              if [ $i -eq 30 ]; then
+                echo "Service on port $port failed to become ready."
+                exit 1
+              fi
+              sleep 2
+            done
+          done
+
       - uses: actions/checkout@v6
 
       - name: Install uv
