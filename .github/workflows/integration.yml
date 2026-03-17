@@ -61,40 +61,6 @@ jobs:
       - name: Install dependencies
         run: uv sync --group test
 
-      - name: Wait for Comlink services
-        run: |
-          comlink_ready=false
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:3000/readyz > /dev/null 2>&1; then
-              comlink_ready=true
-              echo "✓ comlink is ready"
-              break
-            fi
-            echo "Waiting for Comlink... ($i/30)"
-            sleep 2
-          done
-          if [ "$comlink_ready" != "true" ]; then
-            echo "::error::Comlink service failed to start within 60 seconds"
-            docker ps -a
-            exit 1
-          fi
-
-          hmac_ready=false
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:3001/readyz > /dev/null 2>&1; then
-              hmac_ready=true
-              echo "✓ comlink is ready"
-              break
-            fi
-            echo "Waiting for Comlink HMAC... ($i/30)"
-            sleep 2
-          done
-          if [ "$hmac_ready" != "true" ]; then
-            echo "::error::Comlink HMAC service failed to start within 60 seconds"
-            docker ps -a
-            exit 1
-          fi
-
       - name: Run integration tests
         env:
           RUN_INTEGRATION_TESTS: "1"
