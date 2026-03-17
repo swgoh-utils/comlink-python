@@ -372,3 +372,41 @@ class TestSensitiveKeyMasking:
         assert "top_secret" not in log_output
         assert "pub_key" not in log_output
         assert "visible" in log_output
+
+
+# ── Version property (read-only) ────────────────────────────────────────
+
+
+class TestVersionProperty:
+    def test_version_getter(self):
+        client = SwgohComlink(url="http://localhost:3000")
+        assert isinstance(client.version, str)
+        assert len(client.version) > 0
+        client.close()
+
+    def test_version_setter_raises(self):
+        client = SwgohComlink(url="http://localhost:3000")
+        with pytest.raises(AttributeError, match="read-only"):
+            client.version = "99.0.0"
+        client.close()
+
+    def test_version_deleter_raises(self):
+        client = SwgohComlink(url="http://localhost:3000")
+        with pytest.raises(AttributeError, match="read-only"):
+            del client.version
+        client.close()
+
+
+# ── _build_game_data_payload with int items ─────────────────────────────
+
+
+class TestBuildGameDataPayloadIntItems:
+    def test_int_items_passed_as_string(self):
+        payload = SwgohComlinkBase._build_game_data_payload(game_version="1.0", items=42)
+        assert payload["payload"]["items"] == "42"
+
+    def test_intflag_arithmetic(self):
+        # Simulate IntFlag result (just an int)
+        combined = 2097151 | 68717379584
+        payload = SwgohComlinkBase._build_game_data_payload(game_version="1.0", items=combined)
+        assert payload["payload"]["items"] == str(combined)

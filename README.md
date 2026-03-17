@@ -4,7 +4,7 @@
 [![PyPI version](https://badge.fury.io/py/swgoh-comlink.svg)](https://pypi.org/project/swgoh-comlink/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen.svg)](https://github.com/swgoh-utils/comlink-python)
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)](https://github.com/swgoh-utils/comlink-python)
 
 ## Description
 

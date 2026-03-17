@@ -874,3 +874,339 @@ class TestGetLogger:
 
         logger = get_logger("my.custom.logger")
         assert logger.name == "my.custom.logger"
+
+
+# ── _localization ──────────────────────────────────────────────────────
+
+
+class TestHexToAnsiTruecolor:
+    def test_basic_conversion(self):
+        from swgoh_comlink.helpers._localization import _hex_to_ansi_truecolor
+
+        result = _hex_to_ansi_truecolor("FF0000")
+        assert result == "\033[38;2;255;0;0m"
+
+    def test_with_hash_prefix(self):
+        from swgoh_comlink.helpers._localization import _hex_to_ansi_truecolor
+
+        result = _hex_to_ansi_truecolor("#00FF00")
+        assert result == "\033[38;2;0;255;0m"
+
+    def test_mixed_case(self):
+        from swgoh_comlink.helpers._localization import _hex_to_ansi_truecolor
+
+        result = _hex_to_ansi_truecolor("aaBBcc")
+        assert result == "\033[38;2;170;187;204m"
+
+
+class TestParseTokens:
+    def test_plain_text(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("hello world")
+        assert len(tokens) == 1
+        assert tokens[0] == {"type": "text", "value": "hello world"}
+
+    def test_color_tags(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[c][FF0000]red[-][/c]")
+        types = [t["type"] for t in tokens]
+        assert "color_block_open" in types
+        assert "color" in types
+        assert "color_reset" in types
+        assert "color_end" in types
+
+    def test_bold_tags(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[b]bold[/b]")
+        types = [t["type"] for t in tokens]
+        assert types == ["bold_open", "text", "bold_close"]
+
+    def test_italic_tags(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[i]italic[/i]")
+        types = [t["type"] for t in tokens]
+        assert types == ["italic_open", "text", "italic_close"]
+
+    def test_newline_escape(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("line1\\nline2")
+        types = [t["type"] for t in tokens]
+        assert types == ["text", "newline", "text"]
+
+    def test_color_end_dash_c(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[-c]")
+        assert tokens[0]["type"] == "color_end"
+
+    def test_hex_color_token(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[F0FF23]")
+        assert tokens[0] == {"type": "color", "hex": "F0FF23"}
+
+    def test_empty_parts_skipped(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("")
+        assert tokens == []
+
+
+class TestParseSwgohStringBare:
+    def test_plain_text(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("hello world", output="bare") == "hello world"
+
+    def test_strips_color_markup(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[c][FFAA00]golden[-][/c]", output="bare")
+        assert result == "golden"
+
+    def test_strips_bold(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[b]bold[/b]", output="bare") == "bold"
+
+    def test_strips_italic(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[i]italic[/i]", output="bare") == "italic"
+
+    def test_newline(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("a\\nb", output="bare") == "a\nb"
+
+    def test_default_is_bare(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[b]text[/b]") == "text"
+
+
+class TestParseSwgohStringTerminal:
+    def test_color_block(self):
+        from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
+
+        result = parse_swgoh_string("[c][FF0000]red[/c]", output="terminal")
+        assert "\033[38;2;255;0;0m" in result
+        assert "red" in result
+        assert result.endswith(ANSI_RESET)
+
+    def test_bold(self):
+        from swgoh_comlink.helpers._localization import ANSI_BOLD, ANSI_RESET, parse_swgoh_string
+
+        result = parse_swgoh_string("[b]bold[/b]", output="terminal")
+        assert ANSI_BOLD in result
+        assert ANSI_RESET in result
+        assert "bold" in result
+
+    def test_italic(self):
+        from swgoh_comlink.helpers._localization import ANSI_ITALIC, ANSI_RESET, parse_swgoh_string
+
+        result = parse_swgoh_string("[i]italic[/i]", output="terminal")
+        assert ANSI_ITALIC in result
+        assert ANSI_RESET in result
+
+    def test_color_reset_within_block(self):
+        from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
+
+        result = parse_swgoh_string("[c][FF0000]red[-]plain[/c]", output="terminal")
+        assert "red" in result
+        assert "plain" in result
+        # Color reset [-] should produce ANSI_RESET
+        assert result.count(ANSI_RESET) >= 2
+
+    def test_bold_with_active_color_reapplies(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        # Bold close should reapply active color
+        result = parse_swgoh_string("[c][FF0000][b]bold[/b]text[/c]", output="terminal")
+        assert "bold" in result
+        assert "text" in result
+
+    def test_italic_with_active_color_reapplies(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[c][FF0000][i]ital[/i]text[/c]", output="terminal")
+        assert "ital" in result
+
+    def test_bold_close_preserves_italic(self):
+        from swgoh_comlink.helpers._localization import ANSI_ITALIC, parse_swgoh_string
+
+        result = parse_swgoh_string("[i][b]both[/b]just_italic[/i]", output="terminal")
+        # After bold close, italic should be reapplied
+        parts = result.split("both")
+        assert ANSI_ITALIC in parts[1]
+
+    def test_italic_close_preserves_bold(self):
+        from swgoh_comlink.helpers._localization import ANSI_BOLD, parse_swgoh_string
+
+        result = parse_swgoh_string("[b][i]both[/i]just_bold[/b]", output="terminal")
+        parts = result.split("both")
+        assert ANSI_BOLD in parts[1]
+
+    def test_color_end_reapplies_styles(self):
+        from swgoh_comlink.helpers._localization import ANSI_BOLD, parse_swgoh_string
+
+        result = parse_swgoh_string("[b][c][FF0000]red[/c]still_bold[/b]", output="terminal")
+        # After color end, bold should be reapplied
+        assert ANSI_BOLD in result
+
+    def test_finalize_resets_active_styles(self):
+        from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
+
+        # Unclosed bold — finalize should add reset
+        result = parse_swgoh_string("[b]no close", output="terminal")
+        assert result.endswith(ANSI_RESET)
+
+
+class TestParseSwgohStringDiscord:
+    def test_bold(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[b]bold[/b]", output="discord")
+        assert result == "**bold**"
+
+    def test_italic(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[i]italic[/i]", output="discord")
+        assert result == "*italic*"
+
+    def test_color_ignored(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[c][FF0000]red[/c]", output="discord")
+        assert result == "red"
+
+
+class TestParseSwgohStringWeb:
+    def test_color_span(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[c][FF0000]red[/c]", output="web")
+        assert '<span style="color:#FF0000">' in result
+        assert "</span>" in result
+        assert result.startswith("<p>")
+        assert result.endswith("</p>")
+
+    def test_bold(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[b]bold[/b]", output="web")
+        assert "<b>bold</b>" in result
+
+    def test_italic(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[i]italic[/i]", output="web")
+        assert "<em>italic</em>" in result
+
+    def test_color_reset_closes_span(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[c][FF0000]red[-]plain[/c]", output="web")
+        assert "</span>" in result
+        assert "red" in result
+        assert "plain" in result
+
+    def test_wraps_in_p_tag(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("simple", output="web")
+        assert result == "<p>simple</p>"
+
+
+class TestParseSwgohStringComplex:
+    def test_nested_bold_italic(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[b][i]bold-italic[/i][/b]", output="bare")
+        assert result == "bold-italic"
+
+    def test_mixed_markup(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        text = "[b]Title[/b]\\n[c][FFAA00]Gold text[-][/c] and [i]italic[/i]"
+        result = parse_swgoh_string(text, output="bare")
+        assert "Title" in result
+        assert "\n" in result
+        assert "Gold text" in result
+        assert "italic" in result
+
+    def test_empty_string(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("", output="bare") == ""
+        assert parse_swgoh_string("", output="web") == "<p></p>"
+
+
+# ── Additional quick-win helper tests ──────────────────────────────────
+
+
+class TestSanitizeAllycodeInvalidType:
+    def test_float_raises(self):
+        from swgoh_comlink.helpers._utils import sanitize_allycode
+
+        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
+            sanitize_allycode(3.14)
+
+    def test_list_raises(self):
+        from swgoh_comlink.helpers._utils import sanitize_allycode
+
+        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
+            sanitize_allycode([1, 2, 3])
+
+
+class TestIsOmicronSkillNoTier:
+    def test_skill_with_no_omicron_tier_returns_false(self):
+        from swgoh_comlink.helpers._omicron import is_omicron_skill
+
+        # skill_B has no omicron tier (all isOmicronTier=False)
+        # get_omicron_skill_tier returns None, triggering line 132
+        skill_list = [
+            {"id": "skill_B", "omicronMode": 3, "tier": [{"isOmicronTier": False}]},
+        ]
+        assert is_omicron_skill(skill_list, skill_id="skill_B", skill_tier=1) is False
+
+
+class TestConstantsGetLegacyKeyError:
+    def test_legacy_name_with_missing_dataitems_returns_none(self):
+        from unittest.mock import patch
+
+        from swgoh_comlink.helpers._constants import _LEGACY_NAME_MAP, Constants
+
+        # Patch _LEGACY_NAME_MAP to include a key that maps to a nonexistent DataItems member
+        with patch.dict(_LEGACY_NAME_MAP, {"FakeLegacyName": "NONEXISTENT_MEMBER"}):
+            result = Constants.get("FakeLegacyName")
+            assert result is None
+
+
+class TestGetDatacronDismantleValueNoDustRecipe:
+    def test_no_dust_recipe_id_returns_empty(self):
+        from swgoh_comlink.helpers._game_data import get_datacron_dismantle_value
+
+        datacron = {"setId": "set1", "affix": [1]}
+        # Tier exists but dustGrantRecipeId is None
+        sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": None}]}]
+        result = get_datacron_dismantle_value(datacron, sets, [])
+        assert result == {}
+
+
+class TestGetArenaPayoutEdge:
+    def test_payout_already_passed_adds_day(self):
+        from datetime import datetime
+
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        # Use a large positive offset to push payout well into the past
+        # This forces the payout < datetime.now() branch
+        result = get_arena_payout(offset=1440)
+        assert result > datetime.now()

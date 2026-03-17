@@ -658,3 +658,111 @@ class TestCrewlessSkillsGP:
         assert "reinforcement" in gps
         # Crewless ships with hardware skills should have reinforcement > 0
         assert gps["ability"] + gps["reinforcement"] > 0
+
+
+# ── Edge cases for coverage ────────────────────────────────────────────
+
+
+class TestGetDefId:
+    def test_with_def_id(self, calc):
+        assert calc._get_def_id({"defId": "VADER"}) == "VADER"
+
+    def test_with_definition_id(self, calc):
+        assert calc._get_def_id({"definitionId": "VADER:7"}) == "VADER"
+
+    def test_none_unit(self, calc):
+        assert calc._get_def_id(None) is None
+
+    def test_empty_unit(self, calc):
+        assert calc._get_def_id({}) is None
+
+    def test_no_def_id_or_definition_id(self, calc):
+        assert calc._get_def_id({"rarity": 7}) is None
+
+
+class TestCalcPlayerStatsEdgeCases:
+    def test_non_list_or_dict_raises(self, calc):
+        with pytest.raises(TypeError, match="Expected a list or dict"):
+            calc.calc_player_stats("not a valid type")
+
+    def test_dict_without_roster_unit_raises(self, calc):
+        with pytest.raises(RuntimeError, match="rosterUnit"):
+            calc.calc_player_stats({"name": "player"})
+
+    def test_dict_player(self, calc, player):
+        p = copy.deepcopy(player)
+        result = calc.calc_player_stats(p)
+        assert isinstance(result, dict)
+        # Should have processed roster units
+        assert "rosterUnit" in result
+
+    def test_list_player(self, calc, player):
+        p = copy.deepcopy(player)
+        result = calc.calc_player_stats([p])
+        assert isinstance(result, list)
+        assert len(result) == 1
+
+
+class TestCalcRosterStatsDict:
+    def test_roster_as_dict(self, calc, game_data, processed_player):
+        """Covers the dict branch in calc_roster_stats (lines 169-190)."""
+        roster = processed_player["rosterUnit"]
+        # Build a dict keyed by unit ID with list-of-unit-dicts format
+        unit_dict: dict[str, list[dict[str, Any]]] = {}
+        for u in roster[:5]:
+            defid = u.get("definitionId", "").split(":")[0]
+            if not defid:
+                continue
+            meta = game_data["unitData"].get(defid, {})
+            if meta.get("combatType") != 1:
+                continue
+            unit_dict[defid] = [{
+                "currentRarity": u.get("currentRarity", u.get("rarity")),
+                "currentLevel": u.get("currentLevel", u.get("level")),
+                "currentTier": u.get("currentTier", u.get("gear")),
+                "gear": [],
+                "skill": u.get("skill", []),
+            }]
+            if len(unit_dict) >= 3:
+                break
+        if unit_dict:
+            result = calc.calc_roster_stats(unit_dict)
+            assert isinstance(result, dict)
+
+
+class TestCalcRosterStatsSkipsUnknown:
+    def test_unknown_unit_skipped(self, calc):
+        """Units not in game data are skipped (lines 148-152)."""
+        fake_unit = {"defId": "NONEXISTENT_UNIT_XYZ", "rarity": 7, "level": 85}
+        result = calc.calc_roster_stats([fake_unit])
+        assert isinstance(result, list)
+        # Should not crash, just skip
+
+
+class TestShipNotInGameData:
+    def test_missing_ship_raises_key_error(self, calc):
+        """Covers line 431."""
+        fake_ship = {"defId": "NONEXISTENT_SHIP", "rarity": 7, "level": 85}
+        with pytest.raises(KeyError, match="not found in game data"):
+            calc._get_ship_raw_stats(fake_ship, [])
+
+
+class TestShipGPCrewValidation:
+    def test_wrong_crew_count_raises(self, calc, game_data, processed_player):
+        """Covers lines 989-990."""
+        ship, crew = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=True)
+        norm_ship, norm_crew = calc._normalize_ship_and_crew(ship, crew)
+        # Give wrong crew count
+        with pytest.raises(ValueError, match="Incorrect number"):
+            calc._calc_ship_gp(norm_ship, [])
+
+    def test_wrong_crew_member_raises(self, calc, game_data, processed_player):
+        """Covers lines 992-994."""
+        ship, crew = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=True)
+        norm_ship, norm_crew = calc._normalize_ship_and_crew(ship, crew)
+        # Replace a crew member with a fake one
+        if norm_crew:
+            fake_crew = copy.deepcopy(norm_crew)
+            fake_crew[0]["defId"] = "FAKE_CREW_MEMBER"
+            with pytest.raises(ValueError, match="not in"):
+                calc._calc_ship_gp(norm_ship, fake_crew)

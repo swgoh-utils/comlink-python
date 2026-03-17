@@ -130,3 +130,48 @@ class TestGameDataBuilderAsync:
 
         assert sync_result.keys() == async_result.keys()
         assert len(sync_result["unitData"]) == len(async_result["unitData"])
+
+
+# ── StatCalcAsync GitHub fetch error handling ──────────────────────────
+
+
+class TestStatCalcAsyncFetchErrors:
+    @pytest.mark.asyncio
+    async def test_network_error_raises_runtime(self, monkeypatch):
+        import httpx
+
+        from swgoh_comlink.StatCalc.calculator_async import StatCalcAsync
+
+        async def mock_get(self, url, **kwargs):
+            raise httpx.ConnectError("Connection refused")
+
+        monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
+        with pytest.raises(RuntimeError, match="Unable to retrieve game data"):
+            await StatCalcAsync._async_fetch_game_data_from_github()
+
+    @pytest.mark.asyncio
+    async def test_http_error_raises_runtime(self, monkeypatch):
+        import httpx
+
+        from swgoh_comlink.StatCalc.calculator_async import StatCalcAsync
+
+        async def mock_get(self, url, **kwargs):
+            response = httpx.Response(500, request=httpx.Request("GET", url))
+            return response
+
+        monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
+        with pytest.raises(RuntimeError, match="Unable to retrieve game data"):
+            await StatCalcAsync._async_fetch_game_data_from_github()
+
+    @pytest.mark.asyncio
+    async def test_timeout_raises_runtime(self, monkeypatch):
+        import httpx
+
+        from swgoh_comlink.StatCalc.calculator_async import StatCalcAsync
+
+        async def mock_get(self, url, **kwargs):
+            raise httpx.ReadTimeout("Timeout")
+
+        monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
+        with pytest.raises(RuntimeError, match="Unable to retrieve game data"):
+            await StatCalcAsync._async_fetch_game_data_from_github()

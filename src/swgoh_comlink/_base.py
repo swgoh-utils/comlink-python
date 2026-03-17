@@ -200,7 +200,7 @@ class SwgohComlinkBase:
         include_pve_units: bool = True,
         request_segment: int = 0,
         enums: bool = False,
-        items: str | None = None,
+        items: str | int | None = None,
         device_platform: str = "Android",
     ) -> dict[str, Any]:
         """Build payload for get_game_data().

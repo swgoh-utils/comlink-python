@@ -2,7 +2,7 @@
 
 ## Description
 
-This folder contains a collection of examples for common uses of the comlink-python interface wrapper for swgoh-comlink.
+This folder contains a collection of examples for common uses of the `comlink-python` interface wrapper for the `swgoh-comlink` API service.
 
 ## Structure
 
@@ -25,7 +25,6 @@ Examples using `SwgohComlinkAsync` — the asynchronous client. Supports concurr
 
 Each script contains inline comments and sample responses. See the README in each subdirectory for a full listing.
 
-See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for more information.
 
 ## Support
 
