@@ -11,6 +11,8 @@ This project provides:
 
 Both `SwgohComlink` and `SwgohComlinkAsync` share the same constructor parameters and public methods. The async client uses `await` for all requests and should be used inside an `async with` context manager.
 
+For runnable code samples covering common tasks, see the [Examples](examples.md) page.
+
 Similarly, `StatCalcAsync` provides an async factory method for non-blocking game data initialization, while inheriting all calculation methods from `StatCalc`.
 
 ## Quick Start

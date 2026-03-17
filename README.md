@@ -238,6 +238,35 @@ Methods available on both `SwgohComlink` and `SwgohComlinkAsync` (async methods 
 | `get_name_spaces(only_compatible, enums)` | Get available namespaces |
 | `get_segmented_content(content_name_space, accept_language, enums)` | Retrieve segmented content |
 
+## Examples
+
+The [`examples/`](examples/) directory contains runnable scripts for common tasks using both the sync and async clients.
+
+### Synchronous ([`examples/Sync/`](examples/Sync/))
+
+| Script | Description |
+|--------|-------------|
+| [`get_player.py`](examples/Sync/get_player.py) | Get a player's full profile including roster |
+| [`get_guild.py`](examples/Sync/get_guild.py) | Look up guild info from a player's ally code |
+| [`get_events.py`](examples/Sync/get_events.py) | Retrieve current game events with timestamps |
+| [`get_game_data.py`](examples/Sync/get_game_data.py) | Retrieve game data collections |
+| [`get_gac_leaderboard.py`](examples/Sync/get_gac_leaderboard.py) | Get GAC leaderboard data |
+| [`get_gac_brackets.py`](examples/Sync/get_gac_brackets.py) | Scan GAC brackets and search for a player |
+| [`calc_stats_local.py`](examples/Sync/calc_stats_local.py) | Calculate character stats locally with `StatCalc` |
+| [`search_for_guilds.py`](examples/Sync/search_for_guilds.py) | Search for guilds by name or criteria |
+
+### Asynchronous ([`examples/Async/`](examples/Async/))
+
+| Script | Description |
+|--------|-------------|
+| [`get_player.py`](examples/Async/get_player.py) | Get a player's full profile using `await` |
+| [`concurrent_requests.py`](examples/Async/concurrent_requests.py) | Fetch multiple players in parallel with `asyncio.gather()` |
+| [`streaming_guild_roster.py`](examples/Async/streaming_guild_roster.py) | Fetch all guild members concurrently with `asyncio.TaskGroup` |
+| [`streaming_guild_roster_advanced.py`](examples/Async/streaming_guild_roster_advanced.py) | Production-quality guild roster fetch with CLI args and retry logic |
+| [`calc_stats_local.py`](examples/Async/calc_stats_local.py) | Calculate character stats locally with `StatCalcAsync` |
+
+See the [full examples listing](examples/README.md) for all available scripts and usage details.
+
 ## Logging
 
 Logging is handled by the [python logging module](https://docs.python.org/3/library/logging.html). The library follows Python best practice by attaching only a `NullHandler` — no output is produced unless your application configures logging.

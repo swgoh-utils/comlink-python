@@ -19,16 +19,17 @@ theme:
         name: Switch to light mode
 
 nav:
-  - "\U0001F3E0 Home": index.md
-  - "\U0001F4D6 Guides":
-      - "\U0001F500 Migration Guide": migration.md
-      - "\U0001F4DD Logging": logging.md
-  - "\U0001F4E1 API":
-      - "\U0001F517 SwgohComlink": api/comlink.md
-      - "\u26A1 SwgohComlinkAsync": api/async.md
-      - "\U0001F4CA StatCalc": api/statcalc.md
-      - "\U0001F9F0 Helpers": api/helpers.md
-      - "\u26A0\uFE0F Exceptions": api/exceptions.md
+  - "Home": index.md
+  - "Guides":
+      - "Migration Guide": migration.md
+      - "Logging": logging.md
+      - "xamples": examples.md
+  - "API":
+      - "SwgohComlink": api/comlink.md
+      - "SwgohComlinkAsync": api/async.md
+      - "StatCalc": api/statcalc.md
+      - "Helpers": api/helpers.md
+      - "Exceptions": api/exceptions.md
 
 extra:
   version:
