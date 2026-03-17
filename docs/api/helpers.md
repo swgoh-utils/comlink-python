@@ -325,28 +325,6 @@ Functions for querying omicron skill data from game data collections.
 
 ---
 
-## Sentinels
-
-Sentinel objects distinguish "argument not provided" from `None` in function
-signatures. Compare using the `is` operator:
-
-```python
-from swgoh_comlink.helpers import REQUIRED, MISSING
-
-def my_func(param=REQUIRED):
-    if param is REQUIRED:
-        raise ValueError("param is required")
-```
-
-| Sentinel | Purpose |
-|----------|---------|
-| `REQUIRED` | Default for required parameters |
-| `MISSING` | Indicates a value was not provided |
-| `GIVEN` | Indicates a value was explicitly provided |
-| `MutualExclusiveRequired` | Marks mutually exclusive required parameters |
-
----
-
 ## Stat Data Constants
 
 Reference data dictionaries available as module-level exports. These are also

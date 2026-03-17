@@ -6,7 +6,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from ..exceptions import SwgohComlinkValueError
-from ._sentinels import MISSING, REQUIRED, MutualExclusiveRequired
 from ._utils import get_function_name, sanitize_allycode
 
 if TYPE_CHECKING:
@@ -14,9 +13,9 @@ if TYPE_CHECKING:
 
 
 def get_guild_members(
-    comlink: Any = REQUIRED,
-    player_id: str | Any = MutualExclusiveRequired,
-    allycode: str | int | Any = MutualExclusiveRequired,
+    comlink: Any,
+    player_id: str | None = None,
+    allycode: str | int | None = None,
 ) -> list[Any]:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
@@ -29,22 +28,19 @@ def get_guild_members(
         list of guild members objects
 
     Note:
-        A player_id or allycode argument is REQUIRED
+        A player_id or allycode argument is required
 
     """
-    if hasattr(comlink, "__comlink_type__"):
-        comlink_type = comlink.__comlink_type__
-    else:
-        comlink_type = MISSING
-    if comlink is MISSING or comlink_type != "SwgohComlink":
+    comlink_type = getattr(comlink, "__comlink_type__", None)
+    if comlink_type != "SwgohComlink":
         err_msg = f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlink."
         raise SwgohComlinkValueError(err_msg)
 
-    if player_id is not MutualExclusiveRequired and allycode is not MutualExclusiveRequired:
+    if player_id is not None and allycode is not None:
         err_msg = f"{get_function_name()}: Either 'player_id' or 'allycode' are allowed arguments, not both."
         raise SwgohComlinkValueError(err_msg)
 
-    if player_id is MutualExclusiveRequired and allycode is MutualExclusiveRequired:
+    if player_id is None and allycode is None:
         err_msg = f"{get_function_name()}: One of either 'player_id' or 'allycode' is required."
         raise SwgohComlinkValueError(err_msg)
 
@@ -57,9 +53,9 @@ def get_guild_members(
 
 
 async def async_get_guild_members(
-    comlink: Any = REQUIRED,
-    player_id: str | Any = MutualExclusiveRequired,
-    allycode: str | int | Any = MutualExclusiveRequired,
+    comlink: Any,
+    player_id: str | None = None,
+    allycode: str | int | None = None,
 ) -> list[Any]:
     """Return list of guild member player allycodes based upon provided player ID or allycode (async version).
 
@@ -72,24 +68,21 @@ async def async_get_guild_members(
         list of guild members objects
 
     Note:
-        A player_id or allycode argument is REQUIRED
+        A player_id or allycode argument is required
 
     """
-    if hasattr(comlink, "__comlink_type__"):
-        comlink_type = comlink.__comlink_type__
-    else:
-        comlink_type = MISSING
-    if comlink is MISSING or comlink_type != "SwgohComlinkAsync":
+    comlink_type = getattr(comlink, "__comlink_type__", None)
+    if comlink_type != "SwgohComlinkAsync":
         err_msg = (
             f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlinkAsync."
         )
         raise SwgohComlinkValueError(err_msg)
 
-    if player_id is not MutualExclusiveRequired and allycode is not MutualExclusiveRequired:
+    if player_id is not None and allycode is not None:
         err_msg = f"{get_function_name()}: Either 'player_id' or 'allycode' are allowed arguments, not both."
         raise SwgohComlinkValueError(err_msg)
 
-    if player_id is MutualExclusiveRequired and allycode is MutualExclusiveRequired:
+    if player_id is None and allycode is None:
         err_msg = f"{get_function_name()}: One of either 'player_id' or 'allycode' is required."
         raise SwgohComlinkValueError(err_msg)
 

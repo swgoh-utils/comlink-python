@@ -9,7 +9,6 @@ from math import floor
 from typing import Any
 
 from ..exceptions import SwgohComlinkValueError
-from ._sentinels import REQUIRED
 from ._utils import get_function_name
 
 logger = logging.getLogger(__name__)
@@ -59,7 +58,7 @@ def get_raid_leaderboard_ids(campaign_data: list[dict[str, Any]]) -> list[str]:
     return raid_ids
 
 
-def create_localized_unit_name_dictionary(locale: str | list[Any] | Any = REQUIRED) -> dict[str, str]:
+def create_localized_unit_name_dictionary(locale: str | list[Any]) -> dict[str, str]:
     """Create localized translation mapping for unit names
 
     Take a localization element from the SwgohComlink.get_localization() result dictionary and

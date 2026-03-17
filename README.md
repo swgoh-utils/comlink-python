@@ -255,11 +255,18 @@ This release replaces `requests` with `httpx` and changes how logging is configu
 
 ## Test Configuration
 
-Integration tests are opt-in and can be enabled with:
+Integration tests are opt-in and require a running comlink service:
 
 ```bash
-RUN_INTEGRATION_TESTS=1 uv run pytest -q
+# Run integration tests (requires comlink on localhost:3000)
+RUN_INTEGRATION_TESTS=1 uv run pytest tests/integration/ -v
+
+# Run with HMAC tests (requires comlink-hmac on localhost:3001)
+HMAC_ACCESS_KEY=your_key HMAC_SECRET_KEY=your_secret \
+  RUN_INTEGRATION_TESTS=1 uv run pytest tests/integration/ -v
 ```
+
+HMAC tests are automatically skipped when `HMAC_ACCESS_KEY` and `HMAC_SECRET_KEY` environment variables are not set.
 
 See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for more information.
 

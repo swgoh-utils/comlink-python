@@ -10,7 +10,6 @@ from typing import Any
 
 from ..exceptions import SwgohComlinkValueError
 from ._constants import Constants
-from ._sentinels import MISSING
 from ._utils import get_function_name
 
 logger = logging.getLogger(__name__)
@@ -142,8 +141,8 @@ def get_current_gac_event(comlink: Any) -> dict[str, Any]:
         SwgohComlinkValueError: If no active GAC event is found
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", MISSING)
-    if comlink is MISSING or comlink_type != "SwgohComlink":
+    comlink_type = getattr(comlink, "__comlink_type__", None)
+    if comlink_type != "SwgohComlink":
         err_str = f"{get_function_name()}: comlink instance must be provided."
         raise SwgohComlinkValueError(err_str)
 
@@ -168,8 +167,8 @@ async def async_get_current_gac_event(comlink: Any) -> dict[str, Any]:
         SwgohComlinkValueError: If no active GAC event is found
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", MISSING)
-    if comlink is MISSING or comlink_type != "SwgohComlinkAsync":
+    comlink_type = getattr(comlink, "__comlink_type__", None)
+    if comlink_type != "SwgohComlinkAsync":
         err_str = f"{get_function_name()}: async comlink instance must be provided."
         raise SwgohComlinkValueError(err_str)
 
@@ -199,8 +198,8 @@ def get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> dict[int, Any
         Dictionary mapping bracket index to player list, or None if no GAC event is running.
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", MISSING)
-    if comlink is MISSING or comlink_type != "SwgohComlink":
+    comlink_type = getattr(comlink, "__comlink_type__", None)
+    if comlink_type != "SwgohComlink":
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         raise SwgohComlinkValueError(err_msg)
 
@@ -250,8 +249,8 @@ async def async_get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> d
         Dictionary mapping bracket index to player list, or None if no GAC event is running.
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", MISSING)
-    if comlink is MISSING or comlink_type != "SwgohComlinkAsync":
+    comlink_type = getattr(comlink, "__comlink_type__", None)
+    if comlink_type != "SwgohComlinkAsync":
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         raise SwgohComlinkValueError(err_msg)
 

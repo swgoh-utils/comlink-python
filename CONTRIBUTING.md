@@ -111,7 +111,6 @@ comlink-python/
 │   │   └── feature_request.yml     # Feature request template
 │   ├── workflows/
 │   │   ├── ci.yml                  # CI pipeline (lint, type-check, test, docs, build)
-│   │   ├── commit-lint.yml         # Commit message validation (wagoid action)
 │   │   ├── commitlint.yml          # Commit message validation (npm-based)
 │   │   ├── integration.yml         # Integration tests against live comlink services
 │   │   ├── labeler.yml             # Auto-label PRs by file path
@@ -151,6 +150,7 @@ comlink-python/
 │       │   ├── _gac.py               # Grand Arena Championship bracket helpers
 │       │   ├── _game_data.py         # Raid IDs, datacrons, localization, units
 │       │   ├── _guild.py             # Guild member extraction helpers
+│       │   ├── _localization.py      # SWGOH string parsing and localization utilities
 │       │   ├── _omicron.py           # Omicron ability detection
 │       │   ├── _sentinels.py         # Sentinel values (REQUIRED, MISSING)
 │       │   ├── _stat_data.py         # Stat name/ID mapping tables
@@ -189,7 +189,7 @@ comlink-python/
 | `swgoh_comlink_async.py` | `SwgohComlinkAsync` — asynchronous HTTP client (mirrors sync API) |
 | `StatCalc/calculator.py` | `StatCalc` — local stat and GP calculation for game units |
 | `helpers/` | `DataItems` IntFlag enum, `Constants` class, 25+ utility functions split across focused submodules |
-| `exceptions.py` | `SwgohComlinkException` and `SwgohComlinkValueError` |
+| `exceptions.py` | `SwgohComlinkException`, `SwgohComlinkValueError`, and `SwgohComlinkTypeError` |
 | `globals.py` | Shared logging setup (`get_logger()`) |
 | `version.py` | Single `__version__` string, managed by hatch during releases |
 
@@ -202,8 +202,8 @@ comlink-python/
 | Branch | Purpose |
 |--------|---------|
 | `main` | Stable release branch. All PRs target this branch. |
-| `2.0-development` | Next major version development (breaking changes, architectural work) |
-| `1.0-maintenance` | Legacy maintenance branch |
+| `feature/async` | v2.x development branch (async support, httpx migration, architectural work) |
+| `1.0-maintenance` | Legacy v1.x maintenance branch |
 
 **For most contributions:**
 

@@ -39,12 +39,6 @@ from ._omicron import (
     get_unit_from_skill,
     is_omicron_skill,
 )
-from ._sentinels import (
-    GIVEN,
-    MISSING,
-    REQUIRED,
-    MutualExclusiveRequired,
-)
 from ._stat_data import (
     LANGUAGES,
     MOD_SET_IDS,
@@ -66,11 +60,6 @@ from ._utils import (
 )
 
 __all__ = [
-    # Sentinels
-    "GIVEN",
-    "MISSING",
-    "MutualExclusiveRequired",
-    "REQUIRED",
     # Enums and constants
     "Constants",
     "DataItems",

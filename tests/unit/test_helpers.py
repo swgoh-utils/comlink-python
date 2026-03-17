@@ -9,7 +9,6 @@ from typing import Any
 import pytest
 
 from swgoh_comlink.exceptions import SwgohComlinkValueError
-from swgoh_comlink.helpers._sentinels import GIVEN, MISSING
 
 # ── _utils ──────────────────────────────────────────────────────────────
 
@@ -111,20 +110,12 @@ class TestSanitizeAllycode:
         with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
             sanitize_allycode(0)
 
-    def test_default_sentinel_returns_empty(self):
+    def test_default_none_returns_empty(self):
         from swgoh_comlink.helpers._utils import sanitize_allycode
 
-        # Calling with no argument uses the REQUIRED sentinel default,
+        # Calling with no argument uses the None default,
         # which triggers the early "" return.
         assert sanitize_allycode() == ""
-
-    def test_given_sentinel_bypasses_empty_return(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
-
-        # GIVEN is falsy but should NOT trigger the early "" return.
-        # It falls through to the string validation path instead.
-        with pytest.raises((SwgohComlinkValueError, AttributeError)):
-            sanitize_allycode(GIVEN)
 
 
 class TestHumanTime:
@@ -156,11 +147,11 @@ class TestHumanTime:
         with pytest.raises(SwgohComlinkValueError, match="Unable to convert"):
             human_time("not_a_number")
 
-    def test_missing_sentinel_raises(self):
+    def test_non_numeric_type_raises(self):
         from swgoh_comlink.helpers._utils import human_time
 
         with pytest.raises(SwgohComlinkValueError, match="required"):
-            human_time(MISSING)
+            human_time([])
 
 
 class TestConvertRelicTier:
@@ -643,11 +634,11 @@ class TestConvertLeagueToInt:
 
         assert convert_league_to_int("unknown") is None
 
-    def test_missing_raises(self):
+    def test_none_raises(self):
         from swgoh_comlink.helpers._gac import convert_league_to_int
 
         with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_league_to_int(MISSING)
+            convert_league_to_int(None)
 
     def test_empty_raises(self):
         from swgoh_comlink.helpers._gac import convert_league_to_int
@@ -674,11 +665,11 @@ class TestConvertDivisionsToInt:
 
         assert convert_divisions_to_int("99") is None
 
-    def test_missing_raises(self):
+    def test_none_raises(self):
         from swgoh_comlink.helpers._gac import convert_divisions_to_int
 
         with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_divisions_to_int(MISSING)
+            convert_divisions_to_int(None)
 
     def test_empty_raises(self):
         from swgoh_comlink.helpers._gac import convert_divisions_to_int

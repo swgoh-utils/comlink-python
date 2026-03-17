@@ -2,7 +2,7 @@
 
 <!-- insertion marker -->
 
-## [v2.0.4 Pending Release] - feature/async
+## [v2.0.5rc1 Pending Release] - feature/async
 
 ### Features
 
@@ -29,11 +29,10 @@
 
 ### Breaking Changes
 
-- remove `OPTIONAL` and `NotSet` sentinel exports from `swgoh_comlink.helpers`.
-  Replace any usage with plain `None` defaults or `int` defaults as appropriate.
-- remove external `sentinels` library dependency. The package now uses an inline
-  `Sentinel` class. Code importing sentinels from `swgoh_comlink.helpers` should
-  remove references to `OPTIONAL` and `NotSet`.
+- remove all sentinel objects (`REQUIRED`, `MISSING`, `GIVEN`,
+  `MutualExclusiveRequired`, `OPTIONAL`, `NotSet`) and the `_sentinels.py`
+  module entirely. Functions now use standard Python patterns: required
+  parameters have no default, optional parameters default to `None`.
 - change `get_gac_brackets()` and `async_get_gac_brackets()` `limit` parameter
   from sentinel-based default to `int` with default `0` (meaning no limit).
 

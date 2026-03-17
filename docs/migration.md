@@ -49,14 +49,28 @@ insulates your code from future HTTP library changes:
 
 ```python
 from swgoh_comlink import SwgohComlink
-from swgoh_comlink.exceptions import SwgohComlinkException
+from swgoh_comlink.exceptions import (
+    SwgohComlinkException,
+    SwgohComlinkValueError,
+    SwgohComlinkTypeError,
+)
 
 comlink = SwgohComlink()
 try:
     player = comlink.get_player(allycode=245866537)
+except SwgohComlinkValueError as e:
+    print(f"Invalid argument value: {e}")
+except SwgohComlinkTypeError as e:
+    print(f"Invalid argument type: {e}")
 except SwgohComlinkException as e:
     print(f"Comlink error: {e}")
 ```
+
+The exception hierarchy is:
+
+- `SwgohComlinkException` — base for all library errors
+    - `SwgohComlinkValueError` (also inherits `ValueError`) — invalid argument values
+    - `SwgohComlinkTypeError` (also inherits `TypeError`) — invalid argument types
 
 ## 3. Update logging configuration
 
@@ -213,21 +227,24 @@ Same changes as `_request()` — `url_base` replaced by `stats` and `timeout`.
 
 ## 7. Removed sentinels
 
-The `OPTIONAL` and `NotSet` sentinel objects have been removed from
-`swgoh_comlink.helpers`. If your code imports these, remove the imports.
+All sentinel objects (`OPTIONAL`, `NotSet`, `REQUIRED`, `MISSING`, `GIVEN`,
+`MutualExclusiveRequired`) have been removed from `swgoh_comlink.helpers`.
+Remove any sentinel imports from your code.
 
 ```diff
-  from swgoh_comlink.helpers import (
-      REQUIRED,
-      MISSING,
-      GIVEN,
+- from swgoh_comlink.helpers import (
+-     REQUIRED,
+-     MISSING,
+-     GIVEN,
 -     OPTIONAL,
 -     NotSet,
-  )
+-     MutualExclusiveRequired,
+- )
 ```
 
-The remaining sentinels (`REQUIRED`, `MISSING`, `GIVEN`, `MutualExclusiveRequired`)
-are unchanged.
+Functions that previously used sentinel defaults now use standard Python
+patterns: required parameters have no default, and optional parameters
+default to `None`.
 
 ## 8. GAC bracket helpers
 
@@ -252,6 +269,7 @@ are unchanged.
 |------|---------------|-------|
 | HTTP library | `requests` | `httpx` |
 | Transport exception | `requests.RequestException` | `httpx.RequestError` |
+| Exception hierarchy | `SwgohComlinkException`, `SwgohComlinkValueError` | Added `SwgohComlinkTypeError` |
 | `get_logger(log_level=)` | Accepted `log_level`, auto-configured handlers | No `log_level` param, no auto-configuration |
 | Default log output | Console output at INFO level | Silent (NullHandler only) |
 | Client lifecycle | No close needed | Use `with` or call `close()` |
@@ -259,7 +277,7 @@ are unchanged.
 | Local stat calc | Not available | `StatCalc` (sync) / `StatCalcAsync` (async) |
 | `_request(url_base=)` | `url_base` parameter | `stats` bool + `timeout` |
 | `helpers.py` | Single 1,970-line file | `helpers/` subpackage (all imports preserved) |
-| `OPTIONAL` / `NotSet` sentinels | Exported from helpers | Removed |
+| All sentinels | Exported from helpers | Removed — use `None` or required positional args |
 | `get_gac_brackets(limit=)` | Sentinel default | `int` default `0` (0 = no limit) |
 | GAC bracket scanning | Linear O(n) | Exponential probe + binary search O(log n) |
 | Migration checker | Not available | `swgoh-migrate` CLI / `python -m swgoh_comlink.migrate` |

@@ -7,7 +7,6 @@ from pytest_httpx import HTTPXMock
 
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 from swgoh_comlink.exceptions import SwgohComlinkValueError
-from swgoh_comlink.helpers._sentinels import MISSING
 
 # ── Shared fixtures ─────────────────────────────────────────────────────
 
@@ -54,7 +53,7 @@ class TestGetCurrentGacEvent:
         from swgoh_comlink.helpers._gac import get_current_gac_event
 
         with pytest.raises(SwgohComlinkValueError, match="comlink"):
-            get_current_gac_event(MISSING)
+            get_current_gac_event(None)
 
     def test_no_comlink_type_raises(self):
         from swgoh_comlink.helpers._gac import get_current_gac_event
@@ -91,7 +90,7 @@ class TestAsyncGetCurrentGacEvent:
         from swgoh_comlink.helpers._gac import async_get_current_gac_event
 
         with pytest.raises(SwgohComlinkValueError, match="comlink"):
-            await async_get_current_gac_event(MISSING)
+            await async_get_current_gac_event(None)
 
 
 # ── _gac: get_gac_brackets (sync) ──────────────────────────────────────
@@ -102,13 +101,13 @@ class TestGetGacBrackets:
         from swgoh_comlink.helpers._gac import get_gac_brackets
 
         with pytest.raises(SwgohComlinkValueError, match="Invalid comlink"):
-            get_gac_brackets(MISSING, league="kyber")
+            get_gac_brackets(None, league="kyber")
 
     def test_missing_league_raises(self, sync_client):
         from swgoh_comlink.helpers._gac import get_gac_brackets
 
         with pytest.raises(SwgohComlinkValueError, match="league"):
-            get_gac_brackets(sync_client, league=MISSING)
+            get_gac_brackets(sync_client, league=None)
 
     def test_non_string_league_raises(self, sync_client):
         from swgoh_comlink.helpers._gac import get_gac_brackets
@@ -176,14 +175,14 @@ class TestAsyncGetGacBrackets:
         from swgoh_comlink.helpers._gac import async_get_gac_brackets
 
         with pytest.raises(SwgohComlinkValueError, match="Invalid comlink"):
-            await async_get_gac_brackets(MISSING, league="kyber")
+            await async_get_gac_brackets(None, league="kyber")
 
     @pytest.mark.asyncio
     async def test_missing_league_raises(self, async_client):
         from swgoh_comlink.helpers._gac import async_get_gac_brackets
 
         with pytest.raises(SwgohComlinkValueError, match="league"):
-            await async_get_gac_brackets(async_client, league=MISSING)
+            await async_get_gac_brackets(async_client, league=None)
         await async_client.aclose()
 
     @pytest.mark.asyncio
@@ -242,7 +241,7 @@ class TestGetGuildMembers:
         from swgoh_comlink.helpers._guild import get_guild_members
 
         with pytest.raises(SwgohComlinkValueError, match="SwgohComlink"):
-            get_guild_members(MISSING, player_id="pid")
+            get_guild_members(None, player_id="pid")
 
     def test_async_comlink_rejected(self, httpx_mock: HTTPXMock):
         from swgoh_comlink.helpers._guild import get_guild_members
@@ -297,7 +296,7 @@ class TestAsyncGetGuildMembers:
         from swgoh_comlink.helpers._guild import async_get_guild_members
 
         with pytest.raises(SwgohComlinkValueError, match="SwgohComlinkAsync"):
-            await async_get_guild_members(MISSING, player_id="pid")
+            await async_get_guild_members(None, player_id="pid")
 
     @pytest.mark.asyncio
     async def test_sync_comlink_rejected(self, httpx_mock: HTTPXMock):

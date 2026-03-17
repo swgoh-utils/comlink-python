@@ -11,7 +11,6 @@ from typing import Any
 
 from ..exceptions import SwgohComlinkTypeError, SwgohComlinkValueError
 from ._constants import Constants
-from ._sentinels import MISSING, Sentinel
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ def validate_file_path(path: str | Path | os.PathLike[str]) -> bool:
     return os.path.exists(path) and os.path.isfile(path)
 
 
-def sanitize_allycode(allycode: str | int | Sentinel = MISSING) -> str:
+def sanitize_allycode(allycode: str | int | None = None) -> str:
     """Sanitize a player allycode
 
     Ensure that allycode does not:
@@ -64,7 +63,7 @@ def sanitize_allycode(allycode: str | int | Sentinel = MISSING) -> str:
         Player allycode in the proper format
 
     """
-    if allycode is MISSING:
+    if allycode is None:
         logger.warning(f"{get_function_name()}: Invalid ally code: {allycode}")
         return ""
 
