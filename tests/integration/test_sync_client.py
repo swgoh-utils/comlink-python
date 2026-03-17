@@ -38,8 +38,8 @@ def test_get_events(comlink):
     """POST /getEvents returns event data."""
     result = comlink.get_events()
     assert isinstance(result, dict)
-    assert "event" in result
-    assert isinstance(result["event"], list)
+    assert "gameEvent" in result
+    assert isinstance(result["gameEvent"], list)
 
 
 def test_get_player(comlink):

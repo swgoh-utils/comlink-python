@@ -38,8 +38,8 @@ async def test_get_events(async_comlink):
     """POST /getEvents returns event data."""
     result = await async_comlink.get_events()
     assert isinstance(result, dict)
-    assert "event" in result
-    assert isinstance(result["event"], list)
+    assert "gameEvent" in result
+    assert isinstance(result["gameEvent"], list)
 
 
 async def test_get_player(async_comlink):

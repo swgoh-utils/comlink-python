@@ -2,7 +2,7 @@
 
 Tests use two Comlink instances:
 - Port 3000: open access (no HMAC)
-- Port 3001: HMAC-protected (ACCESS_KEY=test_public_key, SECRET_KEY=test_secret_key)
+- Port 3001: HMAC-protected (requires ACCESS_KEY and SECRET_KEY secrets)
 """
 
 import pytest
@@ -18,10 +18,16 @@ from .conftest import (
 
 pytestmark = pytest.mark.integration
 
+hmac_configured = pytest.mark.skipif(
+    not HMAC_ACCESS_KEY or not HMAC_SECRET_KEY,
+    reason="HMAC secrets not configured",
+)
+
 
 # ── Sync: valid HMAC ────────────────────────────────────────────────────
 
 
+@hmac_configured
 def test_hmac_sync_request_succeeds(comlink_hmac):
     """Sync client with correct HMAC keys can access the protected endpoint."""
     result = comlink_hmac.get_enums()
@@ -29,6 +35,7 @@ def test_hmac_sync_request_succeeds(comlink_hmac):
     assert "CombatType" in result
 
 
+@hmac_configured
 def test_hmac_sync_player_request_succeeds(comlink_hmac):
     """Sync HMAC client can fetch a player profile from the protected endpoint."""
     result = comlink_hmac.get_player(allycode=314927874)
@@ -39,12 +46,14 @@ def test_hmac_sync_player_request_succeeds(comlink_hmac):
 # ── Sync: invalid HMAC ──────────────────────────────────────────────────
 
 
+@hmac_configured
 def test_hmac_no_key_rejected():
     """Sync client without HMAC keys is rejected by the protected endpoint."""
     with SwgohComlink(url=COMLINK_HMAC_URL) as client, pytest.raises(SwgohComlinkException):
         client.get_enums()
 
 
+@hmac_configured
 def test_hmac_wrong_key_rejected():
     """Sync client with wrong secret key is rejected by the protected endpoint."""
     with (
@@ -61,6 +70,7 @@ def test_hmac_wrong_key_rejected():
 # ── Async: valid HMAC ───────────────────────────────────────────────────
 
 
+@hmac_configured
 @pytest.mark.asyncio
 async def test_hmac_async_request_succeeds(async_comlink_hmac):
     """Async client with correct HMAC keys can access the protected endpoint."""
@@ -69,6 +79,7 @@ async def test_hmac_async_request_succeeds(async_comlink_hmac):
     assert "CombatType" in result
 
 
+@hmac_configured
 @pytest.mark.asyncio
 async def test_hmac_async_player_request_succeeds(async_comlink_hmac):
     """Async HMAC client can fetch a player profile from the protected endpoint."""
@@ -80,6 +91,7 @@ async def test_hmac_async_player_request_succeeds(async_comlink_hmac):
 # ── Async: invalid HMAC ─────────────────────────────────────────────────
 
 
+@hmac_configured
 @pytest.mark.asyncio
 async def test_hmac_no_key_async_rejected():
     """Async client without HMAC keys is rejected by the protected endpoint."""
@@ -88,6 +100,7 @@ async def test_hmac_no_key_async_rejected():
             await client.get_enums()
 
 
+@hmac_configured
 @pytest.mark.asyncio
 async def test_hmac_wrong_key_async_rejected():
     """Async client with wrong secret key is rejected by the protected endpoint."""
@@ -103,6 +116,7 @@ async def test_hmac_wrong_key_async_rejected():
 # ── HMAC header verification ────────────────────────────────────────────
 
 
+@hmac_configured
 def test_hmac_headers_present():
     """HMAC client includes Authorization and X-Date headers in requests."""
     client = SwgohComlink(
