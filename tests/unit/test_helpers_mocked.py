@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from unittest.mock import patch
 from pytest_httpx import HTTPXMock
 
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
@@ -306,3 +307,60 @@ class TestAsyncGetGuildMembers:
         with pytest.raises(SwgohComlinkValueError, match="SwgohComlinkAsync"):
             await async_get_guild_members(sync_client, player_id="pid")
         sync_client.close()
+
+
+# ── _conquest: calc_current_stamina ──────────────────────────────────────
+
+_FROZEN_TIME = 1773793698
+
+_CONQUEST_UNIT = {
+    "lastRefreshTime": str(_FROZEN_TIME - 7200),  # 120 minutes ago
+    "remainingStamina": 87,
+    "unitId": "2rJUF0DJRyWBTFrXRbTvhA",
+}
+
+
+class TestCalcCurrentStamina:
+    @patch("swgoh_comlink.helpers._conquest.time.time", return_value=_FROZEN_TIME)
+    def test_stamina_without_pass_plus(self, mock_time):
+        from swgoh_comlink.helpers._conquest import calc_current_stamina
+
+        result = calc_current_stamina(_CONQUEST_UNIT)
+        assert result == 4  # floor(120 / 30 * 1.0)
+
+    @patch("swgoh_comlink.helpers._conquest.time.time", return_value=_FROZEN_TIME)
+    def test_stamina_with_pass_plus(self, mock_time):
+        from swgoh_comlink.helpers._conquest import calc_current_stamina
+
+        result = calc_current_stamina(_CONQUEST_UNIT, pass_plus=True)
+        assert result == 5  # floor(120 / 30 * 1.33)
+
+    def test_non_dict_raises(self):
+        from swgoh_comlink.helpers._conquest import calc_current_stamina
+
+        with pytest.raises(SwgohComlinkValueError, match="dict"):
+            calc_current_stamina("not a dict")
+
+    def test_missing_remaining_stamina_raises(self):
+        from swgoh_comlink.helpers._conquest import calc_current_stamina
+
+        with pytest.raises((SwgohComlinkValueError, TypeError)):
+            calc_current_stamina({"lastRefreshTime": "123"})
+
+    def test_missing_last_refresh_time_raises(self):
+        from swgoh_comlink.helpers._conquest import calc_current_stamina
+
+        with pytest.raises((SwgohComlinkValueError, TypeError)):
+            calc_current_stamina({"remainingStamina": 87})
+
+    @patch("swgoh_comlink.helpers._conquest.time.time", return_value=_FROZEN_TIME)
+    def test_stamina_capped_at_100(self, mock_time):
+        from swgoh_comlink.helpers._conquest import calc_current_stamina
+
+        old_unit = {
+            "lastRefreshTime": str(_FROZEN_TIME - 360000),  # 6000 minutes ago
+            "remainingStamina": 50,
+            "unitId": "test",
+        }
+        result = calc_current_stamina(old_unit)
+        assert result == 100

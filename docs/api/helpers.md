@@ -217,6 +217,20 @@ with `async_` accept a `SwgohComlinkAsync` instance and must be awaited.
 
 ---
 
+## Conquest Helpers
+
+Functions for working with Conquest game mode data. These are pure calculation
+functions and do not require a comlink instance.
+
+### calc_current_stamina
+
+::: swgoh_comlink.helpers._conquest.calc_current_stamina
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Game Data Helpers
 
 Pure data-transformation functions for working with game data collections.

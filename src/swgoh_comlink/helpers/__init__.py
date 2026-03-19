@@ -8,6 +8,7 @@ All existing ``from swgoh_comlink.helpers import X`` imports continue to work.
 from __future__ import annotations
 
 from ._arena import get_arena_payout, get_max_rank_jump
+from ._conquest import calc_current_stamina
 from ._constants import Constants
 from ._data_items import DataItems
 from ._decorators import func_debug_logger, func_timer
@@ -95,6 +96,8 @@ __all__ = [
     "get_current_gac_event",
     "get_gac_brackets",
     "search_gac_brackets",
+    # Conquest
+    "calc_current_stamina",
     # Game data
     "create_localized_unit_name_dictionary",
     "get_current_datacron_sets",
