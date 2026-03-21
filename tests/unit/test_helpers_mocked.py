@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 from pytest_httpx import HTTPXMock
 
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync

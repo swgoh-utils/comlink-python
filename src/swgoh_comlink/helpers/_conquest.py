@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 import time
-from typing import Any
 from math import floor
+from typing import Any
 
 from ..exceptions import SwgohComlinkValueError
 
@@ -32,15 +32,18 @@ def calc_current_stamina(unit: dict[str, Any], pass_plus: bool = False) -> int:
         raise SwgohComlinkValueError(f"'unit' must be a dict, not {type(unit)}")
 
     acceleration_factor = 1.33 if pass_plus else 1.0
-    remaining_stamina: int = unit.get("remainingStamina")
-    last_refresh_time: int = int(unit.get("lastRefreshTime"))
+    raw_stamina = unit.get("remainingStamina")
+    raw_refresh = unit.get("lastRefreshTime")
 
-    if remaining_stamina is None or last_refresh_time is None:
+    if raw_stamina is None or raw_refresh is None:
         raise SwgohComlinkValueError("Invalid unit data. Unable to determine current stamina and/or last refresh time.")
+
+    remaining_stamina: int = int(raw_stamina)
+    last_refresh_time: int = int(raw_refresh)
 
     time_diff_minutes = floor((floor(time.time()) - last_refresh_time) / 60)
 
     # Stamina regenerates 1% every 30 minutes
     # Conquest Pass+ holders increase stamina regeneration by 33%
 
-    return min(floor(time_diff_minutes / 30 * acceleration_factor), 100)
+    return min(floor(time_diff_minutes / 30 * acceleration_factor) + remaining_stamina, 100)

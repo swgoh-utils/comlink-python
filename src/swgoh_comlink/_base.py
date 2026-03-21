@@ -65,7 +65,7 @@ class SwgohComlinkBase:
     Direct instantiation is prevented; use ``SwgohComlink`` or ``SwgohComlinkAsync``.
     """
 
-    __comlink_type__ = None
+    __comlink_type__: str | None = None
     PROTOCOL = "http"
 
     @staticmethod
