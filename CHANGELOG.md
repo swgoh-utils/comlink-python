@@ -11,6 +11,24 @@
 - add `_localization.py` module with SWGOH string parsing utilities for extracting
   and transforming game localization data.
 - improve error handling with enhanced exception hierarchy in `exceptions.py`.
+- add `SwgohComlinkAsync` async client with full API parity to `SwgohComlink`.
+  Both clients inherit from a shared `SwgohComlinkBase` class.
+- add `StatCalcAsync` async stat calculator with `create()` factory method for
+  non-blocking game data initialization. Inherits all calculation methods from
+  `StatCalc`.
+- add `GameDataBuilder` / `GameDataBuilderAsync` to build StatCalc game data
+  dynamically from a running Comlink service instead of fetching a static file
+  from GitHub.
+- replace `requests` library with `httpx` for both sync and async HTTP support.
+- add connection pooling via persistent `httpx.Client` / `httpx.AsyncClient` instances.
+- add context manager support (`with SwgohComlink()` and `async with SwgohComlinkAsync()`).
+- add async helper variants: `async_get_current_gac_event()`, `async_get_gac_brackets()`,
+  and `async_get_guild_members()` for use with `SwgohComlinkAsync`.
+- add exponential probing with binary search for GAC bracket boundary discovery,
+  reducing HTTP requests from O(n) to O(log n).
+- add parallel batch fetching via `asyncio.gather` in `async_get_gac_brackets()`
+  for significantly faster bracket collection.
+- add comprehensive Helpers API reference and Exceptions documentation pages.
 
 ### Code Refactoring
 
@@ -18,6 +36,23 @@
   checks ([61aa92b](https://github.com/swgoh-utils/comlink-python/commit/61aa92b)).
 - extract localization helpers from `_utils.py` into dedicated `_localization.py`
   module and update `helpers/__init__.py` exports.
+- replace external `sentinels` library with inline `Sentinel` class; remove
+  unused sentinels (`OPTIONAL`, `NotSet`, `EMPTY`, `NotGiven`, `SET`,
+  `MutualRequiredNotSet`).
+- extract shared logic (HMAC auth, payload builders, URL sanitization, param_alias decorator)
+  into `_base.py` base class.
+- unify all HTTP communication through a single `_request()` gateway method
+  in both sync and async clients.
+- refactor monolithic `helpers.py` (1,970 lines) into a focused `helpers/` subpackage
+  with domain-specific modules (`_arena.py`, `_gac.py`, `_game_data.py`, `_guild.py`,
+  `_omicron.py`, `_utils.py`, `_decorators.py`, `_sentinels.py`, `_data_items.py`,
+  `_stat_data.py`, `_constants.py`). All existing import paths are preserved via
+  backward-compatible re-export shim in `helpers/__init__.py`.
+- consolidate 4 duplicate copies of stat data (Constants.STAT_ENUMS,
+  Constants.UNIT_STAT_ENUMS_MAP, Constants.STATS, StatCalc.STATS_NAME_MAP) into a
+  single canonical `STATS` dict in `helpers/_stat_data.py` with derived views.
+- replace 489-line inline `STATS_NAME_MAP` dict in `StatCalc/calculator.py` with
+  import from `helpers/_stat_data`.
 
 ### Testing
 
@@ -26,6 +61,23 @@
 - add advanced localization bundle example (`examples/Sync/get_location_bundle_adv.py`).
 - add `gameData.json` test fixture to `tests/resources`.
 - remove unused imports and minor cleanup across unit test files.
+- rewrite unit tests to use `pytest-httpx` mocking instead of `monkeypatch`.
+- add comprehensive async client test suite mirroring sync coverage.
+- add `test_base.py` with tests for base class utilities, HMAC, payload builders,
+  and validation logic.
+- add 96 offline unit tests for `GameDataBuilder` transformation logic covering
+  all row parsers, builder functions, and utility helpers (`test_builder_base.py`).
+- add 68 offline unit tests for `StatCalc` calculator covering stat computation,
+  GP calculation, mod formats, gear aggregation, and ship stats (`test_calculator.py`).
+- add 107 pure helper function tests covering `_utils`, `_arena`, `_omicron`,
+  `_game_data`, `_gac`, `_constants`, `_decorators`, and `globals` (`test_helpers.py`).
+- add 29 mocked helper tests for GAC event/bracket scanning and guild member
+  retrieval, both sync and async variants (`test_helpers_mocked.py`).
+- add 18 migration tool tests covering rules, scanner, reporter, and CLI
+  (`test_migrate.py`).
+- add 8 tests for `StatCalcAsync`, `GameDataBuilder`, and `GameDataBuilderAsync`
+  (`test_statcalc_async.py`).
+- increase test coverage from 38% to 96% (440 total unit tests).
 
 ### Breaking Changes
 
@@ -48,47 +100,6 @@
   does, fix slot decrementing in `_gear_piece_gp_rows()`, add `set=0` filter in
   `_mod_gp_rows()`, and normalize whole-number floats to `int` via `_num()`.
 - fix numeric string and negative value handling in `_build_game_data_payload`.
-
-### Features
-
-- add `SwgohComlinkAsync` async client with full API parity to `SwgohComlink`.
-  Both clients inherit from a shared `SwgohComlinkBase` class.
-- add `StatCalcAsync` async stat calculator with `create()` factory method for
-  non-blocking game data initialization. Inherits all calculation methods from
-  `StatCalc`.
-- add `GameDataBuilder` / `GameDataBuilderAsync` to build StatCalc game data
-  dynamically from a running Comlink service instead of fetching a static file
-  from GitHub.
-- replace `requests` library with `httpx` for both sync and async HTTP support.
-- add connection pooling via persistent `httpx.Client` / `httpx.AsyncClient` instances.
-- add context manager support (`with SwgohComlink()` and `async with SwgohComlinkAsync()`).
-- add async helper variants: `async_get_current_gac_event()`, `async_get_gac_brackets()`,
-  and `async_get_guild_members()` for use with `SwgohComlinkAsync`.
-- add exponential probing with binary search for GAC bracket boundary discovery,
-  reducing HTTP requests from O(n) to O(log n).
-- add parallel batch fetching via `asyncio.gather` in `async_get_gac_brackets()`
-  for significantly faster bracket collection.
-- add comprehensive Helpers API reference and Exceptions documentation pages.
-
-### Code Refactoring
-
-- replace external `sentinels` library with inline `Sentinel` class; remove
-  unused sentinels (`OPTIONAL`, `NotSet`, `EMPTY`, `NotGiven`, `SET`,
-  `MutualRequiredNotSet`).
-- extract shared logic (HMAC auth, payload builders, URL sanitization, param_alias decorator)
-  into `_base.py` base class.
-- unify all HTTP communication through a single `_request()` gateway method
-  in both sync and async clients.
-- refactor monolithic `helpers.py` (1,970 lines) into a focused `helpers/` subpackage
-  with domain-specific modules (`_arena.py`, `_gac.py`, `_game_data.py`, `_guild.py`,
-  `_omicron.py`, `_utils.py`, `_decorators.py`, `_sentinels.py`, `_data_items.py`,
-  `_stat_data.py`, `_constants.py`). All existing import paths are preserved via
-  backward-compatible re-export shim in `helpers/__init__.py`.
-- consolidate 4 duplicate copies of stat data (Constants.STAT_ENUMS,
-  Constants.UNIT_STAT_ENUMS_MAP, Constants.STATS, StatCalc.STATS_NAME_MAP) into a
-  single canonical `STATS` dict in `helpers/_stat_data.py` with derived views.
-- replace 489-line inline `STATS_NAME_MAP` dict in `StatCalc/calculator.py` with
-  import from `helpers/_stat_data`.
 
 ### Dependencies
 
@@ -120,26 +131,6 @@
 - add GAC bracket helper examples for sync and async clients
   (`examples/Sync/get_gac_brackets.py`, `examples/Async/get_gac_brackets.py`).
 - remove exhaustive test documentation from published docs.
-
-### Testing
-
-- rewrite unit tests to use `pytest-httpx` mocking instead of `monkeypatch`.
-- add comprehensive async client test suite mirroring sync coverage.
-- add `test_base.py` with tests for base class utilities, HMAC, payload builders,
-  and validation logic.
-- add 96 offline unit tests for `GameDataBuilder` transformation logic covering
-  all row parsers, builder functions, and utility helpers (`test_builder_base.py`).
-- add 68 offline unit tests for `StatCalc` calculator covering stat computation,
-  GP calculation, mod formats, gear aggregation, and ship stats (`test_calculator.py`).
-- add 107 pure helper function tests covering `_utils`, `_arena`, `_omicron`,
-  `_game_data`, `_gac`, `_constants`, `_decorators`, and `globals` (`test_helpers.py`).
-- add 29 mocked helper tests for GAC event/bracket scanning and guild member
-  retrieval, both sync and async variants (`test_helpers_mocked.py`).
-- add 18 migration tool tests covering rules, scanner, reporter, and CLI
-  (`test_migrate.py`).
-- add 8 tests for `StatCalcAsync`, `GameDataBuilder`, and `GameDataBuilderAsync`
-  (`test_statcalc_async.py`).
-- increase test coverage from 38% to 96% (440 total unit tests).
 
 ---
 

@@ -8,7 +8,6 @@ import zipfile
 import io
 import os
 import json
-import sys
 from pathlib import Path
 
 from swgoh_comlink import SwgohComlink
@@ -90,8 +89,8 @@ if __name__ == "__main__":
 
     print("Fetching localization bundle (id=%s)", remote_lang)
     location_bundle = comlink.get_localization_bundle(
-        localization_id=remote_lang,
-    )
+            localization_id=remote_lang,
+            )
 
     loc_bundle_decoded = base64.b64decode(location_bundle['localizationBundle'])
 

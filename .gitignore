@@ -51,6 +51,7 @@ pip-delete-this-directory.txt
 # Exhaustive tests and support files (owner-only, not distributed)
 tests/exhaustive/
 scripts/
+data/
 gameData.json
 
 # Unit test / coverage reports
