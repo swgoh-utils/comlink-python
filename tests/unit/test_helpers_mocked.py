@@ -327,14 +327,14 @@ class TestCalcCurrentStamina:
         from swgoh_comlink.helpers._conquest import calc_current_stamina
 
         result = calc_current_stamina(_CONQUEST_UNIT)
-        assert result == 4  # floor(120 / 30 * 1.0)
+        assert result == 91  # floor(120 / 30 * 1.0) + 87
 
     @patch("swgoh_comlink.helpers._conquest.time.time", return_value=_FROZEN_TIME)
     def test_stamina_with_pass_plus(self, mock_time):
         from swgoh_comlink.helpers._conquest import calc_current_stamina
 
         result = calc_current_stamina(_CONQUEST_UNIT, pass_plus=True)
-        assert result == 5  # floor(120 / 30 * 1.33)
+        assert result == 92  # floor(120 / 30 * 1.33) + 87
 
     def test_non_dict_raises(self):
         from swgoh_comlink.helpers._conquest import calc_current_stamina

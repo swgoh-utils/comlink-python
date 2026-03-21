@@ -116,7 +116,10 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
         try:
             r = await client.request(method.upper(), f"/{endpoint}", **request_kwargs)
+            r.raise_for_status()
             return cast(dict[str, Any] | list[Any], loads(r.content.decode("utf-8")))
+        except httpx.HTTPStatusError as e:
+            raise SwgohComlinkException(f"HTTP {e.response.status_code}: {e.response.text}") from e
         except httpx.RequestError as e:
             raise SwgohComlinkException(e) from e
 
