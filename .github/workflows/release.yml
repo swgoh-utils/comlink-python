@@ -35,21 +35,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: uv pip install --system hatch git-changelog
-
       # Update version
       - name: Update version
-        run: hatch version minor
+        run: uvx hatch version minor
 
       # Update CHANGELOG.md
       - name: Update CHANGELOG.md
-        run: git-changelog -B auto -Tio CHANGELOG.md -c angular -s build,deps,fix,feat,refactor -n semver
+        run: uvx git-changelog -B auto -Tio CHANGELOG.md -c angular -s build,deps,fix,feat,refactor -n semver
 
       # Commit version bump and changelog, then tag and push
       - name: Commit and tag
         run: |
-          VERSION=$(hatch version)
+          VERSION=$(uvx hatch version)
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add src/swgoh_comlink/version.py CHANGELOG.md
@@ -61,7 +58,7 @@ jobs:
 
       # Build the package
       - name: Build the package
-        run: hatch build
+        run: uvx hatch build
 
       # Upload build artifacts for the publish job
       - name: Upload build artifacts

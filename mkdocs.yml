@@ -1,0 +1,62 @@
+site_name: swgoh_comlink
+site_description: Python interfaces for swgoh-comlink and built-in StatCalc
+repo_name: comlink-python
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - "Home": index.md
+  - "Guides":
+      - "Migration Guide": migration.md
+      - "Logging": logging.md
+      - "xamples": examples.md
+  - "API":
+      - "SwgohComlink": api/comlink.md
+      - "SwgohComlinkAsync": api/async.md
+      - "StatCalc": api/statcalc.md
+      - "Helpers": api/helpers.md
+      - "Exceptions": api/exceptions.md
+
+extra:
+  version:
+    provider: mike
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+          options:
+            docstring_style: google
+            docstring_options:
+              warn_unknown_params: false
+            show_source: false
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite

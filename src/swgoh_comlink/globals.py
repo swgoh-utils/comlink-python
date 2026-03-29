@@ -20,17 +20,10 @@ class LoggingFormatter(logging.Formatter):
         return super().format(record)
 
 
-def get_logger(logger_name: str = __name__, log_level: str = "INFO") -> logging.Logger:
-    """Return the configured logger.
+def get_logger(logger_name: str = __name__) -> logging.Logger:
+    """Return a logger for the given name.
 
-    Guards against adding duplicate handlers when called more than once
-    for the same *logger_name*.
+    This is a thin wrapper around :func:`logging.getLogger`.  No handlers
+    or levels are configured — the application is responsible for that.
     """
-    logger = logging.getLogger(logger_name)
-    log_lvl = logging.getLevelName(log_level.upper())
-    logger.setLevel(log_lvl)
-    if not logger.handlers:
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(LoggingFormatter())
-        logger.addHandler(console_handler)
-    return logger
+    return logging.getLogger(logger_name)

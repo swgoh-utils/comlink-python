@@ -21,9 +21,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "requests>=2.32.4",
-    "sentinels>=1.0",
+    "httpx>=0.28",
 ]
+
+[project.scripts]
+swgoh-migrate = "swgoh_comlink.migrate:main"
 
 [project.urls]
 "Homepage" = "https://github.com/swgoh-utils/comlink-python"
@@ -34,7 +36,23 @@ addopts = [
     "--import-mode=importlib",
     "--strict-markers",
 ]
+asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "integration: tests that require an accessible comlink service",
+    "parity: tests that compare python stat calculation against JS baseline",
+    "exhaustive: comprehensive pre-release validation tests",
+    "cat_endpoints: sync and async endpoint functional tests",
+    "cat_enums: enums=True parameter verification across endpoints",
+    "cat_localization: localization bundle gzip/unzip processing tests",
+    "cat_parity: sync vs async response parity verification",
+    "cat_statcalc: StatCalc live calculation tests",
+    "cat_builder: GameDataBuilder validation tests",
+    "cat_helpers: helper function integration tests",
+    "cat_errors: error handling and edge case tests",
+    "cat_schemas: response structure contract validation",
+    "cat_stress: load endurance and connection pool tests",
+]
 
 [tool.hatch.version]
 path = 'src/swgoh_comlink/version.py'
@@ -42,16 +60,38 @@ path = 'src/swgoh_comlink/version.py'
 [tool.hatch.build.targets.wheel]
 packages = ["src/swgoh_comlink"]
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/docs",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/mkdocs.yml",
+]
+
 [tool.uv.sources]
 swgoh-comlink = { workspace = true }
 
 [dependency-groups]
-dev = [
-    "swgoh-comlink",
+test = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+    "pytest-httpx>=0.35",
+    "pytest-asyncio>=0.24",
+]
+typecheck = [
     "mypy>=1.0",
+]
+dev = [
+    {include-group = "test"},
+    {include-group = "typecheck"},
     "ruff>=0.8",
+]
+docs = [
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.28.0",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────
@@ -82,7 +122,7 @@ ignore = [
 # Existing violations to address incrementally — do not add new suppressions
 "src/swgoh_comlink/__init__.py" = ["UP036"]   # outdated version block (sys.exit check)
 "src/swgoh_comlink/exceptions.py" = ["B904"]  # raise-without-from (tracked in issue backlog)
-"src/swgoh_comlink/helpers.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
+"src/swgoh_comlink/helpers/*.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
 
 [tool.ruff.lint.isort]
 known-first-party = ["swgoh_comlink"]
@@ -94,12 +134,8 @@ quote-style = "double"
 
 [tool.mypy]
 python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
+strict = true
 ignore_missing_imports = true
-# TODO: tighten these as type annotations improve
-disallow_untyped_defs = false
-check_untyped_defs = true
 
 # ── Coverage ─────────────────────────────────────────────────────────────
 
@@ -113,3 +149,29 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "if __name__ == .__main__.",
 ]
+
+# ── Semantic Release ─────────────────────────────────────────────────────
+
+[tool.semantic_release]
+version_variable = [
+    "src/swgoh_comlink/version.py"
+]
+version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"
+version_source = "commit"
+branch = "main"
+changelog_file = "CHANGELOG.md"
+build_command = "uv build"
+dist_path = "dist/"
+upload_to_release = true
+upload_to_pypi = false
+remove_dist = true
+patch_without_tag = true
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
+
+[tool.semantic_release.branches.tools]
+match = "tools"
+prerelease = true
+prerelease_token = "rc"

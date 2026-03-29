@@ -1,0 +1,74 @@
+name: Integration Tests
+
+on:
+  pull_request:
+    branches: [main, 1.0-maintenance]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      comlink:
+        image: ghcr.io/swgoh-utils/swgoh-comlink:latest
+        env:
+          APP_NAME: comlink-python-integration-tests
+        ports:
+          - 3000:3000
+
+      comlink-hmac:
+        image: ghcr.io/swgoh-utils/swgoh-comlink:latest
+        env:
+          APP_NAME: comlink-python-hmac-integration-tests
+          ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
+          SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
+        ports:
+          - 3001:3000
+
+    steps:
+      - name: Wait for Comlink services
+        run: |
+          for port in 3000 3001; do
+            echo "Waiting for service on port $port..."
+            for i in $(seq 1 30); do
+              if curl -sf http://localhost:$port/readyz > /dev/null 2>&1; then
+                echo "Service on port $port is ready."
+                break
+              fi
+              if [ $i -eq 30 ]; then
+                echo "Service on port $port failed to become ready."
+                exit 1
+              fi
+              sleep 2
+            done
+          done
+
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --group test
+
+      - name: Run integration tests
+        env:
+          RUN_INTEGRATION_TESTS: "1"
+          HMAC_ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
+          HMAC_SECRET_KEY: ${{ secrets.COMLINK_SECRET_KEY }}
+        run: uv run python -m pytest tests/integration/ -v

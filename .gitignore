@@ -48,6 +48,12 @@ stash/
 pip-log.txt
 pip-delete-this-directory.txt
 
+# Exhaustive tests and support files (owner-only, not distributed)
+tests/exhaustive/
+scripts/
+data/
+gameData.json
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -61,6 +67,9 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+.ruff_cache/
+.parity-cache/
+parity/.cache-gameData.json
 cover/
 
 
@@ -176,3 +185,4 @@ cython_debug/
 Pipfile*
 pyvenv.cfg
 /src/swgoh_comlink/tools.py
+/docs/exhaustive-tests.md
