@@ -576,6 +576,9 @@ class StatCalc:
         return stats
 
     def _calculate_mod_stats(self, base_stats: dict[str, Any], char: dict[str, Any]) -> dict[str, Any]:
+        # Mod definitionId is a 3 digit number, where the first digit is the set id,
+        # the second digit is the rarity (pips/dots) and the third digit is the slot (1-6)
+        # slot = {1: "Square", 2: "Arrow", 3: "Diamond", 4: "Triangle", 5: "Circle", 6: "Plus/Cross"}
         if not char.get("mods") and not char.get("equippedStatMod"):
             return {}
 

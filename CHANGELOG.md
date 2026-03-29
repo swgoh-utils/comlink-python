@@ -2,10 +2,18 @@
 
 <!-- insertion marker -->
 
-## [v2.0.5rc1 Pending Release] - feature/async
+## [v2.0.6](https://github.com/swgoh-utils/comlink-python/releases/tag/v2.0.6) - 2026-03-29
+
+<small>[Compare with v1.18.0rc1](https://github.com/swgoh-utils/comlink-python/compare/v1.18.0rc1...v2.0.6)</small>
 
 ### Features
 
+- add Conquest helpers module (`_conquest.py`) with `calc_current_stamina()` for
+  computing current Conquest energy based on last refresh time and regeneration
+  rate ([044733b](https://github.com/swgoh-utils/comlink-python/commit/044733b)).
+- add HTTP status error handling via `response.raise_for_status()` in both sync
+  and async request methods ([23e878c](https://github.com/swgoh-utils/comlink-python/commit/23e878c)).
+- add examples documentation page and update README with links to examples.
 - add `parse_loc_zip()` utility for parsing SWGOH localization bundle ZIP data
   into structured dictionaries.
 - add `_localization.py` module with SWGOH string parsing utilities for extracting
@@ -32,6 +40,7 @@
 
 ### Code Refactoring
 
+- add inline documentation for mod `definitionId` format in `StatCalc/calculator.py`.
 - simplify GAC helpers (`_gac.py`) by reducing complexity and improving type
   checks ([61aa92b](https://github.com/swgoh-utils/comlink-python/commit/61aa92b)).
 - extract localization helpers from `_utils.py` into dedicated `_localization.py`
@@ -77,6 +86,7 @@
   (`test_migrate.py`).
 - add 8 tests for `StatCalcAsync`, `GameDataBuilder`, and `GameDataBuilderAsync`
   (`test_statcalc_async.py`).
+- add Conquest stamina helper tests in `test_helpers_mocked.py`.
 - increase test coverage from 38% to 96% (440 total unit tests).
 
 ### Breaking Changes
@@ -90,6 +100,8 @@
 
 ### Bug Fixes
 
+- fix `calc_current_stamina` logic for accurate regeneration calculation and
+  enhance type hinting ([02a2fed](https://github.com/swgoh-utils/comlink-python/commit/02a2fed)).
 - fix HMAC empty payload serialization to use empty string (`""`) instead of
   empty object (`{}`) for compatibility with comlink v4 (#51).
 - fix `GameDataBuilder` output to match the JS `gameData.json` reference:
@@ -105,6 +117,8 @@
 
 - replace `requests>=2.32.4` with `httpx>=0.28`.
 - add `pytest-httpx>=0.35` and `pytest-asyncio>=0.24` to dev dependencies.
+- bump `urllib3` from 2.3.0 to 2.6.3.
+- update `certifi` and `charset-normalizer` versions.
 
 ### Logging
 
