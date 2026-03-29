@@ -28,6 +28,15 @@ class TestSanitizeUrl:
     def test_https_with_port_unchanged(self):
         assert sanitize_url("https://example.com:8443") == "https://example.com:8443"
 
+    def test_https_with_path_without_port(self):
+        assert sanitize_url("https://gasapi.dev/comlink") == "https://gasapi.dev:443/comlink"
+
+    def test_https_with_path_and_port_unchanged(self):
+        assert sanitize_url("https://gasapi.dev:8443/comlink") == "https://gasapi.dev:8443/comlink"
+
+    def test_http_with_path_unchanged(self):
+        assert sanitize_url("http://localhost:3000/comlink") == "http://localhost:3000/comlink"
+
     def test_strips_multiple_trailing_slashes(self):
         assert sanitize_url("http://localhost:3000///") == "http://localhost:3000"
 

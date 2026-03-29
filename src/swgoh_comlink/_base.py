@@ -9,11 +9,11 @@ import functools
 import hashlib
 import hmac
 import os
-import re
 import time
 from collections.abc import Callable
 from json import dumps
 from typing import Any
+from urllib.parse import urlparse, urlunparse
 
 from .exceptions import SwgohComlinkValueError
 from .helpers import Constants
@@ -22,8 +22,6 @@ __all__ = ["SwgohComlinkBase"]
 
 # Keys whose values must be masked in logs, repr, and debug output.
 _SENSITIVE_KEYS = frozenset({"secret_key", "access_key"})
-
-url_port_re = re.compile(r"^https://\S+:(\d+)$", re.VERBOSE | re.IGNORECASE)
 
 DEFAULT_TIMEOUT: float = 120.0
 GAME_DATA_TIMEOUT: float = 300.0
@@ -51,8 +49,11 @@ def param_alias(param: str, alias: str) -> Callable[..., Any]:
 def sanitize_url(url: str) -> str:
     """Make sure provided URL is in the expected format and return sanitized."""
     url = url.strip("/")
-    if url.startswith("https") and not re.fullmatch(url_port_re, url):
-        url = f"{url}:443"
+    if url.startswith("https"):
+        parsed = urlparse(url)
+        if parsed.port is None:
+            netloc = f"{parsed.hostname}:443"
+            url = urlunparse(parsed._replace(netloc=netloc))
     return url
 
 
