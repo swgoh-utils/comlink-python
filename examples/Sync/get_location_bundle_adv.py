@@ -3,11 +3,12 @@ get_location_bundle_adv.py
 Script to illustrate a more advanced and efficient usage of the swgoh_comlink
 library to collect and parse the localization bundle.
 """
+
 import base64
-import zipfile
 import io
-import os
 import json
+import os
+import zipfile
 from pathlib import Path
 
 from swgoh_comlink import SwgohComlink
@@ -30,11 +31,11 @@ comlink = SwgohComlink(host=COMLINK_HOST, port=COMLINK_PORT)
 
 
 def parse_loc_zip(
-        zf: zipfile.ZipFile,
-        output_dir: str | Path = ".",
-        delimiter: str = "|",
-        encoding: str = "utf-8",
-        ) -> None:
+    zf: zipfile.ZipFile,
+    output_dir: str | Path = ".",
+    delimiter: str = "|",
+    encoding: str = "utf-8",
+) -> None:
     """
     Parses the content of a zip file containing delimited text files, transforms the data into a
     key-value JSON structure, and saves the result to specified output files.
@@ -65,18 +66,19 @@ def parse_loc_zip(
         result = {}
 
         # Process the zip file entry as a stream to conserve memory and extract the delimited text
-        with zf.open(info) as raw:
-            with io.TextIOWrapper(raw, encoding=encoding) as stream:
-                for line in stream:
-                    if line.startswith("#"):
-                        continue
-                    # Use partition() instead of split() to split the line into key and value
-                    key, sep, value = line.rstrip("\r\n").partition(delimiter)
-                    # Only store the key-value pair if the delimiter is present
-                    if sep:
-                        # Note: many of the "values" contain BBCode style formatting directives
-                        #       that could be stripped out before storing them in the JSON
-                        result[key] = value
+        with zf.open(info) as raw, io.TextIOWrapper(raw, encoding=encoding) as stream:
+            for line in stream:
+                if line.startswith("#"):
+                    continue
+                # Use partition() instead of split() to split the line into key and value
+                key, sep, value = line.rstrip("\r\n").partition(delimiter)
+                # Only store the key-value pair if the delimiter is present
+                if sep:
+                    # Note: many of the "values" contain BBCode style formatting directives
+                    #       that can be stripped or converted before storing them. See
+                    #       `swgoh_comlink.helpers.parse_swgoh_string` for a parser that
+                    #       emits plain text, Discord, terminal ANSI, or HTML output.
+                    result[key] = value
 
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False)
@@ -89,10 +91,10 @@ if __name__ == "__main__":
 
     print("Fetching localization bundle (id=%s)", remote_lang)
     location_bundle = comlink.get_localization_bundle(
-            localization_id=remote_lang,
-            )
+        localization_id=remote_lang,
+    )
 
-    loc_bundle_decoded = base64.b64decode(location_bundle['localizationBundle'])
+    loc_bundle_decoded = base64.b64decode(location_bundle["localizationBundle"])
 
     parse_loc_zip(zipfile.ZipFile(io.BytesIO(loc_bundle_decoded)), _LANG_DIR)
     print("Localization bundle parsed to %s", _LANG_DIR)

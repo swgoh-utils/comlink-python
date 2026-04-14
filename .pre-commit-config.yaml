@@ -20,6 +20,7 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
+        exclude: ^examples/
       - id: ruff-format
 
   # ── Mypy type checking (mirrors CI type-check job) ────────────────────
