@@ -948,7 +948,13 @@ class TestParseTokens:
         from swgoh_comlink.helpers._localization import _parse_tokens
 
         tokens = _parse_tokens("[F0FF23]")
-        assert tokens[0] == {"type": "color", "hex": "F0FF23"}
+        assert tokens[0]["type"] == "color"
+        assert tokens[0]["hex6"] == "F0FF23"
+        assert tokens[0]["hex8"] == "F0FF23FF"
+        assert tokens[0]["r"] == 0xF0
+        assert tokens[0]["g"] == 0xFF
+        assert tokens[0]["b"] == 0x23
+        assert tokens[0]["a"] == 0xFF
 
     def test_empty_parts_skipped(self):
         from swgoh_comlink.helpers._localization import _parse_tokens
@@ -1146,6 +1152,390 @@ class TestParseSwgohStringComplex:
 
         assert parse_swgoh_string("", output="bare") == ""
         assert parse_swgoh_string("", output="web") == "<p></p>"
+
+
+class TestParseTokensExtendedTags:
+    """Tokenization coverage for tags added in response to issue #83."""
+
+    def test_underline_tokens(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[u]x[/u]")
+        types = [t["type"] for t in tokens]
+        assert types == ["underline_open", "text", "underline_close"]
+
+    def test_strike_tokens(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[s]x[/s]")
+        types = [t["type"] for t in tokens]
+        assert types == ["strike_open", "text", "strike_close"]
+
+    def test_sprite_tokens(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[t]x[/t]")
+        types = [t["type"] for t in tokens]
+        assert types == ["sprite_open", "text", "sprite_close"]
+
+    def test_sub_and_sup_tokens(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[sub]a[/sub][sup]b[/sup]")
+        types = [t["type"] for t in tokens]
+        assert types == ["sub_open", "text", "sub_close", "sup_open", "text", "sup_close"]
+
+    def test_sub_sup_with_scale(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[sub=1.5]a[/sub][sup=0.8]b[/sup]")
+        opens = [t for t in tokens if t["type"] in ("sub_open", "sup_open")]
+        assert opens[0] == {"type": "sub_open", "scale": 1.5}
+        assert opens[1] == {"type": "sup_open", "scale": 0.8}
+
+    def test_scale_tokens(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[y=2]xx[/y]")
+        types = [t["type"] for t in tokens]
+        assert types == ["scale_open", "text", "scale_close"]
+        assert tokens[0]["scale"] == 2.0
+
+    def test_three_digit_hex_expands(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[F0A]")
+        assert tokens[0]["type"] == "color"
+        assert tokens[0]["hex6"] == "FF00AA"
+        assert tokens[0]["a"] == 0xFF
+
+    def test_four_digit_hex_rgba(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[F0A8]")
+        assert tokens[0]["type"] == "color"
+        assert tokens[0]["hex8"] == "FF00AA88"
+        assert tokens[0]["a"] == 0x88
+
+    def test_eight_digit_hex_rgba(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[12345678]")
+        assert tokens[0]["type"] == "color"
+        assert tokens[0]["hex8"] == "12345678"
+
+    def test_single_hex_alpha_token(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[F]")
+        assert tokens[0] == {"type": "alpha", "a": 0xFF}
+
+    def test_standalone_color_without_block(self):
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        tokens = _parse_tokens("[FF0000]red")
+        types = [t["type"] for t in tokens]
+        assert types == ["color", "text"]
+
+    def test_named_tag_wins_over_hex(self):
+        """Single-letter named tags must not be misread as 1-digit alpha."""
+        from swgoh_comlink.helpers._localization import _parse_tokens
+
+        assert _parse_tokens("[b]")[0]["type"] == "bold_open"
+        assert _parse_tokens("[c]")[0]["type"] == "color_block_open"
+        assert _parse_tokens("[i]")[0]["type"] == "italic_open"
+        assert _parse_tokens("[s]")[0]["type"] == "strike_open"
+        assert _parse_tokens("[t]")[0]["type"] == "sprite_open"
+        assert _parse_tokens("[u]")[0]["type"] == "underline_open"
+
+
+class TestParseSwgohStringBareExtended:
+    def test_strips_underline(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[u]under[/u]", output="bare") == "under"
+
+    def test_strips_strike(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[s]cross[/s]", output="bare") == "cross"
+
+    def test_strips_sub_sup_scale(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        text = "[sub=0.8]x[/sub][sup]y[/sup][y=1.5]z[/y]"
+        assert parse_swgoh_string(text, output="bare") == "xyz"
+
+    def test_strips_sprite_and_short_color(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[t]icon[/t][F0A]red", output="bare") == "iconred"
+
+    def test_strips_alpha_literal(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("hello[8]world", output="bare") == "helloworld"
+
+
+class TestParseSwgohStringTerminalExtended:
+    def test_underline_emits_ansi(self):
+        from swgoh_comlink.helpers._localization import ANSI_RESET, ANSI_UNDERLINE, parse_swgoh_string
+
+        result = parse_swgoh_string("[u]x[/u]", output="terminal")
+        assert ANSI_UNDERLINE in result
+        assert "x" in result
+        assert result.endswith(ANSI_RESET)
+
+    def test_strike_emits_ansi(self):
+        from swgoh_comlink.helpers._localization import ANSI_RESET, ANSI_STRIKE, parse_swgoh_string
+
+        result = parse_swgoh_string("[s]x[/s]", output="terminal")
+        assert ANSI_STRIKE in result
+        assert result.endswith(ANSI_RESET)
+
+    def test_underline_preserves_color(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[FF0000][u]red[/u]still", output="terminal")
+        # After closing underline, the red foreground should be reapplied.
+        after_close = result.split("red")[1]
+        assert "\033[38;2;255;0;0m" in after_close
+
+    def test_strike_close_reapplies_bold(self):
+        from swgoh_comlink.helpers._localization import ANSI_BOLD, parse_swgoh_string
+
+        result = parse_swgoh_string("[b][s]x[/s]still_bold[/b]", output="terminal")
+        tail = result.split("x")[1]
+        assert ANSI_BOLD in tail
+
+    def test_short_rgb_expands(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[F0A]x", output="terminal")
+        assert "\033[38;2;255;0;170m" in result
+
+    def test_standalone_color_without_c_wrapper(self):
+        """A color literal without [c] should still colorize in terminal output."""
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[00FF00]green", output="terminal")
+        assert "\033[38;2;0;255;0m" in result
+        assert "green" in result
+
+    def test_dash_resets_color_outside_block(self):
+        from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
+
+        result = parse_swgoh_string("[FF0000]red[-]plain", output="terminal")
+        assert ANSI_RESET in result
+        assert "plain" in result
+
+
+class TestParseSwgohStringDiscordExtended:
+    def test_underline_markdown(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[u]x[/u]", output="discord") == "__x__"
+
+    def test_strike_markdown(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[s]x[/s]", output="discord") == "~~x~~"
+
+    def test_sub_sup_scale_stripped(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        text = "[sub=0.8]a[/sub][sup]b[/sup][y=1.2]c[/y]"
+        assert parse_swgoh_string(text, output="discord") == "abc"
+
+
+class TestParseSwgohStringWebExtended:
+    def test_underline_html(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[u]x[/u]", output="web") == "<p><u>x</u></p>"
+
+    def test_strike_html(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[s]x[/s]", output="web") == "<p><s>x</s></p>"
+
+    def test_sub_default_no_scale(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[sub]x[/sub]", output="web") == "<p><sub>x</sub></p>"
+
+    def test_sub_with_scale(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[sub=0.8]x[/sub]", output="web")
+        assert '<sub style="font-size:0.8em">x</sub>' in result
+
+    def test_sup_with_scale(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[sup=1.25]x[/sup]", output="web")
+        assert '<sup style="font-size:1.25em">x</sup>' in result
+
+    def test_scale_integer_formatted_without_decimal(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[y=2]x[/y]", output="web")
+        assert '<span style="font-size:2em">x</span>' in result
+
+    def test_short_hex_color_span(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[F0A]x[/c]", output="web")
+        assert '<span style="color:#FF00AA">x</span>' in result
+
+    def test_rgba_color_uses_rgba_css(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        # [F0A8] -> FF00AA with alpha 0x88 (136). 136/255 ≈ 0.533
+        result = parse_swgoh_string("[F0A8]x[/c]", output="web")
+        assert "rgba(255,0,170,0.533)" in result
+
+    def test_alpha_only_reuses_prior_rgb(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[FF0000]red[8]faded", output="web")
+        # First span opens with opaque red, then closes, then reopens at alpha 0x88.
+        assert '<span style="color:#FF0000">' in result
+        assert "rgba(255,0,0," in result
+
+    def test_sprite_tag_stripped(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[t]icon[/t]", output="web") == "<p>icon</p>"
+
+
+class TestParseSwgohStringComplexExtended:
+    def test_deep_nested_styles(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[b][u][i]x[/i][/u][/b]", output="bare") == "x"
+
+    def test_discord_nested_style_combo(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[b][u][s]x[/s][/u][/b]", output="discord")
+        assert result == "**__~~x~~__**"
+
+    def test_web_nested_preserves_tag_structure(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[b][u]x[/u][/b]", output="web")
+        assert result == "<p><b><u>x</u></b></p>"
+
+    def test_color_then_alpha_then_new_color(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        text = "[FF0000]red[8]faded[00FF00]green[/c]"
+        result = parse_swgoh_string(text, output="web")
+        # One opening span for each color change; matching closes at [/c].
+        assert result.count('<span style="color:') == 3
+        # Must close every span opened.
+        assert result.count("</span>") == 3
+
+    def test_issue_83_golden_string(self):
+        """End-to-end smoke for all four outputs on a representative string."""
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        s = "[c][FF0000][b]Boss[/b][-] deals [u]2x[/u] damage[/c]"
+        assert parse_swgoh_string(s, output="bare") == "Boss deals 2x damage"
+        assert parse_swgoh_string(s, output="discord") == "**Boss** deals __2x__ damage"
+
+
+class TestParseSwgohStringIssue83Coverage:
+    """Round-trip coverage for every tag and color format named in issue #83.
+
+    For text-only outputs (bare/terminal/discord) the visual-only tags
+    ([t], [y=X], [sub], [sup]) are expected to be stripped without leaking
+    any markup characters into the rendered string.
+    """
+
+    # --- [t] / [/t] sprite color forcing ---------------------------------------
+    def test_sprite_terminal_strips(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[t]icon[/t]", output="terminal") == "icon"
+
+    def test_sprite_discord_strips(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[t]icon[/t]", output="discord") == "icon"
+
+    # --- [y=FLOAT] / [/y] font scaling -----------------------------------------
+    def test_scale_terminal_strips(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[y=1.5]big[/y]", output="terminal") == "big"
+
+    # --- [sub] / [sub=FLOAT] / [/sub] subscript --------------------------------
+    def test_sub_terminal_strips(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[sub]x[/sub]", output="terminal") == "x"
+        assert parse_swgoh_string("[sub=0.8]x[/sub]", output="terminal") == "x"
+
+    # --- [sup] / [sup=FLOAT] / [/sup] superscript ------------------------------
+    def test_sup_terminal_strips(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[sup]x[/sup]", output="terminal") == "x"
+        assert parse_swgoh_string("[sup=1.25]x[/sup]", output="terminal") == "x"
+
+    # --- 4-digit [RGBA] color --------------------------------------------------
+    def test_four_digit_rgba_bare(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[F0A8]x[/c]", output="bare") == "x"
+
+    def test_four_digit_rgba_terminal_uses_rgb_channel(self):
+        """Terminal can't render alpha, but it must still emit the RGB channel."""
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[F0A8]x[/c]", output="terminal")
+        # F0A8 -> RGB FF00AA, alpha 88 -> ignored by ANSI but RGB still shown.
+        assert "\033[38;2;255;0;170m" in result
+        assert "x" in result
+
+    # --- 8-digit [RRGGBBAA] color ----------------------------------------------
+    def test_eight_digit_rgba_bare(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string("[12345678]x[/c]", output="bare") == "x"
+
+    def test_eight_digit_rgba_terminal(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[12345678]x[/c]", output="terminal")
+        # 0x12=18, 0x34=52, 0x56=86 (alpha 0x78 dropped by ANSI)
+        assert "\033[38;2;18;52;86m" in result
+        assert "x" in result
+
+    def test_eight_digit_rgba_web(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[12345678]x[/c]", output="web")
+        # alpha 0x78 = 120 -> 120/255 = 0.471
+        assert "rgba(18,52,86,0.471)" in result
+
+    # --- 1-digit [A] alpha-only ------------------------------------------------
+    def test_alpha_only_terminal_no_rgb_change(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[FF0000]r[8]still_red[/c]", output="terminal")
+        # The alpha tag re-emits the same RGB sequence in terminal output.
+        assert result.count("\033[38;2;255;0;0m") == 2
+        assert "still_red" in result
+
+    # --- [c] is optional: standalone color without wrapper ---------------------
+    def test_standalone_color_web_without_c_wrapper(self):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        result = parse_swgoh_string("[00FF00]green", output="web")
+        assert '<span style="color:#00FF00">green</span>' in result
 
 
 # ── Additional quick-win helper tests ──────────────────────────────────

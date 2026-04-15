@@ -321,6 +321,56 @@ Functions for querying omicron skill data from game data collections.
 
 ---
 
+## Localization Helpers
+
+Utilities for working with the SWGOH client's BBCode-style markup that appears
+throughout localization bundles (ability descriptions, mod descriptions, event
+banners, etc.).
+
+### parse_swgoh_string
+
+Parse a raw localization string and convert it to plain text, ANSI-colored
+terminal output, Discord markdown, or HTML. The parser follows
+`NGUIText.ParseSymbol()` semantics, so it handles the same tag family the game
+engine itself supports.
+
+```python
+from swgoh_comlink.helpers import parse_swgoh_string
+
+raw = "[c][FF0000][b]Boss[/b][-] deals [u]2x[/u] damage[/c]"
+
+parse_swgoh_string(raw)                       # 'Boss deals 2x damage'
+parse_swgoh_string(raw, output="discord")     # '**Boss** deals __2x__ damage'
+parse_swgoh_string(raw, output="web")         # HTML with <b>, <u>, <span style=...>
+parse_swgoh_string(raw, output="terminal")    # ANSI truecolor escapes
+```
+
+Supported markup:
+
+| Tag(s) | Purpose |
+|--------|---------|
+| `[c] [/c] [-c]` | Optional color block wrapper |
+| `[-]` | Reset the active color |
+| `[RGB]` / `[RGBA]` / `[RRGGBB]` / `[RRGGBBAA]` | Hex color literal (short forms duplicate each nibble) |
+| `[A]` | 1-digit hex alpha (reuses the previous RGB or white) |
+| `[b] [/b]` / `[i] [/i]` | Bold / italic |
+| `[u] [/u]` / `[s] [/s]` | Underline / strikethrough |
+| `[t] [/t]` | Sprite color marker (stripped in text output) |
+| `[sub] [sub=X] [/sub]` / `[sup] [sup=X] [/sup]` | Subscript / superscript with optional scale |
+| `[y=X] [/y]` | Font scaling (web output uses inline `font-size`) |
+| `\n` | Literal backslash-n escape -> newline |
+
+The `[c]...[/c]` wrapper is optional — bare `[FF0000]` takes effect on its
+own, and `[-]` clears the active color whether or not you're inside a `[c]`
+block.
+
+::: swgoh_comlink.helpers._localization.parse_swgoh_string
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Decorators
 
 ### func_timer

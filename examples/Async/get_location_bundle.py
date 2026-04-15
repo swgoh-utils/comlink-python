@@ -25,10 +25,10 @@ async def main():
         # Get the language bundle using the latest game data language version
         # By default, Comlink compresses the data and encodes it into a BASE64 string for smaller payload and
         # faster delivery. The result is a string value that must be decoded before using.
-        location_bundle = await comlink.get_localization_bundle(id=game_data_versions['language'])
+        location_bundle = await comlink.get_localization_bundle(localization_id=game_data_versions["language"])
 
         # Decode the Base64 result
-        loc_bundle_decoded = base64.b64decode(location_bundle['localizationBundle'])
+        loc_bundle_decoded = base64.b64decode(location_bundle["localizationBundle"])
 
         # Create a zipfile object to access the compressed content
         zip_obj = zipfile.ZipFile(io.BytesIO(loc_bundle_decoded))
@@ -48,10 +48,10 @@ async def main():
         # it as a string. You could also use the various other zipfile methods to extract all files to disk
         # (see https://docs.python.org/3/library/zipfile.html for more details), or loop through the namelist()
         # output and select only specific languages you are interested in.
-        eng_obj = zip_obj.read('Loc_ENG_US.txt')
+        eng_obj = zip_obj.read("Loc_ENG_US.txt")
 
         # Decode to string then split into individual lines
-        eng_obj_decoded = eng_obj.decode('utf-8')
+        eng_obj_decoded = eng_obj.decode("utf-8")
         eng_obj_lines = eng_obj_decoded.splitlines()
 
         """
@@ -60,7 +60,7 @@ async def main():
         above.
         """
         location_bundle_unzipped = await comlink.get_localization_bundle(
-            id=game_data_versions['language'], unzip=True
+            localization_id=game_data_versions["language"], unzip=True
         )
 
         """
