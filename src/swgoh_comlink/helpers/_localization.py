@@ -570,9 +570,22 @@ def _reapply_terminal_styles(state: _FormattingState, result: list[str]) -> None
 
 
 def _finalize_output(output: OutputFormat, state: _FormattingState, result: list[str]) -> str:
-    """Finalize and return the formatted output."""
+    """Finalize and return the formatted output, balancing any unclosed markup."""
     if output == "terminal" and (state.active_color or state.any_style_active()):
         result.append(ANSI_RESET)
+    elif output == "web":
+        # Close any tags the source string left dangling so the HTML stays well-formed.
+        # Inner-most first: styles, then color span.
+        for _ in range(state.strike_depth):
+            result.append("</s>")
+        for _ in range(state.underline_depth):
+            result.append("</u>")
+        for _ in range(state.italic_depth):
+            result.append("</em>")
+        for _ in range(state.bold_depth):
+            result.append("</b>")
+        if state.active_color is not None:
+            result.append("</span>")
 
     formatted = "".join(result)
 
