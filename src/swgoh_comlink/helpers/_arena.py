@@ -52,6 +52,6 @@ def get_arena_payout(offset: int, fleet: bool = False) -> datetime:
     else:
         payout = payout.replace(hour=18, minute=0, second=0, microsecond=0)
     payout = payout - timedelta(minutes=(offset + local_offset))
-    if payout < datetime.now():
+    while payout < datetime.now():
         payout = payout + timedelta(days=1)
     return payout
