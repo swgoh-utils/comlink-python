@@ -14,6 +14,7 @@ from .conftest import (
     COMLINK_HMAC_URL,
     HMAC_ACCESS_KEY,
     HMAC_SECRET_KEY,
+    TEST_ALLYCODE,
 )
 
 pytestmark = pytest.mark.integration
@@ -48,14 +49,24 @@ def test_hmac_sync_player_request_succeeds(comlink_hmac):
 
 @hmac_configured
 def test_hmac_no_key_rejected():
-    """Sync client without HMAC keys is rejected by the protected endpoint."""
+    """Sync client without HMAC keys is rejected by the protected endpoint.
+
+    Uses a POST endpoint (`playerArena`) because the Comlink HMAC service
+    only enforces HMAC on POST; GET endpoints like `/enums` are
+    unauthenticated.
+    """
     with SwgohComlink(url=COMLINK_HMAC_URL) as client, pytest.raises(SwgohComlinkException):
-        client.get_enums()
+        client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
 
 
 @hmac_configured
 def test_hmac_wrong_key_rejected():
-    """Sync client with wrong secret key is rejected by the protected endpoint."""
+    """Sync client with wrong secret key is rejected by the protected endpoint.
+
+    Uses a POST endpoint (`playerArena`) because the Comlink HMAC service
+    only enforces HMAC on POST; GET endpoints like `/enums` are
+    unauthenticated.
+    """
     with (
         SwgohComlink(
             url=COMLINK_HMAC_URL,
@@ -64,7 +75,7 @@ def test_hmac_wrong_key_rejected():
         ) as client,
         pytest.raises(SwgohComlinkException),
     ):
-        client.get_enums()
+        client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
 
 
 # ── Async: valid HMAC ───────────────────────────────────────────────────
@@ -94,23 +105,33 @@ async def test_hmac_async_player_request_succeeds(async_comlink_hmac):
 @hmac_configured
 @pytest.mark.asyncio
 async def test_hmac_no_key_async_rejected():
-    """Async client without HMAC keys is rejected by the protected endpoint."""
+    """Async client without HMAC keys is rejected by the protected endpoint.
+
+    Uses a POST endpoint (`playerArena`) because the Comlink HMAC service
+    only enforces HMAC on POST; GET endpoints like `/enums` are
+    unauthenticated.
+    """
     async with SwgohComlinkAsync(url=COMLINK_HMAC_URL) as client:
         with pytest.raises(SwgohComlinkException):
-            await client.get_enums()
+            await client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
 
 
 @hmac_configured
 @pytest.mark.asyncio
 async def test_hmac_wrong_key_async_rejected():
-    """Async client with wrong secret key is rejected by the protected endpoint."""
+    """Async client with wrong secret key is rejected by the protected endpoint.
+
+    Uses a POST endpoint (`playerArena`) because the Comlink HMAC service
+    only enforces HMAC on POST; GET endpoints like `/enums` are
+    unauthenticated.
+    """
     async with SwgohComlinkAsync(
         url=COMLINK_HMAC_URL,
         access_key=HMAC_ACCESS_KEY,
         secret_key="wrong_secret_key",
     ) as client:
         with pytest.raises(SwgohComlinkException):
-            await client.get_enums()
+            await client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
 
 
 # ── HMAC header verification ────────────────────────────────────────────
