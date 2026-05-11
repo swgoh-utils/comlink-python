@@ -7,6 +7,7 @@ jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     concurrency:
       group: ${{ github.workflow }}-release-${{ github.ref_name }}
@@ -70,6 +71,7 @@ jobs:
   # Publish the package to PyPI
   pypi-publish:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     needs:
       - release
     permissions:

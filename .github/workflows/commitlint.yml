@@ -2,7 +2,7 @@ name: Commit Lint
 
 on:
   pull_request:
-    branches: [main, 1.0-maintenance]
+    branches: [main, develop]
 
 permissions:
   contents: read
@@ -30,9 +30,8 @@ jobs:
                 "chore", "docs", "test", "style", "ci", "perf"
               ]],
               "scope-enum": [1, "always", [
-                "core", "helpers", "deps", "release", "ci", 
-                "version", "hmac", "docs", "tests", "examples", 
-                "async", "statcalc"
+                "core", "helpers", "deps", "release", "ci",
+                "version", "hmac", "docs", "tests", "examples"
               ]],
               "subject-max-length": [1, "always", 100],
               "header-max-length": [0, "always"],
