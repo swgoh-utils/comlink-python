@@ -1,0 +1,328 @@
+{
+  "phase": "phase-0-baseline",
+  "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+  "python_version": "3.11.7",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-0-baseline",
+      "metric": "cold_import_time",
+      "value": 112.6645,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "p95_ms": 120.397,
+        "iters": 10
+      }
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "import_graph_top30",
+      "value": null,
+      "unit": "(structured)",
+      "status": "ok",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "top_imports": [
+          {
+            "name": "swgoh_comlink",
+            "cumulative_us": 111129
+          },
+          {
+            "name": "swgoh_comlink.StatCalc",
+            "cumulative_us": 100274
+          },
+          {
+            "name": "swgoh_comlink.StatCalc.calculator",
+            "cumulative_us": 85177
+          },
+          {
+            "name": "urllib.request",
+            "cumulative_us": 45368
+          },
+          {
+            "name": "swgoh_comlink.helpers._stat_data",
+            "cumulative_us": 31385
+          },
+          {
+            "name": "swgoh_comlink.helpers",
+            "cumulative_us": 31370
+          },
+          {
+            "name": "swgoh_comlink.helpers._gac",
+            "cumulative_us": 28250
+          },
+          {
+            "name": "asyncio",
+            "cumulative_us": 26807
+          },
+          {
+            "name": "asyncio.base_events",
+            "cumulative_us": 23923
+          },
+          {
+            "name": "http.client",
+            "cumulative_us": 23908
+          },
+          {
+            "name": "email.parser",
+            "cumulative_us": 15520
+          },
+          {
+            "name": "email.feedparser",
+            "cumulative_us": 15300
+          },
+          {
+            "name": "email._policybase",
+            "cumulative_us": 14699
+          },
+          {
+            "name": "swgoh_comlink.StatCalc.calculator_async",
+            "cumulative_us": 14181
+          },
+          {
+            "name": "httpx",
+            "cumulative_us": 14072
+          },
+          {
+            "name": "httpx._api",
+            "cumulative_us": 13447
+          },
+          {
+            "name": "httpx._client",
+            "cumulative_us": 13325
+          },
+          {
+            "name": "email.utils",
+            "cumulative_us": 13281
+          },
+          {
+            "name": "site",
+            "cumulative_us": 11618
+          },
+          {
+            "name": "httpx._auth",
+            "cumulative_us": 10331
+          },
+          {
+            "name": "logging",
+            "cumulative_us": 9530
+          },
+          {
+            "name": "httpx._models",
+            "cumulative_us": 9500
+          },
+          {
+            "name": "tempfile",
+            "cumulative_us": 7488
+          },
+          {
+            "name": "sitecustomize",
+            "cumulative_us": 7374
+          },
+          {
+            "name": "shutil",
+            "cumulative_us": 6661
+          },
+          {
+            "name": "subprocess",
+            "cumulative_us": 6468
+          },
+          {
+            "name": "re",
+            "cumulative_us": 6460
+          },
+          {
+            "name": "hashlib",
+            "cumulative_us": 5912
+          },
+          {
+            "name": "ssl",
+            "cumulative_us": 5770
+          },
+          {
+            "name": "asyncio.coroutines",
+            "cumulative_us": 5626
+          }
+        ]
+      }
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "httpx_loaded_on_import",
+      "value": 1.0,
+      "unit": "bool",
+      "status": "ok",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00"
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "method_body_duplication_ratio",
+      "value": 1.0,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "paired_count": 16,
+        "per_method": [
+          {
+            "method": "get_enums",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_events",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_game_data",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_game_metadata",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_guild",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_guild_leaderboard",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_guilds_by_criteria",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_guilds_by_name",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_latest_game_data_version",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_leaderboard",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_localization",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_name_spaces",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_player",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_player_arena",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_segmented_content",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_unit_stats",
+            "similarity": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "get_player_small_e2e_latency",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "reason": "cassette 'player_small' missing"
+      }
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "get_player_large_e2e_latency",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "reason": "cassette 'player_large' missing"
+      }
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "get_data_decode_time",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "reason": "cassette 'data' missing"
+      }
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "get_data_decode_peak_memory",
+      "value": null,
+      "unit": "bytes",
+      "status": "skip",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "reason": "cassette 'data' missing"
+      }
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "get_data_object_size",
+      "value": null,
+      "unit": "bytes",
+      "status": "skip",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "reason": "cassette 'data' missing"
+      }
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "get_player_concurrent_100x_async_wall_ms",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "reason": "cassette 'player_small' missing"
+      }
+    },
+    {
+      "phase": "phase-0-baseline",
+      "metric": "get_player_concurrent_100x_async_peak_memory",
+      "value": null,
+      "unit": "bytes",
+      "status": "skip",
+      "git_sha": "964a04b7d221c6650755c04ebae22571f778dccf",
+      "timestamp": "2026-05-16T13:38:46+00:00",
+      "meta": {
+        "reason": "cassette 'player_small' missing"
+      }
+    }
+  ]
+}
