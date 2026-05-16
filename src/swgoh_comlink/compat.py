@@ -18,7 +18,7 @@ or pin to ``swgoh-comlink<3.2`` if you depend on this module.
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import msgspec
 
@@ -107,5 +107,4 @@ def to_pydantic(struct: Any, model_class: type[_TModel]) -> _TModel:
     # otherwise the caller would see a confusing AttributeError on
     # model_class.model_validate.
     require("pydantic", "pydantic")
-    # Cast since pydantic's stubs aren't visible under --strict + --ignore-missing-imports.
-    return cast("_TModel", model_class.model_validate(msgspec.to_builtins(struct)))
+    return model_class.model_validate(msgspec.to_builtins(struct))
