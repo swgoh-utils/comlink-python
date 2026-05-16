@@ -53,10 +53,15 @@ def test_get_enums_respects_verify_ssl(httpx_mock: HTTPXMock):
 
 
 def test_get_enums_connection_error(httpx_mock: HTTPXMock):
-    """Test that get_enums() wraps connection errors in SwgohComlinkException."""
+    """Test that get_enums() wraps connection errors in SwgohComlinkException.
+
+    v3: pass max_retries=0 so the single registered exception is the only
+    thing the SDK consumes. With the default 3 retries the SDK would try
+    the request 4 times and exhaust the mock after the first attempt.
+    """
     httpx_mock.add_exception(httpx.ConnectError("Connection refused"))
 
-    client = SwgohComlink(url="http://localhost:3000")
+    client = SwgohComlink(url="http://localhost:3000", max_retries=0)
     with pytest.raises(SwgohComlinkException):
         client.get_enums()
 

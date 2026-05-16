@@ -1,0 +1,43 @@
+{
+  "phase": "phase-2-retry-overhead",
+  "git_sha": "c8e831cc57c46b2c9d8cb84bc2bec046414e8728",
+  "python_version": "3.11.15",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-2-retry-overhead",
+      "metric": "retry_overhead_max_retries_0",
+      "value": 149812.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "c8e831cc57c46b2c9d8cb84bc2bec046414e8728",
+      "timestamp": "2026-05-16T18:55:39+00:00",
+      "meta": {
+        "p95": 167250.0,
+        "stdev": 6491.344517690225,
+        "iters": 50,
+        "warmup": 10,
+        "max_retries": 0
+      }
+    },
+    {
+      "phase": "phase-2-retry-overhead",
+      "metric": "retry_overhead_max_retries_3",
+      "value": 148166.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "c8e831cc57c46b2c9d8cb84bc2bec046414e8728",
+      "timestamp": "2026-05-16T18:55:39+00:00",
+      "meta": {
+        "p95": 169667.0,
+        "stdev": 16423.52581575638,
+        "iters": 50,
+        "warmup": 10,
+        "max_retries": 3
+      }
+    }
+  ]
+}

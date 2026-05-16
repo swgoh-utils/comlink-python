@@ -5,17 +5,19 @@ Synchronous Python 3 interface for swgoh-comlink.
 
 from __future__ import annotations
 
-from json import loads
 from typing import Any, cast
 
 import httpx
 
 from ._base import (
+    DEFAULT_MAX_RETRIES,
     DEFAULT_TIMEOUT,
     GAME_DATA_TIMEOUT,
     SwgohComlinkBase,
     param_alias,
+    resolve_profile,
 )
+from ._retry import RetryableStatusError, retrying_sync
 from .exceptions import SwgohComlinkException, SwgohComlinkValueError
 from .helpers import Constants
 
@@ -56,19 +58,53 @@ class SwgohComlink(SwgohComlinkBase):
 
     __comlink_type__ = "SwgohComlink"
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        http_client: httpx.Client | None = None,
+        profile: str = "default",
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        **kwargs: Any,
+    ) -> None:
+        """Construct a sync client.
+
+        Args:
+            http_client: Inject your own :class:`httpx.Client`. When provided,
+                the SDK *does not* auto-close it on :meth:`close` — you own
+                its lifecycle. When omitted, the SDK constructs one per the
+                ``profile`` preset and closes it on :meth:`close`.
+                The ``stats_url`` connection is always SDK-managed.
+            profile: Connection pool preset name — ``"default"``, ``"bot"``,
+                or ``"bulk"``. Ignored when ``http_client`` is supplied
+                (you've already chosen your own pool).
+            max_retries: Number of *additional* attempts after the first
+                failure for transient errors (5xx, 408, 425, 429, connection
+                drops). ``0`` disables retries. Default is 3.
+            **kwargs: Passed through to :class:`SwgohComlinkBase` (``url``,
+                ``access_key``, ``secret_key``, ``host``, ``port``,
+                ``stats_url``, etc.).
+        """
         super().__init__(**kwargs)
-        self.client = httpx.Client(
-            base_url=self.url_base,
-            headers={"Content-Type": "application/json"},
-            verify=self.verify_ssl,
-            timeout=DEFAULT_TIMEOUT,
-        )
+        self.max_retries = max_retries
+
+        if http_client is not None:
+            self.client = http_client
+            self._owns_client = False
+        else:
+            self.client = httpx.Client(
+                base_url=self.url_base,
+                headers={"Content-Type": "application/json"},
+                verify=self.verify_ssl,
+                timeout=DEFAULT_TIMEOUT,
+                limits=resolve_profile(profile),
+            )
+            self._owns_client = True
         self.stats_client = httpx.Client(
             base_url=self.stats_url_base,
             headers={"Content-Type": "application/json"},
             verify=self.verify_ssl,
             timeout=DEFAULT_TIMEOUT,
+            limits=resolve_profile(profile),
         )
 
     def __enter__(self) -> SwgohComlink:
@@ -78,8 +114,13 @@ class SwgohComlink(SwgohComlinkBase):
         self.close()
 
     def close(self) -> None:
-        """Close the underlying HTTP client connections."""
-        self.client.close()
+        """Close the underlying HTTP client connections we own.
+
+        An injected ``http_client`` is NOT closed — the caller owns its
+        lifecycle. The internal ``stats_client`` is always closed.
+        """
+        if getattr(self, "_owns_client", True):
+            self.client.close()
         self.stats_client.close()
 
     def _request(
@@ -92,40 +133,45 @@ class SwgohComlink(SwgohComlinkBase):
     ) -> dict[str, Any] | list[Any]:
         """Send an HTTP request to the comlink service.
 
-        This is the single gateway for all HTTP communication.  Every public
-        method should route through here so that HMAC authentication, TLS
-        verification, and error handling are applied consistently.
+        Routes every call through a single retry-wrapped send. Per-request
+        ``timeout`` overrides the client default; per-call retry behavior
+        is controlled by the client-wide ``max_retries`` (or rebind via
+        :meth:`with_options`).
 
         Args:
             method: HTTP method (``"GET"`` or ``"POST"``).
-            endpoint: API endpoint path.
-            payload: JSON body for the request (ignored for GET requests).
-            stats: If True, use the stats service client.
+            endpoint: API endpoint path (without leading slash).
+            payload: JSON body (ignored for GET).
+            stats: If True, route to the stats sub-service.
             timeout: Per-request timeout override.
 
         Returns:
             Decoded JSON response (dict or list).
 
         Raises:
-            SwgohComlinkException: On any network or decoding error.
+            SwgohComlinkException: Any network, status, or decode error
+                that survived the retry loop.
         """
-        req_headers = self._construct_request_headers(method, endpoint, payload)
+        method_u = method.upper()
+        full_path, request_kwargs = self._build_request_kwargs(method_u, endpoint, payload, timeout)
         client = self.stats_client if stats else self.client
 
-        request_kwargs: dict[str, Any] = {"headers": req_headers}
-        if timeout is not None:
-            request_kwargs["timeout"] = timeout
-        if method.upper() != "GET":
-            request_kwargs["json"] = payload
+        def attempt() -> httpx.Response:
+            r = client.request(method_u, full_path, **request_kwargs)
+            self._classify_response(r)
+            return r
 
         try:
-            r = client.request(method.upper(), f"/{endpoint}", **request_kwargs)
-            r.raise_for_status()
-            return cast(dict[str, Any] | list[Any], loads(r.content.decode("utf-8")))
-        except httpx.HTTPStatusError as e:
-            raise SwgohComlinkException(f"HTTP {e.response.status_code}: {e.response.text}") from e
-        except httpx.RequestError as e:
-            raise SwgohComlinkException(e) from e
+            response = retrying_sync(
+                attempt,
+                attempts=self.max_retries + 1,
+                on=httpx.RequestError,
+            )
+        except (httpx.RequestError, RetryableStatusError) as e:
+            raise self._map_error(e) from e
+        except SwgohComlinkException:
+            raise
+        return self._decode(response)
 
     def _post(
         self,

@@ -152,9 +152,10 @@ async def test_get_enums_uses_get_method(httpx_mock: HTTPXMock):
 
 @pytest.mark.asyncio
 async def test_request_error_raises_comlink_exception(httpx_mock: HTTPXMock):
+    # v3: max_retries=0 means one attempt — matches the single registered exception.
     httpx_mock.add_exception(httpx.ConnectError("Connection refused"))
 
-    client = SwgohComlinkAsync(url="http://localhost:3000")
+    client = SwgohComlinkAsync(url="http://localhost:3000", max_retries=0)
     with pytest.raises(SwgohComlinkException):
         await client.get_enums()
     await client.aclose()

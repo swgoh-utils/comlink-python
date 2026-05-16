@@ -5,17 +5,19 @@ Asynchronous Python 3 interface for swgoh-comlink.
 
 from __future__ import annotations
 
-from json import loads
 from typing import Any, cast
 
 import httpx
 
 from ._base import (
+    DEFAULT_MAX_RETRIES,
     DEFAULT_TIMEOUT,
     GAME_DATA_TIMEOUT,
     SwgohComlinkBase,
     param_alias,
+    resolve_profile,
 )
+from ._retry import RetryableStatusError, retrying_async
 from .exceptions import SwgohComlinkException, SwgohComlinkValueError
 from .helpers import Constants
 
@@ -51,22 +53,48 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     __comlink_type__ = "SwgohComlinkAsync"
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        http_client: httpx.AsyncClient | None = None,
+        profile: str = "default",
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        **kwargs: Any,
+    ) -> None:
+        """Construct an async client.
+
+        Args:
+            http_client: Inject your own :class:`httpx.AsyncClient`. When
+                provided, the SDK *does not* auto-close it on
+                :meth:`aclose` — you own its lifecycle. When omitted, the
+                SDK constructs one per the ``profile`` preset.
+            profile: Connection pool preset — ``"default"`` / ``"bot"`` /
+                ``"bulk"``. Ignored when ``http_client`` is supplied.
+            max_retries: Additional attempts after the first failure for
+                transient errors. ``0`` disables retries. Default 3.
+            **kwargs: Passed through to :class:`SwgohComlinkBase`.
+        """
         super().__init__(**kwargs)
-        connection_limits = httpx.Limits(keepalive_expiry=None)
-        self.client = httpx.AsyncClient(
-            base_url=self.url_base,
-            headers={"Content-Type": "application/json"},
-            verify=self.verify_ssl,
-            timeout=DEFAULT_TIMEOUT,
-            limits=connection_limits,
-        )
+        self.max_retries = max_retries
+
+        if http_client is not None:
+            self.client = http_client
+            self._owns_client = False
+        else:
+            self.client = httpx.AsyncClient(
+                base_url=self.url_base,
+                headers={"Content-Type": "application/json"},
+                verify=self.verify_ssl,
+                timeout=DEFAULT_TIMEOUT,
+                limits=resolve_profile(profile),
+            )
+            self._owns_client = True
         self.stats_client = httpx.AsyncClient(
             base_url=self.stats_url_base,
             headers={"Content-Type": "application/json"},
             verify=self.verify_ssl,
             timeout=DEFAULT_TIMEOUT,
-            limits=connection_limits,
+            limits=resolve_profile(profile),
         )
 
     async def __aenter__(self) -> SwgohComlinkAsync:
@@ -76,8 +104,13 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         await self.aclose()
 
     async def aclose(self) -> None:
-        """Close the underlying async HTTP client connections."""
-        await self.client.aclose()
+        """Close the underlying async HTTP client connections we own.
+
+        An injected ``http_client`` is NOT closed — the caller owns its
+        lifecycle. The internal ``stats_client`` is always closed.
+        """
+        if getattr(self, "_owns_client", True):
+            await self.client.aclose()
         await self.stats_client.aclose()
 
     async def _request(
@@ -90,38 +123,31 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     ) -> dict[str, Any] | list[Any]:
         """Send an async HTTP request to the comlink service.
 
-        This is the single gateway for all HTTP communication.
-
-        Args:
-            method: HTTP method (``"GET"`` or ``"POST"``).
-            endpoint: API endpoint path.
-            payload: JSON body for the request (ignored for GET requests).
-            stats: If True, use the stats service client.
-            timeout: Per-request timeout override.
-
-        Returns:
-            Decoded JSON response (dict or list).
-
-        Raises:
-            SwgohComlinkException: On any network or decoding error.
+        Mirror of :meth:`SwgohComlink._request` — same retry semantics,
+        same building blocks (``_build_request_kwargs`` / ``_decode`` /
+        ``_classify_response`` / ``_map_error`` from the base) — async send
+        and ``asyncio.sleep`` between retries.
         """
-        req_headers = self._construct_request_headers(method, endpoint, payload)
+        method_u = method.upper()
+        full_path, request_kwargs = self._build_request_kwargs(method_u, endpoint, payload, timeout)
         client = self.stats_client if stats else self.client
 
-        request_kwargs: dict[str, Any] = {"headers": req_headers}
-        if timeout is not None:
-            request_kwargs["timeout"] = timeout
-        if method.upper() != "GET":
-            request_kwargs["json"] = payload
+        async def attempt() -> httpx.Response:
+            r = await client.request(method_u, full_path, **request_kwargs)
+            self._classify_response(r)
+            return r
 
         try:
-            r = await client.request(method.upper(), f"/{endpoint}", **request_kwargs)
-            r.raise_for_status()
-            return cast(dict[str, Any] | list[Any], loads(r.content.decode("utf-8")))
-        except httpx.HTTPStatusError as e:
-            raise SwgohComlinkException(f"HTTP {e.response.status_code}: {e.response.text}") from e
-        except httpx.RequestError as e:
-            raise SwgohComlinkException(e) from e
+            response = await retrying_async(
+                attempt,
+                attempts=self.max_retries + 1,
+                on=httpx.RequestError,
+            )
+        except (httpx.RequestError, RetryableStatusError) as e:
+            raise self._map_error(e) from e
+        except SwgohComlinkException:
+            raise
+        return self._decode(response)
 
     async def _post(
         self,

@@ -5,26 +5,118 @@ Base class for swgoh-comlink interface providing shared logic for sync and async
 
 from __future__ import annotations
 
+import copy
 import functools
 import hashlib
 import hmac
 import os
 import time
 from collections.abc import Callable
-from json import dumps
-from typing import Any
+from json import dumps, loads
+from typing import Any, Self, cast
 from urllib.parse import urlparse, urlunparse
 
-from .exceptions import SwgohComlinkValueError
+import httpx
+
+from ._retry import RETRYABLE_STATUSES, RetryableStatusError
+from .exceptions import SwgohComlinkException, SwgohComlinkValueError
 from .helpers import Constants
 
-__all__ = ["SwgohComlinkBase"]
+__all__ = [
+    "BOT_LIMITS",
+    "BULK_LIMITS",
+    "DEFAULT_LIMITS",
+    "DEFAULT_MAX_RETRIES",
+    "DEFAULT_TIMEOUT",
+    "GAME_DATA_TIMEOUT",
+    "NOT_GIVEN",
+    "NotGiven",
+    "PROFILES",
+    "SwgohComlinkBase",
+    "param_alias",
+    "sanitize_url",
+]
 
 # Keys whose values must be masked in logs, repr, and debug output.
 _SENSITIVE_KEYS = frozenset({"secret_key", "access_key"})
 
 DEFAULT_TIMEOUT: float = 120.0
 GAME_DATA_TIMEOUT: float = 300.0
+DEFAULT_MAX_RETRIES: int = 3
+
+
+# ── NOT_GIVEN sentinel ──────────────────────────────────────────────────────
+
+
+class NotGiven:
+    """Sentinel type for "argument not supplied" distinct from ``None``.
+
+    ``None`` is a legitimate value for several SDK kwargs (e.g. ``timeout=None``
+    meaning "no timeout"). A separate sentinel lets methods distinguish
+    "caller passed nothing" from "caller passed None on purpose" — useful
+    for :meth:`SwgohComlinkBase.with_options` and Phase 3+ method signatures.
+    """
+
+    _instance: NotGiven | None = None
+
+    def __new__(cls) -> NotGiven:
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+        return cls._instance
+
+    def __repr__(self) -> str:
+        return "NOT_GIVEN"
+
+    def __bool__(self) -> bool:
+        return False
+
+
+NOT_GIVEN: NotGiven = NotGiven()
+"""Singleton :class:`NotGiven` instance."""
+
+
+# ── Connection pool presets ─────────────────────────────────────────────────
+
+#: Default httpx connection limits. Suitable for general-purpose SDK use.
+#: ``keepalive_expiry=30`` (up from httpx default 5s) is a Phase 2 win for
+#: low-frequency bot users that make one call every ~10s — without 30s
+#: keepalive every call would pay a fresh TCP+TLS handshake.
+DEFAULT_LIMITS: httpx.Limits = httpx.Limits(
+    max_connections=100,
+    max_keepalive_connections=20,
+    keepalive_expiry=30.0,
+)
+
+#: Long-lived bot use case. Tighter keepalive, more pooled connections.
+BOT_LIMITS: httpx.Limits = httpx.Limits(
+    max_connections=200,
+    max_keepalive_connections=50,
+    keepalive_expiry=120.0,
+)
+
+#: Bulk analytics use case. High concurrency, broader pool.
+BULK_LIMITS: httpx.Limits = httpx.Limits(
+    max_connections=500,
+    max_keepalive_connections=200,
+    keepalive_expiry=60.0,
+)
+
+#: Map of profile name → preset. Public so callers can introspect / extend.
+PROFILES: dict[str, httpx.Limits] = {
+    "default": DEFAULT_LIMITS,
+    "bot": BOT_LIMITS,
+    "bulk": BULK_LIMITS,
+}
+
+
+def resolve_profile(profile: str) -> httpx.Limits:
+    """Look up a named pool preset; raises ValueError on unknown name."""
+    try:
+        return PROFILES[profile]
+    except KeyError as e:
+        raise ValueError(
+            f"unknown profile '{profile}'. known: {sorted(PROFILES)}",
+        ) from e
 
 
 def param_alias(param: str, alias: str) -> Callable[..., Any]:
@@ -288,3 +380,107 @@ class SwgohComlinkBase:
     @version.deleter
     def version(self) -> None:
         raise AttributeError("Module 'version' is read-only")
+
+    # ── Phase 2 _BaseClient surface ──────────────────────────────────────
+    #
+    # The methods below are shared HTTP-pipeline plumbing used by both
+    # SwgohComlink and SwgohComlinkAsync. They have no httpx send call
+    # of their own (because the sync vs async call shape differs) — they
+    # handle everything *around* the send: building the request kwargs,
+    # classifying the response, decoding the body, mapping errors,
+    # and cloning the client with overrides.
+
+    def _build_request_kwargs(
+        self,
+        method: str,
+        endpoint: str,
+        payload: dict[str, Any] | list[Any] | None,
+        timeout: float | None,
+    ) -> tuple[str, dict[str, Any]]:
+        """Construct the path + kwargs for ``client.request(method, path, **kwargs)``.
+
+        Returns a tuple ``(full_path, kwargs)`` ready to be unpacked by the
+        subclass's sync or async send. Centralizes header construction,
+        timeout passthrough, and the GET-vs-POST body distinction.
+        """
+        req_headers = self._construct_request_headers(method, endpoint, payload)
+        kwargs: dict[str, Any] = {"headers": req_headers}
+        if timeout is not None:
+            kwargs["timeout"] = timeout
+        if method.upper() != "GET":
+            kwargs["json"] = payload
+        return f"/{endpoint}", kwargs
+
+    @staticmethod
+    def _classify_response(response: httpx.Response) -> None:
+        """Inspect *response* and raise the appropriate exception for the retry loop.
+
+        * Retryable status (5xx, 408, 425, 429) → :class:`RetryableStatusError`
+        * Other 4xx/5xx → :class:`SwgohComlinkException` (non-retryable)
+        * 2xx/3xx → returns None (caller proceeds to decode)
+        """
+        if response.status_code in RETRYABLE_STATUSES:
+            raise RetryableStatusError(response)
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise SwgohComlinkException(
+                f"HTTP {response.status_code}: {response.text}",
+            ) from e
+
+    @staticmethod
+    def _decode(response: httpx.Response) -> dict[str, Any] | list[Any]:
+        """Parse *response*'s body to a JSON object.
+
+        Phase 2: stdlib ``json.loads`` on ``response.content``. Phase 3 swaps
+        this to a per-type ``msgspec.json.Decoder`` lookup; the method
+        signature stays the same so the sync/async ``_request`` paths don't
+        need to change again.
+        """
+        try:
+            return cast(dict[str, Any] | list[Any], loads(response.content.decode("utf-8")))
+        except ValueError as e:
+            raise SwgohComlinkException(f"failed to decode response body: {e}") from e
+
+    @staticmethod
+    def _map_error(exc: BaseException) -> SwgohComlinkException:
+        """Translate a transport-level exception into :class:`SwgohComlinkException`.
+
+        Catches the retry loop's final raise for both transient flavors:
+
+        * :class:`httpx.RequestError` (connection failure, timeout, etc.)
+        * :class:`RetryableStatusError` (status exhausted retries)
+        """
+        if isinstance(exc, RetryableStatusError):
+            resp = exc.response
+            status = getattr(resp, "status_code", "?")
+            text = getattr(resp, "text", "")
+            return SwgohComlinkException(f"HTTP {status}: {text}")
+        return SwgohComlinkException(str(exc))
+
+    def with_options(self, **overrides: Any) -> Self:
+        """Return a shallow clone of this client with attribute *overrides* applied.
+
+        Useful for one-off config tweaks without constructing a new SDK
+        instance from scratch::
+
+            quick = client.with_options(max_retries=0)
+            quick.get_player(allycode=...)
+
+        **Lifetime semantics:** the clone *shares* the underlying httpx
+        client(s) with the original — closing one closes both. This is
+        intentional for cheap option-flipping; if you need a fully
+        independent client (different timeout, different pool) construct
+        a fresh instance instead.
+
+        Unknown attributes raise :class:`AttributeError` rather than
+        silently adding to the clone — typos shouldn't pass undetected.
+        """
+        clone = copy.copy(self)
+        for name, value in overrides.items():
+            if not hasattr(clone, name):
+                raise AttributeError(
+                    f"unknown option '{name}' for {type(self).__name__}",
+                )
+            setattr(clone, name, value)
+        return clone

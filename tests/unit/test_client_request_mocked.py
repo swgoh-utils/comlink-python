@@ -137,9 +137,10 @@ def test_get_enums_uses_get_method(httpx_mock: HTTPXMock):
 
 
 def test_request_error_raises_comlink_exception(httpx_mock: HTTPXMock):
+    # v3: max_retries=0 means one attempt — matches the single registered exception.
     httpx_mock.add_exception(httpx.ConnectError("Connection refused"))
 
-    client = SwgohComlink(url="http://localhost:3000")
+    client = SwgohComlink(url="http://localhost:3000", max_retries=0)
     with pytest.raises(SwgohComlinkException):
         client.get_enums()
 
