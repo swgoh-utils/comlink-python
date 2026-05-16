@@ -33,6 +33,7 @@ interrupted run never leaves a half-written cassette.
 
 from __future__ import annotations
 
+import argparse
 import gzip
 import json
 import os
@@ -149,17 +150,45 @@ def _write_cassette(payload: Any, name: str) -> Path:
     return dest
 
 
-def main() -> int:
-    """Record every cassette in :func:`_build_recordings`.
+def _parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Record comlink cassettes for the v3 benchmark harness.")
+    p.add_argument(
+        "--only",
+        metavar="NAME[,NAME...]",
+        help=(
+            "Comma-separated cassette names to record (e.g. 'player_small' or "
+            "'player_small,guild'). Omit to record all cassettes. Use this for "
+            "surgical regen when only one or two fixtures need refreshing."
+        ),
+    )
+    return p.parse_args()
 
-    Returns process exit code: ``0`` on full success, ``1`` if any single
-    cassette failed (others still attempted).
+
+def main() -> int:
+    """Record cassettes from :func:`_build_recordings`.
+
+    With no ``--only`` filter, records every cassette. Returns exit code
+    ``0`` on full success, ``1`` if any requested cassette failed (others
+    still attempted), ``2`` if ``--only`` names an unknown cassette.
     """
+    args = _parse_args()
     client = _build_client()
     recordings = _build_recordings()
+
+    if args.only:
+        wanted = {n.strip() for n in args.only.split(",") if n.strip()}
+        known = {r.name for r in recordings}
+        unknown = wanted - known
+        if unknown:
+            sys.stderr.write(
+                f"error: --only references unknown cassette(s): {sorted(unknown)}. Known: {sorted(known)}\n"
+            )
+            return 2
+        recordings = [r for r in recordings if r.name in wanted]
+
     failures: list[tuple[str, str]] = []
 
-    sys.stderr.write(f"Recording {len(recordings)} cassettes → {FIXTURES_DIR}\n")
+    sys.stderr.write(f"Recording {len(recordings)} cassette(s) → {FIXTURES_DIR}\n")
     for rec in recordings:
         sys.stderr.write(f"  {rec.name:24s} {rec.description}\n")
         try:
