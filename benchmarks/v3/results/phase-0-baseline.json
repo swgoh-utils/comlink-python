@@ -1,6 +1,6 @@
 {
   "phase": "phase-0-baseline",
-  "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
+  "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
   "python_version": "3.11.15",
   "platform": "darwin",
   "env": {
@@ -10,13 +10,13 @@
     {
       "phase": "phase-0-baseline",
       "metric": "cold_import_time",
-      "value": 41.118,
+      "value": 65.434,
       "unit": "ms",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:35:51+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:57:34+00:00",
       "meta": {
-        "p95_ms": 47.964,
+        "p95_ms": 92.576,
         "iters": 10
       }
     },
@@ -26,129 +26,129 @@
       "value": null,
       "unit": "(structured)",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:35:51+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:57:34+00:00",
       "meta": {
         "top_imports": [
           {
             "name": "swgoh_comlink",
-            "cumulative_us": 39963
+            "cumulative_us": 70605
           },
           {
             "name": "swgoh_comlink.StatCalc",
-            "cumulative_us": 31732
+            "cumulative_us": 60823
           },
           {
             "name": "swgoh_comlink.StatCalc.calculator",
-            "cumulative_us": 23961
+            "cumulative_us": 40504
           },
           {
             "name": "swgoh_comlink.helpers._stat_data",
-            "cumulative_us": 11004
+            "cumulative_us": 19339
           },
           {
             "name": "swgoh_comlink.helpers",
-            "cumulative_us": 10994
-          },
-          {
-            "name": "urllib.request",
-            "cumulative_us": 10890
-          },
-          {
-            "name": "swgoh_comlink.helpers._gac",
-            "cumulative_us": 9200
-          },
-          {
-            "name": "asyncio",
-            "cumulative_us": 8330
-          },
-          {
-            "name": "http.client",
-            "cumulative_us": 7569
-          },
-          {
-            "name": "logging",
-            "cumulative_us": 7481
+            "cumulative_us": 19328
           },
           {
             "name": "swgoh_comlink.StatCalc.calculator_async",
-            "cumulative_us": 7101
+            "cumulative_us": 19230
           },
           {
             "name": "httpx",
-            "cumulative_us": 7018
+            "cumulative_us": 19119
           },
           {
-            "name": "asyncio.base_events",
-            "cumulative_us": 6861
+            "name": "urllib.request",
+            "cumulative_us": 17179
           },
           {
             "name": "httpx._api",
-            "cumulative_us": 5970
+            "cumulative_us": 17174
           },
           {
             "name": "httpx._client",
-            "cumulative_us": 5882
+            "cumulative_us": 17027
+          },
+          {
+            "name": "swgoh_comlink.helpers._gac",
+            "cumulative_us": 14793
+          },
+          {
+            "name": "asyncio",
+            "cumulative_us": 13502
+          },
+          {
+            "name": "http.client",
+            "cumulative_us": 11573
+          },
+          {
+            "name": "asyncio.base_events",
+            "cumulative_us": 11110
+          },
+          {
+            "name": "logging",
+            "cumulative_us": 8668
           },
           {
             "name": "email.parser",
-            "cumulative_us": 5177
+            "cumulative_us": 8107
           },
           {
             "name": "email.feedparser",
-            "cumulative_us": 5054
-          },
-          {
-            "name": "httpx._auth",
-            "cumulative_us": 4859
+            "cumulative_us": 7926
           },
           {
             "name": "email._policybase",
-            "cumulative_us": 4693
+            "cumulative_us": 7486
           },
           {
-            "name": "httpx._models",
-            "cumulative_us": 4457
+            "name": "httpx._auth",
+            "cumulative_us": 6632
           },
           {
             "name": "email.utils",
-            "cumulative_us": 3899
+            "cumulative_us": 6487
+          },
+          {
+            "name": "httpx._models",
+            "cumulative_us": 5869
+          },
+          {
+            "name": "httpx._transports.base",
+            "cumulative_us": 3581
+          },
+          {
+            "name": "httpx._transports",
+            "cumulative_us": 3569
           },
           {
             "name": "re",
-            "cumulative_us": 3135
+            "cumulative_us": 3456
           },
           {
             "name": "asyncio.coroutines",
-            "cumulative_us": 2569
+            "cumulative_us": 2845
           },
           {
             "name": "inspect",
-            "cumulative_us": 2503
+            "cumulative_us": 2763
           },
           {
-            "name": "traceback",
-            "cumulative_us": 2272
-          },
-          {
-            "name": "enum",
-            "cumulative_us": 1663
-          },
-          {
-            "name": "httpx._urls",
-            "cumulative_us": 1539
-          },
-          {
-            "name": "urllib.parse",
-            "cumulative_us": 1375
+            "name": "httpx._transports.asgi",
+            "cumulative_us": 2699
           },
           {
             "name": "site",
-            "cumulative_us": 1341
+            "cumulative_us": 2492
           },
           {
-            "name": "ssl",
-            "cumulative_us": 1195
+            "name": "swgoh_comlink.helpers._constants",
+            "cumulative_us": 2257
+          },
+          {
+            "name": "httpx._urls",
+            "cumulative_us": 2212
           }
         ]
       }
@@ -159,8 +159,8 @@
       "value": 1.0,
       "unit": "bool",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:35:51+00:00"
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:57:34+00:00"
     },
     {
       "phase": "phase-0-baseline",
@@ -168,8 +168,8 @@
       "value": 1.0,
       "unit": "ratio",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:35:51+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:57:34+00:00",
       "meta": {
         "paired_count": 16,
         "per_method": [
@@ -243,14 +243,14 @@
     {
       "phase": "phase-0-baseline",
       "metric": "get_player_small_e2e_latency",
-      "value": 25158250.0,
+      "value": 289562.5,
       "unit": "ns",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:35:52+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:57:34+00:00",
       "meta": {
-        "p95": 39644875.0,
-        "stdev": 8095431.219915084,
+        "p95": 560083.0,
+        "stdev": 96830.09239976676,
         "iters": 20,
         "warmup": 3,
         "cassette": "player_small"
@@ -259,14 +259,14 @@
     {
       "phase": "phase-0-baseline",
       "metric": "get_player_large_e2e_latency",
-      "value": 27976145.5,
+      "value": 40085562.5,
       "unit": "ns",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:35:52+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:57:35+00:00",
       "meta": {
-        "p95": 45460708.0,
-        "stdev": 9576040.982717564,
+        "p95": 121348375.0,
+        "stdev": 58844324.01659717,
         "iters": 20,
         "warmup": 3,
         "cassette": "player_large"
@@ -275,14 +275,14 @@
     {
       "phase": "phase-0-baseline",
       "metric": "get_data_decode_time",
-      "value": 7465733645.5,
+      "value": 7120248125.0,
       "unit": "ns",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:37:31+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:59:12+00:00",
       "meta": {
-        "p95": 7616426000.0,
-        "stdev": 211087796.79122242,
+        "p95": 7924241083.0,
+        "stdev": 562738813.1207384,
         "iters": 10,
         "warmup": 3,
         "parser": "json",
@@ -295,8 +295,8 @@
       "value": 1460047765,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:37:46+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:59:26+00:00",
       "meta": {
         "current_bytes": 21592,
         "parser": "json"
@@ -308,8 +308,8 @@
       "value": 1083926320,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:38:10+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:59:49+00:00",
       "meta": {
         "parser": "json"
       }
@@ -317,14 +317,14 @@
     {
       "phase": "phase-0-baseline",
       "metric": "get_player_concurrent_100x_async_wall",
-      "value": 16487291042.0,
+      "value": 81392167.0,
       "unit": "ns",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:39:51+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:59:50+00:00",
       "meta": {
-        "p95": 18343740375.0,
-        "stdev": 1540529022.1663692,
+        "p95": 89546667.0,
+        "stdev": 13108466.267064778,
         "iters": 5,
         "warmup": 1,
         "cassette": "player_small",
@@ -334,13 +334,13 @@
     {
       "phase": "phase-0-baseline",
       "metric": "get_player_concurrent_100x_async_peak_memory",
-      "value": 1483831919,
+      "value": 26100501,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "cb8a51219c1b2f467246b64dd58d62ac64b4a530",
-      "timestamp": "2026-05-16T17:40:19+00:00",
+      "git_sha": "470debd6d82a52b0eb8db63648782a57e7d60223",
+      "timestamp": "2026-05-16T17:59:50+00:00",
       "meta": {
-        "current_bytes": 50879,
+        "current_bytes": 75943,
         "concurrency": 100
       }
     }

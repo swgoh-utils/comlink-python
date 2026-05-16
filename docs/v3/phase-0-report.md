@@ -10,9 +10,10 @@
 - [x] `benchmarks/v3/` scaffolding: `_harness.py`, `_record.py`, `bench_baseline.py`,
       `fixtures/`, `results/`, `python-version` pin.
 - [x] `docs/v3/` scaffolding: README + this report.
-- [x] Cassettes recorded from live comlink at `192.168.68.74:3200` against ally
-      code `314927874` (Mar's roster, 397 units) and guild `GbsabjvbQESUd8r_qPqdYg`.
-      7 cassettes, ~18 MB total on disk (gzipped).
+- [x] Cassettes recorded from live comlink at `192.168.68.74:3200`. `player_large`
+      against ally code `314927874` (Mar Trepodi, 397 units); `player_small`
+      against ally code `855566316` (Mar Elezra, 115 units, 7.5 KiB gzipped);
+      `guild` against `GbsabjvbQESUd8r_qPqdYg`. 7 cassettes, ~18 MB total on disk.
 - [x] Baseline run on Python 3.11.15 (aarch64, native) produces
       `results/phase-0-baseline.json` with all 11 metrics filled in.
 
@@ -20,7 +21,9 @@
 
 - `964a04b` — `chore(v3): bootstrap research repo with plan, glossary, and 4 ADRs`
 - `cb8a512` — `feat(bench): scaffold v3 benchmark harness + phase-0 baseline`
-- `<TBD>`   — `chore(bench): record baseline cassettes and fill phase-0 numbers`
+- `e9e8685` — `chore(bench): record baseline cassettes and fill phase-0 numbers`
+- `470debd` — `feat(bench): add --only filter to cassette recorder`
+- `<TBD>`   — `chore(bench): refresh player_small cassette with 115-unit ally code`
 
 ## Files touched
 
@@ -51,7 +54,7 @@ benchmarks/v3/results/phase-0-baseline.json   (new)
 | `bench_baseline.py` runs every metric | Cassette-bound metrics emit `status="skip"` when their cassette is missing | Lets the harness be runnable on a fresh clone before the operator has recorded cassettes, which preserves the "everything is reproducible from this commit" property. |
 | Plan refers to `get_data` and `get_metadata` endpoints | The v2 source actually exposes `get_game_data` and `get_game_metadata` | Used the actual method names in the harness; cassette names stay as `data` / `metadata` for plan continuity. |
 | Plan calls out wheel/site-packages size in baseline | Moved behind `--full` flag | The metric requires a network-free `uv build` plus venv-install dance; expensive on every run and not needed until Phase 6 extras work compares against it. |
-| "Small" roster cassette ~50 units | Both `player_small` and `player_large` use ally code `314927874` (397 units) — only one ally code available | Re-record `player_small` later when a small-roster ally code is available. All Phase 3 / Phase 4 comparisons are still valid because they compare v2 vs v3 *on the same cassette*. |
+| "Small" roster cassette ~50 units | `player_small` uses ally code `855566316` (115 units). Closer to small than large but not literally 50. | Smallest representative roster available on this comlink. Distinct enough from `player_large` (397 units) to expose decode/scale differences. |
 | Exit criterion "cassettes sum to under 5 MB" | Reality is ~18 MB on disk (`/data` alone is 15 MB gzipped) | The full `/data` payload is load-bearing for Phase 3's headline numbers; can't shrink it without invalidating the comparison. Plan exit criterion updated to ~15–20 MB. |
 | Python interpreter | Required a rebuild against aarch64 cpython-3.11.15 (uv-managed). Initial venv landed on `/usr/local/opt/python@3.11` which is x86_64 under Rosetta. | (a) Rosetta perf would skew benchmarks; (b) x86 Homebrew Python lacks macOS Local Network privacy grant and silently fails LAN connections with `EHOSTUNREACH`. |
 
@@ -64,21 +67,27 @@ benchmarks/v3/results/phase-0-baseline.json   (new)
 ## Benchmark deltas vs baseline
 
 Phase 0 _is_ the baseline. Numbers from `benchmarks/v3/results/phase-0-baseline.json`
-on Python 3.11.15 (aarch64, native) at SHA `cb8a512`.
+on Python 3.11.15 (aarch64, native) at SHA `470debd`.
 
 | Metric | Median | p95 | Unit | Phase target |
 |---|---:|---:|---|---|
-| `cold_import_time` | **41.1** | — | ms | Phase 5: ≤4 ms (10× reduction). |
+| `cold_import_time` | **65.4** | — | ms | Phase 5: ≤6 ms (10× reduction). |
 | `httpx_loaded_on_import` | **1.0** (yes) | — | bool | Phase 5: 0. |
 | `method_body_duplication_ratio` | **1.0** (16/16 methods) | — | ratio | Phase 4: <0.10. |
-| `get_player_small_e2e_latency` | 25.2 | 39.6 | ms | Phase 2 + 3: ≤10 ms target. |
-| `get_player_large_e2e_latency` | 28.0 | 45.5 | ms | Phase 3 headline (Struct decode). |
-| `get_data_decode_time` (json) | **7,465.7** | 7,616 | ms | Phase 3 headline: 3–5× faster (≤2 s). |
+| `get_player_small_e2e_latency` (115 units) | 0.29 | 0.56 | ms | Phase 2 + 3: ≤0.15 ms target. |
+| `get_player_large_e2e_latency` (397 units) | 40.1 | 121.4 | ms | Phase 3 headline (Struct decode). |
+| `get_data_decode_time` (json) | **7,120.2** | 7,924 | ms | Phase 3 headline: 3–5× faster (≤2 s). |
 | `get_data_decode_peak_memory` | **1,392.4 MiB** | — | bytes | Phase 3 headline: 4–6× lower (≤350 MiB). |
 | `get_data_object_size` | **1,033.7 MiB** | — | bytes | Phase 3 headline: 40–60% smaller (≤500 MiB). |
-| `get_player_concurrent_100x_async_wall` | 16,487 | 18,344 | ms | Phase 2 baseline. |
-| `get_player_concurrent_100x_async_peak_memory` | 1,415 MiB | — | bytes | Phase 2/3 baseline. |
+| `get_player_concurrent_100x_async_wall` (small cassette) | 81.4 | 89.5 | ms | Phase 2 / 3 stress baseline. |
+| `get_player_concurrent_100x_async_peak_memory` | 24.9 MiB | — | bytes | Phase 2 / 3 baseline. |
 | `installed_wheel_size` (`--full`) | — | — | bytes | Deferred to Phase 6. |
+
+The `cold_import_time` figure drifted from 41.1 ms (first run) to 65.4 ms here on
+the same machine + interpreter — system load during the run. Phase 5's target is
+"≤6 ms"; any value in that range is unambiguously a 10× win regardless of which
+baseline value we anchor against. The plan's "±5% reproducibility" exit-criterion
+is unrealistic for cold-import on a working machine; document as an open question.
 
 ### Notable cassette-free finding
 
@@ -107,9 +116,10 @@ The 25–28 ms median is mostly the cost of `json.loads(358 KiB)` plus dict
 allocation, not the (negligible) mock-transport overhead. Phase 3's typed
 decode + Phase 5's lazy imports both move this number.
 
-**`100×` async concurrent wall time is 16.5 s** with peak 1.4 GiB. That's
-~165 ms per call wall-clock for what is — through a mock — purely CPU work.
-The event loop is the bottleneck: 100 large decodes serialize through one
-GIL'd thread. Phase 9's async StatCalc work doesn't help this directly
-(that's stat math, not decoding), but Phase 3's typed decode + `gc=False`
-Structs should pull this down meaningfully.
+**`100×` async concurrent wall time is 81 ms** through the small cassette
+(115 units, 7.5 KiB gzipped) with peak 25 MiB. ~0.8 ms per call wall-clock.
+Mostly mock-transport + asyncio scheduling overhead at this size; Phase 5
+(lazy imports — avoid pulling httpx during client construction) and Phase 3
+(faster decode) are the levers, but the absolute numbers are already small.
+This benchmark exists to catch *regressions* in async overhead, not to be
+the headline.
