@@ -556,6 +556,184 @@ class LeaderboardResponse(_StructBase):
     player_status: dict[str, Any] | None = None
 
 
+# ── /data.units segment (v3.1 probe — see decode_units_segment) ─────────────
+#
+# These Structs deep-type one segment of `/data` (the largest, ~11k items).
+# All `_LeafStruct` (no back-references; gc=False for the ~75× GC speedup
+# that matters at the per-unit scale).
+#
+# Field selection follows Phase 3.5 discipline:
+#   - Type fields with observable shape in the cassette.
+#   - Omit always-empty / always-null fields (`basicAttack`, `leaderAbility`,
+#     `limitBreak`, `uniqueAbility`, `effectIconPriorityOverride`) — Comlink
+#     can re-add them; `forbid_unknown_fields=False` drops silently.
+#   - Sub-shapes that recur (the 12-field AbilityRef appears on basicAttackRef
+#     / leaderAbilityRef / limitBreakRef[item] / uniqueAbilityRef[item]) share
+#     a single Struct class.
+
+
+class UnitStatEntry(_LeafStruct):
+    """A single stat row inside ``baseStat.stat`` / ``unitTier[].baseStat.stat``."""
+
+    unit_stat_id: int = 0
+    stat_value_decimal: str = "0"
+    unscaled_decimal_value: str = "0"
+    ui_display_override_value: str = "-1"
+    scalar: str = "0"
+
+
+class UnitBaseStat(_LeafStruct):
+    """Wraps the ``stat`` list (matches the on-the-wire ``baseStat`` shape)."""
+
+    stat: list[UnitStatEntry] = msgspec.field(default_factory=list)
+
+
+class AbilityRef(_LeafStruct):
+    """Shared 12-field ref shape used by basic/leader/limit-break/unique ability refs."""
+
+    ability_id: str = ""
+    inherit_mapping_id: str = ""
+    override_always_display_in_battle_ui: bool = False
+    override_desc_key: str = ""
+    override_icon: str = ""
+    override_name_key: str = ""
+    power_additive_tag: str = ""
+    required_rarity: int = 0
+    required_relic_tier: int = 0
+    required_skill_tier: int = 0
+    required_tier: int = 0
+    unlock_recipe_id: str = ""
+
+
+class SkillReference(_LeafStruct):
+    skill_id: str = ""
+    required_tier: int = 0
+    required_rarity: int = 0
+    required_relic_tier: int = 0
+
+
+class RelicDefinition(_LeafStruct):
+    relic_tier_definition_id: list[str] = msgspec.field(default_factory=list)
+    upgrade_table_id: str = ""
+    alignment_color_override: str = ""
+    texture: str = ""
+    name_key: str = ""
+
+
+class UnitTierEntry(_LeafStruct):
+    """One entry in ``unitTier`` — per-rarity gear+stat baseline."""
+
+    tier: int = 0
+    equipment_set: list[str] = msgspec.field(default_factory=list)
+    base_stat: UnitBaseStat = msgspec.field(default_factory=UnitBaseStat)
+
+
+class ModRecommendation(_LeafStruct):
+    recommendation_set_id: str = ""
+    unit_tier: int = 0
+
+
+class ExampleSquadEntry(_LeafStruct):
+    id: str = ""
+    name: str = ""
+    description_key: str = ""
+    thumbnail: str = ""
+    unit_def_id: list[str] = msgspec.field(default_factory=list)
+    action_link: str | None = None
+    show_requirement: dict[str, Any] | None = None
+    hide_requirement: dict[str, Any] | None = None
+
+
+class CrewMember(_LeafStruct):
+    unit_id: str = ""
+    slot: int = 0
+    skilless_crew_ability_id: str = ""
+    skill_reference: list[SkillReference] = msgspec.field(default_factory=list)
+
+
+class SummonStatTableEntry(_LeafStruct):
+    rarity: int = 0
+    stat_table: str = ""
+
+
+class Unit(_LeafStruct):
+    """One unit definition from ``/data.units``.
+
+    `forbid_unknown_fields=False` means future Comlink additions don't
+    break decoding. Always-empty/always-null fields from the recording
+    are deliberately omitted from this Struct — call `get_game_data`
+    without `decode_units_segment` if you need them.
+    """
+
+    # Identity / display
+    id: str = ""
+    base_id: str = ""
+    name_key: str = ""
+    desc_key: str = ""
+    unit_prefab: str = ""
+    thumbnail_name: str = ""
+    thumb_image_turn_order: str = ""
+    era_thumbnail_name: str = ""
+    battle_portrait_prefab: str = ""
+    battle_portrait_name_key: str = ""
+    battle_portrait_texture: str = ""
+
+    # Game-mechanics scalars
+    rarity: int = 0
+    max_rarity: int = 0
+    force_alignment: int = 0
+    combat_type: int = 0
+    unit_class: int = 0
+    threat_level: int = 0
+    base_power: int = 0
+    primary_stat: str = ""
+    primary_unit_stat: int = 0
+    action_count_min: int = 0
+    action_count_max: int = 0
+    command_cost: int = 0
+    squad_position_priority: int = 0
+    max_level_override: int = 0
+    training_xp_worth_base_value_override: int = 0
+    training_cost_multiplier_override: int = 0
+
+    # Booleans
+    obtainable: bool = False
+    legend: bool = False
+    big: bool = False
+    hide_in_turn_order: bool = False
+    require_ultimate_unlock: bool = False
+    loaned_unit: bool = False
+
+    # String IDs / references
+    xp_table_id: str = ""
+    stat_progression_id: str = ""
+    crew_contribution_table_id: str = ""
+    promotion_recipe_reference: str = ""
+    creation_recipe_reference: str = ""
+    capital_unlock_key: str = ""
+    associated_event_id: str = ""
+    obtainable_time: str = "0"
+    grant_start_time: str = "0"
+    featured_end_time: str = "0"
+
+    # Typed nesting (well-known shapes)
+    base_stat: UnitBaseStat = msgspec.field(default_factory=UnitBaseStat)
+    skill_reference: list[SkillReference] = msgspec.field(default_factory=list)
+    relic_definition: RelicDefinition | None = None
+    unit_tier: list[UnitTierEntry] = msgspec.field(default_factory=list)
+    mod_recommendation: list[ModRecommendation] = msgspec.field(default_factory=list)
+    example_squad: list[ExampleSquadEntry] = msgspec.field(default_factory=list)
+    crew: list[CrewMember] = msgspec.field(default_factory=list)
+    summon_stat_table: list[SummonStatTableEntry] = msgspec.field(default_factory=list)
+    category_id: list[str] = msgspec.field(default_factory=list)
+
+    # Ability refs — share the 12-field AbilityRef shape.
+    basic_attack_ref: AbilityRef = msgspec.field(default_factory=AbilityRef)
+    leader_ability_ref: AbilityRef | None = None
+    limit_break_ref: list[AbilityRef] = msgspec.field(default_factory=list)
+    unique_ability_ref: list[AbilityRef] = msgspec.field(default_factory=list)
+
+
 # ── Decoders (one per response type; cached at module load) ─────────────────
 
 PLAYER_DECODER: msgspec.json.Decoder[Player] = msgspec.json.Decoder(Player)
@@ -563,6 +741,7 @@ METADATA_DECODER: msgspec.json.Decoder[Metadata] = msgspec.json.Decoder(Metadata
 GUILD_DECODER: msgspec.json.Decoder[Guild] = msgspec.json.Decoder(Guild)
 _GUILD_ENVELOPE_DECODER: msgspec.json.Decoder[GuildEnvelope] = msgspec.json.Decoder(GuildEnvelope)
 LEADERBOARD_DECODER: msgspec.json.Decoder[LeaderboardResponse] = msgspec.json.Decoder(LeaderboardResponse)
+UNIT_LIST_DECODER: msgspec.json.Decoder[list[Unit]] = msgspec.json.Decoder(list[Unit])
 UNTYPED_DECODER: msgspec.json.Decoder[Any] = msgspec.json.Decoder()
 
 

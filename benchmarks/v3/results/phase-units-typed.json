@@ -1,0 +1,146 @@
+{
+  "phase": "phase-units-typed",
+  "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+  "python_version": "3.11.15",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-units-typed",
+      "metric": "decode_speed_units_dict",
+      "value": 684529000.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:30+00:00",
+      "meta": {
+        "p95": 716921125.0,
+        "stdev": 35305842.07443989,
+        "iters": 5,
+        "warmup": 1,
+        "cassette": "data",
+        "bytes": 145233864
+      }
+    },
+    {
+      "phase": "phase-units-typed",
+      "metric": "decode_speed_units_typed",
+      "value": 323514125.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:30+00:00",
+      "meta": {
+        "p95": 360471792.0,
+        "stdev": 25070523.996765472,
+        "iters": 5,
+        "warmup": 1,
+        "cassette": "data",
+        "bytes": 145233864
+      }
+    },
+    {
+      "phase": "phase-units-typed",
+      "metric": "decode_speed_ratio_typed_over_dict",
+      "value": 0.47260835552620856,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:30+00:00",
+      "meta": {
+        "note": "lower=faster on typed; <1 means typed is faster"
+      }
+    },
+    {
+      "phase": "phase-units-typed",
+      "metric": "decode_peak_memory_units_dict",
+      "value": 484082442,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:32+00:00",
+      "meta": {
+        "current_bytes": 24725,
+        "cassette": "data"
+      }
+    },
+    {
+      "phase": "phase-units-typed",
+      "metric": "decode_peak_memory_units_typed",
+      "value": 312059220,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:32+00:00",
+      "meta": {
+        "current_bytes": 4480,
+        "cassette": "data"
+      }
+    },
+    {
+      "phase": "phase-units-typed",
+      "metric": "decode_peak_memory_ratio_typed_over_dict",
+      "value": 0.6446406498668258,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:32+00:00",
+      "meta": {
+        "note": "lower=less memory on typed"
+      }
+    },
+    {
+      "phase": "phase-units-typed",
+      "metric": "object_size_units_dict",
+      "value": 501045280,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:44+00:00",
+      "meta": {
+        "cassette": "data"
+      }
+    },
+    {
+      "phase": "phase-units-typed",
+      "metric": "object_size_units_typed",
+      "value": 328503568,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:44+00:00",
+      "meta": {
+        "cassette": "data"
+      }
+    },
+    {
+      "phase": "phase-units-typed",
+      "metric": "object_size_ratio_typed_over_dict",
+      "value": 0.6556364885824291,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:44+00:00",
+      "meta": {
+        "note": "lower=smaller resident footprint on typed"
+      }
+    },
+    {
+      "phase": "phase-units-typed",
+      "metric": "v3_1_scope_verdict",
+      "value": null,
+      "unit": "text",
+      "status": "ok",
+      "git_sha": "8874a6d6595f3d88c468b584730f1f11fde61ccf",
+      "timestamp": "2026-05-16T23:52:44+00:00",
+      "meta": {
+        "verdict": "green-light v3.1 scope: type the remaining 81 segments",
+        "speed_x": 2.11591688616378,
+        "memory_ratio": 0.6446406498668258,
+        "size_ratio": 0.6556364885824291
+      }
+    }
+  ]
+}
