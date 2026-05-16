@@ -1,0 +1,348 @@
+{
+  "phase": "phase-3-baseline",
+  "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+  "python_version": "3.11.15",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-3-baseline",
+      "metric": "cold_import_time",
+      "value": 34.325,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:32:26+00:00",
+      "meta": {
+        "p95_ms": 40.41,
+        "iters": 10
+      }
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "import_graph_top30",
+      "value": null,
+      "unit": "(structured)",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:32:26+00:00",
+      "meta": {
+        "top_imports": [
+          {
+            "name": "swgoh_comlink",
+            "cumulative_us": 33312
+          },
+          {
+            "name": "swgoh_comlink.StatCalc",
+            "cumulative_us": 24107
+          },
+          {
+            "name": "swgoh_comlink.StatCalc.calculator",
+            "cumulative_us": 18029
+          },
+          {
+            "name": "urllib.request",
+            "cumulative_us": 8344
+          },
+          {
+            "name": "swgoh_comlink.helpers._stat_data",
+            "cumulative_us": 8077
+          },
+          {
+            "name": "swgoh_comlink.helpers",
+            "cumulative_us": 8070
+          },
+          {
+            "name": "swgoh_comlink.helpers._gac",
+            "cumulative_us": 6598
+          },
+          {
+            "name": "asyncio",
+            "cumulative_us": 5983
+          },
+          {
+            "name": "http.client",
+            "cumulative_us": 5848
+          },
+          {
+            "name": "swgoh_comlink.StatCalc.calculator_async",
+            "cumulative_us": 5609
+          },
+          {
+            "name": "httpx",
+            "cumulative_us": 5539
+          },
+          {
+            "name": "httpx._api",
+            "cumulative_us": 5013
+          },
+          {
+            "name": "httpx._client",
+            "cumulative_us": 4936
+          },
+          {
+            "name": "logging",
+            "cumulative_us": 4911
+          },
+          {
+            "name": "asyncio.base_events",
+            "cumulative_us": 4800
+          },
+          {
+            "name": "httpx._auth",
+            "cumulative_us": 4070
+          },
+          {
+            "name": "email.parser",
+            "cumulative_us": 3968
+          },
+          {
+            "name": "swgoh_comlink.swgoh_comlink",
+            "cumulative_us": 3958
+          },
+          {
+            "name": "email.feedparser",
+            "cumulative_us": 3867
+          },
+          {
+            "name": "httpx._models",
+            "cumulative_us": 3734
+          },
+          {
+            "name": "email._policybase",
+            "cumulative_us": 3553
+          },
+          {
+            "name": "email.utils",
+            "cumulative_us": 2936
+          },
+          {
+            "name": "swgoh_comlink._base",
+            "cumulative_us": 2845
+          },
+          {
+            "name": "msgspec",
+            "cumulative_us": 2593
+          },
+          {
+            "name": "re",
+            "cumulative_us": 2205
+          },
+          {
+            "name": "msgspec._core",
+            "cumulative_us": 1775
+          },
+          {
+            "name": "asyncio.coroutines",
+            "cumulative_us": 1769
+          },
+          {
+            "name": "inspect",
+            "cumulative_us": 1718
+          },
+          {
+            "name": "enum",
+            "cumulative_us": 1344
+          },
+          {
+            "name": "traceback",
+            "cumulative_us": 1321
+          }
+        ]
+      }
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "httpx_loaded_on_import",
+      "value": 1.0,
+      "unit": "bool",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:32:26+00:00"
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "method_body_duplication_ratio",
+      "value": 0.9743,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:32:26+00:00",
+      "meta": {
+        "paired_count": 16,
+        "per_method": [
+          {
+            "method": "get_enums",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_events",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_game_data",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_game_metadata",
+            "similarity": 0.8944
+          },
+          {
+            "method": "get_guild",
+            "similarity": 0.8953
+          },
+          {
+            "method": "get_guild_leaderboard",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_guilds_by_criteria",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_guilds_by_name",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_latest_game_data_version",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_leaderboard",
+            "similarity": 0.9143
+          },
+          {
+            "method": "get_localization",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_name_spaces",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_player",
+            "similarity": 0.8848
+          },
+          {
+            "method": "get_player_arena",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_segmented_content",
+            "similarity": 1.0
+          },
+          {
+            "method": "get_unit_stats",
+            "similarity": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "get_player_small_e2e_latency",
+      "value": 138771.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:32:26+00:00",
+      "meta": {
+        "p95": 179042.0,
+        "stdev": 16510.335432452765,
+        "iters": 20,
+        "warmup": 3,
+        "cassette": "player_small"
+      }
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "get_player_large_e2e_latency",
+      "value": 10521624.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:32:26+00:00",
+      "meta": {
+        "p95": 12724792.0,
+        "stdev": 1823535.3082699573,
+        "iters": 20,
+        "warmup": 3,
+        "cassette": "player_large"
+      }
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "get_data_decode_time",
+      "value": 3158905896.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:33:07+00:00",
+      "meta": {
+        "p95": 3293421791.0,
+        "stdev": 130983747.7436568,
+        "iters": 10,
+        "warmup": 3,
+        "parser": "json",
+        "cassette_size_bytes": 393569066
+      }
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "get_data_decode_peak_memory",
+      "value": 1460047765,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:33:16+00:00",
+      "meta": {
+        "current_bytes": 21592,
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "get_data_object_size",
+      "value": 1083926320,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:33:30+00:00",
+      "meta": {
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "get_player_concurrent_100x_async_wall",
+      "value": 27783750.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:33:30+00:00",
+      "meta": {
+        "p95": 28947042.0,
+        "stdev": 805134.4209311884,
+        "iters": 5,
+        "warmup": 1,
+        "cassette": "player_small",
+        "concurrency": 100
+      }
+    },
+    {
+      "phase": "phase-3-baseline",
+      "metric": "get_player_concurrent_100x_async_peak_memory",
+      "value": 14418364,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:33:30+00:00",
+      "meta": {
+        "current_bytes": 87940,
+        "concurrency": 100
+      }
+    }
+  ]
+}

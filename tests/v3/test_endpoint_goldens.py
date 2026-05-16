@@ -26,10 +26,12 @@ deliberate ``_regen_goldens`` and review.
 from __future__ import annotations
 
 import json
+import warnings
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+import msgspec
 import pytest
 from tests.v3.conftest import CassetteServer, load_cassette_bytes
 
@@ -127,7 +129,21 @@ def _apply_overrides(case: EndpointCase, server: CassetteServer) -> None:
         server.use(endpoint, cassette)
 
 
-# ── Sync tests ──────────────────────────────────────────────────────────────
+def _to_dict(result: Any) -> Any:
+    """Return a dict-shaped view of *result* for comparison against goldens.
+
+    Phase 3 endpoint returns are typed :class:`msgspec.Struct` (default) or
+    dict (``raw=True``). Goldens are dict-shaped JSON captured pre-Phase-3,
+    so we round-trip Structs through :func:`msgspec.to_builtins` to compare
+    on equal footing. This is *also* the lossless-round-trip assertion the
+    Phase 3 plan demanded of ``compat.to_dict()``.
+    """
+    if isinstance(result, msgspec.Struct):
+        return msgspec.to_builtins(result)
+    return result
+
+
+# ── Sync tests (typed default) ──────────────────────────────────────────────
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.id for c in CASES])
@@ -137,15 +153,21 @@ def test_sync_endpoint_matches_expected(
     recorded_comlink: Any,
     golden: Callable[[str], Any],
 ) -> None:
-    """SDK (sync) output for *case* matches its golden or passthrough cassette."""
+    """SDK (sync, default typed return) round-trips through to_builtins == expected.
+
+    For typed endpoints (Player, Metadata, Guild, Leaderboard), the SDK
+    returns a Struct; we serialize back to dict for the golden compare.
+    For passthrough endpoints (/data, /localization), the SDK returns a
+    dict directly and we compare against the cassette.
+    """
     _apply_overrides(case, cassette_server)
     method = getattr(recorded_comlink, case.method)
     result = method(**case.kwargs)
     expected = _expected(case, golden)
-    assert result == expected
+    assert _to_dict(result) == expected
 
 
-# ── Async tests ─────────────────────────────────────────────────────────────
+# ── Async tests (typed default) ─────────────────────────────────────────────
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.id for c in CASES])
@@ -155,14 +177,67 @@ async def test_async_endpoint_matches_expected(
     recorded_comlink_async: Any,
     golden: Callable[[str], Any],
 ) -> None:
-    """SDK (async) output for *case* matches its golden or passthrough cassette.
+    """Async parity: same Struct→dict round-trip yields the same expected payload.
 
-    Combined with :func:`test_sync_endpoint_matches_expected` this also
-    asserts sync/async parity by transitivity — both must equal the same
-    expected payload.
+    Combined with the sync test, this also gives free sync/async parity
+    by transitivity.
     """
     _apply_overrides(case, cassette_server)
     method: Callable[..., Awaitable[Any]] = getattr(recorded_comlink_async, case.method)
     result = await method(**case.kwargs)
     expected = _expected(case, golden)
+    assert _to_dict(result) == expected
+
+
+# ── raw=True path: existing v2 dict shape is preserved ──────────────────────
+
+
+_RAW_TYPED_CASES = [c for c in CASES if c.golden is not None]
+
+
+@pytest.mark.parametrize("case", _RAW_TYPED_CASES, ids=[c.id for c in _RAW_TYPED_CASES])
+def test_sync_endpoint_raw_returns_dict(
+    case: EndpointCase,
+    cassette_server: CassetteServer,
+    recorded_comlink: Any,
+    golden: Callable[[str], Any],
+) -> None:
+    """``raw=True`` on a typed endpoint returns the v2 dict shape unchanged."""
+    _apply_overrides(case, cassette_server)
+    method = getattr(recorded_comlink, case.method)
+    result = method(raw=True, **case.kwargs)
+    assert isinstance(result, dict), f"raw=True should return dict, got {type(result).__name__}"
+    expected = _expected(case, golden)
     assert result == expected
+
+
+# ── compat.to_dict deprecation warning ──────────────────────────────────────
+
+
+def test_compat_to_dict_round_trips_player(
+    cassette_server: CassetteServer,
+    recorded_comlink: Any,
+    golden: Callable[[str], Any],
+) -> None:
+    """``compat.to_dict(player)`` round-trips lossless to the golden dict."""
+    from swgoh_comlink import compat
+
+    cassette_server.use("player", "player_small")
+    p = recorded_comlink.get_player(allycode=855566316)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        as_dict = compat.to_dict(p)
+    assert as_dict == golden("player_small")
+
+
+def test_compat_to_dict_emits_deprecation_warning(
+    cassette_server: CassetteServer,
+    recorded_comlink: Any,
+) -> None:
+    """First call to ``compat.to_dict()`` raises DeprecationWarning."""
+    from swgoh_comlink import compat
+
+    cassette_server.use("player", "player_small")
+    p = recorded_comlink.get_player(allycode=855566316)
+    with pytest.warns(DeprecationWarning, match=r"removed in v3\.2"):
+        compat.to_dict(p)

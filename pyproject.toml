@@ -21,6 +21,7 @@ classifiers = [
 ]
 dependencies = [
     "httpx>=0.28",
+    "msgspec>=0.18",
 ]
 
 [project.scripts]

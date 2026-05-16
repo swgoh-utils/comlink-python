@@ -6,6 +6,7 @@ from __future__ import annotations
 import inspect
 import logging
 import os
+from datetime import UTC
 from pathlib import Path
 from typing import Any
 
@@ -112,14 +113,14 @@ def human_time(unix_time: int | float) -> str:
             raise SwgohComlinkValueError(err_msg) from e
     if not isinstance(unix_time, (int, float)):
         raise SwgohComlinkValueError("The 'unix_time' argument is required.")
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     if isinstance(unix_time, float):
         unix_time = int(unix_time)
 
     if len(str(unix_time)) >= 13:  # milliseconds
         unix_time /= 1000
-    return datetime.fromtimestamp(unix_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.fromtimestamp(unix_time, tz=UTC).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def convert_relic_tier(relic_tier: str | int) -> str | None:

@@ -34,7 +34,7 @@ repos:
     hooks:
       - id: mypy
         files: ^src/swgoh_comlink/
-        additional_dependencies: [httpx>=0.28]
+        additional_dependencies: [httpx>=0.28, msgspec>=0.18]
         args: [--strict, --ignore-missing-imports]
 
   # ── Commitlint (mirrors CI commitlint job) ────────────────────────────

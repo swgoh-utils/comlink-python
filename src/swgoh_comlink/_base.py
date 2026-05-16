@@ -12,11 +12,12 @@ import hmac
 import os
 import time
 from collections.abc import Callable
-from json import dumps, loads
+from json import dumps
 from typing import Any, Self, cast
 from urllib.parse import urlparse, urlunparse
 
 import httpx
+import msgspec
 
 from ._retry import RETRYABLE_STATUSES, RetryableStatusError
 from .exceptions import SwgohComlinkException, SwgohComlinkValueError
@@ -430,16 +431,24 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _decode(response: httpx.Response) -> dict[str, Any] | list[Any]:
-        """Parse *response*'s body to a JSON object.
+        """Parse *response*'s body to a JSON object via msgspec's untyped decoder.
 
-        Phase 2: stdlib ``json.loads`` on ``response.content``. Phase 3 swaps
-        this to a per-type ``msgspec.json.Decoder`` lookup; the method
-        signature stays the same so the sync/async ``_request`` paths don't
-        need to change again.
+        This is the fallback path used when a caller does not supply an
+        explicit ``decoder=`` to :meth:`_request`. msgspec's untyped
+        decode produces the same dict/list shape ``json.loads`` would,
+        but is meaningfully faster (~2x) on large payloads, so even the
+        raw/passthrough path benefits from the Phase 3 swap.
+
+        Typed endpoints (get_player, get_game_metadata, etc.) bypass
+        this and call their cached :class:`msgspec.json.Decoder` directly.
         """
+        # Local import keeps base-module load cheap when only the base
+        # class is touched (Phase 5 lazy-import work cares).
+        from ._models import UNTYPED_DECODER
+
         try:
-            return cast(dict[str, Any] | list[Any], loads(response.content.decode("utf-8")))
-        except ValueError as e:
+            return cast(dict[str, Any] | list[Any], UNTYPED_DECODER.decode(response.content))
+        except msgspec.DecodeError as e:
             raise SwgohComlinkException(f"failed to decode response body: {e}") from e
 
     @staticmethod
