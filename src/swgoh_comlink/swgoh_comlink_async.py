@@ -137,6 +137,92 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             await self.client.aclose()
         await self.stats_client.aclose()
 
+    # ── Phase 8 ergonomics (async) ──────────────────────────────────────
+
+    async def healthcheck(self, *, timeout: float = 5.0) -> bool:
+        """Async mirror of :meth:`SwgohComlink.healthcheck`."""
+        try:
+            r = await self.client.request("GET", "/enums", timeout=timeout)
+        except (httpx.HTTPError, httpx.TimeoutException, httpx.RequestError):
+            return False
+        return r.status_code == 200
+
+    async def raw_request(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | list[Any] | None = None,
+        *,
+        timeout: float | None = None,
+    ) -> httpx.Response:
+        """Async escape hatch — mirror of :meth:`SwgohComlink.raw_request`.
+
+        Returns the raw :class:`httpx.Response`; bypasses retry, classify,
+        decode. HMAC headers are still attached.
+        """
+        method_u = method.upper()
+        endpoint = path.lstrip("/")
+        full_path, request_kwargs = self._build_request_kwargs(method_u, endpoint, payload, timeout)
+        return await self.client.request(method_u, full_path, **request_kwargs)
+
+    def stream_game_data(
+        self,
+        version: str = "",
+        include_pve_units: bool = True,
+        request_segment: int = 0,
+        enums: bool = False,
+        items: str | None = None,
+        device_platform: str = "Android",
+    ) -> Any:
+        """Return an ``httpx.AsyncClient.stream`` context manager for ``/data``.
+
+        ``async with client.stream_game_data() as r:`` — caller uses
+        ``response.aiter_bytes()`` (or ``.aiter_text()`` etc.). Bypasses
+        the retry loop.
+
+        Note: this method is **synchronous** and does not need ``await``
+        — it just returns the async context manager. The metadata fetch
+        used to resolve a ``version=""`` arg WOULD need to be awaited,
+        so callers must pass ``version=`` explicitly (or use the
+        non-streaming :meth:`get_game_data` which handles the fallback).
+        """
+        if not version:
+            raise ValueError(
+                "stream_game_data: pass version= explicitly. The metadata fallback "
+                "needs an async call; do `v = await client._get_game_version()` first "
+                "or use get_game_data() for in-memory access.",
+            )
+        payload = game_data_payload(
+            game_version=version,
+            include_pve_units=include_pve_units,
+            request_segment=request_segment,
+            enums=enums,
+            items=items,
+            device_platform=device_platform,
+        )
+        full_path, request_kwargs = self._build_request_kwargs("POST", "data", payload, GAME_DATA_TIMEOUT)
+        return self.client.stream("POST", full_path, **request_kwargs)
+
+    def stream_localization(
+        self,
+        localization_id: str,
+        locale: str | None = None,
+        unzip: bool = False,
+        enums: bool = False,
+    ) -> Any:
+        """Return an ``httpx.AsyncClient.stream`` context manager for ``/localization``.
+
+        ``localization_id`` is required (unlike the sync version) — the
+        metadata fallback would need an async call, which a non-async
+        function can't await. Use :meth:`get_latest_game_data_version`
+        beforehand if you need the fallback.
+        """
+        payload = localization_payload(localization_id, locale, unzip, enums)
+        full_path, request_kwargs = self._build_request_kwargs("POST", "localization", payload, None)
+        return self.client.stream("POST", full_path, **request_kwargs)
+
+    # ── Internal request plumbing ────────────────────────────────────────
+
     async def _request(
         self,
         method: str = "POST",
