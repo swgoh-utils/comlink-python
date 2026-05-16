@@ -1,0 +1,4150 @@
+{
+  "allyCode": "855566316",
+  "datacron": [
+    {
+      "affix": [],
+      "focused": false,
+      "id": "zomV9uOVSP6p0ifN53P27A",
+      "locked": false,
+      "rerollCount": 0,
+      "rerollIndex": 0,
+      "rerollOption": [],
+      "setId": 28,
+      "tag": [],
+      "templateId": "datacron_set_28_base"
+    },
+    {
+      "affix": [],
+      "focused": false,
+      "id": "SzAZqXLeSbaehDEWTQbO8w",
+      "locked": false,
+      "rerollCount": 0,
+      "rerollIndex": 0,
+      "rerollOption": [],
+      "setId": 30,
+      "tag": [],
+      "templateId": "datacron_set_30_base"
+    }
+  ],
+  "eraUnitStatus": [],
+  "guildBannerColor": "starter_0_white_white",
+  "guildBannerLogo": "guild_icon_starter",
+  "guildId": "1qfXsb04QpyaTqq9Q-Jw1A",
+  "guildLogoBackground": "",
+  "guildName": "STARTER_GUILD_TIER_0",
+  "guildTypeId": "TIER_0",
+  "lastActivityTime": "1778954165000",
+  "level": 85,
+  "lifetimeSeasonScore": "0",
+  "loanedUnitEraLevel": 28,
+  "localTimeZoneOffsetMinutes": -240,
+  "name": "Mar Elezra",
+  "nucleusId": "1022153658744",
+  "playerId": "w3-aw31mSL2Frbk2tWBg5Q",
+  "playerRating": {
+    "playerRankStatus": {
+      "divisionId": 5,
+      "leagueId": "CARBONITE"
+    },
+    "playerSkillRating": {
+      "skillRating": 1995
+    }
+  },
+  "profileStat": [
+    {
+      "index": 15,
+      "nameKey": "STAT_SEASON_SUCCESSFUL_DEFENDS_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 17,
+      "nameKey": "STAT_SEASON_FULL_CLEAR_ROUND_WINS_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 18,
+      "nameKey": "STAT_SEASON_UNDERSIZED_SQUAD_WINS_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 8,
+      "nameKey": "STAT_PVE_HARD_BATTLES_WIN_NAME_TU07_2",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 14,
+      "nameKey": "STAT_SEASON_OFFENSIVE_BATTLES_WON_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 6,
+      "nameKey": "STAT_PVP_BATTLES_WIN_NAME_TU07_2",
+      "value": "4",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 7,
+      "nameKey": "STAT_PVE_BATTLES_WIN_NAME_TU15",
+      "value": "118",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 9,
+      "nameKey": "STAT_TOTAL_GALACTIC_WON_NAME_TU07_2",
+      "value": "10",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 4,
+      "nameKey": "STAT_SEASON_LEAGUE_SCORE_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 5,
+      "nameKey": "STAT_PVP_SHIP_BATTLES_WIN_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 21,
+      "nameKey": "STAT_SEASON_BEST_RANK_NAME",
+      "value": "22011707393097",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 13,
+      "nameKey": "STAT_SEASON_PROMOTIONS_EARNED_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 16,
+      "nameKey": "STAT_SEASON_BANNERS_EARNED_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 11,
+      "nameKey": "STAT_TOTAL_GUILD_CONTRIBUTION_NAME_TU07_2",
+      "value": "750",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 1,
+      "nameKey": "STAT_GALACTIC_POWER_ACQUIRED_NAME",
+      "value": "813196",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 20,
+      "nameKey": "STAT_SEASON_MOST_LEAGUE_SCORE_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 19,
+      "nameKey": "STAT_SEASON_TERRITORIES_DEFEATED_NAME",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 10,
+      "nameKey": "STAT_GUILD_RAID_WON_NAME_TU07_2",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 3,
+      "nameKey": "STAT_SHIP_GALACTIC_POWER_ACQUIRED_NAME",
+      "value": "302033",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 12,
+      "nameKey": "STAT_TOTAL_GUILD_EXCHANGE_DONATIONS_TU07_2",
+      "value": "0",
+      "versionKey": "NULL"
+    },
+    {
+      "index": 2,
+      "nameKey": "STAT_CHARACTER_GALACTIC_POWER_ACQUIRED_NAME",
+      "value": "511163",
+      "versionKey": "NULL"
+    }
+  ],
+  "pvpProfile": [
+    {
+      "eventId": "",
+      "rank": 7224,
+      "squad": {
+        "cell": [
+          {
+            "cellIndex": 0,
+            "crewBattleStat": [],
+            "forcedUnitEraLevel": 0,
+            "inheritFromDefinitionId": "",
+            "messageReticle": "",
+            "overkillItem": false,
+            "progressItem": true,
+            "selectable": true,
+            "squadUnitType": 2,
+            "unitBattleStat": null,
+            "unitDefId": "ANAKINKNIGHT:FIVE_STAR",
+            "unitId": "JgchrtNFTn2oRK06VgGpBA",
+            "unitState": null
+          },
+          {
+            "cellIndex": 1,
+            "crewBattleStat": [],
+            "forcedUnitEraLevel": 0,
+            "inheritFromDefinitionId": "",
+            "messageReticle": "",
+            "overkillItem": false,
+            "progressItem": true,
+            "selectable": true,
+            "squadUnitType": 1,
+            "unitBattleStat": null,
+            "unitDefId": "AHSOKATANO:FIVE_STAR",
+            "unitId": "JGAgiAUBReasWjfe1Z2JDg",
+            "unitState": null
+          },
+          {
+            "cellIndex": 2,
+            "crewBattleStat": [],
+            "forcedUnitEraLevel": 0,
+            "inheritFromDefinitionId": "",
+            "messageReticle": "",
+            "overkillItem": false,
+            "progressItem": true,
+            "selectable": true,
+            "squadUnitType": 1,
+            "unitBattleStat": null,
+            "unitDefId": "MACEWINDU:FIVE_STAR",
+            "unitId": "x_Sluo8ARkGMEpaPqTaCwg",
+            "unitState": null
+          },
+          {
+            "cellIndex": 3,
+            "crewBattleStat": [],
+            "forcedUnitEraLevel": 0,
+            "inheritFromDefinitionId": "",
+            "messageReticle": "",
+            "overkillItem": false,
+            "progressItem": true,
+            "selectable": true,
+            "squadUnitType": 1,
+            "unitBattleStat": null,
+            "unitDefId": "EZRABRIDGERS3:FIVE_STAR",
+            "unitId": "yOdeW-OQQiGnFKs_owCfwQ",
+            "unitState": null
+          },
+          {
+            "cellIndex": 4,
+            "crewBattleStat": [],
+            "forcedUnitEraLevel": 0,
+            "inheritFromDefinitionId": "",
+            "messageReticle": "",
+            "overkillItem": false,
+            "progressItem": true,
+            "selectable": true,
+            "squadUnitType": 1,
+            "unitBattleStat": null,
+            "unitDefId": "KANANJARRUSS3:FIVE_STAR",
+            "unitId": "sG8pwfWcQuyvHhJp0WvJog",
+            "unitState": null
+          }
+        ],
+        "datacron": null,
+        "expireTime": "0",
+        "lastSaveTime": "1750337468000",
+        "squadType": 5,
+        "supportInheritFromDefinitionId": "",
+        "targetingSetId": "",
+        "targetingTactic": 1
+      },
+      "tab": 1
+    },
+    {
+      "eventId": "",
+      "rank": 535,
+      "squad": {
+        "cell": [
+          {
+            "cellIndex": 0,
+            "crewBattleStat": [],
+            "forcedUnitEraLevel": 0,
+            "inheritFromDefinitionId": "",
+            "messageReticle": "",
+            "overkillItem": false,
+            "progressItem": true,
+            "selectable": true,
+            "squadUnitType": 3,
+            "unitBattleStat": null,
+            "unitDefId": "CAPITALJEDICRUISER:ONE_STAR",
+            "unitId": "h6-2CIRiTy-nT0URnKn3iQ",
+            "unitState": null
+          },
+          {
+            "cellIndex": 1,
+            "crewBattleStat": [],
+            "forcedUnitEraLevel": 0,
+            "inheritFromDefinitionId": "",
+            "messageReticle": "",
+            "overkillItem": false,
+            "progressItem": true,
+            "selectable": true,
+            "squadUnitType": 1,
+            "unitBattleStat": null,
+            "unitDefId": "JEDISTARFIGHTERANAKIN:FIVE_STAR",
+            "unitId": "j44beiYVRUON8Srrm5UCPw",
+            "unitState": null
+          },
+          {
+            "cellIndex": 2,
+            "crewBattleStat": [],
+            "forcedUnitEraLevel": 0,
+            "inheritFromDefinitionId": "",
+            "messageReticle": "",
+            "overkillItem": false,
+            "progressItem": true,
+            "selectable": true,
+            "squadUnitType": 1,
+            "unitBattleStat": null,
+            "unitDefId": "XWINGRED2:FIVE_STAR",
+            "unitId": "rvrdyxt_TlOmwEPAdUUvCA",
+            "unitState": null
+          },
+          {
+            "cellIndex": 3,
+            "crewBattleStat": [],
+            "forcedUnitEraLevel": 0,
+            "inheritFromDefinitionId": "",
+            "messageReticle": "",
+            "overkillItem": false,
+            "progressItem": true,
+            "selectable": true,
+            "squadUnitType": 1,
+            "unitBattleStat": null,
+            "unitDefId": "PHANTOM2:FIVE_STAR",
+            "unitId": "VqgnhDRoRjGc9ZY7RbyRyA",
+            "unitState": null
+          }
+        ],
+        "datacron": null,
+        "expireTime": "0",
+        "lastSaveTime": "1750336547000",
+        "squadType": 5,
+        "supportInheritFromDefinitionId": "",
+        "targetingSetId": "",
+        "targetingTactic": 1
+      },
+      "tab": 2
+    }
+  ],
+  "rosterUnit": [
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "GREEFKARGA:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "KIfDL7UCRIG7HGpwOEdCqQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_GREEFKARGA",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_GREEFKARGA01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_GREEFKARGA01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_GREEFKARGA02",
+          "tier": 3
+        },
+        {
+          "id": "contractskill_GREEFKARGA01",
+          "tier": 1
+        },
+        {
+          "id": "leaderskill_GREEFKARGA",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "ZEBS3:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "xWCLn3kYSK6Oybt_BXkOgQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_ZEBS301",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_ZEBS302",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_ZEBS3",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_ZEBS301",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "ASAJJDARKDISCIPLE:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "GTPuET0iRI6XzZ_5gIp7VQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "DARKTROOPER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "EqqILCYNSzaTFGdsfNCVgg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_DARKTROOPER",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_DARKTROOPER01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_DARKTROOPER02",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_DARKTROOPER01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CT210408:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "nd-8EE0WQ4ad8OE2kWc8Zw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_ct21040801",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_ct21040802",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_CT210408",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CT210408",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "MOTHERTALZIN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "zQyC2kWWTqidEJngewnHrw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_MOTHERTALZIN01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_MOTHERTALZIN",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_MOTHERTALZIN02",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_MOTHERTALZIN01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_MOTHERTALZIN",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "BIGGSDARKLIGHTER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "91tNcQ4NTqmunv4x07nODA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_BIGGSDARKLIGHTER01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_BIGGSDARKLIGHTER",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_BIGGSDARKLIGHTER01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CC2224:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "ywasLPEaS-adsYf7iZU4WQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_CC2224",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CC222401",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_CC2224",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CC222402",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 1,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "EWOKSCOUT:ONE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "UxFFqdurQaewj8vTIyQE1Q",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "K2SO:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "tZow047bQuyMnVq6yHC0oQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_K2SO",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_K2SO01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_K2SO01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_K2SO02",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CT7567:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "KohMlzaGQ0-JcDBtvhu_AQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_REX01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_REX",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_REX",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_REX01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_REX02",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "MOFFGIDEONS1:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "z_AW_HcwQemIaF3yKz4o1g",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_MOFFGIDEONS101",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_MOFFGIDEONS1",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_MOFFGIDEONS102",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_MOFFGIDEONS101",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_MOFFGIDEONS1",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 1,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "IG86SENTINELDROID:ONE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "xlHCdAesTXi74YAqjWR7Gg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 1,
+      "currentTier": 1,
+      "currentXp": 1228000,
+      "definitionId": "CAPITALMONCALAMARICRUISER:ONE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "NnmvCqkmQIO46YtoLvfG7Q",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "basicskill_CAPITALMONCALAMARICRUISER",
+          "tier": 0
+        },
+        {
+          "id": "specialskill_CAPITALMONCALAMARICRUISER03",
+          "tier": 0
+        },
+        {
+          "id": "specialskill_CAPITALMONCALAMARICRUISER02",
+          "tier": 0
+        },
+        {
+          "id": "specialskill_CAPITALMONCALAMARICRUISER01",
+          "tier": 0
+        },
+        {
+          "id": "uniqueskill_CAPITALMONCALAMARICRUISER01",
+          "tier": 0
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 2,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "BATCHERS3:TWO_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "a6Njeyn5QP6HJCsQdQERXA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "KYLOREN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "G47ZYIpQQ_Kkaod_-NI3wA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_KYLOREN",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_KYLOREN01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_KYLOREN02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_KYLOREN01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "DENGAR:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "LTRVZgUyQs2pxdits2nYsQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_DENGAR02",
+          "tier": 3
+        },
+        {
+          "id": "contractskill_DENGAR01",
+          "tier": 1
+        },
+        {
+          "id": "specialskill_DENGAR01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_DENGAR",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_DENGAR01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_DENGAR",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "TIESILENCER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "WqpfqLQtSn6YgYqG0YXDuQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_TIESILENCER01",
+          "tier": 2
+        },
+        {
+          "id": "basicskill_TIESILENCER",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_TIESILENCER01",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "XWINGRED3:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "lownFmODQl-4jtkCGF5UYw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "basicskill_XWINGRED3",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_XWINGRED301",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_XWINGRED301",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 1,
+      "currentTier": 1,
+      "currentXp": 1228000,
+      "definitionId": "CAPITALSTARDESTROYER:ONE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "87M7nYoTQNO2ZrSS61I0dA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_CAPITALSTARDESTROYER01",
+          "tier": 0
+        },
+        {
+          "id": "specialskill_CAPITALSTARDESTROYER03",
+          "tier": 0
+        },
+        {
+          "id": "specialskill_CAPITALSTARDESTROYER02",
+          "tier": 0
+        },
+        {
+          "id": "basicskill_CAPITALSTARDESTROYER",
+          "tier": 0
+        },
+        {
+          "id": "uniqueskill_CAPITALSTARDESTROYER01",
+          "tier": 0
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "QUIGONJINN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "R7V1T8DPQY-3TOM_AQVn5Q",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_QUIGONJINN",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_QUIGONJINN02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_QUIGONJINN01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_QUIGONJINN",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "BASTILASHAN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "EruGID2hT1KyI3V9HOsLhQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_BASTILASHAN01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_BASTILASHAN02",
+          "tier": 1
+        },
+        {
+          "id": "basicskill_BASTILASHAN",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_BASTILASHAN",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_BASTILASHAN02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_BASTILASHAN01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "ROYALGUARD:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "OLgjHMbtQ1KyOV2oASpuIA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_ROYALGUARD01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_ROYALGUARD01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_ROYALGUARD",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "XWINGRED2:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "rvrdyxt_TlOmwEPAdUUvCA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "basicskill_XWINGRED2",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_XWINGRED201",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_XWINGRED201",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "JEDISTARFIGHTERAHSOKATANO:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "bL0cNuMPRXe9OI0NRieB1Q",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_JEDISTARFIGHTERAHSOKATANO02",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_JEDISTARFIGHTERAHSOKATANO01",
+          "tier": 2
+        },
+        {
+          "id": "basicskill_JEDISTARFIGHTERAHSOKATANO",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "HOTHREBELSOLDIER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "i3Ps6lXjSVmgmQ5p5fKqGg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_HOTHREBELSOLDIER",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_HOTHREBELSOLDIER01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_HOTHREBELSOLDIER01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "ASAJVENTRESS:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "c2P1AIb5QjK8k3a1ljKpjw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_ASAJVENTRESS01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_ASAJVENTRESS02",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_ASAJVENTRESS",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_ASAJVENTRESS01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_ASAJVENTRESS",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 85,
+      "currentRarity": 1,
+      "currentTier": 1,
+      "currentXp": 873200,
+      "definitionId": "XWINGRESISTANCE:ONE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "6y0zZEzWQWuxufNzCDVCuQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_XWINGRESISTANCE01",
+          "tier": 6
+        },
+        {
+          "id": "basicskill_XWINGRESISTANCE",
+          "tier": 6
+        },
+        {
+          "id": "hardwareskill_XWINGRESISTANCE01",
+          "tier": 1
+        },
+        {
+          "id": "specialskill_XWINGRESISTANCE02",
+          "tier": 4
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "POE:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "o7ShGK35RtG3ZT0jZQDl2w",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "leaderskill_POE",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_POE01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_POE",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_POE01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CHIRRUTIMWE:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "XPcDqV_MTguwMhgTYa4SMg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_CHIRRUTIMWE02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CHIRRUTIMWE01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_CHIRRUTIMWE",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CHIRRUTIMWE02",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_CHIRRUTIMWE01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "TALIA:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "tEto8ZDJR76B2yjY0QaAiQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_TALIA01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_TALIA02",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_TALIA",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_TALIA",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "KANANJARRUSS3:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "sG8pwfWcQuyvHhJp0WvJog",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_KANANJARRUSS301",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_KANANJARRUSS302",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_KANANJARRUSS301",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_KANANJARRUSS3",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "JEDISTARFIGHTERANAKIN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "j44beiYVRUON8Srrm5UCPw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "basicskill_JEDISTARFIGHTERANAKIN",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_JEDISTARFIGHTERANAKIN01",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_JEDISTARFIGHTERANAKIN01",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "AHSOKATANO:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "JGAgiAUBReasWjfe1Z2JDg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_AHSOKATANO01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_AHSOKATANO",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_AHSOKATANO",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_AHSOKATANO01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "SABINEWRENS3:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "HQgqsJuyTiy31xp767u_PA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_SABINEWRENS301",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_SABINEWRENS302",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_SABINEWRENS301",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_SABINEWRENS3",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 2,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "JEDIKNIGHTCONSULAR:TWO_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "2ffaRkk-R3uvYO-vkrTDlw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "TIEFIGHTERIMPERIAL:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "S0q0f13JQdScM3pDlZoAog",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "uniqueskill_TIEFIGHTERIMPERIAL02",
+          "tier": 2
+        },
+        {
+          "id": "basicskill_TIEFIGHTERIMPERIAL",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_TIEFIGHTERIMPERIAL01",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "STORMTROOPERHAN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "4Yj3bONqQQa5-JDyvEpTsQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_STORMTROOPERHAN",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_STORMTROOPERHAN",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_STORMTROOPERHAN01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_STORMTROOPERHAN01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "HERASYNDULLAS3:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "ePYrVFemREqTQ9jVcmO3uw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_HERASYNDULLAS3",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_HERASYNDULLAS3",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_HERASYNDULLAS302",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_HERASYNDULLAS301",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "BOSSK:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "OGClwGGrSz6XZma7CX7dyA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_BOSSK",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_BOSSK02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_BOSSK01",
+          "tier": 3
+        },
+        {
+          "id": "contractskill_BOSSK01",
+          "tier": 1
+        },
+        {
+          "id": "leaderskill_BOSSK",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_BOSSK01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CT5555:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "9pdvY-nSSnyOCN2VF-uRZQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_CT5555",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_CT555502",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_CT555501",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_CT5555",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CT555501",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "LUKESKYWALKER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "GWyI7ZffQyCPxpAjThybqA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_LUKESKYWALKER",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_LUKESKYWALKER",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_LUKESKYWALKER01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_LUKESKYWALKER01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "FIRSTORDEREXECUTIONER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "XBpqfZ7CSDKUY1Z0gBdJSg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_FIRSTORDEREXECUTIONER01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_FIRSTORDEREXECUTIONER01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_FIRSTORDEREXECUTIONER",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "VADER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "HCR_sdnlSMSOGpRLmFbXyw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_VADER01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_VADER03",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_VADER",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_VADER01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_VADER02",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_VADER",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "COUNTDOOKU:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "jrlAl0iUQ8-hvbVYRweEOw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_COUNTDOOKU02",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_COUNTDOOKU01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_COUNTDOOKU",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_COUNTDOOKU01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_COUNTDOOKU",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 85,
+      "currentRarity": 3,
+      "currentTier": 7,
+      "currentXp": 883025,
+      "definitionId": "GREATMOTHERS:THREE_STAR",
+      "equipment": [
+        {
+          "equipmentId": "117",
+          "slot": 0
+        },
+        {
+          "equipmentId": "059",
+          "slot": 1
+        },
+        {
+          "equipmentId": "105",
+          "slot": 2
+        },
+        {
+          "equipmentId": "071",
+          "slot": 3
+        }
+      ],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "64aGrF1PRMGHvMxKt5osQw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_GREATMOTHERS01",
+          "tier": 5
+        },
+        {
+          "id": "leaderskill_GREATMOTHERS",
+          "tier": 5
+        },
+        {
+          "id": "basicskill_GREATMOTHERS",
+          "tier": 6
+        },
+        {
+          "id": "specialskill_GREATMOTHERS01",
+          "tier": 6
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "ARC170CLONESERGEANT:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "3zo0aD3tTLyyQuTTbm-caQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_ARC170CLONESERGEANT01",
+          "tier": 2
+        },
+        {
+          "id": "basicskill_ARC170CLONESERGEANT",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_ARC170CLONESERGEANT02",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "ANAKINKNIGHT:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "JgchrtNFTn2oRK06VgGpBA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_ANAKINKNIGHT",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_ANAKINKNIGHT01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_ANAKINKNIGHT",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_ANAKINKNIGHT01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "ADMINISTRATORLANDO:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "8O9CGYFEQ5KJQBTZs5O-cQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_ADMINISTRATORLANDO",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_ADMINISTRATORLANDO",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_ADMINISTRATORLANDO01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_ADMINISTRATORLANDO01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "MAUL:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "6mqMqtLRSsKFIgh_kKJyVQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_MAUL01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_MAUL",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_MAUL01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_MAUL",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "IG2000:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "e82wMwsaRsCrueX6BF1Zbg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_IG20001",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_IG20001",
+          "tier": 2
+        },
+        {
+          "id": "basicskill_IG2000",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "NIGHTSISTERSPIRIT:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "UEysYDELSaugjd4OTVZkXg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_NIGHTSISTERSPIRIT01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_NIGHTSISTERSPIRIT01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_NIGHTSISTERSPIRIT",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "XANADUBLOOD:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "ErrHVmkQQ3aPB2jesNOQzQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "basicskill_XANADUBLOOD",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_XANADUBLOOD01",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_XANADUBLOOD01",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 6,
+      "currentRarity": 3,
+      "currentTier": 2,
+      "currentXp": 205,
+      "definitionId": "KLEYA:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "FQDBcqlnRA6QdxaH9Q_Bhw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_KLEYA01",
+          "tier": 0
+        },
+        {
+          "id": "specialskill_KLEYA02",
+          "tier": 0
+        },
+        {
+          "id": "basicskill_KLEYA",
+          "tier": 0
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "YODACHEWBACCA:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "_hMqaUcDSVmyTLSMoNrFHA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CLONESERGEANTPHASEI:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "1PMNFOrzQKiWRlfELNYFPQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_CLONESERGEANTPHASEI01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_CLONESERGEANTPHASEI01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_CLONESERGEANTPHASEI",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 1,
+      "currentTier": 1,
+      "currentXp": 1228000,
+      "definitionId": "CAPITALJEDICRUISER:ONE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "h6-2CIRiTy-nT0URnKn3iQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_CAPITALJEDICRUISER01",
+          "tier": 0
+        },
+        {
+          "id": "specialskill_CAPITALJEDICRUISER03",
+          "tier": 0
+        },
+        {
+          "id": "specialskill_CAPITALJEDICRUISER02",
+          "tier": 0
+        },
+        {
+          "id": "uniqueskill_CAPITALJEDICRUISER01",
+          "tier": 0
+        },
+        {
+          "id": "basicskill_CAPITALJEDICRUISER",
+          "tier": 0
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "ADMIRALACKBAR:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "J00SqwaAR8y_NYkrB4vE4Q",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "leaderskill_ADMIRALACKBAR",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_ADMIRALACKBAR01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_ADMIRALACKBAR02",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_ADMIRALACKBAR",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "FIRSTORDERTROOPER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "QLBGHg__Q4SZbGZfYdeZ0A",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_FIRSTORDERTROOPER",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_FIRSTORDERTROOPER01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_FIRSTORDERTROOPER01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "PHANTOM2:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "VqgnhDRoRjGc9ZY7RbyRyA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_PHANTOM202",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_PHANTOM201",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_PHANTOM202",
+          "tier": 2
+        },
+        {
+          "id": "basicskill_PHANTOM2",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_PHANTOM201",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "GREEDO:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "WPjSvc2HQ12UZidsa1jecA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_GREEDO01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_GREEDO01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_GREEDO02",
+          "tier": 3
+        },
+        {
+          "id": "contractskill_GREEDO01",
+          "tier": 1
+        },
+        {
+          "id": "leaderskill_GREEDO",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_GREEDO",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "DEDRAMEERO:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "CKycjCBGSJ-ak7uxeIuX6A",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "KXSECURITYDROID:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "86_17fEWSmK37Oc0_qFDPQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "STORMTROOPER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "dvS8n-nuTbGdnvmroT3ctg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_STORMTROOPER01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_STORMTROOPER01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_STORMTROOPER01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CHOPPERS3:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "N6bmR_P2S-iU-59ZlwyWPg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_CHOPPERS301",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CHOPPERS302",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_CHOPPERS3",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CHOPPERS301",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "HOTHREBELSCOUT:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "rlQ-idjCRsiMpvbwXgRIdA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_HOTHREBELSCOUT",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_HOTHREBELSCOUT01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_HOTHREBELSCOUT01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "BOBAFETT:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "L5dWjFQlSsep9OFLrOzQkA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_BOBAFETT02",
+          "tier": 3
+        },
+        {
+          "id": "contractskill_BOBAFETT01",
+          "tier": 1
+        },
+        {
+          "id": "uniqueskill_BOBAFETT01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_BOBAFETT",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_BOBAFETT",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_BOBAFETT01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "GHOST:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "vnphA4VJRly69F1buQ9M-A",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "basicskill_GHOST",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_GHOST01",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_GHOST01",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_GHOST02",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_GHOST03",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "TIEBOMBERIMPERIAL:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "yVWUewJcQj6gU80BIN-eAg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "uniqueskill_TIEBOMBERIMPERIAL01",
+          "tier": 2
+        },
+        {
+          "id": "basicskill_TIEBOMBERIMPERIAL",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_TIEBOMBERIMPERIAL01",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "WEDGEANTILLES:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "JNwUOSMFQU6fuoZsqfM5mQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_WEDGEANTILLES01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_WEDGEANTILLES01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_WEDGEANTILLES",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_WEDGEANTILLES",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "SLAVE1:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "E1Hg3LObQ8exfzjtF-GCRQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_slave102",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_slave101",
+          "tier": 2
+        },
+        {
+          "id": "basicskill_slave1",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_slave101",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "VEERS:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "10Sy0CfTQIiuzwB1JYp3Rw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "leaderskill_VEERS",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_VEERS01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_VEERS01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_VEERS",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "TIEADVANCED:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "CwITi92_TfOXRbO693SyiA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "specialskill_TIEADVANCED01",
+          "tier": 2
+        },
+        {
+          "id": "basicskill_TIEADVANCED",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_TIEADVANCED01",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "DEATHTROOPER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "SlxqnhyTTPifXJhR8QIXbg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_DEATHTROOPER01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_DEATHTROOPER02",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_DEATHTROOPER01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_DEATHTROOPER",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "MACEWINDU:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "x_Sluo8ARkGMEpaPqTaCwg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_MACEWINDU01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_MACEWINDU02",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_MACEWINDU",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_MACEWINDU",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_MACEWINDU01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_MACEWINDU02",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "VEL:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "pnEyXYDKScCaMTu0-gja1Q",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "STORMTROOPERLUKE:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "xPw1justSzS4hvWOnrTt8A",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "JYNERSO:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "iNflBYmYTECs_B6sRTNaXw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_JYNERSO02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_JYNERSO01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_JYNERSO",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_JYNERSO",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_JYNERSO01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "IG88:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "J3lM2nykQTmfAdxksKQ9SA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "contractskill_IG8801",
+          "tier": 1
+        },
+        {
+          "id": "uniqueskill_IG8801",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_IG88",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_IG8801",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_IG88",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "REY:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "FugaiZt7Rx26O7P8EAMFvw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_REY01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_REY",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_REY02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_REY01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "DARTHNIHILUS:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "Z1835g6MTm2P7UoFwi9kDA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "leaderskill_DARTHNIHILUS",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_DARTHNIHILUS",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_DARTHNIHILUS01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_DARTHNIHILUS02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_DARTHNIHILUS01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "CARSONTEVA:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "0H0MU_aLQlGuqyFl0xR65Q",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "DAKA:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "9APvCR4HQ1qjiB8MY1m0Nw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "leaderskill_DAKA",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_DAKA01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_DAKA",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_DAKA01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "GRANDMOFFTARKIN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "LxAo1lOdTtOTUWmowCabYg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "leaderskill_GRANDMOFFTARKIN",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_GRANDMOFFTARKIN02",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_GRANDMOFFTARKIN01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_GRANDMOFFTARKIN",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_GRANDMOFFTARKIN01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CAPTAINREX:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "4SMBKx-uQqmNouyV-2HaSg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_CAPTAINREX01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CAPTAINREX02",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_CAPTAINREX01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_CAPTAINREX",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "SHORETROOPER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "IE0rbfAyReWxeFfqY8Yi2g",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_SHORETROOPER01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_SHORETROOPER",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_SHORETROOPER01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "SNOWTROOPER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "d3BKJQfATw6hccsYmhwEfg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_SNOWTROOPER01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_SNOWTROOPER",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_SNOWTROOPER",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "MAJORPARTAGAZ:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "6Ayf5LnqRvGx_J_QrPgzQQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "PRINCESSLEIA:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "d-BqW3qpRnqfh-ucJVwZbw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "leaderskill_PRINCESSLEIA",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_PRINCESSLEIA01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_PRINCESSLEIA",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_PRINCESSLEIA01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "VULTUREDROID:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "XBHNYPucQsy5IDXPgt0h7Q",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "basicskill_VULTUREDROID",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_VULTUREDROID01",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_VULTUREDROID01",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "RESISTANCETROOPER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "x_5EJwN7R3WmKmqUhiJNgw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_RESISTANCETROOPER",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_RESISTANCETROOPER01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_RESISTANCETROOPER01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "FINN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "shDLX6ldRMeGHwRTtzioMQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "leaderskill_FINN",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_FINN",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_FINN02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_FINN01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "PHASMA:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "WGD7I0YPS1aXjcAZXJracw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_PHASMA",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_PHASMA01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_PHASMA02",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_PHASMA",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CASSIANANDOR:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "dnF0Cq1cSAGEZ53LQyQnzA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_CASSIANANDOR",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_CASSIANANDOR01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CASSIANANDOR01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CASSIANANDOR02",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "EZRABRIDGERS3:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "yOdeW-OQQiGnFKs_owCfwQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_EZRABRIDGERS3",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_EZRABRIDGERS301",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_EZRABRIDGERS301",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_EZRABRIDGERS302",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "BAZEMALBUS:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "Yxqr0aOwSjyVyCLu99X23A",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_BAZEMALBUS",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_BAZEMALBUS02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_BAZEMALBUS01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_BAZEMALBUS01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_BAZEMALBUS02",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "R5D4:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "VR6TVl7NRiah21Y7kl7W1A",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 1,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "JEDISTARFIGHTERCONSULAR:ONE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "uynknAg2SSe07ejQgjcCpA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "FIRSTORDEROFFICERMALE:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "6WBatB__R7a9RfgSzLbjzA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_FIRSTORDEROFFICERMALE",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_FIRSTORDEROFFICERMALE01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_FIRSTORDEROFFICERMALE02",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "DARTHSIDIOUS:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "TnTpqKryQLmCWBLB5I_Z9A",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_DARTHSIDIOUS01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_DARTHSIDIOUS",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_DARTHSIDIOUS01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_DARTHSIDIOUS",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "YWINGREBEL:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "EOrWfGz_T86LYKj70CUbXQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "basicskill_YWINGREBEL",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_YWINGREBEL01",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_YWINGREBEL01",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "OLDBENKENOBI:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "zBhZPMsvQkOQvJ9NU5i01A",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_OLDBENKENOBI",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_OLDBENKENOBI",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_OLDBENKENOBI02",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_OLDBENKENOBI01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_OLDBENKENOBI01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "KYLORENUNMASKED:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "M1kKpwsNTJuYzgvt-5pmxw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_KYLORENUNMASKED02",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_KYLORENUNMASKED",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_KYLORENUNMASKED01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_KYLORENUNMASKED",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_KYLORENUNMASKED01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "CINTA:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "Dl-otdHCRrOpIYlBJAb-ug",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "RESISTANCEPILOT:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "N1N7PGliTdaVsk00KEbHtw",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_RESISTANCEPILOT01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_RESISTANCEPILOT",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_RESISTANCEPILOT01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "VADERDUELSEND:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "w65c6WeETfCa62brwly4IQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "INQUISITORBARRISS:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "YLYHV7S0T0CoSzxUT5EWJg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "SMUGGLERHAN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "6-F9FxO5TmaAQf1WDcoxTA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "specialskill_SMUGGLERHAN01",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_SMUGGLERHAN02",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_SMUGGLERHAN01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_SMUGGLERHAN",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "CADBANE:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "LdHCMDkdTtmICgZ0xagWhg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "contractskill_CADBANE01",
+          "tier": 1
+        },
+        {
+          "id": "uniqueskill_CADBANE01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_CADBANE01",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_CADBANE",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_CADBANE",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "THEMANDALORIAN:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "sPlqn4kXSZCXALJVbhfAHg",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "basicskill_THEMANDALORIAN",
+          "tier": 3
+        },
+        {
+          "id": "leaderskill_THEMANDALORIAN",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_THEMANDALORIAN01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_THEMANDALORIAN01",
+          "tier": 3
+        },
+        {
+          "id": "contractskill_THEMANDALORIAN",
+          "tier": 1
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "IG90:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "Lo48pJLyRyaMJ5joQhNeYQ",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "TIEFIGHTERPILOT:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "qR9cAIXnR9KEQhC1Gx856g",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_TIEFIGHTERPILOT01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_TIEFIGHTERPILOT",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_TIEFIGHTERPILOT01",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 1,
+      "currentRarity": 3,
+      "currentTier": 1,
+      "currentXp": 0,
+      "definitionId": "RANGERZEB:THREE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "5QQ3aG5FR72XfVrXwswLNA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 1,
+      "currentXp": 614000,
+      "definitionId": "UMBARANSTARFIGHTER:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "h_trzITMS3yhMUl-xF6w6g",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": null,
+      "skill": [
+        {
+          "id": "basicskill_UMBARANSTARFIGHTER",
+          "tier": 2
+        },
+        {
+          "id": "specialskill_UMBARANSTARFIGHTER01",
+          "tier": 2
+        },
+        {
+          "id": "uniqueskill_UMBARANSTARFIGHTER01",
+          "tier": 2
+        }
+      ],
+      "unitStat": null
+    },
+    {
+      "currentLevel": 80,
+      "currentRarity": 5,
+      "currentTier": 8,
+      "currentXp": 653025,
+      "definitionId": "SMUGGLERCHEWBACCA:FIVE_STAR",
+      "equipment": [],
+      "equippedStatMod": [],
+      "equippedStatModOld": [],
+      "id": "zDQ4GxUxQ-aItclrBDQUeA",
+      "promotionRecipeReference": "",
+      "purchasedAbilityId": [],
+      "relic": {
+        "currentTier": 1
+      },
+      "skill": [
+        {
+          "id": "uniqueskill_SMUGGLERCHEWBACCA01",
+          "tier": 3
+        },
+        {
+          "id": "specialskill_SMUGGLERCHEWBACCA01",
+          "tier": 3
+        },
+        {
+          "id": "basicskill_SMUGGLERCHEWBACCA",
+          "tier": 3
+        },
+        {
+          "id": "uniqueskill_SMUGGLERCHEWBACCA02",
+          "tier": 3
+        }
+      ],
+      "unitStat": null
+    }
+  ],
+  "seasonStatus": [
+    {
+      "division": 5,
+      "endTime": "1774216800000",
+      "eventInstanceId": "GA2_SEASON_76A:O1771884000000",
+      "joinTime": "1772557695000",
+      "league": "CARBONITE",
+      "losses": 0,
+      "rank": 83472,
+      "remove": false,
+      "seasonId": "4zone_5v5_ga2_c3s1_76a",
+      "seasonPoints": 0,
+      "wins": 0
+    },
+    {
+      "division": 5,
+      "endTime": "1776632400000",
+      "eventInstanceId": "GA2_SEASON_77A:O1774299600000",
+      "joinTime": "1774461630000",
+      "league": "CARBONITE",
+      "losses": 0,
+      "rank": 84428,
+      "remove": false,
+      "seasonId": "4zone_3v3_ga2_c3s1_77a",
+      "seasonPoints": 0,
+      "wins": 0
+    },
+    {
+      "division": 5,
+      "endTime": "1779051600000",
+      "eventInstanceId": "GA2_SEASON_78A:O1776718800000",
+      "joinTime": "1777238567000",
+      "league": "CARBONITE",
+      "losses": 0,
+      "rank": 102666,
+      "remove": false,
+      "seasonId": "4zone_5v5_ga2_c3s1_78a",
+      "seasonPoints": 0,
+      "wins": 0
+    }
+  ],
+  "selectedPlayerPortrait": null,
+  "selectedPlayerTitle": null,
+  "unlockedPlayerPortrait": [
+    {
+      "id": "PLAYERPORTRAIT_VISAS"
+    },
+    {
+      "id": "PLAYERPORTRAIT_STORMTROOPER"
+    },
+    {
+      "id": "PLAYERPORTRAIT_BASTILASHAN_DARK"
+    },
+    {
+      "id": "PLAYERPORTRAIT_FEYZARA"
+    },
+    {
+      "id": "PLAYERPORTRAIT_L337"
+    },
+    {
+      "id": "PLAYERPORTRAIT_FIRSTORDER_TIE"
+    },
+    {
+      "id": "PLAYERPORTRAIT_XWING"
+    },
+    {
+      "id": "PLAYERPORTRAIT_B1BATTLEDROID"
+    },
+    {
+      "id": "PLAYERPORTRAIT_CANTINAKEEPER"
+    },
+    {
+      "id": "PLAYERPORTRAIT_SHATTERED_LEGACY"
+    },
+    {
+      "id": "PLAYERPORTRAIT_KELDOR"
+    },
+    {
+      "id": "PLAYERPORTRAIT_PROTOCOLDROID"
+    },
+    {
+      "id": "PLAYERPORTRAIT_JEDICONSULAR"
+    },
+    {
+      "id": "PLAYERPORTRAIT_ROYALGUARD"
+    }
+  ],
+  "unlockedPlayerTitle": [
+    {
+      "id": "PLAYERTITLE_THE_IMMORTAL_SHADOW"
+    },
+    {
+      "id": "PLAYERTITLE_SAGRONATEEMA"
+    }
+  ]
+}

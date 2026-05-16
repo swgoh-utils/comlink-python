@@ -1,0 +1,1884 @@
+{
+  "guildEvents": [],
+  "inventory": null,
+  "inviteStatus": [],
+  "lastRaidPointsSummary": [],
+  "member": [
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "PXON5sB4Skmqt4_jCKlszQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 3,
+      "nucleusId": "",
+      "playerId": "OE7WmxEySLaTWBTA0gFpZQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "UL3U-hPbRGebQXyTZNYtHA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 4,
+      "nucleusId": "",
+      "playerId": "WrD1S81tRQCG5tI0RIN2Cg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 3,
+      "nucleusId": "",
+      "playerId": "JVDQ8TOURueFPq1yp0FlOQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 3,
+      "nucleusId": "",
+      "playerId": "hJR1GJ4fTkSnZ24KZReD2w",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "M8hr4RajSr61iqHHfxLbmQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "sRNuNLp3SRObvWzxrWvOfg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 3,
+      "nucleusId": "",
+      "playerId": "BPmIsP2-QWumKXfcgrs0zA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "q0KUj-03SuSt1uC6jcGwbg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 3,
+      "nucleusId": "",
+      "playerId": "hBA3jGQ9SV6cKzenusSTUg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "iZVe1jYwRJ2hnYxlAQpVpg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "dw2XJirtR6SCwCExRBQ5rQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "RKQenef6RSe1crTh_7ajgA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 3,
+      "nucleusId": "",
+      "playerId": "x0y39oPGQbmCatnQNycPEg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "IuwEh9WwSVOy4CrEX383QQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "jubs6BOdQsaavxdhNEFqaw",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "P_nZoNC_TJeRpdW8E8vEOw",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "aLDeNIdBRR6CT3r1VEFOYA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "co0M_B0UT6uw-pfXxhLdsA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "KoMD6DwAQC-rA3m7MC96iA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "wc61T8aZShyPLHh-cZvWLA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "0AH8lox8QaeI9gMERVviCw",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 3,
+      "nucleusId": "",
+      "playerId": "cRdX7yGvS-eKfyDxAAgaYw",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "dJjiu_SkSC-42PrHLoEiPg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "O31uO-oJT3KNHoHEfmzhKA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 3,
+      "nucleusId": "",
+      "playerId": "ePoB5UZNT7mKDX5oJVMz9g",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "IxO2B3RNS7yRZkwKw5ePTA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "OHsbSZiiQQaKDKIJZIXKMA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "0bYE4qm4SkmTxadYfU8d3Q",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "HIwect7YSPeU0v3LpHsqow",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "XhjVpC5fSiud9WU9DxNlHA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "t08ZSMNnRRu8niNIqjBzOg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "jVxf8EGaTHKuN8TIaDifyQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "u4BolnFwSc6kM10BXpsDmw",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "lDIr5GP4Q_-nChZhhBV1ng",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 3,
+      "nucleusId": "",
+      "playerId": "U4XaMTqSQEaAZTC7blwjaQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "dBGlaqdpSFWNflCM_BYqsw",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "LwEGI1KFR46IVIUqomgatg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "reqTv6x_QYW52IutA6ZPKA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "paTL0uOORkuckaCAJWUryg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "W0JklhUsRYaUk2lFkYaz-Q",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "_0dotsN9QyGof1qLb6btHw",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "mHt1yOyETxiYfvcb620m9g",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "zCZxtmKbTja6fRmhFl7JQg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "F-v8xs-DQjON0DVX3ZWHkg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "0Q4VtXwcStieNbWMqJyTFA",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "D8U4U9y_S7WyNGsPqv3JmQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "lH1x-UqJToCadpX0D6_JqQ",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    },
+    {
+      "characterGalacticPower": "0",
+      "galacticPower": "0",
+      "guildJoinTime": "0",
+      "guildXp": 0,
+      "lastActivityTime": "0",
+      "leagueId": "",
+      "lifetimeSeasonScore": "0",
+      "memberContribution": [
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 1
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 2
+        },
+        {
+          "currentValue": "0",
+          "lifetimeValue": "0",
+          "type": 3
+        }
+      ],
+      "memberLevel": 2,
+      "nucleusId": "",
+      "playerId": "8dB2kmR5TGGGwqI05nUQeg",
+      "playerLevel": 0,
+      "playerName": "",
+      "playerPortrait": "",
+      "playerTitle": "",
+      "seasonStatus": [],
+      "shipGalacticPower": "0",
+      "squadPower": 0
+    }
+  ],
+  "nextChallengesRefresh": "1779031800",
+  "profile": {
+    "autoLaunchConfig": {
+      "autoLaunch": true,
+      "autoLaunchImmediately": false,
+      "autoLaunchTime": "0",
+      "autoSimEnabled": false,
+      "campaignMissionIdentifier": {
+        "campaignId": "GUILD",
+        "campaignMapId": "RAIDS",
+        "campaignMissionId": "DIFF01",
+        "campaignNodeDifficulty": 4,
+        "campaignNodeId": "ORDER66"
+      },
+      "immediate": true,
+      "joinPeriodDuration": "0",
+      "raidId": "order66",
+      "scheduledUtcOffsetSeconds": "0"
+    },
+    "bannerColorId": "bright_blue_dark_blue",
+    "bannerLogoId": "guild_icon_senate",
+    "chatChannelId": "guild-{GbsabjvbQESUd8r_qPqdYg}",
+    "enrollmentStatus": 2,
+    "externalMessageKey": "CAW Hard baby! ROTE - 48* and counting. Maxed out Order 66 raid. Discord: .kapzz",
+    "guildEventTracker": [
+      {
+        "completedStars": "48",
+        "definitionId": "t05D",
+        "endTime": "1776618007000"
+      }
+    ],
+    "guildGalacticPower": "767681008",
+    "guildGalacticPowerForRequirement": "767681008",
+    "guildType": "",
+    "id": "GbsabjvbQESUd8r_qPqdYg",
+    "leaderboardScore": "0",
+    "level": 1,
+    "levelRequirement": 85,
+    "logoBackground": "",
+    "memberCount": 50,
+    "memberMax": 50,
+    "messageCriteriaKey": [],
+    "name": "CAW 2 INSANITY",
+    "raidLaunchConfig": [],
+    "raidWin": 0,
+    "rank": 0,
+    "singleLaunchConfig": {
+      "autoLaunch": false,
+      "autoLaunchImmediately": false,
+      "autoLaunchTime": "0",
+      "autoSimEnabled": false,
+      "campaignMissionIdentifier": {
+        "campaignId": "GUILD",
+        "campaignMapId": "RAIDS",
+        "campaignMissionId": "DIFF01",
+        "campaignNodeDifficulty": 4,
+        "campaignNodeId": "ORDER66"
+      },
+      "immediate": true,
+      "joinPeriodDuration": "0",
+      "raidId": "order66",
+      "scheduledUtcOffsetSeconds": "0"
+    },
+    "trophy": 0
+  },
+  "progress": null,
+  "raidResult": [],
+  "raidStatus": [],
+  "recentRaidResult": [],
+  "recentTerritoryBattleResult": [],
+  "recentTerritoryWarResult": [],
+  "roomAvailable": [],
+  "stat": [],
+  "territoryBattleResult": [],
+  "territoryBattleStatus": [],
+  "territoryWarStatus": []
+}

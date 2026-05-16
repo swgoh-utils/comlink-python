@@ -146,7 +146,12 @@ ignore_missing_imports = true
 source = ["swgoh_comlink"]
 
 [tool.coverage.report]
-fail_under = 40
+# Ratchet: each phase may raise this number, never lower it without a
+# documented reason in the corresponding phase report. Started at 40 in
+# v2.x; Phase 1 raises to 90 (current actual is ~96.5% on full suite).
+# Phase 9 target is 95+; gradual climb over phases as new code lands
+# with its tests.
+fail_under = 90
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",

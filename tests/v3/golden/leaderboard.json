@@ -1,0 +1,1818 @@
+{
+  "leaderboard": [
+    {
+      "id": "",
+      "player": [
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_flame",
+            "guildTypeId": "NORMAL",
+            "id": "0HQfPaTtSPSNOiSCNII89Q",
+            "name": "Vanguard of Dis0tter"
+          },
+          "id": "UuKcT_bnSmaVPp3qMEHxyw",
+          "isFake": false,
+          "level": 85,
+          "name": "Sashaisha",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4731
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_YOUNGLANDO",
+          "power": 17016435,
+          "pvpStatus": {
+            "rank": 1,
+            "rankDelta": 0,
+            "score": 4774,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1170341",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_SEASON001_AURODIUM_ALL"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_jedi",
+            "guildTypeId": "NORMAL",
+            "id": "z3BB54z3QletZLfgGC38pQ",
+            "name": "Lordflys guild"
+          },
+          "id": "hQo4f97LRUqQvd_ITein1g",
+          "isFake": false,
+          "level": 85,
+          "name": "WesVader",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4663
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_STARKILLER",
+          "power": 7432943,
+          "pvpStatus": {
+            "rank": 2,
+            "rankDelta": 0,
+            "score": 4701,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "0",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_PRINCESS"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_mandalorian",
+            "guildTypeId": "NORMAL",
+            "id": "UKDYauClQ2OU5YbDAm8Ufw",
+            "name": "Bounty Hunters Guild United"
+          },
+          "id": "ed8Gv09VTbaUOc24AcqWrA",
+          "isFake": false,
+          "level": 85,
+          "name": "Fluffy Pink Bunny",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4668
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_BAYLANSKOLL",
+          "power": 8940453,
+          "pvpStatus": {
+            "rank": 3,
+            "rankDelta": 0,
+            "score": 4642,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "0",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_BAYLANSKOLL"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_jedi",
+            "guildTypeId": "NORMAL",
+            "id": "5ndNtNm2RhO9ik2j9WXzNg",
+            "name": "PHANTOM's MENACE"
+          },
+          "id": "EpwlcWkKQZGUduP5jp7BPw",
+          "isFake": false,
+          "level": 85,
+          "name": "\u72c2\u6cd5\u5e08\u6d85\u62c9",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4625
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_MAUL",
+          "power": 15475836,
+          "pvpStatus": {
+            "rank": 4,
+            "rankDelta": 0,
+            "score": 4587,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "889757",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_GLAHSOKA_QUEST_003"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_jedi",
+            "guildTypeId": "NORMAL",
+            "id": "5ndNtNm2RhO9ik2j9WXzNg",
+            "name": "PHANTOM's MENACE"
+          },
+          "id": "LAAmv-utSMytVtC81_Exig",
+          "isFake": false,
+          "level": 85,
+          "name": "PM\u5c0f\u7c73\u56e2\u5e7f\u62db\u5404\u8def\u5927\u4f6c",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4590
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_CONVOR",
+          "power": 16946859,
+          "pvpStatus": {
+            "rank": 5,
+            "rankDelta": 0,
+            "score": 4548,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "683168",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_EPISODEPASS_ERA_02_EPISODE_1"
+        },
+        {
+          "guild": {
+            "bannerColorId": "cyan_purple",
+            "bannerLogoId": "guild_icon_Rebel",
+            "guildTypeId": "NORMAL",
+            "id": "--hA6bRQSVma2FdFjyQFaw",
+            "name": "the arnot rebels "
+          },
+          "id": "U3H2GtOUSfO5Mio5X-c-KQ",
+          "isFake": false,
+          "level": 85,
+          "name": "Sassanach",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4544
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_VISAS",
+          "power": 3443256,
+          "pvpStatus": {
+            "rank": 6,
+            "rankDelta": 0,
+            "score": 4544,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "12604",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_LOYAL_FRIEND"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_wolffe",
+            "guildTypeId": "NORMAL",
+            "id": "xsgyQVTVT5OsCjaitUCRug",
+            "name": "MyOther Falcon Is A Delorean"
+          },
+          "id": "mh1ip1w9RPiT2O5sSUaYeA",
+          "isFake": false,
+          "level": 85,
+          "name": "Hxvvk",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4546
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_BOUNTYHUNTER",
+          "power": 11781032,
+          "pvpStatus": {
+            "rank": 7,
+            "rankDelta": 0,
+            "score": 4514,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "43614",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_NOEQUAL"
+        },
+        {
+          "guild": {
+            "bannerColorId": "green_blue",
+            "bannerLogoId": "guild_icon_mandalorian",
+            "guildTypeId": "NORMAL",
+            "id": "a66DWk3SQyeACediZAc71g",
+            "name": "Lone Stars"
+          },
+          "id": "FFMIhJRmTEi4ifsroPE6uA",
+          "isFake": false,
+          "level": 85,
+          "name": "HanShotLast",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4462
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_VISAS",
+          "power": 7913005,
+          "pvpStatus": {
+            "rank": 8,
+            "rankDelta": 0,
+            "score": 4501,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "0",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_USURPER"
+        },
+        {
+          "guild": {
+            "bannerColorId": "gold_purple",
+            "bannerLogoId": "guild_icon_sithempire",
+            "guildTypeId": "NORMAL",
+            "id": "lZ6vJX1CQ46fThuU9K13lw",
+            "name": "The Fountain A"
+          },
+          "id": "awnPXE0XR4eFwCazY6RAGw",
+          "isFake": false,
+          "level": 85,
+          "name": "Nash",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4449
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_SHATTERED_LEGACY",
+          "power": 5636289,
+          "pvpStatus": {
+            "rank": 9,
+            "rankDelta": 0,
+            "score": 4482,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "266439",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_GAC_SHADOW"
+        },
+        {
+          "guild": {
+            "bannerColorId": "bright_orange_brown",
+            "bannerLogoId": "guild_icon_sabine",
+            "guildTypeId": "NORMAL",
+            "id": "tIHPRFwZQwaAToIoHg4MjA",
+            "name": "There is no try TH"
+          },
+          "id": "g2P1Y8OVT4SACJtgaDaqvw",
+          "isFake": false,
+          "level": 85,
+          "name": "ErengKo",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4475
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_L337",
+          "power": 6193020,
+          "pvpStatus": {
+            "rank": 10,
+            "rankDelta": 0,
+            "score": 4475,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1110",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_MANDO"
+        },
+        {
+          "guild": {
+            "bannerColorId": "cyan_purple",
+            "bannerLogoId": "guild_icon_mandalorian",
+            "guildTypeId": "NORMAL",
+            "id": "I9KEh5dOSCKSdpCc7l42vA",
+            "name": "ReturnoftheHangover"
+          },
+          "id": "sNROhv_OR8Ks_FKRRSv6gw",
+          "isFake": false,
+          "level": 85,
+          "name": "Hmmcookie",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4456
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_JEDI_GENERAL",
+          "power": 8098307,
+          "pvpStatus": {
+            "rank": 11,
+            "rankDelta": 0,
+            "score": 4456,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "0",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_GENERALOFTHE501ST"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_seventhfleet",
+            "guildTypeId": "NORMAL",
+            "id": "P6DIkHYhRiK3IUxen4wkzA",
+            "name": "SarlaccMyBalls"
+          },
+          "id": "tNmDXzKDS021DGIm4J5VdQ",
+          "isFake": false,
+          "level": 85,
+          "name": "The Fonz",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4403
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_JOLEEBINDO",
+          "power": 7105663,
+          "pvpStatus": {
+            "rank": 12,
+            "rankDelta": 0,
+            "score": 4430,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "31391",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_HOLOTABLEHERO"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_sithempire",
+            "guildTypeId": "NORMAL",
+            "id": "t4kcN8WHSrK027WuHd1QPw",
+            "name": "OG TYTHONS"
+          },
+          "id": "KgCeFu8ZQZGEDuKwQjD_cw",
+          "isFake": false,
+          "level": 85,
+          "name": "Steban",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4403
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_BANTHAS_BEST_BREW",
+          "power": 9316435,
+          "pvpStatus": {
+            "rank": 13,
+            "rankDelta": 0,
+            "score": 4403,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "6570",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_LOYAL_FRIEND"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_jedi",
+            "guildTypeId": "NORMAL",
+            "id": "ksDVuGz1QUmc3YqnVwdoJw",
+            "name": "FirstJediOrderCouncil"
+          },
+          "id": "twbnTA7vQGWH0nDn4XcwxQ",
+          "isFake": false,
+          "level": 85,
+          "name": "Samm Skye",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4421
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_BASTILA",
+          "power": 7153239,
+          "pvpStatus": {
+            "rank": 14,
+            "rankDelta": 0,
+            "score": 4391,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "57802",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_BLOOD_OF_REVAN"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_Rebel",
+            "guildTypeId": "NORMAL",
+            "id": "E1UjGmN1Q0-GGNXjXdfOJw",
+            "name": "Rebels RU"
+          },
+          "id": "H1sB4zgDQZOroSu3fZ1mug",
+          "isFake": false,
+          "level": 85,
+          "name": "DarkNub",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4406
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_NIGHTSISTERS_VENTRESS",
+          "power": 7103029,
+          "pvpStatus": {
+            "rank": 15,
+            "rankDelta": 0,
+            "score": 4373,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "486060",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_GRANDARENA_INTRO"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_wolffe",
+            "guildTypeId": "NORMAL",
+            "id": "DsTZ7vt6Tuy_rjehJDtE-g",
+            "name": "Clones Unleashed"
+          },
+          "id": "KFQej3uXTUCgpc3iYq461A",
+          "isFake": false,
+          "level": 85,
+          "name": "Tassenix",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4405
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_BAYLANSKOLL",
+          "power": 17484607,
+          "pvpStatus": {
+            "rank": 16,
+            "rankDelta": 0,
+            "score": 4366,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "823187",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_MARQUEE_50RT"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_Rebel",
+            "guildTypeId": "NORMAL",
+            "id": "RyojIGsNSXy7sZSDUD838A",
+            "name": "Balance and Order"
+          },
+          "id": "T17UHggJQ7yql77-avfgrA",
+          "isFake": false,
+          "level": 85,
+          "name": "Film Geek",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4301
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_TU18_ALL_PLAYERS",
+          "power": 7774115,
+          "pvpStatus": {
+            "rank": 17,
+            "rankDelta": 0,
+            "score": 4334,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "0",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_JEDIMASTER"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_senate",
+            "guildTypeId": "NORMAL",
+            "id": "KnFj_WZDQW-Z2WVsa80aUA",
+            "name": "Ludo Kressh"
+          },
+          "id": "RLuxakSCTqeqVMtbVHgfIw",
+          "isFake": false,
+          "level": 85,
+          "name": "Vaex",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4332
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_ROYALGUARD",
+          "power": 9040511,
+          "pvpStatus": {
+            "rank": 18,
+            "rankDelta": 0,
+            "score": 4332,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "70745",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_USURPER"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_oldrepublic",
+            "guildTypeId": "NORMAL",
+            "id": "inLdop_MTBWWm9HaDeq-Ow",
+            "name": "WhereNoJediHasGoneBefore"
+          },
+          "id": "vNJCptvXRPWc9kXQKdOowg",
+          "isFake": false,
+          "level": 85,
+          "name": "Andre",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4318
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_DARTHREVAN",
+          "power": 8060488,
+          "pvpStatus": {
+            "rank": 19,
+            "rankDelta": 0,
+            "score": 4287,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "55685",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_JEDI_GENERAL"
+        },
+        {
+          "guild": {
+            "bannerColorId": "green_blue",
+            "bannerLogoId": "guild_icon_seventhfleet",
+            "guildTypeId": "NORMAL",
+            "id": "z0PEbrOrQOeTefnnKieKsg",
+            "name": "???? ?????"
+          },
+          "id": "aZfH-1nuSnmTjy6XRRYLFw",
+          "isFake": false,
+          "level": 85,
+          "name": "\u306f\u3044\u305b",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4283
+            }
+          },
+          "portrait": "",
+          "power": 3320168,
+          "pvpStatus": {
+            "rank": 20,
+            "rankDelta": 0,
+            "score": 4283,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "13545",
+          "squadUnit": [],
+          "tier": 0,
+          "title": ""
+        },
+        {
+          "guild": {
+            "bannerColorId": "green_dark_green",
+            "bannerLogoId": "guild_icon_Rebel",
+            "guildTypeId": "NORMAL",
+            "id": "CeB4eVPZTPudn_6Y-2CvuQ",
+            "name": "Dr Evazan Cosmetic Surgery"
+          },
+          "id": "dS026dD3R-KK851Jy2pzOQ",
+          "isFake": false,
+          "level": 85,
+          "name": "Vegito",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4270
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_GLKYLOREN",
+          "power": 6081148,
+          "pvpStatus": {
+            "rank": 21,
+            "rankDelta": 0,
+            "score": 4270,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "158102",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_GLSLKR_QUEST_004"
+        },
+        {
+          "guild": {
+            "bannerColorId": "green_blue",
+            "bannerLogoId": "guild_icon_jedi",
+            "guildTypeId": "NORMAL",
+            "id": "ilfXs71oTAyJqHazoUlldA",
+            "name": "The 501st assault legion"
+          },
+          "id": "iRHOuE1WT7SMnxT4i0lrYQ",
+          "isFake": false,
+          "level": 85,
+          "name": "jedimaster42",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4237
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_RANGETROOPER",
+          "power": 8368167,
+          "pvpStatus": {
+            "rank": 22,
+            "rankDelta": 0,
+            "score": 4267,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "5910",
+          "squadUnit": [],
+          "tier": 0,
+          "title": ""
+        },
+        {
+          "guild": {
+            "bannerColorId": "bright_orange_brown",
+            "bannerLogoId": "guild_icon_mandalorian",
+            "guildTypeId": "NORMAL",
+            "id": "Fd0XGajpQy6BXzqLuyviDQ",
+            "name": "The 64th Horde"
+          },
+          "id": "Og3FxKDJRVOkOQTjHtAeYg",
+          "isFake": false,
+          "level": 85,
+          "name": "acq1497",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4256
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_DARTHREVAN",
+          "power": 4660710,
+          "pvpStatus": {
+            "rank": 23,
+            "rankDelta": 0,
+            "score": 4256,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "21074",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_PITFIGHTER"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_seventhfleet",
+            "guildTypeId": "NORMAL",
+            "id": "WlMutPN6RE-Au75osFDIpg",
+            "name": "DarthLordsofKoRRiban"
+          },
+          "id": "fFgICjE5Sf6bJfpo65o1mw",
+          "isFake": false,
+          "level": 85,
+          "name": "ReyRonaldo07",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4232
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_JEDIKNIGHT",
+          "power": 4538756,
+          "pvpStatus": {
+            "rank": 24,
+            "rankDelta": 0,
+            "score": 4232,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "13502",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_JEDIKNIGHT"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_jedi",
+            "guildTypeId": "NORMAL",
+            "id": "5ndNtNm2RhO9ik2j9WXzNg",
+            "name": "PHANTOM's MENACE"
+          },
+          "id": "vQrTZNwXTau-WoekP6ijkg",
+          "isFake": false,
+          "level": 85,
+          "name": "\u4e00\u7fa4\u72d7\u98de\u673a\u7684ucantsay\u662f\u771f\u6253\u4e0d\u8fc7gac\u7684\u540e\u624b\u9f9f\u762a\u4eec",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4244
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_BINARY_SUNSET",
+          "power": 15223053,
+          "pvpStatus": {
+            "rank": 25,
+            "rankDelta": 0,
+            "score": 4213,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1137055",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_SEASON001_KYBER_RANK02_10"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_oldrepublic",
+            "guildTypeId": "NORMAL",
+            "id": "QO-kncymTJ2F0V0MMr7S9A",
+            "name": "Der Ruhesitz"
+          },
+          "id": "UB9SqYn9QqWaGQu-14Ukag",
+          "isFake": false,
+          "level": 85,
+          "name": "Kal Ashnikov",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4174
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_PADMEAMIDALA",
+          "power": 4991040,
+          "pvpStatus": {
+            "rank": 26,
+            "rankDelta": 0,
+            "score": 4207,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "47282",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_SENATOR"
+        },
+        {
+          "guild": {
+            "bannerColorId": "bright_orange_brown",
+            "bannerLogoId": "guild_icon_jedi",
+            "guildTypeId": "NORMAL",
+            "id": "0ftcV359S4KiFpZ9Sl0kVQ",
+            "name": "A New Bespin"
+          },
+          "id": "m03QQupiS42BHHHVwipI0A",
+          "isFake": false,
+          "level": 85,
+          "name": "Gersch",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4229
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_ESB4",
+          "power": 15751483,
+          "pvpStatus": {
+            "rank": 27,
+            "rankDelta": 0,
+            "score": 4195,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1101322",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_SEASON001_KYBER_RANK02_10"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_sabine",
+            "guildTypeId": "NORMAL",
+            "id": "Xn1KE-AbSJ-8mfvj6XIsOA",
+            "name": "Smooth criminals"
+          },
+          "id": "yVssaTZuSQaZyBj6-tkEAQ",
+          "isFake": false,
+          "level": 85,
+          "name": "DEAN ATTICUS",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4187
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_BINARY_SUNSET",
+          "power": 5144579,
+          "pvpStatus": {
+            "rank": 28,
+            "rankDelta": 0,
+            "score": 4187,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1650",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_A_NEW_HOPE"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_mandalorian",
+            "guildTypeId": "NORMAL",
+            "id": "mOCgqrXwTzi7O5Gov3U-Qg",
+            "name": "MandalorianLoyalist "
+          },
+          "id": "dDviOEA3QbGW4k6DkGE6pw",
+          "isFake": false,
+          "level": 85,
+          "name": "Tiric Thorn",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4187
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_DARTHREVAN",
+          "power": 4004742,
+          "pvpStatus": {
+            "rank": 29,
+            "rankDelta": 0,
+            "score": 4187,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "38940",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_BAD_BATCH"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_sith",
+            "guildTypeId": "NORMAL",
+            "id": "WUU98mKITs2bcUEjjxtovw",
+            "name": "Order of Mayhem"
+          },
+          "id": "KZjvASmDRKaG9o5spJ2w-w",
+          "isFake": false,
+          "level": 85,
+          "name": "Poopyface Tomatonose",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4187
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_MANDO",
+          "power": 5023044,
+          "pvpStatus": {
+            "rank": 30,
+            "rankDelta": 0,
+            "score": 4187,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "53214",
+          "squadUnit": [],
+          "tier": 0,
+          "title": ""
+        },
+        {
+          "guild": {
+            "bannerColorId": "green_blue",
+            "bannerLogoId": "guild_icon_wolffe",
+            "guildTypeId": "NORMAL",
+            "id": "lxtkfRCeRsOPRxusBZlXrw",
+            "name": "merlyns Marauder's "
+          },
+          "id": "coHHhM3RTiCMoH3t41TUWQ",
+          "isFake": false,
+          "level": 85,
+          "name": "Tam Kelar",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4185
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_MANDO",
+          "power": 7281663,
+          "pvpStatus": {
+            "rank": 31,
+            "rankDelta": 0,
+            "score": 4185,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "31792",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_SEASON001_CARBONITE_ALL"
+        },
+        {
+          "guild": {
+            "bannerColorId": "bright_blue_dark_blue",
+            "bannerLogoId": "guild_icon_jedi",
+            "guildTypeId": "NORMAL",
+            "id": "RDNbGOMVT7SdjYjfP8xIiA",
+            "name": "UK Casuals"
+          },
+          "id": "vMkz-N_2RBmiOkMX_m2iLA",
+          "isFake": false,
+          "level": 85,
+          "name": "OutTheWindu",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4182
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_KRENNIC",
+          "power": 4400270,
+          "pvpStatus": {
+            "rank": 32,
+            "rankDelta": 0,
+            "score": 4182,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "0",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_LOYAL_FRIEND"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_oldrepublic",
+            "guildTypeId": "NORMAL",
+            "id": "fJXYTxpsS9iZvGj2M1OUGw",
+            "name": "CAW Patrol"
+          },
+          "id": "5pldv7fuTcGRDACTK04ATA",
+          "isFake": false,
+          "level": 85,
+          "name": "\u1d48 \u02b3 \u1d43 \u1d9c \u1d4f \u30b7",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4148
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_INQUISITOR_BADGE",
+          "power": 17196482,
+          "pvpStatus": {
+            "rank": 33,
+            "rankDelta": 0,
+            "score": 4181,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "966113",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_NOEQUAL"
+        },
+        {
+          "guild": {
+            "bannerColorId": "bright_blue_dark_blue",
+            "bannerLogoId": "guild_icon_mandalorian",
+            "guildTypeId": "NORMAL",
+            "id": "SgrDBqbITQuREUfRpV6X-w",
+            "name": "Mace's Army"
+          },
+          "id": "A-9UzVaPTKquZ4wA3zQEDQ",
+          "isFake": false,
+          "level": 85,
+          "name": "Mol Eliza",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4138
+            }
+          },
+          "portrait": "",
+          "power": 4636243,
+          "pvpStatus": {
+            "rank": 34,
+            "rankDelta": 0,
+            "score": 4177,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "5364",
+          "squadUnit": [],
+          "tier": 0,
+          "title": ""
+        },
+        {
+          "guild": {
+            "bannerColorId": "green_dark_green",
+            "bannerLogoId": "guild_icon_mandalorian",
+            "guildTypeId": "NORMAL",
+            "id": "bZJQFdGESGKFjwZh-aoHIg",
+            "name": "Green Alliance"
+          },
+          "id": "zF7x4wrMR4evlhdeNaD3Cw",
+          "isFake": false,
+          "level": 85,
+          "name": "Di'Sath RyOrange",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4196
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_DARKREY",
+          "power": 15821277,
+          "pvpStatus": {
+            "rank": 35,
+            "rankDelta": 0,
+            "score": 4164,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "663530",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_A_NEW_HOPE"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_wolffe",
+            "guildTypeId": "NORMAL",
+            "id": "DsTZ7vt6Tuy_rjehJDtE-g",
+            "name": "Clones Unleashed"
+          },
+          "id": "iCSncL--RhSlT4OHc-29TQ",
+          "isFake": false,
+          "level": 85,
+          "name": "Vestara Khai",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4116
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_NEXU",
+          "power": 15916490,
+          "pvpStatus": {
+            "rank": 36,
+            "rankDelta": 0,
+            "score": 4148,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "868541",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_GRANDARENA_ADVANCED"
+        },
+        {
+          "guild": {
+            "bannerColorId": "green_dark_green",
+            "bannerLogoId": "guild_icon_mandalorian",
+            "guildTypeId": "NORMAL",
+            "id": "bZJQFdGESGKFjwZh-aoHIg",
+            "name": "Green Alliance"
+          },
+          "id": "ekjscuBKSbSzEKA2EamsCw",
+          "isFake": false,
+          "level": 85,
+          "name": "L\u03b5s \u0396g\u03c5\u03b5g\u03c5\u03bfs",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4181
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_VADERDUELSEND",
+          "power": 15259026,
+          "pvpStatus": {
+            "rank": 37,
+            "rankDelta": 0,
+            "score": 4147,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1021535",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_GLSLKR_QUEST_001"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_empire",
+            "guildTypeId": "NORMAL",
+            "id": "jrl9Q-_CRDGdMyNjTQH1rQ",
+            "name": "M?W Chromium"
+          },
+          "id": "kVtaRX9_QhSuTtHV_en1gQ",
+          "isFake": false,
+          "level": 85,
+          "name": "R\u00d8XT\u0394R",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4096
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_CONVOR",
+          "power": 17798452,
+          "pvpStatus": {
+            "rank": 38,
+            "rankDelta": 0,
+            "score": 4129,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1034504",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_EPISODEPASS_ERA_02_EPISODE_1"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_jedi",
+            "guildTypeId": "NORMAL",
+            "id": "uebXPemvSvWX7entjA_F0g",
+            "name": "UA ONE LEGACY"
+          },
+          "id": "hs6MimGNRLKbQ_vhpEwYdg",
+          "isFake": false,
+          "level": 85,
+          "name": "UA Tigra",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4094
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_JEDICONSULAR",
+          "power": 17817340,
+          "pvpStatus": {
+            "rank": 39,
+            "rankDelta": 0,
+            "score": 4126,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "536676",
+          "squadUnit": [],
+          "tier": 0,
+          "title": ""
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_flame",
+            "guildTypeId": "NORMAL",
+            "id": "0HQfPaTtSPSNOiSCNII89Q",
+            "name": "Vanguard of Dis0tter"
+          },
+          "id": "XMAJTUkmTJ6nU6g9WK67ow",
+          "isFake": false,
+          "level": 85,
+          "name": "TomFord",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4068
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_DARKTROOPER",
+          "power": 14927131,
+          "pvpStatus": {
+            "rank": 40,
+            "rankDelta": 0,
+            "score": 4103,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "352732",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_SEASON001_KYBER_RANK02_10"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_flame",
+            "guildTypeId": "NORMAL",
+            "id": "0HQfPaTtSPSNOiSCNII89Q",
+            "name": "Vanguard of Dis0tter"
+          },
+          "id": "sU1dUw-DTJOCfbUxANGzcg",
+          "isFake": false,
+          "level": 85,
+          "name": "Jim23",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4066
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_PADAWANOBIWAN",
+          "power": 16237569,
+          "pvpStatus": {
+            "rank": 41,
+            "rankDelta": 0,
+            "score": 4101,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "889168",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_VODE_AN_VANGUARD"
+        },
+        {
+          "guild": {
+            "bannerColorId": "bright_blue_dark_blue",
+            "bannerLogoId": "guild_icon_wolffe",
+            "guildTypeId": "NORMAL",
+            "id": "MGQR-eI7TWeDyNNK_ROpng",
+            "name": "Schwartz Holiday Special"
+          },
+          "id": "MjmwXlG6Rp-gMvU85MJvuw",
+          "isFake": false,
+          "level": 85,
+          "name": "Andrew",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4117
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_SITHMASTER",
+          "power": 16001191,
+          "pvpStatus": {
+            "rank": 42,
+            "rankDelta": 0,
+            "score": 4083,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "906894",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_DARKLORD"
+        },
+        {
+          "guild": {
+            "bannerColorId": "cyan_purple",
+            "bannerLogoId": "guild_icon_oldrepublic",
+            "guildTypeId": "NORMAL",
+            "id": "Nwa4bm5OSjq-Clzf2FBlqw",
+            "name": "Grogu's Dutch Fanclub"
+          },
+          "id": "7yFjL6sMRuSCH_sFQGjQWA",
+          "isFake": false,
+          "level": 85,
+          "name": "Obi",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4120
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_GRANDARENA_CHALLENGE_GENERALKENOBI",
+          "power": 6115851,
+          "pvpStatus": {
+            "rank": 43,
+            "rankDelta": 0,
+            "score": 4083,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "313040",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_HOLOTABLEHERO"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_mandalorian",
+            "guildTypeId": "NORMAL",
+            "id": "RNCsSr6eRPajtrv73W01Lg",
+            "name": "Smuggler Lineage "
+          },
+          "id": "-gDdXo7yQCyS2yekmTT_Iw",
+          "isFake": false,
+          "level": 85,
+          "name": "Zev Caridda",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4083
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_BASTILA",
+          "power": 4272953,
+          "pvpStatus": {
+            "rank": 44,
+            "rankDelta": 0,
+            "score": 4083,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "12544",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_HOLOTABLEHERO"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_oldrepublic",
+            "guildTypeId": "NORMAL",
+            "id": "fJXYTxpsS9iZvGj2M1OUGw",
+            "name": "CAW Patrol"
+          },
+          "id": "Cp7TSunVRGSzLi8Uhdl-ng",
+          "isFake": false,
+          "level": 85,
+          "name": "A llama is bored by ur cheez",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4038
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_GLLUKE",
+          "power": 16762741,
+          "pvpStatus": {
+            "rank": 45,
+            "rankDelta": 0,
+            "score": 4072,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1068002",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_PITFIGHTER"
+        },
+        {
+          "guild": {
+            "bannerColorId": "white_red",
+            "bannerLogoId": "guild_icon_wolffe",
+            "guildTypeId": "NORMAL",
+            "id": "DsTZ7vt6Tuy_rjehJDtE-g",
+            "name": "Clones Unleashed"
+          },
+          "id": "EhDkAahiQL6Aafk3buP9pQ",
+          "isFake": false,
+          "level": 85,
+          "name": "Richie Sakai",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4100
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_R5D4",
+          "power": 15681487,
+          "pvpStatus": {
+            "rank": 46,
+            "rankDelta": 0,
+            "score": 4066,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1086510",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_EPISODEPASS_ERA_08_EPISODE_1"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_empire",
+            "guildTypeId": "NORMAL",
+            "id": "jrl9Q-_CRDGdMyNjTQH1rQ",
+            "name": "M?W Chromium"
+          },
+          "id": "5SW_HDFgTMe1oFXP5F_XwQ",
+          "isFake": false,
+          "level": 85,
+          "name": "BabyYoda",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4099
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_IG12",
+          "power": 17563702,
+          "pvpStatus": {
+            "rank": 47,
+            "rankDelta": 0,
+            "score": 4065,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "569983",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_MARQUEE_IG12"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_flame",
+            "guildTypeId": "NORMAL",
+            "id": "0HQfPaTtSPSNOiSCNII89Q",
+            "name": "Vanguard of Dis0tter"
+          },
+          "id": "l7Ex-6tESruRbgzqmw57Yw",
+          "isFake": false,
+          "level": 85,
+          "name": "Arsenal416",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4100
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_NIGHTSISTERS_VENTRESS",
+          "power": 17186628,
+          "pvpStatus": {
+            "rank": 48,
+            "rankDelta": 0,
+            "score": 4064,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "969066",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_MARQUEE_SCOUTTROOPER_V3"
+        },
+        {
+          "guild": {
+            "bannerColorId": "bright_blue_dark_blue",
+            "bannerLogoId": "guild_icon_flame",
+            "guildTypeId": "NORMAL",
+            "id": "8RhppbbqR_ShmjY5S6ZtQg",
+            "name": "sL Dead Forest Guards"
+          },
+          "id": "dc31LQzuQQ-vcQvT1RXL3Q",
+          "isFake": false,
+          "level": 85,
+          "name": "Mengmeng142857",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4027
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_GRANDARENA_ADVANCED",
+          "power": 14875454,
+          "pvpStatus": {
+            "rank": 49,
+            "rankDelta": 0,
+            "score": 4061,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "448776",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_GLPALP_EVENT"
+        },
+        {
+          "guild": {
+            "bannerColorId": "red_white",
+            "bannerLogoId": "guild_icon_flame",
+            "guildTypeId": "NORMAL",
+            "id": "0HQfPaTtSPSNOiSCNII89Q",
+            "name": "Vanguard of Dis0tter"
+          },
+          "id": "bfCdU4uGSS6fj2J5tVYwsA",
+          "isFake": false,
+          "level": 85,
+          "name": "Fatal",
+          "playerRating": {
+            "playerRankStatus": {
+              "divisionId": 25,
+              "leagueId": "KYBER"
+            },
+            "playerSkillRating": {
+              "skillRating": 4019
+            }
+          },
+          "portrait": "PLAYERPORTRAIT_KLEYA",
+          "power": 16315930,
+          "pvpStatus": {
+            "rank": 50,
+            "rankDelta": 0,
+            "score": 4053,
+            "scoreDelta": 0,
+            "tier": 0
+          },
+          "seasonLeagueId": "KYBER",
+          "seasonsLifetimeScore": "1050403",
+          "squadUnit": [],
+          "tier": 0,
+          "title": "PLAYERTITLE_USURPER"
+        }
+      ],
+      "playerStatus": {
+        "rank": 1,
+        "rankDelta": 0,
+        "score": 0,
+        "scoreDelta": 0,
+        "tier": 0
+      }
+    }
+  ],
+  "player": [],
+  "playerStatus": null
+}
