@@ -1,0 +1,62 @@
+{
+  "phase": "phase-2-retry-recovery",
+  "git_sha": "c8e831cc57c46b2c9d8cb84bc2bec046414e8728",
+  "python_version": "3.11.15",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-2-retry-recovery",
+      "metric": "retry_after_1s_total_wall",
+      "value": 1.011106583988294,
+      "unit": "s",
+      "status": "ok",
+      "git_sha": "c8e831cc57c46b2c9d8cb84bc2bec046414e8728",
+      "timestamp": "2026-05-16T18:55:45+00:00",
+      "meta": {
+        "samples": [
+          1.0110962499165908,
+          1.0111753749661148,
+          1.01133862498682,
+          1.011106583988294,
+          1.0108616249635816
+        ],
+        "scenario": "429 + Retry-After: 1 -> 200",
+        "expected_range_s": [
+          0.95,
+          1.5
+        ]
+      }
+    },
+    {
+      "phase": "phase-2-retry-recovery",
+      "metric": "exponential_backoff_first_retry",
+      "value": 0.35006754100322723,
+      "unit": "s",
+      "status": "ok",
+      "git_sha": "c8e831cc57c46b2c9d8cb84bc2bec046414e8728",
+      "timestamp": "2026-05-16T18:55:47+00:00",
+      "meta": {
+        "samples": [
+          0.17510579095687717,
+          0.08488649991340935,
+          0.27689829107839614,
+          0.477379290969111,
+          0.3731769589940086,
+          0.39709062490146607,
+          0.35006754100322723,
+          0.013503875001333654,
+          0.37762241589371115,
+          0.08349174994509667
+        ],
+        "scenario": "503 -> exp jitter wait -> 200",
+        "expected_range_s": [
+          0.0,
+          0.6
+        ]
+      }
+    }
+  ]
+}
