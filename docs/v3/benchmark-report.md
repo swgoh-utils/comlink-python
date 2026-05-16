@@ -140,6 +140,47 @@ both sync and async clients).
 | Coverage ratchet | 92 → **95** (current actual ~96.5%) |
 | `bench_v3_final.py` | Re-runs the headline benches; produces consolidated JSON |
 
+### Units-segment typed-decode experiment (v3.1-research probe)
+
+Runs on `v3.1-research` (not v3.0-dev — v3.0 surface is frozen). The
+probe types one of `/data`'s 82 segments (`units`, the largest at
+~11,169 entries) and measures whether the win justifies hand-typing the
+remaining 81 in v3.1. Helper: `swgoh_comlink.compat.decode_units_segment`.
+Bench: `benchmarks/v3/bench_units_typed_vs_dict.py`. Result JSON:
+`benchmarks/v3/results/phase-units-typed.json`.
+
+Cassette: same `data.json.gz` used everywhere else in this report. The
+units segment alone is ~142 MiB of JSON.
+
+| Metric | dict (`UNTYPED_DECODER`) | typed (`UNIT_LIST_DECODER`) | ratio |
+|---|---:|---:|---:|
+| Decode wall time | 685 ms | **324 ms** | **2.12× faster** |
+| Peak alloc (`tracemalloc`) | 462 MiB | **298 MiB** | **0.64× (36% less)** |
+| Resident size (`asizeof`) | 478 MiB | **313 MiB** | **0.66× (34% smaller)** |
+
+**Decision rule** (set in advance, written into the bench script):
+- `speed_ratio ≥ 1.5×` AND `memory_ratio ≤ 0.7×` → green-light v3.1
+  scope.
+- `speed_ratio < 1.2×` OR `memory_ratio > 0.9×` → deferral validated.
+- In-between → judgment call.
+
+**Outcome:** both green-light thresholds met (2.12× ≥ 1.5×; 0.64× ≤ 0.7×).
+The recommendation for v3.1 is to hand-type the remaining 81 `/data`
+segments. The mechanical labor is real (each new segment needs cassette
+inspection → Struct definitions → decoder registration → tests), but the
+per-segment payback is now empirically supported, not speculative.
+
+**Caveats specific to this probe:**
+- The helper re-encodes the units dict to JSON before typed decode (the
+  cached `/data` response is already a dict, not bytes). v3.1 should
+  plumb the typed decoder through `_request` so the typed path receives
+  the original HTTP bytes — that would remove a hop and the speed/memory
+  numbers should improve further.
+- Always-empty/always-null fields are deliberately omitted from the
+  Struct (`basicAttack`, `leaderAbility`, `limitBreak`, `uniqueAbility`,
+  `effectIconPriorityOverride`). `forbid_unknown_fields=False` means
+  Comlink can re-add them without breaking decoding.
+
 ## What v3 didn't deliver (deferred to v3.1)
 
 - **`[ratelimit]`** + `[circuitbreaker]` extras — ADR-0004

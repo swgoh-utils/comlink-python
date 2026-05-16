@@ -18,16 +18,18 @@ or pin to ``swgoh-comlink<3.2`` if you depend on this module.
 from __future__ import annotations
 
 import warnings
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import msgspec
 
+from ._models import UNIT_LIST_DECODER, Unit
 from ._optional import require
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
-__all__ = ["to_dict", "to_pydantic"]
+__all__ = ["decode_units_segment", "to_dict", "to_pydantic"]
 
 _TModel = TypeVar("_TModel", bound="BaseModel")
 
@@ -108,3 +110,40 @@ def to_pydantic(struct: Any, model_class: type[_TModel]) -> _TModel:
     # model_class.model_validate.
     require("pydantic", "pydantic")
     return model_class.model_validate(msgspec.to_builtins(struct))
+
+
+def decode_units_segment(payload: Mapping[str, Any]) -> list[Unit]:
+    """Decode the ``units`` list inside a ``/data`` response into typed Structs.
+
+    Pass the dict returned by :meth:`SwgohComlink.get_game_data`; the helper
+    extracts ``payload["units"]``, re-encodes it as JSON, and decodes via
+    a cached :class:`msgspec.json.Decoder` typed as ``list[Unit]``.
+
+    The re-encode round-trip is the honest cost users pay for opting into
+    typed access *after* the dict has materialized (e.g. after a
+    :class:`GameDataCache` hit). If a future v3.x release plumbs the
+    typed decoder straight through ``_request``, this helper still works
+    — its contract is "raw ``/data`` dict in, typed unit list out."
+
+    Args:
+        payload: The dict returned by ``client.get_game_data(...)``. May
+            contain a ``units`` key holding a ``list[dict]``; other
+            segments are ignored.
+
+    Returns:
+        A list of :class:`Unit` Structs. Returns ``[]`` if *payload*
+        contains no ``units`` key or the list is empty.
+
+    Example::
+
+        from swgoh_comlink import SwgohComlink, compat
+
+        client = SwgohComlink(url="...")
+        raw = client.get_game_data(request_segment=0)
+        units = compat.decode_units_segment(raw)
+        print(f"{len(units)} units; first: {units[0].name_key}")
+    """
+    units = payload.get("units")
+    if not units:
+        return []
+    return UNIT_LIST_DECODER.decode(msgspec.json.encode(units))
