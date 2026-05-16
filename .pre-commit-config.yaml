@@ -34,7 +34,16 @@ repos:
     hooks:
       - id: mypy
         files: ^src/swgoh_comlink/
-        additional_dependencies: [httpx>=0.28, msgspec>=0.18]
+        # Match the runtime SDK deps + every optional-extra dep that ships
+        # type stubs. Without these, mypy --strict in the isolated hook env
+        # treats them all as Any and emits spurious "unused type: ignore"
+        # vs "no-any-return" depending on which arrives first.
+        additional_dependencies:
+          - httpx>=0.28
+          - msgspec>=0.18
+          - pydantic>=2.5
+          - diskcache>=5.6
+          - cachetools>=5.3
         args: [--strict, --ignore-missing-imports]
 
   # ── Commitlint (mirrors CI commitlint job) ────────────────────────────
