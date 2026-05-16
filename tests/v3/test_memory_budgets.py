@@ -37,16 +37,15 @@ def _peak_memory_for(decode, body: bytes) -> int:
     return int(peak)
 
 
-# Budgets measured at the Phase 3 introduction commit and padded ~1.5x:
+# Budgets measured at the Phase 3.5 commit and padded ~1.5x:
 #
-#   typed Player decode of player_large (358 KiB gzipped, 397 units):  budget 35 MiB
+#   typed Player decode of player_large (358 KiB gzipped, 397 units):  budget 15 MiB
+#     (measured: ~9.7 MiB peak with deep typing; was ~14 MiB before
+#      Phase 3.5; 15 MiB leaves ~50% headroom for noise)
 #   untyped /data decode (15 MiB gzipped, 80 MiB JSON):                budget 1.6 GiB
-#
-# The /data budget is intentionally close to the Phase 0 baseline since
-# /data is a passthrough endpoint (no Struct typing yet) — Phase 3 does
-# not move that number meaningfully. Phase 7 (GameDataCache) will.
+#     (/data is passthrough; Phase 7's GameDataCache will move this)
 
-_PLAYER_LARGE_BUDGET_BYTES = 35 * 1024 * 1024
+_PLAYER_LARGE_BUDGET_BYTES = 15 * 1024 * 1024
 _DATA_BUDGET_BYTES = 1_600 * 1024 * 1024
 
 

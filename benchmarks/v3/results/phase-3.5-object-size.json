@@ -1,0 +1,232 @@
+{
+  "phase": "phase-3-object-size",
+  "git_sha": "321700cef83401377df615445eaf799bdad13294",
+  "python_version": "3.11.15",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_metadata_json",
+      "value": 196648,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "metadata",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_metadata_msgspec_untyped",
+      "value": 199728,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "metadata",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_metadata_msgspec_typed",
+      "value": 198136,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "metadata",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_guild_json",
+      "value": 72536,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "guild",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_guild_msgspec_untyped",
+      "value": 106472,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "guild",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_guild_msgspec_typed",
+      "value": 87192,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "guild",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_leaderboard_json",
+      "value": 120592,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "leaderboard",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_leaderboard_msgspec_untyped",
+      "value": 120872,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "leaderboard",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_leaderboard_msgspec_typed",
+      "value": 120432,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "leaderboard",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_player_small_json",
+      "value": 263280,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "player_small",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_player_small_msgspec_untyped",
+      "value": 280600,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "player_small",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_player_small_msgspec_typed",
+      "value": 135536,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "player_small",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_player_large_json",
+      "value": 15048032,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "player_large",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_player_large_msgspec_untyped",
+      "value": 15987352,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "player_large",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_player_large_msgspec_typed",
+      "value": 10493040,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
+      "meta": {
+        "cassette": "player_large",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_data_json",
+      "value": 1083926320,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:53+00:00",
+      "meta": {
+        "cassette": "data",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-object-size",
+      "metric": "object_size_data_msgspec_untyped",
+      "value": 1195518256,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:58:07+00:00",
+      "meta": {
+        "cassette": "data",
+        "parser": "msgspec_untyped"
+      }
+    }
+  ]
+}

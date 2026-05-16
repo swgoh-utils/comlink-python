@@ -1,0 +1,353 @@
+{
+  "phase": "phase-3-decode-speed",
+  "git_sha": "321700cef83401377df615445eaf799bdad13294",
+  "python_version": "3.11.15",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_metadata_json",
+      "value": 90312.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 98209.0,
+        "stdev": 4202.932296162103,
+        "iters": 50,
+        "warmup": 3,
+        "cassette": "metadata",
+        "cassette_bytes": 41858,
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_metadata_msgspec_untyped",
+      "value": 51125.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 52125.0,
+        "stdev": 2283.2041785211254,
+        "iters": 50,
+        "warmup": 3,
+        "cassette": "metadata",
+        "cassette_bytes": 41858,
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_metadata_msgspec_typed",
+      "value": 52791.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 69375.0,
+        "stdev": 8615.015889451986,
+        "iters": 50,
+        "warmup": 3,
+        "cassette": "metadata",
+        "cassette_bytes": 41858,
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_guild_json",
+      "value": 74145.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 81000.0,
+        "stdev": 2943.1409103825367,
+        "iters": 50,
+        "warmup": 3,
+        "cassette": "guild",
+        "cassette_bytes": 27388,
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_guild_msgspec_untyped",
+      "value": 37833.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 39875.0,
+        "stdev": 649.3635266904959,
+        "iters": 50,
+        "warmup": 3,
+        "cassette": "guild",
+        "cassette_bytes": 27388,
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_guild_msgspec_typed",
+      "value": 44875.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 45792.0,
+        "stdev": 798.0527579613994,
+        "iters": 50,
+        "warmup": 3,
+        "cassette": "guild",
+        "cassette_bytes": 27388,
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_leaderboard_json",
+      "value": 86229.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 90542.0,
+        "stdev": 1753.2891167570667,
+        "iters": 50,
+        "warmup": 3,
+        "cassette": "leaderboard",
+        "cassette_bytes": 29981,
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_leaderboard_msgspec_untyped",
+      "value": 44166.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 56667.0,
+        "stdev": 5964.754456892623,
+        "iters": 50,
+        "warmup": 3,
+        "cassette": "leaderboard",
+        "cassette_bytes": 29981,
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_leaderboard_msgspec_typed",
+      "value": 43000.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 48042.0,
+        "stdev": 2104.8787279042167,
+        "iters": 50,
+        "warmup": 3,
+        "cassette": "leaderboard",
+        "cassette_bytes": 29981,
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_player_small_json",
+      "value": 185479.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 195625.0,
+        "stdev": 40095.602314092816,
+        "iters": 30,
+        "warmup": 3,
+        "cassette": "player_small",
+        "cassette_bytes": 59665,
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_player_small_msgspec_untyped",
+      "value": 103083.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 107875.0,
+        "stdev": 1684.151302346497,
+        "iters": 30,
+        "warmup": 3,
+        "cassette": "player_small",
+        "cassette_bytes": 59665,
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_player_small_msgspec_typed",
+      "value": 74541.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:01+00:00",
+      "meta": {
+        "p95": 98833.0,
+        "stdev": 7128.692705998185,
+        "iters": 30,
+        "warmup": 3,
+        "cassette": "player_small",
+        "cassette_bytes": 59665,
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_player_large_json",
+      "value": 16757229.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:02+00:00",
+      "meta": {
+        "p95": 20511708.0,
+        "stdev": 2364992.437019629,
+        "iters": 10,
+        "warmup": 3,
+        "cassette": "player_large",
+        "cassette_bytes": 3746624,
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_player_large_msgspec_untyped",
+      "value": 11340812.5,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:02+00:00",
+      "meta": {
+        "p95": 13695125.0,
+        "stdev": 1822248.2424429718,
+        "iters": 10,
+        "warmup": 3,
+        "cassette": "player_large",
+        "cassette_bytes": 3746624,
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_player_large_msgspec_typed",
+      "value": 6269021.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:02+00:00",
+      "meta": {
+        "p95": 10802666.0,
+        "stdev": 1609034.6816212542,
+        "iters": 10,
+        "warmup": 3,
+        "cassette": "player_large",
+        "cassette_bytes": 3746624,
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_data_json",
+      "value": 3130308083.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:15+00:00",
+      "meta": {
+        "p95": 3490297375.0,
+        "stdev": 326729093.8439006,
+        "iters": 3,
+        "warmup": 1,
+        "cassette": "data",
+        "cassette_bytes": 393569066,
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_data_msgspec_untyped",
+      "value": 2490678042.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
+      "meta": {
+        "p95": 2673193792.0,
+        "stdev": 157677873.8705939,
+        "iters": 3,
+        "warmup": 1,
+        "cassette": "data",
+        "cassette_bytes": 393569066,
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_localization_eng_us_json",
+      "value": 14622125.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
+      "meta": {
+        "p95": 14682375.0,
+        "stdev": 154931.22918895338,
+        "iters": 5,
+        "warmup": 1,
+        "cassette": "localization_eng_us",
+        "cassette_bytes": 15282487,
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-speed",
+      "metric": "decode_localization_eng_us_msgspec_untyped",
+      "value": 8371292.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
+      "meta": {
+        "p95": 8436291.0,
+        "stdev": 102288.045544433,
+        "iters": 5,
+        "warmup": 1,
+        "cassette": "localization_eng_us",
+        "cassette_bytes": 15282487,
+        "parser": "msgspec_untyped"
+      }
+    }
+  ]
+}

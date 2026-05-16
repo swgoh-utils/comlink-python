@@ -1,6 +1,6 @@
 {
   "phase": "phase-3-decode-memory",
-  "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+  "git_sha": "321700cef83401377df615445eaf799bdad13294",
   "python_version": "3.11.15",
   "platform": "darwin",
   "env": {
@@ -13,8 +13,8 @@
       "value": 235430,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "metadata",
         "parser": "json"
@@ -26,8 +26,8 @@
       "value": 195307,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "metadata",
         "parser": "msgspec_untyped"
@@ -39,8 +39,8 @@
       "value": 193782,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "metadata",
         "parser": "msgspec_typed"
@@ -52,8 +52,8 @@
       "value": 100954,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "guild",
         "parser": "json"
@@ -65,8 +65,8 @@
       "value": 102179,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "guild",
         "parser": "msgspec_untyped"
@@ -78,8 +78,8 @@
       "value": 81925,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "guild",
         "parser": "msgspec_typed"
@@ -91,8 +91,8 @@
       "value": 147990,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "leaderboard",
         "parser": "json"
@@ -104,8 +104,8 @@
       "value": 116875,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "leaderboard",
         "parser": "msgspec_untyped"
@@ -117,8 +117,8 @@
       "value": 114935,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "leaderboard",
         "parser": "msgspec_typed"
@@ -130,8 +130,8 @@
       "value": 322431,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "player_small",
         "parser": "json"
@@ -143,8 +143,8 @@
       "value": 275341,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "player_small",
         "parser": "msgspec_untyped"
@@ -153,11 +153,11 @@
     {
       "phase": "phase-3-decode-memory",
       "metric": "decode_memory_player_small_msgspec_typed",
-      "value": 142958,
+      "value": 131751,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "player_small",
         "parser": "msgspec_typed"
@@ -169,8 +169,8 @@
       "value": 18549992,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "player_large",
         "parser": "json"
@@ -182,8 +182,8 @@
       "value": 15640751,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:03+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "player_large",
         "parser": "msgspec_untyped"
@@ -192,11 +192,11 @@
     {
       "phase": "phase-3-decode-memory",
       "metric": "decode_memory_player_large_msgspec_typed",
-      "value": 14481865,
+      "value": 10150884,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:04+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:25+00:00",
       "meta": {
         "cassette": "player_large",
         "parser": "msgspec_typed"
@@ -208,8 +208,8 @@
       "value": 1460066893,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:13+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:34+00:00",
       "meta": {
         "cassette": "data",
         "parser": "json"
@@ -221,8 +221,8 @@
       "value": 1168990219,
       "unit": "bytes",
       "status": "ok",
-      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
-      "timestamp": "2026-05-16T19:30:19+00:00",
+      "git_sha": "321700cef83401377df615445eaf799bdad13294",
+      "timestamp": "2026-05-16T19:57:39+00:00",
       "meta": {
         "cassette": "data",
         "parser": "msgspec_untyped"
