@@ -36,7 +36,9 @@ class TestMigrationRule:
         from swgoh_comlink.migrate._rules import RULES
 
         assert len(RULES) > 0
-        assert all(r.id.startswith("DEP") for r in RULES)
+        # v3 widens the rule-id namespace from just "DEP*" (v1→v2)
+        # to also include "V3*" (v2→v3). Both prefixes are valid.
+        assert all(r.id.startswith(("DEP", "V3")) for r in RULES)
 
 
 # ── scan_file ──────────────────────────────────────────────────────────

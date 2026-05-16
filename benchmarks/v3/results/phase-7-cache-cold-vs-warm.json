@@ -1,6 +1,6 @@
 {
   "phase": "phase-7-cache-cold-vs-warm",
-  "git_sha": "d96b15bd4864747d75f756c366a67c94ec8b014e",
+  "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
   "python_version": "3.11.15",
   "platform": "darwin",
   "env": {
@@ -10,16 +10,16 @@
     {
       "phase": "phase-7-cache-cold-vs-warm",
       "metric": "cold_get_game_data_ms",
-      "value": 3549.6322499820963,
+      "value": 3381.906916969456,
       "unit": "ms",
       "status": "ok",
-      "git_sha": "d96b15bd4864747d75f756c366a67c94ec8b014e",
-      "timestamp": "2026-05-16T21:06:21+00:00",
+      "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
+      "timestamp": "2026-05-16T21:48:34+00:00",
       "meta": {
         "samples_ms": [
-          3608.9177089743316,
-          3144.5401669479907,
-          3549.6322499820963
+          3381.906916969456,
+          3143.048416939564,
+          3422.1127080963925
         ],
         "scenario": "fresh on-disk cache; full fetch + decode + encode + write"
       }
@@ -27,14 +27,14 @@
     {
       "phase": "phase-7-cache-cold-vs-warm",
       "metric": "disk_warm_get_game_data_ms",
-      "value": 3503043146.0,
+      "value": 3255152020.5,
       "unit": "ns",
       "status": "ok",
-      "git_sha": "d96b15bd4864747d75f756c366a67c94ec8b014e",
-      "timestamp": "2026-05-16T21:06:21+00:00",
+      "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
+      "timestamp": "2026-05-16T21:48:34+00:00",
       "meta": {
-        "p95": 4621440125.0,
-        "stdev": 627967803.6624715,
+        "p95": 4305611041.0,
+        "stdev": 575722615.3340942,
         "iters": 10,
         "warmup": 2,
         "scenario": "payload on disk; new GameDataCache instance per call; pays msgpack decode each time"
@@ -46,11 +46,11 @@
       "value": 333.0,
       "unit": "ns",
       "status": "ok",
-      "git_sha": "d96b15bd4864747d75f756c366a67c94ec8b014e",
-      "timestamp": "2026-05-16T21:06:21+00:00",
+      "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
+      "timestamp": "2026-05-16T21:48:34+00:00",
       "meta": {
-        "p95": 375.0,
-        "stdev": 46.902757774662746,
+        "p95": 416.0,
+        "stdev": 53.10543258177048,
         "iters": 100,
         "warmup": 3,
         "scenario": "same GameDataCache instance; in-memory dict hit (the realistic bot path)"
@@ -59,20 +59,20 @@
     {
       "phase": "phase-7-cache-cold-vs-warm",
       "metric": "disk_warm_speedup_vs_cold",
-      "value": 1.0132996089515183,
+      "value": 1.0389397778264087,
       "unit": "ratio",
       "status": "ok",
-      "git_sha": "d96b15bd4864747d75f756c366a67c94ec8b014e",
-      "timestamp": "2026-05-16T21:06:21+00:00"
+      "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
+      "timestamp": "2026-05-16T21:48:34+00:00"
     },
     {
       "phase": "phase-7-cache-cold-vs-warm",
       "metric": "inmem_warm_speedup_vs_cold",
-      "value": 10659556.306252541,
+      "value": 10155876.627535902,
       "unit": "ratio",
       "status": "ok",
-      "git_sha": "d96b15bd4864747d75f756c366a67c94ec8b014e",
-      "timestamp": "2026-05-16T21:06:21+00:00"
+      "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
+      "timestamp": "2026-05-16T21:48:34+00:00"
     }
   ]
 }
