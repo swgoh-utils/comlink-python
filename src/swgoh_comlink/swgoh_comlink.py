@@ -5,6 +5,7 @@ Synchronous Python 3 interface for swgoh-comlink.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any, cast
 
 import httpx
@@ -16,6 +17,17 @@ from ._base import (
     SwgohComlinkBase,
     param_alias,
     resolve_profile,
+)
+from ._models import (
+    LEADERBOARD_DECODER,
+    METADATA_DECODER,
+    PLAYER_DECODER,
+    UNTYPED_DECODER,
+    Guild,
+    LeaderboardResponse,
+    Metadata,
+    Player,
+    decode_guild,
 )
 from ._retry import RetryableStatusError, retrying_sync
 from .exceptions import SwgohComlinkException, SwgohComlinkValueError
@@ -130,7 +142,9 @@ class SwgohComlink(SwgohComlinkBase):
         payload: dict[str, Any] | list[Any] | None = None,
         stats: bool = False,
         timeout: float | None = None,
-    ) -> dict[str, Any] | list[Any]:
+        *,
+        decoder: Callable[[bytes], Any] | None = None,
+    ) -> Any:
         """Send an HTTP request to the comlink service.
 
         Routes every call through a single retry-wrapped send. Per-request
@@ -144,9 +158,14 @@ class SwgohComlink(SwgohComlinkBase):
             payload: JSON body (ignored for GET).
             stats: If True, route to the stats sub-service.
             timeout: Per-request timeout override.
+            decoder: How to decode ``response.content``. Pass a
+                ``msgspec.json.Decoder`` instance or any
+                ``Callable[[bytes], T]``. Defaults to the untyped msgspec
+                decoder (returns ``dict[str, Any] | list[Any]``).
 
         Returns:
-            Decoded JSON response (dict or list).
+            Whatever the *decoder* produces — typed Struct, dict, list,
+            or anything else.
 
         Raises:
             SwgohComlinkException: Any network, status, or decode error
@@ -171,7 +190,12 @@ class SwgohComlink(SwgohComlinkBase):
             raise self._map_error(e) from e
         except SwgohComlinkException:
             raise
-        return self._decode(response)
+
+        decode = decoder if decoder is not None else UNTYPED_DECODER.decode
+        try:
+            return decode(response.content)
+        except Exception as e:  # noqa: BLE001 — msgspec.DecodeError, ValidationError, etc.
+            raise SwgohComlinkException(f"failed to decode response body: {e}") from e
 
     def _post(
         self,
@@ -179,16 +203,27 @@ class SwgohComlink(SwgohComlinkBase):
         payload: dict[str, Any] | list[Any] | None = None,
         stats: bool = False,
         timeout: float | None = None,
-    ) -> dict[str, Any] | list[Any]:
+        *,
+        decoder: Callable[[bytes], Any] | None = None,
+    ) -> Any:
         """Send a POST request to the comlink service.
 
-        Convenience wrapper around :meth:`_request`.
+        Convenience wrapper around :meth:`_request`. Forwards ``decoder=``
+        so typed-endpoint methods can opt into a specific Struct decoder.
         """
-        return self._request(method="POST", endpoint=endpoint, payload=payload, stats=stats, timeout=timeout)
+        return self._request(
+            method="POST",
+            endpoint=endpoint,
+            payload=payload,
+            stats=stats,
+            timeout=timeout,
+            decoder=decoder,
+        )
 
     def _get_game_version(self) -> str:
-        md = self.get_game_metadata()
-        return str(md["latestGamedataVersion"])
+        # v3: get_game_metadata returns a Metadata Struct by default (raw=False).
+        md = cast(Metadata, self.get_game_metadata())
+        return str(md.latest_gamedata_version)
 
     # ── Public API methods ───────────────────────────────────────────────
 
@@ -209,7 +244,10 @@ class SwgohComlink(SwgohComlinkBase):
         endpoint_string = self._build_unit_stats_endpoint(flags, language)
         if isinstance(request_payload, dict):
             request_payload = [request_payload]
-        return self._post(endpoint=endpoint_string, payload=request_payload, stats=True)
+        return cast(
+            "list[Any] | dict[str, Any]",
+            self._post(endpoint=endpoint_string, payload=request_payload, stats=True),
+        )
 
     def get_enums(self) -> dict[str, Any]:
         """
@@ -314,22 +352,32 @@ class SwgohComlink(SwgohComlinkBase):
     getLocalizationBundle = get_localization
     get_localization_bundle = get_localization
 
-    def get_game_metadata(self, client_specs: dict[str, Any] | None = None, enums: bool = False) -> dict[str, Any]:
+    def get_game_metadata(
+        self,
+        client_specs: dict[str, Any] | None = None,
+        enums: bool = False,
+        *,
+        raw: bool = False,
+    ) -> Metadata | dict[str, Any]:
         """
         Get the game metadata. Game metadata contains the current game and localization versions.
 
         Args:
             client_specs: Optional dictionary containing client specifications.
             enums: Boolean signifying whether enums in response should be translated to text. [Default: False]
+            raw: When True, return the raw ``dict`` from the wire (v2 shape).
+                When False (default), return a typed :class:`Metadata` Struct.
 
         Returns:
-            A dictionary containing the game metadata.
+            :class:`Metadata` by default, or ``dict[str, Any]`` when ``raw=True``.
         """
         if client_specs:
             payload: dict[str, Any] = {"payload": {"client_specs": client_specs}, "enums": enums}
         else:
             payload = {}
-        return cast(dict[str, Any], self._post(endpoint="metadata", payload=payload))
+        if raw:
+            return cast(dict[str, Any], self._post(endpoint="metadata", payload=payload))
+        return cast(Metadata, self._post(endpoint="metadata", payload=payload, decoder=METADATA_DECODER.decode))
 
     # alias for non PEP usage of direct endpoint calls
     getGameMetaData = get_game_metadata
@@ -337,8 +385,13 @@ class SwgohComlink(SwgohComlinkBase):
     get_metadata = get_game_metadata
 
     def get_player(
-        self, allycode: str | int | None = None, player_id: str | None = None, enums: bool = False
-    ) -> dict[str, Any]:
+        self,
+        allycode: str | int | None = None,
+        player_id: str | None = None,
+        enums: bool = False,
+        *,
+        raw: bool = False,
+    ) -> Player | dict[str, Any]:
         """
         Get player information from game. Either allycode or player_id must be provided.
 
@@ -346,12 +399,16 @@ class SwgohComlink(SwgohComlinkBase):
             allycode: integer or string representing player allycode
             player_id: string representing player game ID
             enums: boolean [Defaults to False]
+            raw: When True, return the raw ``dict`` from the wire (v2 shape).
+                When False (default), return a typed :class:`Player` Struct.
 
         Returns:
-            A dictionary containing the player information.
+            :class:`Player` by default, or ``dict[str, Any]`` when ``raw=True``.
         """
         payload = self._get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
-        return cast(dict[str, Any], self._post(endpoint="player", payload=payload))
+        if raw:
+            return cast(dict[str, Any], self._post(endpoint="player", payload=payload))
+        return cast(Player, self._post(endpoint="player", payload=payload, decoder=PLAYER_DECODER.decode))
 
     # alias for non PEP usage of direct endpoint calls
     getPlayer = get_player
@@ -388,8 +445,13 @@ class SwgohComlink(SwgohComlinkBase):
 
     @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     def get_guild(
-        self, guild_id: str, include_recent_guild_activity_info: bool = False, enums: bool = False
-    ) -> dict[str, Any]:
+        self,
+        guild_id: str,
+        include_recent_guild_activity_info: bool = False,
+        enums: bool = False,
+        *,
+        raw: bool = False,
+    ) -> Guild | dict[str, Any]:
         """
         Get guild information for a specific Guild ID.
 
@@ -397,9 +459,12 @@ class SwgohComlink(SwgohComlinkBase):
             guild_id: String ID of guild to retrieve.
             include_recent_guild_activity_info: boolean [Default: False]
             enums: Should enums in response be translated to text. [Default: False]
+            raw: When True, return the raw ``dict`` from the wire (v2 shape;
+                still unwrapped from the optional ``"guild"`` envelope).
+                When False (default), return a typed :class:`Guild` Struct.
 
         Returns:
-            A dictionary containing the guild information.
+            :class:`Guild` by default, or ``dict[str, Any]`` when ``raw=True``.
         """
         if not guild_id:
             raise SwgohComlinkValueError("guild_id must not be empty.")
@@ -407,10 +472,13 @@ class SwgohComlink(SwgohComlinkBase):
             "payload": {"guildId": guild_id, "includeRecentGuildActivityInfo": include_recent_guild_activity_info},
             "enums": enums,
         }
-        guild: dict[str, Any] = cast(dict[str, Any], self._post(endpoint="guild", payload=payload))
-        if "guild" in guild.keys():
-            guild = guild["guild"]
-        return guild
+        if raw:
+            guild: dict[str, Any] = cast(dict[str, Any], self._post(endpoint="guild", payload=payload))
+            if "guild" in guild.keys():
+                guild = guild["guild"]
+            return guild
+        # decode_guild handles both wrapped and unwrapped wire forms.
+        return cast(Guild, self._post(endpoint="guild", payload=payload, decoder=decode_guild))
 
     # alias for non PEP usage of direct endpoint calls
     getGuild = get_guild
@@ -472,7 +540,8 @@ class SwgohComlink(SwgohComlinkBase):
         event_instance_id: str | None = None,
         group_id: str | None = None,
         enums: bool = False,
-    ) -> dict[str, Any]:
+        raw: bool = False,
+    ) -> LeaderboardResponse | dict[str, Any]:
         """
         Retrieve Grand Arena Championship leaderboard information.
 
@@ -483,9 +552,11 @@ class SwgohComlink(SwgohComlinkBase):
             event_instance_id: Event+instance ID (for type 4).
             group_id: Group ID (for type 4).
             enums: Whether to translate enum values to text [Default: False]
+            raw: When True, return the raw ``dict`` from the wire (v2 shape).
+                When False (default), return a typed :class:`LeaderboardResponse` Struct.
 
         Returns:
-            A dictionary containing the leaderboard data.
+            :class:`LeaderboardResponse` by default, or ``dict[str, Any]`` when ``raw=True``.
         """
         leagues = Constants.LEAGUES
         divisions = Constants.DIVISIONS
@@ -507,7 +578,12 @@ class SwgohComlink(SwgohComlinkBase):
         elif leaderboard_type == 6:
             payload["payload"]["league"] = league
             payload["payload"]["division"] = division
-        return cast(dict[str, Any], self._post(endpoint="getLeaderboard", payload=payload))
+        if raw:
+            return cast(dict[str, Any], self._post(endpoint="getLeaderboard", payload=payload))
+        return cast(
+            LeaderboardResponse,
+            self._post(endpoint="getLeaderboard", payload=payload, decoder=LEADERBOARD_DECODER.decode),
+        )
 
     # alias for non PEP usage of direct endpoint calls
     getLeaderboard = get_leaderboard
@@ -557,10 +633,11 @@ class SwgohComlink(SwgohComlinkBase):
         Returns:
             Dictionary with 'game' and 'language' version strings.
         """
-        current_metadata = self.get_metadata()
+        # v3: get_game_metadata returns a Metadata Struct by default (raw=False).
+        current_metadata = cast(Metadata, self.get_game_metadata())
         return {
-            "game": current_metadata["latestGamedataVersion"],
-            "language": current_metadata["latestLocalizationBundleVersion"],
+            "game": current_metadata.latest_gamedata_version,
+            "language": current_metadata.latest_localization_bundle_version,
         }
 
     # alias for shorthand call

@@ -44,11 +44,13 @@ def get_guild_members(
         err_msg = f"{get_function_name()}: One of either 'player_id' or 'allycode' is required."
         raise SwgohComlinkValueError(err_msg)
 
+    # v3: helpers stay v2-compatible by opting into raw=True (dict shape).
+    # When this helper is migrated to attribute access, drop the kwargs.
     if isinstance(player_id, str):
-        player = comlink.get_player(player_id=player_id)
+        player = comlink.get_player(player_id=player_id, raw=True)
     else:
-        player = comlink.get_player(allycode=sanitize_allycode(allycode))
-    guild = comlink.get_guild(guild_id=player["guildId"])
+        player = comlink.get_player(allycode=sanitize_allycode(allycode), raw=True)
+    guild = comlink.get_guild(guild_id=player["guildId"], raw=True)
     return guild["member"] or []
 
 
@@ -86,9 +88,10 @@ async def async_get_guild_members(
         err_msg = f"{get_function_name()}: One of either 'player_id' or 'allycode' is required."
         raise SwgohComlinkValueError(err_msg)
 
+    # v3: helpers stay v2-compatible by opting into raw=True (dict shape).
     if isinstance(player_id, str):
-        player = await comlink.get_player(player_id=player_id)
+        player = await comlink.get_player(player_id=player_id, raw=True)
     else:
-        player = await comlink.get_player(allycode=sanitize_allycode(allycode))
-    guild = await comlink.get_guild(guild_id=player["guildId"])
+        player = await comlink.get_player(allycode=sanitize_allycode(allycode), raw=True)
+    guild = await comlink.get_guild(guild_id=player["guildId"], raw=True)
     return guild["member"] or []

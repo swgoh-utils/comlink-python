@@ -1,0 +1,232 @@
+{
+  "phase": "phase-3-decode-memory",
+  "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+  "python_version": "3.11.15",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_metadata_json",
+      "value": 235430,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "metadata",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_metadata_msgspec_untyped",
+      "value": 195307,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "metadata",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_metadata_msgspec_typed",
+      "value": 193782,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "metadata",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_guild_json",
+      "value": 100954,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "guild",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_guild_msgspec_untyped",
+      "value": 102179,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "guild",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_guild_msgspec_typed",
+      "value": 81925,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "guild",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_leaderboard_json",
+      "value": 147990,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "leaderboard",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_leaderboard_msgspec_untyped",
+      "value": 116875,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "leaderboard",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_leaderboard_msgspec_typed",
+      "value": 114935,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "leaderboard",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_player_small_json",
+      "value": 322431,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "player_small",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_player_small_msgspec_untyped",
+      "value": 275341,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "player_small",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_player_small_msgspec_typed",
+      "value": 142958,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "player_small",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_player_large_json",
+      "value": 18549992,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "player_large",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_player_large_msgspec_untyped",
+      "value": 15640751,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:03+00:00",
+      "meta": {
+        "cassette": "player_large",
+        "parser": "msgspec_untyped"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_player_large_msgspec_typed",
+      "value": 14481865,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:04+00:00",
+      "meta": {
+        "cassette": "player_large",
+        "parser": "msgspec_typed"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_data_json",
+      "value": 1460066893,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:13+00:00",
+      "meta": {
+        "cassette": "data",
+        "parser": "json"
+      }
+    },
+    {
+      "phase": "phase-3-decode-memory",
+      "metric": "decode_memory_data_msgspec_untyped",
+      "value": 1168990219,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "3dac3b49ff0f038de8d5cb4ee46d77e561a1b9e7",
+      "timestamp": "2026-05-16T19:30:19+00:00",
+      "meta": {
+        "cassette": "data",
+        "parser": "msgspec_untyped"
+      }
+    }
+  ]
+}

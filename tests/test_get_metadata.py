@@ -14,7 +14,7 @@ class TestGetMetadata(TestCase):
         }
 
         comlink = SwgohComlink()
-        md = comlink.get_game_metadata()
+        md = comlink.get_game_metadata(raw=True)
 
         mock_post.assert_called_once()
         call_kwargs = mock_post.call_args
@@ -28,7 +28,7 @@ class TestGetMetadata(TestCase):
 
         comlink = SwgohComlink()
         specs = {"platform": "Android", "bundleId": "com.test"}
-        comlink.get_game_metadata(client_specs=specs)
+        comlink.get_game_metadata(client_specs=specs, raw=True)
 
         call_kwargs = mock_post.call_args
         payload = call_kwargs.kwargs.get("payload") or call_kwargs[1].get("payload")

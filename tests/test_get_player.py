@@ -11,7 +11,7 @@ class TestGetPlayer(TestCase):
         mock_post.return_value = {"name": "TestPlayer", "allyCode": "245866537", "level": 85}
 
         comlink = SwgohComlink()
-        result = comlink.get_player(allycode=245866537)
+        result = comlink.get_player(allycode=245866537, raw=True)
 
         mock_post.assert_called_once_with(
             endpoint="player", payload={"payload": {"allyCode": "245866537"}, "enums": False}
@@ -24,7 +24,7 @@ class TestGetPlayer(TestCase):
         mock_post.return_value = {"name": "TestPlayer"}
 
         comlink = SwgohComlink()
-        comlink.get_player(player_id="abc123")
+        comlink.get_player(player_id="abc123", raw=True)
 
         mock_post.assert_called_once_with(
             endpoint="player", payload={"payload": {"playerId": "abc123"}, "enums": False}
@@ -34,7 +34,7 @@ class TestGetPlayer(TestCase):
         """Test that get_player() raises when neither allycode nor player_id is given."""
         comlink = SwgohComlink()
         with self.assertRaises(SwgohComlinkValueError):
-            comlink.get_player()
+            comlink.get_player(raw=True)
 
 
 if __name__ == "__main__":

@@ -716,13 +716,15 @@ class TestCalcRosterStatsDict:
             meta = game_data["unitData"].get(defid, {})
             if meta.get("combatType") != 1:
                 continue
-            unit_dict[defid] = [{
-                "currentRarity": u.get("currentRarity", u.get("rarity")),
-                "currentLevel": u.get("currentLevel", u.get("level")),
-                "currentTier": u.get("currentTier", u.get("gear")),
-                "gear": [],
-                "skill": u.get("skill", []),
-            }]
+            unit_dict[defid] = [
+                {
+                    "currentRarity": u.get("currentRarity", u.get("rarity")),
+                    "currentLevel": u.get("currentLevel", u.get("level")),
+                    "currentTier": u.get("currentTier", u.get("gear")),
+                    "gear": [],
+                    "skill": u.get("skill", []),
+                }
+            ]
             if len(unit_dict) >= 3:
                 break
         if unit_dict:

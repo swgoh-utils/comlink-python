@@ -215,7 +215,13 @@ def get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> dict[int, Any
 
     def _probe(index: int) -> bool:
         group_id = f"{event_instance}:{league}:{index}"
-        result = comlink.get_gac_leaderboard(leaderboard_type=4, event_instance_id=event_instance, group_id=group_id)
+        # v3: raw=True keeps the v2 dict shape this helper expects.
+        result = comlink.get_gac_leaderboard(
+            leaderboard_type=4,
+            event_instance_id=event_instance,
+            group_id=group_id,
+            raw=True,
+        )
         return len(result["player"]) > 0
 
     last_bracket = _find_bracket_boundary(_probe)
@@ -227,7 +233,13 @@ def get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> dict[int, Any
     brackets: dict[int, Any] = {}
     for i in range(end + 1):
         group_id = f"{event_instance}:{league}:{i}"
-        result = comlink.get_gac_leaderboard(leaderboard_type=4, event_instance_id=event_instance, group_id=group_id)
+        # v3: raw=True keeps the v2 dict shape this helper expects.
+        result = comlink.get_gac_leaderboard(
+            leaderboard_type=4,
+            event_instance_id=event_instance,
+            group_id=group_id,
+            raw=True,
+        )
         brackets[i] = result["player"]
 
     return brackets
@@ -266,8 +278,12 @@ async def async_get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> d
 
     async def _probe(index: int) -> bool:
         group_id = f"{event_instance}:{league}:{index}"
+        # v3: raw=True keeps the v2 dict shape this helper expects.
         result = await comlink.get_gac_leaderboard(
-            leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
+            leaderboard_type=4,
+            event_instance_id=event_instance,
+            group_id=group_id,
+            raw=True,
         )
         return len(result["player"]) > 0
 
@@ -279,8 +295,12 @@ async def async_get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> d
 
     async def _fetch(index: int) -> tuple[int, list[Any]]:
         group_id = f"{event_instance}:{league}:{index}"
+        # v3: raw=True keeps the v2 dict shape this helper expects.
         result = await comlink.get_gac_leaderboard(
-            leaderboard_type=4, event_instance_id=event_instance, group_id=group_id
+            leaderboard_type=4,
+            event_instance_id=event_instance,
+            group_id=group_id,
+            raw=True,
         )
         return index, result["player"]
 

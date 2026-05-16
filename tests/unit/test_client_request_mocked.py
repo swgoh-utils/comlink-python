@@ -18,7 +18,7 @@ def test_get_player_posts_expected_payload(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"name": "Test Player"})
 
     client = SwgohComlink(url="http://localhost:3000", verify_ssl=False)
-    out = client.get_player(allycode=123456789)
+    out = client.get_player(allycode=123456789, raw=True)
 
     assert out["name"] == "Test Player"
 
@@ -33,7 +33,7 @@ def test_get_player_with_player_id(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"name": "Test Player"})
 
     client = SwgohComlink(url="http://localhost:3000")
-    client.get_player(player_id="abc-123")
+    client.get_player(player_id="abc-123", raw=True)
 
     body = json.loads(httpx_mock.get_request().content)
     assert body == {"payload": {"playerId": "abc-123"}, "enums": False}
@@ -88,7 +88,7 @@ def test_get_guild_unwraps_guild_key(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"guild": {"profile": {"name": "Guild Name"}}})
 
     client = SwgohComlink(url="http://localhost:3000")
-    out = client.get_guild(guild_id="guild-1", include_recent_guild_activity_info=True)
+    out = client.get_guild(guild_id="guild-1", include_recent_guild_activity_info=True, raw=True)
 
     assert out == {"profile": {"name": "Guild Name"}}
 
@@ -109,7 +109,7 @@ def test_get_guild_no_unwrap_when_key_missing(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"profile": {"name": "Direct Guild"}})
 
     client = SwgohComlink(url="http://localhost:3000")
-    out = client.get_guild(guild_id="guild-2")
+    out = client.get_guild(guild_id="guild-2", raw=True)
     assert out == {"profile": {"name": "Direct Guild"}}
 
 
@@ -118,7 +118,7 @@ def test_get_guild_with_alias(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"guild": {"name": "Test"}})
 
     client = SwgohComlink(url="http://localhost:3000")
-    client.get_guild(guild_id="guild-1", includeRecent=True)
+    client.get_guild(guild_id="guild-1", includeRecent=True, raw=True)
 
     body = json.loads(httpx_mock.get_request().content)
     assert body["payload"]["includeRecentGuildActivityInfo"] is True
@@ -216,7 +216,7 @@ def test_get_game_metadata_default(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"latestGamedataVersion": "v1"})
 
     client = SwgohComlink(url="http://localhost:3000")
-    out = client.get_game_metadata()
+    out = client.get_game_metadata(raw=True)
 
     body = json.loads(httpx_mock.get_request().content)
     assert body == {}
@@ -228,7 +228,7 @@ def test_get_game_metadata_with_client_specs(httpx_mock: HTTPXMock):
 
     client = SwgohComlink(url="http://localhost:3000")
     specs = {"platform": "Android", "bundleId": "com.ea.game"}
-    client.get_game_metadata(client_specs=specs, enums=True)
+    client.get_game_metadata(client_specs=specs, enums=True, raw=True)
 
     body = json.loads(httpx_mock.get_request().content)
     assert body == {"payload": {"client_specs": specs}, "enums": True}
@@ -295,7 +295,7 @@ def test_get_leaderboard_type_4(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"leaderboard": []})
 
     client = SwgohComlink(url="http://localhost:3000")
-    client.get_leaderboard(leaderboard_type=4, event_instance_id="event1", group_id="group1")
+    client.get_leaderboard(leaderboard_type=4, event_instance_id="event1", group_id="group1", raw=True)
 
     body = json.loads(httpx_mock.get_request().content)
     assert body["payload"]["leaderboardType"] == 4
@@ -307,7 +307,7 @@ def test_get_leaderboard_type_6_with_string_league_division(httpx_mock: HTTPXMoc
     httpx_mock.add_response(json={"leaderboard": []})
 
     client = SwgohComlink(url="http://localhost:3000")
-    client.get_leaderboard(leaderboard_type=6, league="kyber", division="1")
+    client.get_leaderboard(leaderboard_type=6, league="kyber", division="1", raw=True)
 
     body = json.loads(httpx_mock.get_request().content)
     assert body["payload"]["leaderboardType"] == 6
@@ -319,7 +319,7 @@ def test_get_leaderboard_type_6_with_int_division(httpx_mock: HTTPXMock):
     httpx_mock.add_response(json={"leaderboard": []})
 
     client = SwgohComlink(url="http://localhost:3000")
-    client.get_leaderboard(leaderboard_type=6, league="carbonite", division=3)
+    client.get_leaderboard(leaderboard_type=6, league="carbonite", division=3, raw=True)
 
     body = json.loads(httpx_mock.get_request().content)
     assert body["payload"]["league"] == 20  # carbonite
