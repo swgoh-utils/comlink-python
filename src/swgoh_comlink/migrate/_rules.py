@@ -162,4 +162,65 @@ RULES: list[MigrationRule] = [
         message="SwgohComlink instantiation without context manager.",
         suggestion=("Consider using 'with SwgohComlink() as comlink:' for automatic connection cleanup."),
     ),
+    # ── v2 → v3 rules ─────────────────────────────────────────────────
+    #
+    # v3 typed endpoints (get_player, get_guild, get_game_metadata,
+    # get_leaderboard) now return msgspec.Struct by default. Dict
+    # indexing on the return value breaks. The fixes:
+    #   - attribute access: player.roster_unit
+    #   - opt out: get_player(..., raw=True) returns the v2 dict
+    #   - one-shot bridge: swgoh_comlink.compat.to_dict(player)["rosterUnit"]
+    MigrationRule(
+        id="V3001",
+        pattern=r"\.get_player\([^)]*\)\s*\[",
+        severity="ERROR",
+        message="get_player() returns a typed Player Struct in v3.",
+        suggestion=(
+            "Use attribute access (player.roster_unit) instead of dict indexing. "
+            "If you need the v2 dict shape, pass raw=True: client.get_player(..., raw=True)['rosterUnit']. "
+            "For a one-shot bridge: swgoh_comlink.compat.to_dict(player)['rosterUnit']."
+        ),
+    ),
+    MigrationRule(
+        id="V3002",
+        pattern=r"\.get_guild\([^)]*\)\s*\[",
+        severity="ERROR",
+        message="get_guild() returns a typed Guild Struct in v3.",
+        suggestion=(
+            "Use attribute access (guild.profile.name, guild.member) instead of dict indexing. "
+            "Or opt out via get_guild(..., raw=True)['member']."
+        ),
+    ),
+    MigrationRule(
+        id="V3003",
+        pattern=r"\.get_game_metadata\([^)]*\)\s*\[",
+        severity="ERROR",
+        message="get_game_metadata() returns a typed Metadata Struct in v3.",
+        suggestion=(
+            "Use attribute access (metadata.latest_gamedata_version) instead of dict indexing. "
+            "Or opt out via get_game_metadata(..., raw=True)['latestGamedataVersion']."
+        ),
+    ),
+    MigrationRule(
+        id="V3004",
+        pattern=r"\.get_leaderboard\([^)]*\)\s*\[",
+        severity="ERROR",
+        message="get_leaderboard() returns a typed LeaderboardResponse Struct in v3.",
+        suggestion=(
+            "Use attribute access (lb.leaderboard, lb.player) instead of dict indexing. "
+            "Note: individual player entries within lb.player and lb.leaderboard[i].player "
+            "remain dict[str, Any] for content fidelity."
+        ),
+    ),
+    MigrationRule(
+        id="V3005",
+        pattern=r"swgoh_comlink\.globals",
+        severity="WARNING",
+        message="swgoh_comlink.globals shadows the builtin globals() inside __init__.py.",
+        suggestion=(
+            "In v3 the import works, but the submodule name is a known foot-gun "
+            "(see Phase 5 report). v3.1 candidate to rename. Switch to "
+            "swgoh_comlink.helpers.get_logger or equivalent when available."
+        ),
+    ),
 ]

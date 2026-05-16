@@ -1,6 +1,6 @@
 {
   "phase": "phase-5-import-time",
-  "git_sha": "3831f31f7c0176c6897fb36d4d2b50fa44575fab",
+  "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
   "python_version": "3.11.15",
   "platform": "darwin",
   "env": {
@@ -10,13 +10,13 @@
     {
       "phase": "phase-5-import-time",
       "metric": "cold_import_time_ms",
-      "value": 6.8075,
+      "value": 6.42,
       "unit": "ms",
       "status": "ok",
-      "git_sha": "3831f31f7c0176c6897fb36d4d2b50fa44575fab",
-      "timestamp": "2026-05-16T20:39:52+00:00",
+      "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
+      "timestamp": "2026-05-16T21:47:38+00:00",
       "meta": {
-        "p95_ms": 7.338,
+        "p95_ms": 6.808,
         "iters": 20
       }
     },
@@ -26,19 +26,19 @@
       "value": 0.0,
       "unit": "bool",
       "status": "ok",
-      "git_sha": "3831f31f7c0176c6897fb36d4d2b50fa44575fab",
-      "timestamp": "2026-05-16T20:39:52+00:00"
+      "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
+      "timestamp": "2026-05-16T21:47:38+00:00"
     },
     {
       "phase": "phase-5-import-time",
       "metric": "import_then_construct_ms",
-      "value": 80.19512495957315,
+      "value": 73.9638750674203,
       "unit": "ms",
       "status": "ok",
-      "git_sha": "3831f31f7c0176c6897fb36d4d2b50fa44575fab",
-      "timestamp": "2026-05-16T20:39:53+00:00",
+      "git_sha": "4b5e008cb12825ab9532e4e1e3b42d8feeafde1c",
+      "timestamp": "2026-05-16T21:47:39+00:00",
       "meta": {
-        "p95_ms": 87.48449990525842,
+        "p95_ms": 95.86237499024719,
         "iters": 10
       }
     }
