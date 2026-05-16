@@ -283,7 +283,7 @@ def bench_concurrent_100x_async(rep: Reporter) -> None:
         try:
             await asyncio.gather(*(client.get_player(allycode="123456789") for _ in range(100)))
         finally:
-            await client.close()
+            await client.aclose()
 
     # Wall-time: a single 100-call gather is the unit of measurement.
     timing = measure(lambda: asyncio.run(runner()), warmup=1, iters=5)

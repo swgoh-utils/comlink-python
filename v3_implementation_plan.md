@@ -48,7 +48,7 @@ This is a **standalone research repo** at `/Users/marktripod/code/comlink-python
 | **Method-body duplication ratio** | Custom script: AST-diff each `get_*` in `swgoh_comlink.py` vs `swgoh_comlink_async.py`; report % of overlapping lines | Phase 4 |
 | **Import-graph cost** | `python -X importtime ... 2>&1 \| awk` to sum cumulative ms for the whole `swgoh_comlink.*` tree | Phase 5 |
 
-**Phase 0 exit criteria:** `bench_baseline.py` runs clean; `results/phase-0-baseline.json` exists; all numbers reproducible across 3 runs within ±5%. Cassettes are gzipped, checked in, and sum to under 5 MB on disk. No code changes to `src/swgoh_comlink/`.
+**Phase 0 exit criteria:** `bench_baseline.py` runs clean; `results/phase-0-baseline.json` exists; all numbers reproducible across 3 runs within ±5%. Cassettes are gzipped and checked in (expect ~15-20 MB total — `/data` alone is ~15 MB gzipped; the full-payload size is load-bearing for Phase 3's headline numbers and cannot be reduced). No code changes to `src/swgoh_comlink/`.
 
 ---
 

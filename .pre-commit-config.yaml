@@ -12,6 +12,11 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-added-large-files
+        # Cassettes under benchmarks/v3/fixtures/ are intentionally large
+        # (the full /data dump is ~15 MiB gzipped and load-bearing for the
+        # Phase 3 msgspec headline numbers). Bump the threshold from the
+        # 500 KiB default to 20 MiB so they fit.
+        args: [--maxkb=20480]
       - id: debug-statements
 
   # ── Ruff linter & formatter (mirrors CI lint job) ─────────────────────
