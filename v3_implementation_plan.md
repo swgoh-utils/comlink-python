@@ -130,6 +130,46 @@ This is a **standalone research repo** at `/Users/marktripod/code/comlink-python
 
 ---
 
+## Phase 3.5 — Deepen Player Struct nesting
+
+**Branch:** `v3/phase-3.5-deepen-player-typing` off `v3.0-dev` after Phase 3.
+
+**Goals:** Close the partial-typing gap that left Phase 3's memory wins under projection. Phase 3 typed Player and RosterUnit at the top, but left heavy nested fields (`Mod.primary_stat`, `Mod.secondary_stat`, `Mod.level_cost`, `Player.datacron`, `Player.pvp_profile`, etc.) as `dict[str, Any]`. Those are the bytes that dominate the player_large object graph — 2,400+ Mod sub-dicts per player. Phase 3.5 types them.
+
+**Tasks:**
+1. Survey actual sub-field shapes from the recorded cassettes (don't guess; the wire format isn't documented).
+2. Add new leaf Structs in `src/swgoh_comlink/_models.py`:
+   - `PrimaryStat`, `SecondaryStat` (Mod stats)
+   - `CurrencyCost` (level_cost, remove_cost, sell_value all share this shape)
+   - `ConvertedItem`
+   - `EquipmentSlot` (`RosterUnit.equipment`)
+   - `UnitStat` (`RosterUnit.unit_stat`)
+   - `Datacron` + `DatacronAffix` (`Player.datacron`)
+   - `EraUnitStatus`, `ProfileStat`, `SeasonStatusEntry`
+   - `PvpProfileEntry` + `Squad` + `SquadUnit` (`Player.pvp_profile`)
+   - `PlayerRating`, `PortraitId`, `TitleId`
+3. Update `Mod`, `RosterUnit`, `Player` to reference the new types in place of `dict[str, Any]` / `list[dict[str, Any]]`.
+4. `gc=False` on every leaf (these are the GC speedup hotspots — 2,400 Mods × 1.75x cheaper GC each).
+5. Re-run goldens; `msgspec.to_builtins` of the deeper Structs must produce the same dict shape the Phase 3 goldens captured.
+6. Re-run `bench_decode_speed`, `bench_decode_memory`, `bench_object_size`; verify wins moved toward the original plan projections.
+7. Tighten the `test_memory_budgets.py` `PLAYER_LARGE_BUDGET_BYTES` if the new typed-decode peak comfortably allows it.
+
+**Out of scope (kept as dicts):**
+- `/data` segment typing — Phase 7 (`GameDataCache`) will pick its own subset.
+- `unlocked_player_portrait/title` — long lists but each item is just `{"id": str}`; minimal memory delta.
+
+**Benchmarking:**
+Same harness as Phase 3 (`bench_decode_*` scripts). Compare against Phase 3 baselines, not Phase 0 — Phase 3.5 is a depth tweak on top of Phase 3's architecture.
+
+**Expected deltas (vs Phase 3):**
+- `player_large` typed decode memory: ~1.28x → ~3x+ lower than json baseline (closer to plan's 4-6x).
+- `player_large` typed object size: ~1.02x → ~2x+ smaller (was the worst miss; deep typing is the lever).
+- `player_small` decode speed: 2.45x → 2.5–3x (small bump; was already most-typed).
+
+**Phase 3.5 exit criteria:** all v3 tests still green; benchmark deltas meet expectations; memory budget test updated; phase report explains the new baseline.
+
+---
+
 ## Phase 4 — Sibling-on-base sync/async collapse
 
 **Branch:** `v3/phase-4-sibling-clients` off `v3.0-dev` after Phase 3.

@@ -40,7 +40,7 @@ __all__ = [
     "METADATA_DECODER",
     "PLAYER_DECODER",
     "UNTYPED_DECODER",
-    # Types
+    # Types — top-level
     "Guild",
     "GuildEnvelope",
     "GuildProfile",
@@ -48,12 +48,30 @@ __all__ = [
     "LeaderboardResponse",
     "Member",
     "Metadata",
-    "Mod",
-    "ModStat",
     "Player",
+    # Types — RosterUnit nesting
+    "Mod",
+    "PrimaryStat",
     "Relic",
     "RosterUnit",
+    "SecondaryStat",
     "Skill",
+    "StatValue",
+    # Types — Player nesting
+    "CurrencyCost",
+    "Datacron",
+    "DatacronAffix",
+    "EraUnitStatus",
+    "IdRef",
+    "PlayerRankStatus",
+    "PlayerRating",
+    "PlayerSkillRating",
+    "ProfileStat",
+    "PvpProfileEntry",
+    "SeasonStatusEntry",
+    "Squad",
+    "SquadCell",
+    "SquadDatacron",
     # Helpers
     "decoder_for",
 ]
@@ -113,6 +131,12 @@ class Metadata(_StructBase):
 
 
 # ── /player and nested ──────────────────────────────────────────────────────
+#
+# Phase 3.5 deepens these. The leaf types (StatValue, CurrencyCost,
+# DatacronAffix, etc.) use ``gc=False`` because they're truly terminal —
+# they reference only primitives, lists of primitives, or other gc=False
+# leaves. Container types (Mod, Datacron, Squad, RosterUnit, Player)
+# stay gc=True so they can be collected when referenced from cycles.
 
 
 class Skill(_LeafStruct):
@@ -122,32 +146,74 @@ class Skill(_LeafStruct):
     tier: int = 0
 
 
-class ModStat(_LeafStruct):
-    """Mod stat. Used in :class:`Mod`."""
+# ── Mod stat shape ──────────────────────────────────────────────────────────
 
-    stat: dict[str, Any] = msgspec.field(default_factory=dict)
-    roll: list[int] = msgspec.field(default_factory=list)
+
+class StatValue(_LeafStruct):
+    """The inner ``stat`` object of a :class:`PrimaryStat` / :class:`SecondaryStat`.
+
+    Comlink ships scalar/unscaled in string form (BigInteger over the wire);
+    we preserve that — converting to int loses precision for high-roll mods.
+    """
+
+    unit_stat_id: int = 0
+    scalar: str = "0"
+    stat_value_decimal: str = "0"
+    ui_display_override_value: str = "-1"
+    unscaled_decimal_value: str = "0"
+
+
+class PrimaryStat(_LeafStruct):
+    """Mod primary stat (1 per mod)."""
+
+    stat: StatValue = msgspec.field(default_factory=StatValue)
+    roll: list[str] = msgspec.field(default_factory=list)
     stat_rolls: int = 0
-    stat_roller_bounds_max: str = ""
-    stat_roller_bounds_min: str = ""
+    stat_roller_bounds_max: str = "0"
+    stat_roller_bounds_min: str = "0"
     unscaled_roll_value: list[str] = msgspec.field(default_factory=list)
 
 
+class SecondaryStat(_LeafStruct):
+    """Mod secondary stat (up to 4 per mod). Same shape as :class:`PrimaryStat`."""
+
+    stat: StatValue = msgspec.field(default_factory=StatValue)
+    roll: list[str] = msgspec.field(default_factory=list)
+    stat_rolls: int = 0
+    stat_roller_bounds_max: str = "0"
+    stat_roller_bounds_min: str = "0"
+    unscaled_roll_value: list[str] = msgspec.field(default_factory=list)
+
+
+class CurrencyCost(_LeafStruct):
+    """Reused by ``level_cost``, ``remove_cost``, ``sell_value`` (same shape)."""
+
+    bonus_quantity: int = 0
+    currency: int = 0
+    quantity: str = "0"
+
+
 class Mod(_LeafStruct):
-    """One equipped stat mod. Big list per roster unit (typically 6 per unit)."""
+    """One equipped stat mod. Big list per roster unit (typically 6 per unit).
+
+    Phase 3.5: nested Stat / CurrencyCost types swapped in. This is the
+    largest single typing change in the player graph — ~2,400 Mods per
+    large-roster player x 5 typed sub-structs each = ~12,000 newly
+    slotted objects.
+    """
 
     bonus_quantity: int = 0
     converted_item: dict[str, Any] | None = None
     definition_id: str = ""
     id: str = ""
     level: int = 0
-    level_cost: dict[str, Any] = msgspec.field(default_factory=dict)
+    level_cost: CurrencyCost = msgspec.field(default_factory=CurrencyCost)
     locked: bool = False
-    primary_stat: dict[str, Any] = msgspec.field(default_factory=dict)
-    remove_cost: dict[str, Any] = msgspec.field(default_factory=dict)
+    primary_stat: PrimaryStat = msgspec.field(default_factory=PrimaryStat)
+    remove_cost: CurrencyCost = msgspec.field(default_factory=CurrencyCost)
     rerolled_count: int = 0
-    secondary_stat: list[dict[str, Any]] = msgspec.field(default_factory=list)
-    sell_value: dict[str, Any] = msgspec.field(default_factory=dict)
+    secondary_stat: list[SecondaryStat] = msgspec.field(default_factory=list)
+    sell_value: CurrencyCost = msgspec.field(default_factory=CurrencyCost)
     tier: int = 0
     xp: int = 0
 
@@ -156,6 +222,9 @@ class Relic(_LeafStruct):
     """Relic tier object on a roster unit. Just ``{"currentTier": n}``."""
 
     current_tier: int = 0
+
+
+# ── RosterUnit ──────────────────────────────────────────────────────────────
 
 
 class RosterUnit(_StructBase):
@@ -167,18 +236,170 @@ class RosterUnit(_StructBase):
     current_rarity: int = 0
     current_tier: int = 0
     current_xp: int = 0
-    equipment: list[dict[str, Any]] = msgspec.field(default_factory=list)
+    # equipment items are always observed empty in current cassettes — leave
+    # as Any. When users start hitting non-empty equipment, type this.
+    equipment: list[Any] = msgspec.field(default_factory=list)
     equipped_stat_mod: list[Mod] = msgspec.field(default_factory=list)
     equipped_stat_mod_old: list[Any] = msgspec.field(default_factory=list)
     promotion_recipe_reference: str = ""
     purchased_ability_id: list[str] = msgspec.field(default_factory=list)
     relic: Relic | None = None
     skill: list[Skill] = msgspec.field(default_factory=list)
+    # unit_stat is observed null across the cassette — keep flexible.
     unit_stat: dict[str, Any] | None = None
 
 
+# ── Player-level nested types ───────────────────────────────────────────────
+
+
+class DatacronAffix(_LeafStruct):
+    """One affix on a datacron (up to 9 per datacron)."""
+
+    ability_id: str = ""
+    required_relic_tier: int = 0
+    required_unit_tier: int = 0
+    scope_icon: str = ""
+    stat_type: int = 0
+    stat_value: str = "0"
+    tag: list[str] = msgspec.field(default_factory=list)
+    target_rule: str = ""
+
+
+class Datacron(_StructBase):
+    """One datacron on a player. Player-level shape has the full reroll
+    bookkeeping; squad-embedded datacrons use :class:`SquadDatacron` instead.
+    """
+
+    id: str = ""
+    set_id: int = 0
+    template_id: str = ""
+    affix: list[DatacronAffix] = msgspec.field(default_factory=list)
+    locked: bool = False
+    focused: bool = False
+    reroll_count: int = 0
+    reroll_index: int = 0
+    reroll_option: list[Any] = msgspec.field(default_factory=list)
+    tag: list[str] = msgspec.field(default_factory=list)
+
+
+class SquadDatacron(_StructBase):
+    """Datacron as embedded in a saved squad (:class:`Squad.datacron`).
+
+    Strict subset of :class:`Datacron`: no ``locked``, ``focused``, or
+    ``reroll*`` (those live on the player-level shape only). Has its own
+    ``highestTierApplied`` field which is *not* present on player-level
+    datacrons. Modeled as a separate type to keep ``msgspec.to_builtins``
+    round-trip byte-faithful against the wire.
+    """
+
+    id: str = ""
+    set_id: int = 0
+    template_id: str = ""
+    affix: list[DatacronAffix] = msgspec.field(default_factory=list)
+    tag: list[str] = msgspec.field(default_factory=list)
+    highest_tier_applied: int = 0
+
+
+class EraUnitStatus(_LeafStruct):
+    """Per-era unit unlock status."""
+
+    unit_base_id: str = ""
+    era_level: int = 0
+
+
+class ProfileStat(_LeafStruct):
+    """One profile stat counter."""
+
+    index: int = 0
+    name_key: str = ""
+    value: str = "0"
+    version_key: str = ""
+
+
+class SquadCell(_LeafStruct):
+    """One cell in a saved-squad lineup."""
+
+    cell_index: int = 0
+    crew_battle_stat: list[Any] = msgspec.field(default_factory=list)
+    forced_unit_era_level: int = 0
+    inherit_from_definition_id: str = ""
+    message_reticle: str = ""
+    overkill_item: bool = False
+    progress_item: bool = True
+    selectable: bool = True
+    squad_unit_type: int = 0
+    unit_battle_stat: dict[str, Any] | None = None
+    unit_def_id: str = ""
+    unit_id: str = ""
+    unit_state: dict[str, Any] | None = None
+
+
+class Squad(_StructBase):
+    """A saved-squad config (also embeds a datacron)."""
+
+    cell: list[SquadCell] = msgspec.field(default_factory=list)
+    datacron: SquadDatacron | None = None
+    expire_time: str = "0"
+    last_save_time: str = "0"
+    squad_type: int = 0
+    support_inherit_from_definition_id: str = ""
+    targeting_set_id: str = ""
+    targeting_tactic: int = 0
+
+
+class PvpProfileEntry(_StructBase):
+    """One PvP profile slot (arena/fleet/etc.)."""
+
+    tab: int = 0
+    rank: int = 0
+    event_id: str = ""
+    squad: Squad = msgspec.field(default_factory=Squad)
+
+
+class SeasonStatusEntry(_LeafStruct):
+    """One past/current GAC season status row."""
+
+    season_id: str = ""
+    event_instance_id: str = ""
+    league: str = ""
+    division: int = 0
+    rank: int = 0
+    wins: int = 0
+    losses: int = 0
+    season_points: int = 0
+    join_time: str = "0"
+    end_time: str = "0"
+    remove: bool = False
+
+
+class PlayerRankStatus(_LeafStruct):
+    """Player's current league + division (inside :class:`PlayerRating`)."""
+
+    league_id: str = ""
+    division_id: int = 0
+
+
+class PlayerSkillRating(_LeafStruct):
+    """Player's skill rating (MMR-ish) (inside :class:`PlayerRating`)."""
+
+    skill_rating: int = 0
+
+
+class PlayerRating(_LeafStruct):
+    """Aggregate of player league/division + skill rating."""
+
+    player_rank_status: PlayerRankStatus = msgspec.field(default_factory=PlayerRankStatus)
+    player_skill_rating: PlayerSkillRating = msgspec.field(default_factory=PlayerSkillRating)
+
+
+class IdRef(_LeafStruct):
+    """``{"id": str}`` for selected_player_portrait / title and unlocked_* lists."""
+
+    id: str = ""
+
+
 class Player(_StructBase):
-    """`/player` envelope. ~26 top-level fields; deepest nesting is roster."""
+    """`/player` envelope. ~26 top-level fields; the heavy nesting is roster."""
 
     # Identity
     name: str = ""
@@ -195,22 +416,22 @@ class Player(_StructBase):
     guild_banner_color: str = ""
     guild_banner_logo: str = ""
     guild_logo_background: str = ""
-    # Roster + collections
+    # Roster + collections (Phase 3.5 typed)
     roster_unit: list[RosterUnit] = msgspec.field(default_factory=list)
-    datacron: list[dict[str, Any]] = msgspec.field(default_factory=list)
-    era_unit_status: list[dict[str, Any]] = msgspec.field(default_factory=list)
+    datacron: list[Datacron] = msgspec.field(default_factory=list)
+    era_unit_status: list[EraUnitStatus] = msgspec.field(default_factory=list)
     loaned_unit_era_level: int = 0
-    profile_stat: list[dict[str, Any]] = msgspec.field(default_factory=list)
-    pvp_profile: list[dict[str, Any]] = msgspec.field(default_factory=list)
-    season_status: list[dict[str, Any]] = msgspec.field(default_factory=list)
-    lifetime_season_score: str = ""
-    player_rating: dict[str, Any] = msgspec.field(default_factory=dict)
-    # Both selectedPlayer{Portrait,Title} are null on accounts that
-    # haven't picked one yet — observed on the small_roster cassette.
-    selected_player_portrait: dict[str, Any] | None = None
-    selected_player_title: dict[str, Any] | None = None
-    unlocked_player_portrait: list[dict[str, Any]] = msgspec.field(default_factory=list)
-    unlocked_player_title: list[dict[str, Any]] = msgspec.field(default_factory=list)
+    profile_stat: list[ProfileStat] = msgspec.field(default_factory=list)
+    pvp_profile: list[PvpProfileEntry] = msgspec.field(default_factory=list)
+    season_status: list[SeasonStatusEntry] = msgspec.field(default_factory=list)
+    lifetime_season_score: str = "0"
+    player_rating: PlayerRating = msgspec.field(default_factory=PlayerRating)
+    # Both selectedPlayer{Portrait,Title} are null on accounts that haven't
+    # picked one yet (observed on the small_roster cassette).
+    selected_player_portrait: IdRef | None = None
+    selected_player_title: IdRef | None = None
+    unlocked_player_portrait: list[IdRef] = msgspec.field(default_factory=list)
+    unlocked_player_title: list[IdRef] = msgspec.field(default_factory=list)
 
 
 # ── /guild and nested ───────────────────────────────────────────────────────
