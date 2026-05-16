@@ -147,6 +147,121 @@ class SwgohComlink(SwgohComlinkBase):
             self.client.close()
         self.stats_client.close()
 
+    # ── Phase 8 ergonomics ──────────────────────────────────────────────
+
+    def healthcheck(self, *, timeout: float = 5.0) -> bool:
+        """Probe the comlink ``/enums`` endpoint and report reachability.
+
+        Returns True on a 200 response within *timeout* seconds; False on
+        any HTTP error, network error, or timeout. Does NOT raise.
+        Intended for bot startup probes — "is comlink up before I begin
+        the per-tick loop?"
+
+        Bypasses the retry loop. ``/enums`` is a cheap GET that serves
+        static data, so the only meaningful failure modes are
+        "comlink down" and "network unreachable" — both should fail
+        fast, not retry.
+        """
+        try:
+            r = self.client.request("GET", "/enums", timeout=timeout)
+        except (httpx.HTTPError, httpx.TimeoutException, httpx.RequestError):
+            return False
+        return r.status_code == 200
+
+    def raw_request(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | list[Any] | None = None,
+        *,
+        timeout: float | None = None,
+    ) -> httpx.Response:
+        """Issue a request to *path* and return the raw :class:`httpx.Response`.
+
+        Escape hatch for endpoints the SDK doesn't model, debugging, or
+        any case where the typed/retry pipeline isn't wanted. Bypasses:
+        the retry loop, status classification, msgspec decode, the
+        Struct/typed-decoder dispatch — everything past
+        ``_build_request_kwargs``.
+
+        HMAC headers are still attached.
+
+        Args:
+            method: HTTP method (``"GET"``, ``"POST"``, etc.).
+            path: Endpoint path (with or without leading slash).
+            payload: Optional JSON body (sent verbatim for non-GET).
+            timeout: Per-request timeout override.
+
+        Returns:
+            :class:`httpx.Response`. Caller is responsible for status
+            checking and decoding.
+        """
+        method_u = method.upper()
+        endpoint = path.lstrip("/")
+        full_path, request_kwargs = self._build_request_kwargs(method_u, endpoint, payload, timeout)
+        return self.client.request(method_u, full_path, **request_kwargs)
+
+    def stream_game_data(
+        self,
+        version: str = "",
+        include_pve_units: bool = True,
+        request_segment: int = 0,
+        enums: bool = False,
+        items: str | None = None,
+        device_platform: str = "Android",
+    ) -> Any:
+        """Return an ``httpx.Client.stream`` context manager for ``/data``.
+
+        Use when the payload is too large to materialize in memory at
+        once. The caller treats the returned object as a context manager
+        and iterates ``response.iter_bytes()`` (or ``.iter_text()`` /
+        ``.iter_lines()`` / ``.iter_raw()``).
+
+        Bypasses the retry loop (streaming + retry doesn't compose
+        cleanly — a half-streamed response can't be replayed). For
+        retry-on-fail, use :meth:`get_game_data` and accept the
+        in-memory cost.
+
+        Example::
+
+            with client.stream_game_data() as r:
+                r.raise_for_status()
+                with open("data.json", "wb") as f:
+                    for chunk in r.iter_bytes():
+                        f.write(chunk)
+        """
+        game_version = version or self._get_game_version()
+        payload = game_data_payload(
+            game_version=game_version,
+            include_pve_units=include_pve_units,
+            request_segment=request_segment,
+            enums=enums,
+            items=items,
+            device_platform=device_platform,
+        )
+        full_path, request_kwargs = self._build_request_kwargs("POST", "data", payload, GAME_DATA_TIMEOUT)
+        return self.client.stream("POST", full_path, **request_kwargs)
+
+    def stream_localization(
+        self,
+        localization_id: str | None = None,
+        locale: str | None = None,
+        unzip: bool = False,
+        enums: bool = False,
+    ) -> Any:
+        """Return an ``httpx.Client.stream`` context manager for ``/localization``.
+
+        Same semantics as :meth:`stream_game_data` — caller iterates
+        ``response.iter_bytes()`` and is responsible for status checking.
+        """
+        if not localization_id:
+            localization_id = self.get_latest_game_data_version()["language"]
+        payload = localization_payload(localization_id, locale, unzip, enums)
+        full_path, request_kwargs = self._build_request_kwargs("POST", "localization", payload, None)
+        return self.client.stream("POST", full_path, **request_kwargs)
+
+    # ── Internal request plumbing ────────────────────────────────────────
+
     def _request(
         self,
         method: str = "POST",
