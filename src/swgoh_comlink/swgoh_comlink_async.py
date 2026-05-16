@@ -29,9 +29,21 @@ from ._models import (
     Player,
     decode_guild,
 )
+from ._payloads import (
+    game_data_payload,
+    game_metadata_payload,
+    guild_criteria_payload,
+    guild_leaderboard_payload,
+    guild_payload,
+    guild_search_payload,
+    leaderboard_payload,
+    localization_payload,
+    player_arena_payload,
+    player_payload,
+    unit_stats_endpoint,
+)
 from ._retry import RetryableStatusError, retrying_async
-from .exceptions import SwgohComlinkException, SwgohComlinkValueError
-from .helpers import Constants
+from .exceptions import SwgohComlinkException
 
 __all__ = ["SwgohComlinkAsync"]
 
@@ -200,55 +212,32 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     # ── Public API methods ───────────────────────────────────────────────
 
     async def get_unit_stats(
-        self, request_payload: dict[str, Any] | list[Any], flags: list[str] | None = None, language: str | None = None
+        self,
+        request_payload: dict[str, Any] | list[Any],
+        flags: list[str] | None = None,
+        language: str | None = None,
     ) -> list[Any] | dict[str, Any]:
-        """
-        Calculate unit stats using the swgoh-stats service interface to swgoh-comlink.
-
-        Args:
-            request_payload: Dictionary or list of dictionaries containing units for which to calculate stats.
-            flags: List of strings specifying which flags to include in the request URI.
-            language: String indicating the desired localized language. Default "eng_us".
-
-        Returns:
-            Input object with the calculated stats for the specified units included.
-        """
-        endpoint_string = self._build_unit_stats_endpoint(flags, language)
+        """Calculate unit stats via the swgoh-stats sub-service."""
         if isinstance(request_payload, dict):
             request_payload = [request_payload]
         return cast(
             "list[Any] | dict[str, Any]",
-            await self._post(endpoint=endpoint_string, payload=request_payload, stats=True),
+            await self._post(endpoint=unit_stats_endpoint(flags, language), payload=request_payload, stats=True),
         )
 
     async def get_enums(self) -> dict[str, Any]:
-        """
-        Get an object containing the game data enums.
-
-        Unlike most endpoints, ``/enums`` uses a GET request.
-
-        Returns:
-            A dictionary containing the game data enums.
-        """
+        """Get the game data enums. Uses GET (not POST)."""
         return cast(dict[str, Any], await self._request(method="GET", endpoint="enums"))
 
-    # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums
 
     async def get_events(self, enums: bool = False) -> dict[str, list[Any]]:
-        """
-        Get an object containing the events game data.
+        """Get the events game data."""
+        return cast(
+            dict[str, list[Any]],
+            await self._post(endpoint="getEvents", payload={"payload": {}, "enums": enums}),
+        )
 
-        Args:
-            enums: Boolean flag to indicate whether enum value should be converted in response. [Default is False]
-
-        Returns:
-            A single element dictionary containing a list of the events game data.
-        """
-        payload = {"payload": {}, "enums": enums}
-        return cast(dict[str, list[Any]], await self._post(endpoint="getEvents", payload=payload))
-
-    # alias for non PEP usage of direct endpoint calls
     getEvents = get_events
 
     async def get_game_data(
@@ -260,27 +249,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         items: str | None = None,
         device_platform: str = "Android",
     ) -> dict[str, Any]:
-        """
-        Get game data.
-
-        Args:
-            version: string (found in metadata key value 'latestGamedataVersion')
-            include_pve_units: boolean [Defaults to True]
-            request_segment: integer >=0 [Defaults to 0]
-            enums: boolean [Defaults to False]
-            items: string [Defaults to None] bitwise value indicating the collections to retrieve from game.
-                NOTE: this parameter is mutually exclusive with request_segment.
-            device_platform: string [Defaults to "Android"]
-
-        Returns:
-            A dictionary containing the game data.
-        """
-        if version == "":
-            game_version = await self._get_game_version()
-        else:
-            game_version = version
-
-        payload = self._build_game_data_payload(
+        """Get game data. ``version=""`` triggers a metadata fetch for the latest version."""
+        game_version = version or await self._get_game_version()
+        payload = game_data_payload(
             game_version=game_version,
             include_pve_units=include_pve_units,
             request_segment=request_segment,
@@ -290,36 +261,25 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         )
         return cast(dict[str, Any], await self._post(endpoint="data", payload=payload, timeout=GAME_DATA_TIMEOUT))
 
-    # alias for non PEP usage of direct endpoint calls
     getGameData = get_game_data
 
     async def get_localization(
-        self, localization_id: str | None = None, locale: str | None = None, unzip: bool = False, enums: bool = False
+        self,
+        localization_id: str | None = None,
+        locale: str | None = None,
+        unzip: bool = False,
+        enums: bool = False,
     ) -> dict[str, Any]:
-        """
-        Get localization data from game.
-
-        Args:
-            localization_id: latestLocalizationBundleVersion found in game metadata.
-            locale: string Specify only a specific locale to retrieve [for example "ENG_US"]
-            unzip: boolean [Defaults to False]
-            enums: boolean [Defaults to False]
-
-        Returns:
-            A dictionary containing the localization data.
-        """
+        """Get localization data. ``localization_id=None`` triggers a metadata fetch."""
         if not localization_id:
-            current_game_version = await self.get_latest_game_data_version()
-            localization_id = current_game_version["language"]
+            localization_id = (await self.get_latest_game_data_version())["language"]
+        return cast(
+            dict[str, Any],
+            await self._post(
+                endpoint="localization", payload=localization_payload(localization_id, locale, unzip, enums)
+            ),
+        )
 
-        if locale:
-            assert localization_id is not None
-            localization_id = localization_id + ":" + locale.upper()
-
-        payload = {"unzip": unzip, "enums": enums, "payload": {"id": localization_id}}
-        return cast(dict[str, Any], await self._post(endpoint="localization", payload=payload))
-
-    # aliases for non PEP usage of direct endpoint calls
     getLocalization = get_localization
     getLocalizationBundle = get_localization
     get_localization_bundle = get_localization
@@ -331,23 +291,13 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         *,
         raw: bool = False,
     ) -> Metadata | dict[str, Any]:
-        """
-        Get the game metadata. Game metadata contains the current game and localization versions.
+        """Get game metadata. Returns :class:`Metadata` by default; ``raw=True`` for the v2 dict."""
+        decoder = None if raw else METADATA_DECODER.decode
+        return cast(
+            "Metadata | dict[str, Any]",
+            await self._post(endpoint="metadata", payload=game_metadata_payload(client_specs, enums), decoder=decoder),
+        )
 
-        Args:
-            client_specs: Optional dictionary containing client specifications.
-            enums: Boolean signifying whether enums in response should be translated to text. [Default: False]
-            raw: When True, return raw ``dict`` (v2 shape). Default returns :class:`Metadata`.
-        """
-        if client_specs:
-            payload: dict[str, Any] = {"payload": {"client_specs": client_specs}, "enums": enums}
-        else:
-            payload = {}
-        if raw:
-            return cast(dict[str, Any], await self._post(endpoint="metadata", payload=payload))
-        return cast(Metadata, await self._post(endpoint="metadata", payload=payload, decoder=METADATA_DECODER.decode))
-
-    # alias for non PEP usage of direct endpoint calls
     getGameMetaData = get_game_metadata
     getMetaData = get_game_metadata
     get_metadata = get_game_metadata
@@ -360,21 +310,13 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         *,
         raw: bool = False,
     ) -> Player | dict[str, Any]:
-        """
-        Get player information from game. Either allycode or player_id must be provided.
+        """Get player info. Returns :class:`Player` by default; ``raw=True`` for the v2 dict."""
+        decoder = None if raw else PLAYER_DECODER.decode
+        return cast(
+            "Player | dict[str, Any]",
+            await self._post(endpoint="player", payload=player_payload(allycode, player_id, enums), decoder=decoder),
+        )
 
-        Args:
-            allycode: integer or string representing player allycode
-            player_id: string representing player game ID
-            enums: boolean [Defaults to False]
-            raw: When True, return raw ``dict`` (v2 shape). Default returns :class:`Player`.
-        """
-        payload = self._get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
-        if raw:
-            return cast(dict[str, Any], await self._post(endpoint="player", payload=payload))
-        return cast(Player, await self._post(endpoint="player", payload=payload, decoder=PLAYER_DECODER.decode))
-
-    # alias for non PEP usage of direct endpoint calls
     getPlayer = get_player
 
     @param_alias(param="player_details_only", alias="playerDetailsOnly")
@@ -385,23 +327,14 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         player_details_only: bool = False,
         enums: bool = False,
     ) -> dict[str, Any]:
-        """
-        Get player arena information from game. Either allycode or player_id must be provided.
+        """Get player arena info."""
+        return cast(
+            dict[str, Any],
+            await self._post(
+                endpoint="playerArena", payload=player_arena_payload(allycode, player_id, player_details_only, enums)
+            ),
+        )
 
-        Args:
-            allycode: integer or string representing player allycode
-            player_id: string representing player game ID
-            player_details_only: filter results to only player details [Defaults to False]
-            enums: boolean [Defaults to False]
-
-        Returns:
-            A dictionary containing the player arena information.
-        """
-        payload = self._get_player_payload(allycode=allycode, player_id=player_id, enums=enums)
-        payload["payload"]["playerDetailsOnly"] = player_details_only
-        return cast(dict[str, Any], await self._post(endpoint="playerArena", payload=payload))
-
-    # alias to allow for get_arena() calls as a shortcut for get_player_arena() and non PEP variations
     get_arena = get_player_arena
     get_player_arena_profile = get_player_arena
     getPlayerArena = get_player_arena
@@ -416,78 +349,45 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         *,
         raw: bool = False,
     ) -> Guild | dict[str, Any]:
-        """
-        Get guild information for a specific Guild ID.
-
-        Args:
-            guild_id: String ID of guild to retrieve.
-            include_recent_guild_activity_info: boolean [Default: False]
-            enums: Should enums in response be translated to text. [Default: False]
-            raw: When True, return raw ``dict`` (v2 shape, still unwrapped).
-                Default returns :class:`Guild`.
-        """
-        if not guild_id:
-            raise SwgohComlinkValueError("guild_id must not be empty.")
-        payload = {
-            "payload": {"guildId": guild_id, "includeRecentGuildActivityInfo": include_recent_guild_activity_info},
-            "enums": enums,
-        }
+        """Get guild info. Returns :class:`Guild` by default; ``raw=True`` unwraps the ``"guild"`` envelope into a v2-shaped dict."""
+        payload = guild_payload(guild_id, include_recent_guild_activity_info, enums)
         if raw:
             guild: dict[str, Any] = cast(dict[str, Any], await self._post(endpoint="guild", payload=payload))
-            if "guild" in guild.keys():
-                guild = guild["guild"]
-            return guild
+            return guild.get("guild", guild) if "guild" in guild else guild
         return cast(Guild, await self._post(endpoint="guild", payload=payload, decoder=decode_guild))
 
-    # alias for non PEP usage of direct endpoint calls
     getGuild = get_guild
 
     async def get_guilds_by_name(
-        self, name: str, start_index: int = 0, count: int = 10, enums: bool = False
+        self,
+        name: str,
+        start_index: int = 0,
+        count: int = 10,
+        enums: bool = False,
     ) -> dict[str, Any]:
-        """
-        Search for guild by name and return match.
+        """Search for guild by name."""
+        return cast(
+            dict[str, Any],
+            await self._post(endpoint="getGuilds", payload=guild_search_payload(name, start_index, count, enums)),
+        )
 
-        Args:
-            name: string for guild name search
-            start_index: integer for where in the result list to begin
-            count: integer for max matches to return [Default: 10]
-            enums: Whether to translate enums in response to text [Default: False]
-
-        Returns:
-            A dictionary containing the guild search results.
-        """
-        payload = {
-            "payload": {"name": name, "filterType": 4, "startIndex": start_index, "count": count},
-            "enums": enums,
-        }
-        return cast(dict[str, Any], await self._post(endpoint="getGuilds", payload=payload))
-
-    # alias for non PEP usage of direct endpoint calls
     getGuildByName = get_guilds_by_name
 
     async def get_guilds_by_criteria(
-        self, search_criteria: dict[str, Any], start_index: int = 0, count: int = 10, enums: bool = False
+        self,
+        search_criteria: dict[str, Any],
+        start_index: int = 0,
+        count: int = 10,
+        enums: bool = False,
     ) -> dict[str, Any]:
-        """
-        Search for guild by guild criteria and return matches.
+        """Search for guild by criteria dict."""
+        return cast(
+            dict[str, Any],
+            await self._post(
+                endpoint="getGuilds", payload=guild_criteria_payload(search_criteria, start_index, count, enums)
+            ),
+        )
 
-        Args:
-            search_criteria: Dictionary of search criteria
-            start_index: integer for where in the result list to begin
-            count: integer for max matches to return
-            enums: Whether to translate enum values to text [Default: False]
-
-        Returns:
-            A dictionary containing the guild search results.
-        """
-        payload = {
-            "payload": {"searchCriteria": search_criteria, "filterType": 5, "startIndex": start_index, "count": count},
-            "enums": enums,
-        }
-        return cast(dict[str, Any], await self._post(endpoint="getGuilds", payload=payload))
-
-    # alias for non PEP usage of direct endpoint calls
     getGuildByCriteria = get_guilds_by_criteria
 
     async def get_leaderboard(
@@ -501,86 +401,60 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         enums: bool = False,
         raw: bool = False,
     ) -> LeaderboardResponse | dict[str, Any]:
-        """
-        Retrieve Grand Arena Championship leaderboard information.
-
-        Args:
-            leaderboard_type: Type 4 for GAC brackets, Type 6 for global leaderboards.
-            league: Enum value or string name for league.
-            division: Enum value or string name for division.
-            event_instance_id: Event+instance ID (for type 4).
-            group_id: Group ID (for type 4).
-            enums: Whether to translate enum values to text [Default: False]
-
-        Returns:
-            A dictionary containing the leaderboard data.
-        """
-        leagues = Constants.LEAGUES
-        divisions = Constants.DIVISIONS
-        if isinstance(league, str):
-            league = leagues[league.lower()]
-        if isinstance(division, int) and len(str(division)) == 1:
-            division = divisions[str(division).lower()]
-        if isinstance(division, str):
-            division = divisions[division.lower()]
-        payload: dict[str, Any] = {
-            "payload": {
-                "leaderboardType": leaderboard_type,
-            },
-            "enums": enums,
-        }
-        if leaderboard_type == 4:
-            payload["payload"]["eventInstanceId"] = event_instance_id
-            payload["payload"]["groupId"] = group_id
-        elif leaderboard_type == 6:
-            payload["payload"]["league"] = league
-            payload["payload"]["division"] = division
-        if raw:
-            return cast(dict[str, Any], await self._post(endpoint="getLeaderboard", payload=payload))
+        """Get GAC leaderboard (type 4) or global leaderboard (type 6)."""
+        decoder = None if raw else LEADERBOARD_DECODER.decode
+        payload = leaderboard_payload(leaderboard_type, league, division, event_instance_id, group_id, enums)
         return cast(
-            LeaderboardResponse,
-            await self._post(endpoint="getLeaderboard", payload=payload, decoder=LEADERBOARD_DECODER.decode),
+            "LeaderboardResponse | dict[str, Any]",
+            await self._post(endpoint="getLeaderboard", payload=payload, decoder=decoder),
         )
 
-    # alias for non PEP usage of direct endpoint calls
     getLeaderboard = get_leaderboard
     get_gac_leaderboard = get_leaderboard
     getGacLeaderboard = get_leaderboard
 
     async def get_guild_leaderboard(
-        self, leaderboard_id: list[dict[str, Any]], count: int = 200, enums: bool = False
+        self,
+        leaderboard_id: list[dict[str, Any]],
+        count: int = 200,
+        enums: bool = False,
     ) -> dict[str, Any]:
-        """
-        Fetches the guild leaderboard data for given leaderboard ID.
+        """Fetch the guild leaderboard for a given ID."""
+        return cast(
+            dict[str, Any],
+            await self._post(
+                endpoint="getGuildLeaderboard", payload=guild_leaderboard_payload(leaderboard_id, count, enums)
+            ),
+        )
 
-        Parameters:
-            leaderboard_id: A list containing one leaderboard ID dictionary.
-            count: The number of leaderboard entries to retrieve. [Default: 200]
-            enums: Whether or not to translate enum values. [Default: False]
-
-        Returns:
-            A dictionary containing the guild leaderboard data.
-        """
-        payload = dict(payload={"leaderboardId": leaderboard_id, "count": count}, enums=enums)
-        return cast(dict[str, Any], await self._post(endpoint="getGuildLeaderboard", payload=payload))
-
-    # alias for non PEP usage of direct endpoint calls
     getGuildLeaderboard = get_guild_leaderboard
 
     async def get_name_spaces(self, only_compatible: bool = False, enums: bool = False) -> dict[str, Any]:
-        """Fetches namespaces based on the specified filter criteria."""
-        payload = {"payload": {"onlyCompatible": only_compatible}, "enums": enums}
-        return cast(dict[str, Any], await self._post(endpoint="getNameSpaces", payload=payload))
+        """Fetch namespaces."""
+        return cast(
+            dict[str, Any],
+            await self._post(
+                endpoint="getNameSpaces", payload={"payload": {"onlyCompatible": only_compatible}, "enums": enums}
+            ),
+        )
 
     async def get_segmented_content(
-        self, content_name_space: str = "current", accept_language: str = "ENG_US", enums: bool = False
+        self,
+        content_name_space: str = "current",
+        accept_language: str = "ENG_US",
+        enums: bool = False,
     ) -> dict[str, Any]:
-        """Retrieves segmented content from a specified namespace."""
-        payload = {
-            "payload": {"contentNameSpace": content_name_space, "acceptLanguage": accept_language},
-            "enums": enums,
-        }
-        return cast(dict[str, Any], await self._post(endpoint="getSegmentedContent", payload=payload))
+        """Retrieve segmented content from a namespace."""
+        return cast(
+            dict[str, Any],
+            await self._post(
+                endpoint="getSegmentedContent",
+                payload={
+                    "payload": {"contentNameSpace": content_name_space, "acceptLanguage": accept_language},
+                    "enums": enums,
+                },
+            ),
+        )
 
     # ── Helper methods ───────────────────────────────────────────────────
 

@@ -20,8 +20,7 @@ import httpx
 import msgspec
 
 from ._retry import RETRYABLE_STATUSES, RetryableStatusError
-from .exceptions import SwgohComlinkException, SwgohComlinkValueError
-from .helpers import Constants
+from .exceptions import SwgohComlinkException
 
 __all__ = [
     "BOT_LIMITS",
@@ -257,36 +256,26 @@ class SwgohComlinkBase:
             req_headers["Authorization"] = f"HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}"
         return req_headers
 
-    # ── Static payload builders ──────────────────────────────────────────
+    # ── Static payload builders (Phase 4: thin shims over _payloads.py) ───
+    #
+    # These were the canonical payload builders pre-Phase 4. They now
+    # delegate to module-level pure functions in :mod:`._payloads` so the
+    # logic is shared with the sync/async endpoint methods (and tests
+    # can exercise the builders without instantiating a client).
+    #
+    # External callers reaching into the SDK via ``SwgohComlinkBase._foo``
+    # keep working; the shims will be removed in v3.2.
 
     @staticmethod
     def _get_player_payload(
-        allycode: str | int | None = None, player_id: str | None = None, enums: bool = False
+        allycode: str | int | None = None,
+        player_id: str | None = None,
+        enums: bool = False,
     ) -> dict[str, Any]:
-        """Build payload for get_player functions.
+        """Shim — use :func:`swgoh_comlink._payloads.player_payload`."""
+        from ._payloads import player_payload
 
-        Args:
-            allycode: player allyCode
-            player_id: player game ID
-            enums: boolean
-
-        Returns:
-            The constructed payload.
-
-        Raises:
-            SwgohComlinkValueError: If neither allycode nor player_id is provided.
-        """
-        if not allycode and not player_id:
-            raise SwgohComlinkValueError("Either 'allycode' or 'player_id' must be provided.")
-        payload: dict[str, Any] = {"payload": {}, "enums": enums}
-        if player_id:
-            payload["payload"]["playerId"] = str(player_id)
-        else:
-            code_str = str(allycode).replace("-", "")
-            if not code_str.isdigit() or len(code_str) != 9:
-                raise SwgohComlinkValueError("Allycode must be a 9-digit number.")
-            payload["payload"]["allyCode"] = code_str
-        return payload
+        return player_payload(allycode=allycode, player_id=player_id, enums=enums)
 
     @staticmethod
     def _build_game_data_payload(
@@ -297,78 +286,24 @@ class SwgohComlinkBase:
         items: str | int | None = None,
         device_platform: str = "Android",
     ) -> dict[str, Any]:
-        """Build payload for get_game_data().
+        """Shim — use :func:`swgoh_comlink._payloads.game_data_payload`."""
+        from ._payloads import game_data_payload
 
-        Raises:
-            SwgohComlinkValueError: If request_segment is out of range.
-        """
-        payload: dict[str, Any] = {
-            "payload": {
-                "version": f"{game_version}",
-                "devicePlatform": device_platform,
-                "includePveUnits": include_pve_units,
-            },
-            "enums": enums,
-        }
-        if items:
-            if isinstance(items, int):
-                # Direct integer (e.g. from IntFlag arithmetic)
-                payload["payload"]["items"] = str(items)
-            elif items.lstrip("-").isdigit():
-                # Numeric string — pass through as-is
-                payload["payload"]["items"] = items
-            else:
-                # Named constant — resolve via Constants lookup
-                payload["payload"]["items"] = Constants.get(items) or "-1"
-        else:
-            if request_segment < 0 or request_segment > 4:
-                raise SwgohComlinkValueError(
-                    "Invalid argument. <request_segment> should be an integer between 0 and 4, inclusive."
-                )
-            payload["payload"]["requestSegment"] = request_segment
-        return payload
+        return game_data_payload(
+            game_version=game_version,
+            include_pve_units=include_pve_units,
+            request_segment=request_segment,
+            enums=enums,
+            items=items,
+            device_platform=device_platform,
+        )
 
     @staticmethod
     def _build_unit_stats_endpoint(flags: list[str] | None = None, language: str | None = None) -> str:
-        """Build the stats endpoint string with query parameters.
+        """Shim — use :func:`swgoh_comlink._payloads.unit_stats_endpoint`."""
+        from ._payloads import unit_stats_endpoint
 
-        Returns:
-            Endpoint string like ``"api?flags=calcGP&language=eng_us"``.
-
-        Raises:
-            SwgohComlinkValueError: If flags contains invalid values.
-        """
-        _allowed_flags = {
-            "gameStyle",
-            "calcGP",
-            "onlyGP",
-            "withoutModCalc",
-            "percentVals",
-            "useMax",
-            "scaled",
-            "unscaled",
-            "statIDs",
-            "enums",
-            "noSpace",
-        }
-
-        flag_str = None
-        if flags:
-            if isinstance(flags, list) and set(flags).issubset(_allowed_flags):
-                flag_str = "flags=" + ",".join(flags)
-            else:
-                raise SwgohComlinkValueError(
-                    f'Invalid argument. <flags> should be a list of strings with one or more of "'
-                    f"{_allowed_flags} flag values."
-                )
-
-        lang_str = f"language={language}" if language else None
-
-        query_string = None
-        if flag_str or lang_str:
-            query_string = "?" + "&".join(filter(None, iter([flag_str, lang_str])))
-
-        return "api" + query_string if query_string else "api"
+        return unit_stats_endpoint(flags=flags, language=language)
 
     @property
     def version(self) -> str:

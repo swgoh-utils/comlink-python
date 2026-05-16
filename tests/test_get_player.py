@@ -13,8 +13,11 @@ class TestGetPlayer(TestCase):
         comlink = SwgohComlink()
         result = comlink.get_player(allycode=245866537, raw=True)
 
+        # Phase 4: get_player always passes decoder= (None when raw=True).
         mock_post.assert_called_once_with(
-            endpoint="player", payload={"payload": {"allyCode": "245866537"}, "enums": False}
+            endpoint="player",
+            payload={"payload": {"allyCode": "245866537"}, "enums": False},
+            decoder=None,
         )
         self.assertEqual(result["name"], "TestPlayer")
 
@@ -26,8 +29,11 @@ class TestGetPlayer(TestCase):
         comlink = SwgohComlink()
         comlink.get_player(player_id="abc123", raw=True)
 
+        # Phase 4: get_player always passes decoder= (None when raw=True).
         mock_post.assert_called_once_with(
-            endpoint="player", payload={"payload": {"playerId": "abc123"}, "enums": False}
+            endpoint="player",
+            payload={"payload": {"playerId": "abc123"}, "enums": False},
+            decoder=None,
         )
 
     def test_get_player_no_identifier(self):
