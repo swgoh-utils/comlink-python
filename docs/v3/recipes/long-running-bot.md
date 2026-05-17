@@ -66,6 +66,52 @@ while True:
   is marginally better when you're calling every minute or two and
   TCP/TLS handshakes start to matter.
 
+## Async variant (`SwgohComlinkAsync` + async cache)
+
+Same pattern, different surface. `GameDataCache` exposes `a*` twins of
+every client-touching method and an `async with` lifecycle. The disk
+store and in-memory memo are shared with the sync surface, so a sync
+warmup script can populate the cache an async bot reads.
+
+```python
+import asyncio
+from swgoh_comlink import SwgohComlinkAsync
+from swgoh_comlink._cache import GameDataCache
+
+async def main():
+    async with (
+        SwgohComlinkAsync(
+            url="http://comlink.local:3000",
+            profile="bot",
+            max_retries=3,
+        ) as client,
+        GameDataCache() as cache,
+    ):
+        if not await client.healthcheck(timeout=5.0):
+            raise SystemExit("comlink unreachable")
+
+        while True:
+            game_data = await cache.aget_game_data(client)
+            loc = await cache.aget_localization(client, locale="ENG_US")
+
+            tasks = [client.get_player(allycode=a) for a in tracked_allies]
+            for player in await asyncio.gather(*tasks, return_exceptions=True):
+                if isinstance(player, Exception):
+                    log.exception("get_player failed: %s", player)
+                    continue
+                process(player, game_data)
+
+            await asyncio.sleep(60)
+
+asyncio.run(main())
+```
+
+Internals: `aget_game_data` / `aget_localization` / `acurrent_version`
+/ `aevict_old_versions` / `aclose` wrap the blocking diskcache and
+msgpack operations in `asyncio.to_thread`, so the event loop stays
+responsive on cold and disk-warm paths. In-memory hits stay
+synchronous (nanosecond-scale dict access).
+
 ## What's NOT here
 
 * **Rate limiting.** `[ratelimit]` is deferred to v3.1 (ADR-0004). Until
