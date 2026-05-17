@@ -38,6 +38,7 @@ still import :mod:`swgoh_comlink` without pulling either dep.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import sys
 from pathlib import Path
@@ -49,6 +50,7 @@ from ._optional import require
 
 if TYPE_CHECKING:
     from .swgoh_comlink import SwgohComlink
+    from .swgoh_comlink_async import SwgohComlinkAsync
 
 __all__ = [
     "DEFAULT_VERSION_TTL_SECONDS",
@@ -111,9 +113,16 @@ class GameDataCache:
     (the cachetools.TTLCache calls are guarded by the GIL). Sharing a
     single GameDataCache across threads is the expected pattern.
 
-    Async clients: not supported in v3.0. The cache itself is sync;
-    pairing it with :class:`SwgohComlinkAsync` would require an async
-    wrapper. Carry-forward for v3.1.
+    Async support: the class exposes a parallel ``a*`` surface
+    (:meth:`acurrent_version`, :meth:`aget_game_data`,
+    :meth:`aget_localization`, :meth:`aevict_old_versions`,
+    :meth:`aclose`, plus ``async with``) for use with
+    :class:`SwgohComlinkAsync`. Blocking disk and msgpack work runs on
+    ``asyncio.to_thread`` so the event loop stays responsive; the
+    in-memory memo and TTLCache stay synchronous (nanosecond-scale
+    dict access under the GIL). The same disk store, memo, and
+    metadata cache are shared across both surfaces — a sync warmup
+    script can populate the cache an async runtime reads.
     """
 
     def __init__(
@@ -140,6 +149,33 @@ class GameDataCache:
         # evict_old_versions().
         self._inmem: dict[Any, Any] = {}
 
+    # ── Shared key + version helpers (used by sync + async paths) ──────────
+
+    @staticmethod
+    def _extract_version(md: Any) -> str:
+        """Pull the version string from a Metadata Struct or raw dict."""
+        # Metadata may be a Struct (raw=False) or dict (raw=True).
+        version = getattr(md, "latest_gamedata_version", None) or md["latestGamedataVersion"]
+        return str(version)
+
+    @staticmethod
+    def _data_key(
+        version: str,
+        request_segment: int,
+        include_pve_units: bool,
+        enums: bool,
+    ) -> tuple[str, str, int, bool, bool]:
+        return ("data", version, request_segment, include_pve_units, enums)
+
+    @staticmethod
+    def _localization_key(version: str, locale: str | None, unzip: bool) -> tuple[str, str, str, bool]:
+        return ("localization", version, locale or "", unzip)
+
+    def _memo_version(self, version: str) -> None:
+        """Record the version in the TTLCache + last-seen pointer."""
+        self._metadata_cache["v"] = version
+        self._last_seen_version = version
+
     # ── Metadata version (memoized) ────────────────────────────────────────
 
     def current_version(self, client: SwgohComlink) -> str:
@@ -154,12 +190,18 @@ class GameDataCache:
             return str(self._metadata_cache["v"])
         except KeyError:
             pass
-        md = client.get_game_metadata()
-        # Metadata may be a Struct (raw=False) or dict (raw=True).
-        version = getattr(md, "latest_gamedata_version", None) or md["latestGamedataVersion"]  # type: ignore[index]
-        version = str(version)
-        self._metadata_cache["v"] = version
-        self._last_seen_version = version
+        version = self._extract_version(client.get_game_metadata())
+        self._memo_version(version)
+        return version
+
+    async def acurrent_version(self, client: SwgohComlinkAsync) -> str:
+        """Async twin of :meth:`current_version`. Shares the same TTLCache."""
+        try:
+            return str(self._metadata_cache["v"])
+        except KeyError:
+            pass
+        version = self._extract_version(await client.get_game_metadata())
+        self._memo_version(version)
         return version
 
     # ── /data ──────────────────────────────────────────────────────────────
@@ -177,12 +219,10 @@ class GameDataCache:
         On hit: msgpack-decode the stored bytes (~5 ms for the full dump
         vs ~7 s for a cold fetch + decode).
 
-        On miss: fetch via ``client.get_game_data(raw=True, ...)``
-        (raw shape preserves the full segment dict the cache stores)
-        and write to disk.
+        On miss: fetch via ``client.get_game_data(...)`` and write to disk.
         """
         version = self.current_version(client)
-        key = ("data", version, request_segment, include_pve_units, enums)
+        key = self._data_key(version, request_segment, include_pve_units, enums)
         # Fast path 1: in-process memo
         if key in self._inmem:
             return self._inmem[key]  # type: ignore[no-any-return]
@@ -209,6 +249,46 @@ class GameDataCache:
         self._inmem[key] = data
         return data
 
+    async def aget_game_data(
+        self,
+        client: SwgohComlinkAsync,
+        *,
+        request_segment: int = 0,
+        include_pve_units: bool = True,
+        enums: bool = False,
+    ) -> dict[str, Any]:
+        """Async twin of :meth:`get_game_data`. Shares the same disk + memo.
+
+        Blocking diskcache ops and msgpack encode/decode run on
+        ``asyncio.to_thread`` so the event loop stays responsive on
+        cold and disk-warm paths. In-memory dict access stays
+        synchronous — it's nanosecond-scale and GIL-safe.
+        """
+        version = await self.acurrent_version(client)
+        key = self._data_key(version, request_segment, include_pve_units, enums)
+        if key in self._inmem:
+            return self._inmem[key]  # type: ignore[no-any-return]
+        cached: bytes | None = await asyncio.to_thread(self._cache.get, key)
+        if cached is not None:
+            data = await asyncio.to_thread(msgspec.msgpack.decode, cached)
+            self._inmem[key] = data
+            return data  # type: ignore[no-any-return]
+
+        try:
+            data = await client.get_game_data(
+                version=version,
+                request_segment=request_segment,
+                include_pve_units=include_pve_units,
+                enums=enums,
+            )
+        except TypeError:
+            data = await client.get_game_data(version=version, request_segment=request_segment)
+
+        encoded = await asyncio.to_thread(msgspec.msgpack.encode, data)
+        await asyncio.to_thread(self._cache.set, key, encoded, tag=version)
+        self._inmem[key] = data
+        return data
+
     # ── /localization ──────────────────────────────────────────────────────
 
     def get_localization(
@@ -224,7 +304,7 @@ class GameDataCache:
         ``unzip=True`` semantics in the cached form unless overridden.
         """
         version = self.current_version(client)
-        key = ("localization", version, locale or "", unzip)
+        key = self._localization_key(version, locale, unzip)
         if key in self._inmem:
             return self._inmem[key]  # type: ignore[no-any-return]
         cached: bytes | None = self._cache.get(key)
@@ -237,6 +317,30 @@ class GameDataCache:
         # the fallback when localization_id is None.
         data = client.get_localization(locale=locale, unzip=unzip)
         self._cache.set(key, msgspec.msgpack.encode(data), tag=version)
+        self._inmem[key] = data
+        return data
+
+    async def aget_localization(
+        self,
+        client: SwgohComlinkAsync,
+        *,
+        locale: str | None = None,
+        unzip: bool = True,
+    ) -> dict[str, Any]:
+        """Async twin of :meth:`get_localization`. Shares the same disk + memo."""
+        version = await self.acurrent_version(client)
+        key = self._localization_key(version, locale, unzip)
+        if key in self._inmem:
+            return self._inmem[key]  # type: ignore[no-any-return]
+        cached: bytes | None = await asyncio.to_thread(self._cache.get, key)
+        if cached is not None:
+            data = await asyncio.to_thread(msgspec.msgpack.decode, cached)
+            self._inmem[key] = data
+            return data  # type: ignore[no-any-return]
+
+        data = await client.get_localization(locale=locale, unzip=unzip)
+        encoded = await asyncio.to_thread(msgspec.msgpack.encode, data)
+        await asyncio.to_thread(self._cache.set, key, encoded, tag=version)
         self._inmem[key] = data
         return data
 
@@ -267,17 +371,36 @@ class GameDataCache:
         self._inmem.clear()
         return removed
 
+    async def aevict_old_versions(self, current_version: str) -> int:
+        """Async wrapper around :meth:`evict_old_versions`.
+
+        The eviction loop walks every disk key + deletes the stale
+        ones; doing that on a worker thread avoids blocking the loop
+        on large caches.
+        """
+        return await asyncio.to_thread(self.evict_old_versions, current_version)
+
     # ── Lifecycle ──────────────────────────────────────────────────────────
 
     def close(self) -> None:
         """Close the underlying diskcache. Safe to call multiple times."""
         self._cache.close()
 
+    async def aclose(self) -> None:
+        """Async twin of :meth:`close` (runs the diskcache shutdown on a worker thread)."""
+        await asyncio.to_thread(self.close)
+
     def __enter__(self) -> GameDataCache:
         return self
 
     def __exit__(self, *exc: Any) -> None:
         self.close()
+
+    async def __aenter__(self) -> GameDataCache:
+        return self
+
+    async def __aexit__(self, *exc: Any) -> None:
+        await self.aclose()
 
     def __repr__(self) -> str:
         return f"GameDataCache(cache_dir={str(self.cache_dir)!r})"

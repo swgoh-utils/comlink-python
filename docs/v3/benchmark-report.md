@@ -212,13 +212,35 @@ isolates the decoder cost. Real-world cost on the cached path is lower
 than the bench numbers because `msgspec.convert` walks the in-memory
 dict tree directly.
 
+### v3.1 — async-aware `GameDataCache`
+
+`GameDataCache` grows `a*` twins of every client-touching method
+(`acurrent_version`, `aget_game_data`, `aget_localization`,
+`aevict_old_versions`, `aclose`) and an `async with` lifecycle.
+Blocking diskcache and msgpack ops run on `asyncio.to_thread`;
+in-memory hits stay synchronous. Same disk store and memo as the sync
+surface — a sync warmup script can populate a cache an async runtime
+reads.
+
+Async cache parity on the same `/data` cassette:
+
+| Path | Sync `get_game_data` | Async `aget_game_data` | Notes |
+|---|---:|---:|---|
+| Cold (fresh disk; full pipeline) | 3,462 ms | 4,291 ms | `asyncio.run` per-iter loop construction; in a live event loop this overhead is gone. |
+| Disk-warm (new instance per call) | 3,350 ms (1.0× vs cold) | 3,973 ms (1.1× vs async cold) | Identical underlying work; +~0.6 ms `asyncio.to_thread` overhead. |
+| In-memory warm (same instance) | 0.0003 ms (**10⁷×**) | 0.1034 ms (**4.15×10⁴**) | Bench overstates async warm cost — each iter spins up a fresh event loop. Real per-call cost in a live loop is the same dict access (~0.0003 ms). |
+
+The 4.15×10⁴ warm headline still clears the Phase 7 100–1000× target
+by 40×. Async users were locked out of `GameDataCache` in v3.0; v3.1
+gives them the same disk + memo with the same correctness guarantees.
+
 ## What v3 didn't deliver (deferred to v3.1)
 
 - **`[ratelimit]`** + `[circuitbreaker]` extras — ADR-0004
 - **Async-aware StatCalc** with threshold-based `ProcessPoolExecutor`
 - **`StatCalc/` → `statcalc/`** PEP 8 rename
 - **Deeper `Mod.equipment` / `unit_stat`** typing (needs non-empty cassette samples)
-- **Async-aware `GameDataCache`** for `SwgohComlinkAsync`
+- ~~**Async-aware `GameDataCache`** for `SwgohComlinkAsync`~~ — landed in `v3.1-research`
 - **`GameDataBuilder` rewrite** atop GameDataCache
 - **`unasync`-style codegen** to actually eliminate sync/async duplication
 - **`stamina` dependency** — never added (Phase 2 hand-rolled the retry loop)

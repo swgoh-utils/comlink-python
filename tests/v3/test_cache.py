@@ -199,3 +199,128 @@ def test_get_localization_cached_per_locale(tmp_path: Path) -> None:
 
 def test_default_version_ttl_is_30_seconds() -> None:
     assert DEFAULT_VERSION_TTL_SECONDS == 30.0
+
+
+# ── Async surface ───────────────────────────────────────────────────────────
+#
+# Mirrors the six sync tests above against the a* methods. Uses
+# unittest.mock.AsyncMock so awaiting the mock returns the configured
+# value. pytest-asyncio's auto-mode (configured in pyproject.toml)
+# picks up `async def test_*` without an explicit marker.
+
+
+def _fake_async_client(version: str, data_payload: dict[str, Any]) -> Any:
+    """Async-aware stub. ``AsyncMock`` makes ``await client.<method>(...)`` work."""
+    client = mock.AsyncMock()
+    md = mock.MagicMock()
+    md.latest_gamedata_version = version
+    client.get_game_metadata.return_value = md
+    client.get_game_data.return_value = data_payload
+    return client
+
+
+async def test_async_cold_fetch_calls_client_warm_does_not(tmp_path: Path) -> None:
+    """First aget_game_data hits client; second is in-memory; new cache instance against same dir hits disk."""
+    payload = {"units": [{"id": "x"}], "ability": []}
+    client = _fake_async_client("v1", payload)
+
+    async with GameDataCache(cache_dir=tmp_path) as cache:
+        first = await cache.aget_game_data(client)
+        assert first == payload
+        assert client.get_game_data.call_count == 1
+
+        second = await cache.aget_game_data(client)
+        assert second == payload
+        assert client.get_game_data.call_count == 1
+
+    # Fresh cache instance, same dir → should hit disk (no client call)
+    async with GameDataCache(cache_dir=tmp_path) as cache2:
+        third = await cache2.aget_game_data(client)
+        assert third == payload
+        # client.get_game_data wasn't called again — disk hit served it.
+        assert client.get_game_data.call_count == 1
+
+
+async def test_async_warm_path_returns_equivalent_value(tmp_path: Path) -> None:
+    """msgspec.msgpack round-trip preserves the payload exactly on the async path."""
+    payload = {
+        "units": [{"id": "abc", "level": 85, "rarity": 7, "tags": ["scoundrel"]}],
+        "ability": [{"id": "ability_1", "tier": 6}],
+        "nested": {"a": {"b": [1, 2, 3]}},
+    }
+    client = _fake_async_client("v1", payload)
+
+    async with GameDataCache(cache_dir=tmp_path) as cache:
+        first = await cache.aget_game_data(client)
+        second = await cache.aget_game_data(client)
+        assert first == second == payload
+
+
+async def test_async_metadata_probe_memoized(tmp_path: Path) -> None:
+    """acurrent_version called 3x → client.get_game_metadata called once."""
+    client = _fake_async_client("v1", {"x": 1})
+
+    async with GameDataCache(cache_dir=tmp_path) as cache:
+        for _ in range(3):
+            assert await cache.acurrent_version(client) == "v1"
+        assert client.get_game_metadata.call_count == 1
+
+
+async def test_async_version_bump_triggers_fresh_fetch(tmp_path: Path) -> None:
+    """TTL=0 + metadata version change → fresh fetch on aget_game_data."""
+    payload_v1 = {"units": [{"id": "v1"}]}
+    payload_v2 = {"units": [{"id": "v2"}]}
+
+    client = _fake_async_client("v1", payload_v1)
+    async with GameDataCache(cache_dir=tmp_path, version_ttl_seconds=0.0) as cache:
+        first = await cache.aget_game_data(client)
+        assert first == payload_v1
+
+        client.get_game_metadata.return_value.latest_gamedata_version = "v2"
+        client.get_game_data.return_value = payload_v2
+
+        second = await cache.aget_game_data(client)
+        assert second == payload_v2
+        assert client.get_game_data.call_count == 2
+
+
+async def test_async_get_localization_cached_per_locale(tmp_path: Path) -> None:
+    """ENG_US and FRE_FR cached independently on the async path."""
+    eng_payload = {"locale": "ENG_US", "strings": {"hello": "Hello"}}
+    fre_payload = {"locale": "FRE_FR", "strings": {"hello": "Bonjour"}}
+
+    client = mock.AsyncMock()
+    md = mock.MagicMock()
+    md.latest_gamedata_version = "v1"
+    client.get_game_metadata.return_value = md
+
+    async def localization_router(locale: str | None = None, unzip: bool = True) -> Any:
+        return eng_payload if locale == "ENG_US" else fre_payload
+
+    client.get_localization.side_effect = localization_router
+
+    async with GameDataCache(cache_dir=tmp_path) as cache:
+        a = await cache.aget_localization(client, locale="ENG_US")
+        b = await cache.aget_localization(client, locale="FRE_FR")
+        assert a == eng_payload
+        assert b == fre_payload
+        assert client.get_localization.call_count == 2
+
+        # Warm reads
+        await cache.aget_localization(client, locale="ENG_US")
+        await cache.aget_localization(client, locale="FRE_FR")
+        assert client.get_localization.call_count == 2
+
+
+async def test_async_context_manager_closes_cache(tmp_path: Path) -> None:
+    """`async with GameDataCache(...)` exits via aclose() — underlying diskcache shuts down cleanly."""
+    cache = GameDataCache(cache_dir=tmp_path)
+    async with cache:
+        # Mutating the cache during the `with` body works.
+        client = _fake_async_client("v1", {"x": 1})
+        await cache.aget_game_data(client)
+    # After exit, the diskcache is closed; opening a fresh GameDataCache
+    # against the same dir must still work (i.e. aclose didn't corrupt
+    # the on-disk store).
+    async with GameDataCache(cache_dir=tmp_path) as fresh:
+        assert await fresh.aget_game_data(client) == {"x": 1}
