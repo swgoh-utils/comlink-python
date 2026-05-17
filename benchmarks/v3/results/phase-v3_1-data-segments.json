@@ -1,0 +1,1650 @@
+{
+  "phase": "phase-v3_1-data-segments",
+  "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+  "python_version": "3.11.15",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_units_dict",
+      "value": 950258000.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:31+00:00",
+      "meta": {
+        "p95": 1008023208.0,
+        "stdev": 301027712.8595164,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "units",
+        "count": 11169,
+        "bytes": 145233864
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_units_typed",
+      "value": 228403875.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:31+00:00",
+      "meta": {
+        "p95": 897812292.0,
+        "stdev": 359916451.90117776,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "units",
+        "count": 11169,
+        "bytes": 145233864,
+        "type": "Unit"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_units_typed_over_dict",
+      "value": 0.2403598549025633,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:31+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_units_dict",
+      "value": 484082370,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:35+00:00",
+      "meta": {
+        "current_bytes": 24725,
+        "segment": "units"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_units_typed",
+      "value": 312059148,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:35+00:00",
+      "meta": {
+        "current_bytes": 4480,
+        "segment": "units"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_units_typed_over_dict",
+      "value": 0.6446405970124465,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:35+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_units_dict",
+      "value": 501045280,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:47+00:00",
+      "meta": {
+        "segment": "units"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_units_typed",
+      "value": 328503568,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:47+00:00",
+      "meta": {
+        "segment": "units"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_units_typed_over_dict",
+      "value": 0.6556364885824291,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:47+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_skill_dict",
+      "value": 3210375.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:47+00:00",
+      "meta": {
+        "p95": 3504292.0,
+        "stdev": 131165.801406083,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "skill",
+        "count": 1892,
+        "bytes": 2798437
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_skill_typed",
+      "value": 2142625.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:47+00:00",
+      "meta": {
+        "p95": 2313833.0,
+        "stdev": 76001.3532412417,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "skill",
+        "count": 1892,
+        "bytes": 2798437,
+        "type": "Skill"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_skill_typed_over_dict",
+      "value": 0.6674064556321302,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:47+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_skill_dict",
+      "value": 5812830,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:49+00:00",
+      "meta": {
+        "current_bytes": 9775,
+        "segment": "skill"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_skill_typed",
+      "value": 2873282,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:49+00:00",
+      "meta": {
+        "current_bytes": 4480,
+        "segment": "skill"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_skill_typed_over_dict",
+      "value": 0.4943000225363549,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:49+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_skill_dict",
+      "value": 5883504,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:51+00:00",
+      "meta": {
+        "segment": "skill"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_skill_typed",
+      "value": 2929920,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:51+00:00",
+      "meta": {
+        "segment": "skill"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_skill_typed_over_dict",
+      "value": 0.4979889535215749,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:51+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_material_dict",
+      "value": 1789791.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:51+00:00",
+      "meta": {
+        "p95": 2075375.0,
+        "stdev": 141172.864828904,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "material",
+        "count": 858,
+        "bytes": 1001960
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_material_typed",
+      "value": 1122625.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:51+00:00",
+      "meta": {
+        "p95": 1221958.0,
+        "stdev": 50585.245984377696,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "material",
+        "count": 858,
+        "bytes": 1001960,
+        "type": "Material"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_material_typed_over_dict",
+      "value": 0.6272380406427343,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:51+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_material_dict",
+      "value": 3503842,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:53+00:00",
+      "meta": {
+        "current_bytes": 19256,
+        "segment": "material"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_material_typed",
+      "value": 2052394,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:53+00:00",
+      "meta": {
+        "current_bytes": 6688,
+        "segment": "material"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_material_typed_over_dict",
+      "value": 0.5857552937603921,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:53+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_material_dict",
+      "value": 3571064,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:55+00:00",
+      "meta": {
+        "segment": "material"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_material_typed",
+      "value": 2112632,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:55+00:00",
+      "meta": {
+        "segment": "material"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_material_typed_over_dict",
+      "value": 0.5915973502575143,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:55+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ability_dict",
+      "value": 39939666.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:58+00:00",
+      "meta": {
+        "p95": 652759417.0,
+        "stdev": 336299307.16507095,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "ability",
+        "count": 6465,
+        "bytes": 17617691
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ability_typed",
+      "value": 35616458.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:58+00:00",
+      "meta": {
+        "p95": 662571500.0,
+        "stdev": 338183839.37396276,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "ability",
+        "count": 6465,
+        "bytes": 17617691,
+        "type": "Ability"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_ability_typed_over_dict",
+      "value": 0.8917565309634787,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:32:58+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ability_dict",
+      "value": 56726695,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:00+00:00",
+      "meta": {
+        "current_bytes": 19395,
+        "segment": "ability"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ability_typed",
+      "value": 44952717,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:00+00:00",
+      "meta": {
+        "current_bytes": 21384,
+        "segment": "ability"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_ability_typed_over_dict",
+      "value": 0.7924437868273482,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:00+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ability_dict",
+      "value": 57386456,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:03+00:00",
+      "meta": {
+        "segment": "ability"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ability_typed",
+      "value": 45577416,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:03+00:00",
+      "meta": {
+        "segment": "ability"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_ability_typed_over_dict",
+      "value": 0.7942190401163648,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:03+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_campaign_dict",
+      "value": 777360000.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:08+00:00",
+      "meta": {
+        "p95": 786346333.0,
+        "stdev": 370550796.2627629,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "campaign",
+        "count": 16,
+        "bytes": 51961656
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_campaign_typed",
+      "value": 745410667.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:08+00:00",
+      "meta": {
+        "p95": 774672459.0,
+        "stdev": 356148386.33780897,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "campaign",
+        "count": 16,
+        "bytes": 51961656,
+        "type": "Campaign"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_campaign_typed_over_dict",
+      "value": 0.9589002096840589,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:08+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_campaign_dict",
+      "value": 135700706,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:11+00:00",
+      "meta": {
+        "current_bytes": 22941,
+        "segment": "campaign"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_campaign_typed",
+      "value": 135634769,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:11+00:00",
+      "meta": {
+        "current_bytes": 22540,
+        "segment": "campaign"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_campaign_typed_over_dict",
+      "value": 0.9995140998013673,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:11+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_campaign_dict",
+      "value": 138361000,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:16+00:00",
+      "meta": {
+        "segment": "campaign"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_campaign_typed",
+      "value": 138294160,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:16+00:00",
+      "meta": {
+        "segment": "campaign"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_campaign_typed_over_dict",
+      "value": 0.9995169158939297,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:16+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_effect_dict",
+      "value": 1508038291.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:29+00:00",
+      "meta": {
+        "p95": 1517951291.0,
+        "stdev": 282927209.64651376,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "effect",
+        "count": 60015,
+        "bytes": 98123233
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_effect_typed",
+      "value": 816473125.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:29+00:00",
+      "meta": {
+        "p95": 1442408084.0,
+        "stdev": 284740321.31964904,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "effect",
+        "count": 60015,
+        "bytes": 98123233,
+        "type": "Effect"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_effect_typed_over_dict",
+      "value": 0.5414140541873018,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:29+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_effect_dict",
+      "value": 286279165,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:33+00:00",
+      "meta": {
+        "current_bytes": 19574,
+        "segment": "effect"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_effect_typed",
+      "value": 140548528,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:33+00:00",
+      "meta": {
+        "current_bytes": 19549,
+        "segment": "effect"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_effect_typed_over_dict",
+      "value": 0.49094920337636166,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:33+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_effect_dict",
+      "value": 289049104,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:42+00:00",
+      "meta": {
+        "segment": "effect"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_effect_typed",
+      "value": 142205200,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:42+00:00",
+      "meta": {
+        "segment": "effect"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_effect_typed_over_dict",
+      "value": 0.4919759239246768,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:42+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_equipment_dict",
+      "value": 1687625.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:42+00:00",
+      "meta": {
+        "p95": 2095750.0,
+        "stdev": 187542.79928192392,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "equipment",
+        "count": 698,
+        "bytes": 939944
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_equipment_typed",
+      "value": 1124334.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:42+00:00",
+      "meta": {
+        "p95": 1237250.0,
+        "stdev": 54390.86397089129,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "equipment",
+        "count": 698,
+        "bytes": 939944,
+        "type": "Equipment"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_equipment_typed_over_dict",
+      "value": 0.6662226501740611,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:42+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_equipment_dict",
+      "value": 3410253,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:44+00:00",
+      "meta": {
+        "current_bytes": 19255,
+        "segment": "equipment"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_equipment_typed",
+      "value": 1937329,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:44+00:00",
+      "meta": {
+        "current_bytes": 4480,
+        "segment": "equipment"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_equipment_typed_over_dict",
+      "value": 0.568089522976741,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:44+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_equipment_dict",
+      "value": 3501464,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:46+00:00",
+      "meta": {
+        "segment": "equipment"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_equipment_typed",
+      "value": 2023528,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:46+00:00",
+      "meta": {
+        "segment": "equipment"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_equipment_typed_over_dict",
+      "value": 0.5779091260112913,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:46+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_recipe_dict",
+      "value": 2666625.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:46+00:00",
+      "meta": {
+        "p95": 2838958.0,
+        "stdev": 107547.00068202738,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "recipe",
+        "count": 2172,
+        "bytes": 1683523
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_recipe_typed",
+      "value": 1800541.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:46+00:00",
+      "meta": {
+        "p95": 1936041.0,
+        "stdev": 61520.51788874993,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "recipe",
+        "count": 2172,
+        "bytes": 1683523,
+        "type": "Recipe"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_recipe_typed_over_dict",
+      "value": 0.6752134252097689,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:46+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_recipe_dict",
+      "value": 3959704,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:48+00:00",
+      "meta": {
+        "current_bytes": 20492,
+        "segment": "recipe"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_recipe_typed",
+      "value": 2120184,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:48+00:00",
+      "meta": {
+        "current_bytes": 9720,
+        "segment": "recipe"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_recipe_typed_over_dict",
+      "value": 0.5354400227895822,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:48+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_recipe_dict",
+      "value": 4021144,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:50+00:00",
+      "meta": {
+        "segment": "recipe"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_recipe_typed",
+      "value": 2179200,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:50+00:00",
+      "meta": {
+        "segment": "recipe"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_recipe_typed_over_dict",
+      "value": 0.5419353298464318,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:50+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_statMod_dict",
+      "value": 516666.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:50+00:00",
+      "meta": {
+        "p95": 810500.0,
+        "stdev": 154706.2780277517,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "statMod",
+        "count": 288,
+        "bytes": 299325
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_statMod_typed",
+      "value": 300042.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:50+00:00",
+      "meta": {
+        "p95": 311833.0,
+        "stdev": 6147.3686891222005,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "statMod",
+        "count": 288,
+        "bytes": 299325,
+        "type": "StatMod"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_statMod_typed_over_dict",
+      "value": 0.5807272009383238,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:50+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_statMod_dict",
+      "value": 1054079,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:52+00:00",
+      "meta": {
+        "current_bytes": 19260,
+        "segment": "statMod"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_statMod_typed",
+      "value": 593346,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:52+00:00",
+      "meta": {
+        "current_bytes": 4480,
+        "segment": "statMod"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_statMod_typed_over_dict",
+      "value": 0.5629046779226224,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:52+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_statMod_dict",
+      "value": 1074032,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:54+00:00",
+      "meta": {
+        "segment": "statMod"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_statMod_typed",
+      "value": 609464,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:54+00:00",
+      "meta": {
+        "segment": "statMod"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_statMod_typed_over_dict",
+      "value": 0.5674542285518495,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:54+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_statModSet_dict",
+      "value": 4209.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:54+00:00",
+      "meta": {
+        "p95": 4708.0,
+        "stdev": 231.05475541524783,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "statModSet",
+        "count": 8,
+        "bytes": 3645
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_statModSet_typed",
+      "value": 3375.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:54+00:00",
+      "meta": {
+        "p95": 3625.0,
+        "stdev": 108.6406921921984,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "statModSet",
+        "count": 8,
+        "bytes": 3645,
+        "type": "StatModSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_statModSet_typed_over_dict",
+      "value": 0.8018531717747683,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:54+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_statModSet_dict",
+      "value": 14300,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:55+00:00",
+      "meta": {
+        "current_bytes": 7472,
+        "segment": "statModSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_statModSet_typed",
+      "value": 8036,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:55+00:00",
+      "meta": {
+        "current_bytes": 952,
+        "segment": "statModSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_statModSet_typed_over_dict",
+      "value": 0.561958041958042,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:55+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_statModSet_dict",
+      "value": 15784,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:57+00:00",
+      "meta": {
+        "segment": "statModSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_statModSet_typed",
+      "value": 8744,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:57+00:00",
+      "meta": {
+        "segment": "statModSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_statModSet_typed_over_dict",
+      "value": 0.553978712620375,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:57+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_datacronAffixTemplateSet_dict",
+      "value": 736542.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:57+00:00",
+      "meta": {
+        "p95": 760708.0,
+        "stdev": 63542.41557023151,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "datacronAffixTemplateSet",
+        "count": 722,
+        "bytes": 370499
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_datacronAffixTemplateSet_typed",
+      "value": 486458.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:57+00:00",
+      "meta": {
+        "p95": 525416.0,
+        "stdev": 20238.45240377831,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "datacronAffixTemplateSet",
+        "count": 722,
+        "bytes": 370499,
+        "type": "DatacronAffixTemplateSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_datacronAffixTemplateSet_typed_over_dict",
+      "value": 0.6604619967360992,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:57+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_datacronAffixTemplateSet_dict",
+      "value": 1354110,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:59+00:00",
+      "meta": {
+        "current_bytes": 19200,
+        "segment": "datacronAffixTemplateSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_datacronAffixTemplateSet_typed",
+      "value": 956038,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:59+00:00",
+      "meta": {
+        "current_bytes": 4480,
+        "segment": "datacronAffixTemplateSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_datacronAffixTemplateSet_typed_over_dict",
+      "value": 0.7060268368153252,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:33:59+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_datacronAffixTemplateSet_dict",
+      "value": 1397968,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:01+00:00",
+      "meta": {
+        "segment": "datacronAffixTemplateSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_datacronAffixTemplateSet_typed",
+      "value": 999232,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:01+00:00",
+      "meta": {
+        "segment": "datacronAffixTemplateSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_datacronAffixTemplateSet_typed_over_dict",
+      "value": 0.7147745871150126,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:01+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_datacronTemplate_dict",
+      "value": 239208.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:01+00:00",
+      "meta": {
+        "p95": 286750.0,
+        "stdev": 23072.189009714704,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "datacronTemplate",
+        "count": 61,
+        "bytes": 168995
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_datacronTemplate_typed",
+      "value": 167542.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:01+00:00",
+      "meta": {
+        "p95": 182375.0,
+        "stdev": 7119.0901455171925,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "datacronTemplate",
+        "count": 61,
+        "bytes": 168995,
+        "type": "DatacronTemplate"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_datacronTemplate_typed_over_dict",
+      "value": 0.7004029965552991,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:01+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_datacronTemplate_dict",
+      "value": 439157,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:03+00:00",
+      "meta": {
+        "current_bytes": 9916,
+        "segment": "datacronTemplate"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_datacronTemplate_typed",
+      "value": 267880,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:03+00:00",
+      "meta": {
+        "current_bytes": 4480,
+        "segment": "datacronTemplate"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_datacronTemplate_typed_over_dict",
+      "value": 0.6099868611908725,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:03+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_datacronTemplate_dict",
+      "value": 445120,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:05+00:00",
+      "meta": {
+        "segment": "datacronTemplate"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_datacronTemplate_typed",
+      "value": 272872,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:05+00:00",
+      "meta": {
+        "segment": "datacronTemplate"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_datacronTemplate_typed_over_dict",
+      "value": 0.6130301941049605,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:05+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_datacronSet_dict",
+      "value": 51917.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:05+00:00",
+      "meta": {
+        "p95": 53583.0,
+        "stdev": 1199.4657977616534,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "datacronSet",
+        "count": 10,
+        "bytes": 60368
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_datacronSet_typed",
+      "value": 50125.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:05+00:00",
+      "meta": {
+        "p95": 52125.0,
+        "stdev": 2037.0594493043152,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "datacronSet",
+        "count": 10,
+        "bytes": 60368,
+        "type": "DatacronSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_datacronSet_typed_over_dict",
+      "value": 0.9654833676830326,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:05+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_datacronSet_dict",
+      "value": 159388,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:07+00:00",
+      "meta": {
+        "current_bytes": 19996,
+        "segment": "datacronSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_datacronSet_typed",
+      "value": 120040,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:07+00:00",
+      "meta": {
+        "current_bytes": 4480,
+        "segment": "datacronSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_datacronSet_typed_over_dict",
+      "value": 0.7531307250232138,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:07+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_datacronSet_dict",
+      "value": 161488,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:08+00:00",
+      "meta": {
+        "segment": "datacronSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_datacronSet_typed",
+      "value": 122128,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:08+00:00",
+      "meta": {
+        "segment": "datacronSet"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_datacronSet_typed_over_dict",
+      "value": 0.7562667195085703,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:08+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_datacronHelpEntry_dict",
+      "value": 417.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:08+00:00",
+      "meta": {
+        "p95": 541.0,
+        "stdev": 54.034248398585135,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "datacronHelpEntry",
+        "count": 5,
+        "bytes": 327
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_datacronHelpEntry_typed",
+      "value": 417.0,
+      "unit": "ns",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:08+00:00",
+      "meta": {
+        "p95": 541.0,
+        "stdev": 68.1615727518079,
+        "iters": 5,
+        "warmup": 1,
+        "segment": "datacronHelpEntry",
+        "count": 5,
+        "bytes": 327,
+        "type": "DatacronHelpEntry"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_speed_ratio_datacronHelpEntry_typed_over_dict",
+      "value": 1.0,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:08+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_datacronHelpEntry_dict",
+      "value": 1741,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:10+00:00",
+      "meta": {
+        "current_bytes": 976,
+        "segment": "datacronHelpEntry"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_datacronHelpEntry_typed",
+      "value": 981,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:10+00:00",
+      "meta": {
+        "current_bytes": 56,
+        "segment": "datacronHelpEntry"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "decode_peak_memory_ratio_datacronHelpEntry_typed_over_dict",
+      "value": 0.5634692705341757,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:10+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_datacronHelpEntry_dict",
+      "value": 1872,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:12+00:00",
+      "meta": {
+        "segment": "datacronHelpEntry"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_datacronHelpEntry_typed",
+      "value": 1000,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:12+00:00",
+      "meta": {
+        "segment": "datacronHelpEntry"
+      }
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "object_size_ratio_datacronHelpEntry_typed_over_dict",
+      "value": 0.5341880341880342,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:12+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "aggregate_decode_speed_ratio",
+      "value": 0.5577674065384536,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:12+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "aggregate_peak_memory_ratio",
+      "value": 0.6555987382126264,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:12+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "aggregate_object_size_ratio",
+      "value": 0.6619236005640554,
+      "unit": "ratio",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:12+00:00"
+    },
+    {
+      "phase": "phase-v3_1-data-segments",
+      "metric": "v3_1_aggregate_verdict",
+      "value": null,
+      "unit": "text",
+      "status": "ok",
+      "git_sha": "adbf0791cdeb177c7c2d07696166bbabe9b1a66b",
+      "timestamp": "2026-05-17T00:34:12+00:00",
+      "meta": {
+        "verdict": "green-light: type the remaining /data segments in v3.1",
+        "aggregate_speed_x": 1.7928620214760758,
+        "aggregate_memory_ratio": 0.6555987382126264,
+        "aggregate_size_ratio": 0.6619236005640554,
+        "segments_benched": 14
+      }
+    }
+  ]
+}

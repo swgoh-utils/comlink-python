@@ -140,46 +140,77 @@ both sync and async clients).
 | Coverage ratchet | 92 → **95** (current actual ~96.5%) |
 | `bench_v3_final.py` | Re-runs the headline benches; produces consolidated JSON |
 
-### Units-segment typed-decode experiment (v3.1-research probe)
+### v3.1 — typed `/data` segment coverage
 
-Runs on `v3.1-research` (not v3.0-dev — v3.0 surface is frozen). The
-probe types one of `/data`'s 82 segments (`units`, the largest at
-~11,169 entries) and measures whether the win justifies hand-typing the
-remaining 81 in v3.1. Helper: `swgoh_comlink.compat.decode_units_segment`.
-Bench: `benchmarks/v3/bench_units_typed_vs_dict.py`. Result JSON:
-`benchmarks/v3/results/phase-units-typed.json`.
+Runs on `v3.1-research` (not `v3.0-dev` — v3.0 surface is frozen per
+Phase 9 / ADR-0004). Hand-types 14 of `/data`'s ~80 segments and
+measures dict-vs-typed decode for each. Helper:
+`swgoh_comlink.compat.decode_segment` (single generic entry point, no
+per-segment wrappers).
 
-Cassette: same `data.json.gz` used everywhere else in this report. The
-units segment alone is ~142 MiB of JSON.
+Bench: `benchmarks/v3/bench_data_segments_typed_vs_dict.py`. Result
+JSON: `benchmarks/v3/results/phase-v3_1-data-segments.json`. Bytes-based
+on both sides (matches the units-only probe's methodology — apples to
+apples; `msgspec.json.Decoder()` vs `msgspec.json.Decoder(list[T])`).
 
-| Metric | dict (`UNTYPED_DECODER`) | typed (`UNIT_LIST_DECODER`) | ratio |
+Cassette: same `data.json.gz` used elsewhere in this report.
+
+**Per-segment (typed/dict ratios; <1 = typed is faster/lighter):**
+
+| Segment | Count | Speed (×faster) | Memory ratio | Size ratio |
+|---|---:|---:|---:|---:|
+| `units` | 11,169 | **4.16×** | 0.64× | 0.66× |
+| `effect` | 60,015 | **1.85×** | 0.49× | 0.49× |
+| `statMod` | 288 | 1.72× | 0.56× | 0.57× |
+| `material` | 858 | 1.59× | 0.59× | 0.59× |
+| `datacronAffixTemplateSet` | 722 | 1.51× | 0.71× | 0.71× |
+| `skill` | 1,892 | 1.50× | 0.49× | 0.50× |
+| `equipment` | 698 | 1.50× | 0.57× | 0.58× |
+| `recipe` | 2,172 | 1.48× | 0.54× | 0.54× |
+| `datacronTemplate` | 61 | 1.43× | 0.61× | 0.61× |
+| `statModSet` | 8 | 1.25× | 0.56× | 0.55× |
+| `ability` | 6,465 | 1.12× | 0.79× | 0.79× |
+| `datacronSet` | 10 | 1.04× | 0.75× | 0.76× |
+| `campaign` | 16 | 1.04× | 1.00× | 1.00× |
+| `datacronHelpEntry` | 5 | 1.00× | 0.56× | 0.53× |
+
+**Aggregate across all 14 segments:**
+
+| Metric | dict | typed | ratio |
 |---|---:|---:|---:|
-| Decode wall time | 685 ms | **324 ms** | **2.12× faster** |
-| Peak alloc (`tracemalloc`) | 462 MiB | **298 MiB** | **0.64× (36% less)** |
-| Resident size (`asizeof`) | 478 MiB | **313 MiB** | **0.66× (34% smaller)** |
+| Decode wall (sum) | ~3,290 ms | **~1,840 ms** | **1.79× faster** |
+| Peak alloc (sum) | ~3.5 GiB | **~2.3 GiB** | **0.66×** |
+| Resident size (sum) | ~3.5 GiB | **~2.3 GiB** | **0.66×** |
 
-**Decision rule** (set in advance, written into the bench script):
-- `speed_ratio ≥ 1.5×` AND `memory_ratio ≤ 0.7×` → green-light v3.1
-  scope.
-- `speed_ratio < 1.2×` OR `memory_ratio > 0.9×` → deferral validated.
+**Decision rule** (pre-registered in the bench script, identical to the
+units-only probe):
+- `speed_ratio ≥ 1.5×` AND `memory_ratio ≤ 0.7×` → green-light typing
+  remaining segments.
+- `speed_ratio < 1.2×` OR `memory_ratio > 0.9×` → stop here.
 - In-between → judgment call.
 
-**Outcome:** both green-light thresholds met (2.12× ≥ 1.5×; 0.64× ≤ 0.7×).
-The recommendation for v3.1 is to hand-type the remaining 81 `/data`
-segments. The mechanical labor is real (each new segment needs cassette
-inspection → Struct definitions → decoder registration → tests), but the
-per-segment payback is now empirically supported, not speculative.
+**Outcome:** aggregate **1.79× faster** AND **0.66× memory** — both
+thresholds met → green-light typing the remaining ~70 `/data` segments
+in a follow-up v3.1 phase if operator demand warrants.
 
-**Caveats specific to this probe:**
-- The helper re-encodes the units dict to JSON before typed decode (the
-  cached `/data` response is already a dict, not bytes). v3.1 should
-  plumb the typed decoder through `_request` so the typed path receives
-  the original HTTP bytes — that would remove a hop and the speed/memory
-  numbers should improve further.
-- Always-empty/always-null fields are deliberately omitted from the
-  Struct (`basicAttack`, `leaderAbility`, `limitBreak`, `uniqueAbility`,
-  `effectIconPriorityOverride`). `forbid_unknown_fields=False` means
-  Comlink can re-add them without breaking decoding.
+**Where the typing didn't move the needle:**
+- `campaign` (1.04× speed, 1.00× memory). 16 entries, but each has a
+  deeply nested `campaignMap.campaignNodeDifficultyGroup.campaignNode`
+  list that v3.1 leaves as `dict[str, Any]`. The bulk is in the
+  un-typed sub-tree; typing only the outer envelope barely helps.
+  Deep-typing the `campaignNode` shape is a future-phase candidate.
+- `ability` (1.12× speed). Same story — `aiParams`, `synergy`,
+  `visualTarget`, `tier`, `descriptiveTag` left as dicts because their
+  shapes are sparse / inconsistent across the 6,465 entries.
+- Very small segments (`statModSet`, `datacronSet`, `datacronHelpEntry`).
+  Decode times are sub-millisecond; ratios are noisy and not meaningful.
+
+**Caveat:** the helper's runtime path uses `msgspec.convert` on dicts
+(no JSON re-encode), since callers operate on dicts from
+`GameDataCache` or `get_game_data`. The bench's bytes-based comparison
+isolates the decoder cost. Real-world cost on the cached path is lower
+than the bench numbers because `msgspec.convert` walks the in-memory
+dict tree directly.
 
 ## What v3 didn't deliver (deferred to v3.1)
 

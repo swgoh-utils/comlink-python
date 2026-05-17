@@ -734,6 +734,442 @@ class Unit(_LeafStruct):
     unique_ability_ref: list[AbilityRef] = msgspec.field(default_factory=list)
 
 
+# ── Shared /data sub-types (used across multiple segments) ──────────────────
+#
+# These leaf shapes recur across the 13 typed /data segments. Defined
+# once here so the segment Structs below can compose them.
+
+
+class MissionIdentifier(_LeafStruct):
+    """5-field identifier on ``material.lookupMission[].missionIdentifier`` /
+    ``equipment.lookupMission[].missionIdentifier`` / ``statMod.missionLookup[].missionIdentifier``."""
+
+    campaign_id: str = ""
+    campaign_map_id: str = ""
+    campaign_mission_id: str = ""
+    campaign_node_difficulty: int = 0
+    campaign_node_id: str = ""
+
+
+class MissionLookupEntry(_LeafStruct):
+    """``lookupMission[]`` and ``missionLookup[]`` wrapper (mission + requirement IDs)."""
+
+    mission_identifier: MissionIdentifier = msgspec.field(default_factory=MissionIdentifier)
+    requirement_id: list[str] = msgspec.field(default_factory=list)
+
+
+class EffectReference(_LeafStruct):
+    """3-field reference on ``ability.effectReference[]`` and ``effect.effectReference[]``.
+
+    Distinct from :class:`AbilityRef` (which has 12 fields and a different role).
+    ``contextIndex`` is always empty in the recorded cassette → omitted.
+    """
+
+    id: str = ""
+    max_bonus_move: int = 0
+
+
+class DescriptiveTag(_LeafStruct):
+    """2-field tag shape used as ``descriptiveTag[]``, ``effectedTag[]``,
+    ``interactsWithTag[]`` across ability + effect segments."""
+
+    exclude: bool = False
+    tag: str = ""
+
+
+class EffectTriggerCondition(_LeafStruct):
+    """3-field condition on ``triggerCondition[]`` and ``expirationCondition[]``."""
+
+    condition_type: int = 0
+    condition_value: str = ""
+    priority: int = 0
+
+
+# ── /data.skill ─────────────────────────────────────────────────────────────
+
+
+class SkillTier(_LeafStruct):
+    is_omicron_tier: bool = False
+    is_zeta_tier: bool = False
+    power_override_tag: str = ""
+    recipe_id: str = ""
+    required_unit_level: int = 0
+    required_unit_rarity: int = 0
+    required_unit_relic_tier: int = 0
+    required_unit_tier: int = 0
+
+
+class SkillDefinition(_LeafStruct):
+    """``/data.skill[]`` — the catalog entry. Distinct from the per-roster
+    :class:`Skill` shape (which is just ``id + tier``)."""
+
+    id: str = ""
+    name_key: str = ""
+    ability_reference: str = ""
+    icon_key: str = ""
+    is_zeta: bool = False
+    omicron_mode: int = 0
+    skill_type: int = 0
+    tier: list[SkillTier] = msgspec.field(default_factory=list)
+
+
+# ── /data.material ──────────────────────────────────────────────────────────
+
+
+class Material(_LeafStruct):
+    id: str = ""
+    name_key: str = ""
+    desc_key: str = ""
+    icon_key: str = ""
+    rarity: int = 0
+    tier: int = 0
+    type: int = 0
+    obtainable_time: str = "0"
+    recipe_id: str = ""
+    unit_def_reference: str = ""
+    sell_value: CurrencyCost = msgspec.field(default_factory=CurrencyCost)
+    training_cost: int = 0
+    training_cost_max_level: int = 0
+    xp_value: int = 0
+    lookup_mission: list[MissionLookupEntry] = msgspec.field(default_factory=list)
+    # actionLinkLookup + raidLookup are populated only 3/858 times in the
+    # cassette with a different shape; left as dict for fidelity.
+    action_link_lookup: list[dict[str, Any]] = msgspec.field(default_factory=list)
+    raid_lookup: list[dict[str, Any]] = msgspec.field(default_factory=list)
+
+
+# ── /data.ability ───────────────────────────────────────────────────────────
+
+
+class Ability(_LeafStruct):
+    id: str = ""
+    name_key: str = ""
+    desc_key: str = ""
+    short_desc_key: str = ""
+    ability_type: int = 0
+    icon: str = ""
+    sub_icon: str = ""
+    prefab_name: str = ""
+    cooldown: int = 0
+    cooldown_type: int = 0
+    granted_priority: int = 0
+    button_location: int = 0
+    detail_location: int = 0
+    stacking_line_override: str = ""
+    apply_type_tooltip_key: str = ""
+    blocked_loc_key: str = ""
+    blocking_effect_id: str = ""
+    ally_targeting_rule_id: str = ""
+    always_display_in_battle_ui: bool = False
+    hide_cooldown_description: bool = False
+    highlight_when_ready_in_battle_ui: bool = False
+    use_as_reinforcement_desc: bool = False
+    effect_reference: list[EffectReference] = msgspec.field(default_factory=list)
+    descriptive_tag: list[DescriptiveTag] = msgspec.field(default_factory=list)
+    interacts_with_tag: list[DescriptiveTag] = msgspec.field(default_factory=list)
+    triggered_condition: list[EffectTriggerCondition] = msgspec.field(default_factory=list)
+    # Sparse / variable-shape sub-objects → keep as raw dicts.
+    ai_params: dict[str, Any] | None = None
+    confirmation_message: dict[str, Any] | None = None
+    synergy: dict[str, Any] | None = None
+    visual_target: dict[str, Any] | None = None
+    tier: list[dict[str, Any]] = msgspec.field(default_factory=list)
+    ultimate_charge_required: list[int] = msgspec.field(default_factory=list)
+
+
+# ── /data.campaign ──────────────────────────────────────────────────────────
+
+
+class CampaignNodeDifficultyGroup(_LeafStruct):
+    campaign_node_difficulty: int = 0
+    daily_battle_cap_key: str = ""
+    grind_enabled: bool = False
+    progress: int = 0
+    unlock_requirement_localization_key: str = ""
+    campaign_node: list[dict[str, Any]] = msgspec.field(default_factory=list)
+
+
+class CampaignMap(_LeafStruct):
+    id: str = ""
+    daily_battle_cap_key: str = ""
+    game_mode_key: str = ""
+    grind_enabled: bool = False
+    is_player_squad_supplied: bool = False
+    progress: int = 0
+    unlock_requirement_localization_key: str = ""
+    campaign_node_difficulty_group: list[CampaignNodeDifficultyGroup] = msgspec.field(default_factory=list)
+
+
+class Campaign(_LeafStruct):
+    id: str = ""
+    name_key: str = ""
+    description_key: str = ""
+    image: str = ""
+    campaign_type: int = 0
+    daily_battle_cap_key: str = ""
+    grind_enabled: bool = False
+    progress: int = 0
+    unlock_requirement_localization_key: str = ""
+    campaign_map: list[CampaignMap] = msgspec.field(default_factory=list)
+
+
+# ── /data.effect ────────────────────────────────────────────────────────────
+
+
+class EffectTarget(_LeafStruct):
+    id: str = ""
+    battle_deployment_state: int = 0
+    battle_side: int = 0
+    exclude_selected_target: bool = False
+    exclude_self: bool = False
+    health_state: int = 0
+    unit_select: int = 0
+    category: dict[str, Any] | None = None
+    required_category: dict[str, Any] | None = None
+    active_effect_tag_criteria: list[dict[str, Any]] = msgspec.field(default_factory=list)
+    required_active_effect_tag_criteria: list[dict[str, Any]] = msgspec.field(default_factory=list)
+    force_alignment: list[int] = msgspec.field(default_factory=list)
+    unit_class: list[int] = msgspec.field(default_factory=list)
+    stat_value: list[dict[str, Any]] = msgspec.field(default_factory=list)
+
+
+class Effect(_LeafStruct):
+    id: str = ""
+    type: int = 0
+    apply_type: int = 0
+    apply_effect_enabled: bool = False
+    apply_effect_label: str = ""
+    blackboard_compare_name: str = ""
+    blackboard_name: str = ""
+    chance: int = 0
+    damage_type: int = 0
+    expire_on_application: bool = False
+    icon_color: str = ""
+    ignore_damage_animation: bool = False
+    max_bonus_moves: int = 0
+    additive_amount_decimal: str = "0"
+    context_multiplier_decimal: int = 0
+    multiplier_amount_decimal: int = 0
+    result_variance_decimal: int = 0
+    persistent_icon: str = ""
+    persistent_icon_overlay: str = ""
+    persistent_icon_groupable: bool = False
+    persistent_icon_priority: int = 0
+    persistent_loc_key: str = ""
+    replace_table_id: str = ""
+    stacking_line_override: str = ""
+    trigger_on_application: bool = False
+    triggered_loc_key: str = ""
+    triggered_vfx: str = ""
+    # Summon-related scalars.
+    summon_count: int = 0
+    summon_enable_initial_vfx: bool = False
+    summon_era_level: int = 0
+    summon_id: str = ""
+    summon_level: int = 0
+    summon_marker_index: int = 0
+    summon_rarity: int = 0
+    summon_squad_increase: int = 0
+    summon_tier: int = 0
+    # Typed nesting.
+    target: list[EffectTarget] = msgspec.field(default_factory=list)
+    trigger_condition: list[EffectTriggerCondition] = msgspec.field(default_factory=list)
+    expiration_condition: list[EffectTriggerCondition] = msgspec.field(default_factory=list)
+    effect_reference: list[EffectReference] = msgspec.field(default_factory=list)
+    descriptive_tag: list[DescriptiveTag] = msgspec.field(default_factory=list)
+    effected_tag: list[DescriptiveTag] = msgspec.field(default_factory=list)
+    # Sparse / mixed-shape sub-fields → dicts.
+    persistent_vfx_reference: dict[str, Any] | None = None
+    context_index: list[int] = msgspec.field(default_factory=list)
+    param: list[str] = msgspec.field(default_factory=list)
+    infinite_cycle_effect: list[str] = msgspec.field(default_factory=list)
+    # summonEffect recursively embeds Effect (19/60015 entries); keep as dict
+    # to avoid recursive-type complexity for a sparse field.
+    summon_effect: list[dict[str, Any]] = msgspec.field(default_factory=list)
+
+
+# ── /data.equipment ─────────────────────────────────────────────────────────
+
+
+class EquipmentStat(_LeafStruct):
+    """Wrapper holding the ``stat`` list (UnitStatEntry reused from units probe)."""
+
+    stat: list[UnitStatEntry] = msgspec.field(default_factory=list)
+
+
+class Equipment(_LeafStruct):
+    id: str = ""
+    name_key: str = ""
+    icon_key: str = ""
+    mark: str = ""
+    type: int = 0
+    tier: int = 0
+    required_level: int = 0
+    required_rarity: int = 0
+    find_flow_disabled: bool = False
+    obtainable_time: str = "0"
+    recipe_id: str = ""
+    equipment_stat: EquipmentStat = msgspec.field(default_factory=EquipmentStat)
+    sell_value: CurrencyCost = msgspec.field(default_factory=CurrencyCost)
+    lookup_mission: list[MissionLookupEntry] = msgspec.field(default_factory=list)
+
+
+# ── /data.recipe ────────────────────────────────────────────────────────────
+
+
+class RecipeIngredient(_LeafStruct):
+    """Reused for both ``recipe.ingredients[]`` and ``recipe.result`` (identical shape)."""
+
+    id: str = ""
+    type: int = 0
+    rarity: int = 0
+    min_quantity: int = 0
+    max_quantity: int = 0
+    preview_priority: int = 0
+    primary_reward: bool = False
+    unit_level: int = 0
+    unit_tier: int = 0
+
+
+class CraftRequirement(_LeafStruct):
+    id: str = ""
+    desc_key: str = ""
+    eval_type: int = 0
+    requirement_item: list[dict[str, Any]] = msgspec.field(default_factory=list)
+
+
+class Recipe(_LeafStruct):
+    id: str = ""
+    desc_key: str = ""
+    type: int = 0
+    unlock_level: int = 0
+    required_era_level: int = 0
+    ingredients: list[RecipeIngredient] = msgspec.field(default_factory=list)
+    craft_requirement: CraftRequirement | None = None
+    result: RecipeIngredient | None = None
+
+
+# ── /data.statMod ───────────────────────────────────────────────────────────
+
+
+class StatMod(_LeafStruct):
+    """All fields here are scalar references (FKs into other /data segments)."""
+
+    id: str = ""
+    name_key: str = ""
+    desc_key: str = ""
+    rarity: int = 0
+    slot: int = 0
+    set_id: str = ""
+    level_table_id: str = ""
+    overclock_recipe_table_id: str = ""
+    promotion_id: str = ""
+    promotion_recipe_id: str = ""
+    reroll_cap_table_id: str = ""
+    tier_up_recipe_table_id: str = ""
+    mission_lookup: list[MissionLookupEntry] = msgspec.field(default_factory=list)
+
+
+# ── /data.statModSet ────────────────────────────────────────────────────────
+
+
+class StatModSetBonus(_LeafStruct):
+    """Bonus carrier on ``completeBonus`` / ``maxLevelBonus`` (stat is a single
+    UnitStatEntry, not a list)."""
+
+    ability_id: list[str] = msgspec.field(default_factory=list)
+    stat: UnitStatEntry = msgspec.field(default_factory=UnitStatEntry)
+
+
+class StatModSet(_LeafStruct):
+    id: str = ""
+    name: str = ""
+    icon: str = ""
+    set_count: int = 0
+    complete_bonus: StatModSetBonus = msgspec.field(default_factory=StatModSetBonus)
+    max_level_bonus: StatModSetBonus = msgspec.field(default_factory=StatModSetBonus)
+
+
+# ── /data.datacron* ─────────────────────────────────────────────────────────
+#
+# Fresh Structs — wire shapes diverge from the /player Datacron / DatacronAffix
+# already defined in this module (e.g. /data carries min_tier/max_tier bounds
+# and statValueMin/Max strings vs /player's single statValue).
+
+
+class DataDatacronAffix(_LeafStruct):
+    """``datacronAffixTemplateSet.affix[]`` — distinct from /player ``DatacronAffix``."""
+
+    ability_id: str = ""
+    max_tier: int = 0
+    min_tier: int = 0
+    scope_icon: str = ""
+    stat_type: int = 0
+    stat_value_max: str = "0"
+    stat_value_min: str = "0"
+    target_rule: str = ""
+    tag: list[str] = msgspec.field(default_factory=list)
+
+
+class DatacronAffixTemplateSet(_LeafStruct):
+    id: str = ""
+    affix: list[DataDatacronAffix] = msgspec.field(default_factory=list)
+
+
+class DatacronTemplateTier(_LeafStruct):
+    id: int = 0
+    override_scope_identifier: int = 0
+    override_upgrade_cost_recipe_id: str = ""
+    required_relic_tier: int = 0
+    required_unit_tier: int = 0
+    affix_template_set_id: list[str] = msgspec.field(default_factory=list)
+    initial_affix_template_set_ids: list[str] = msgspec.field(default_factory=list)
+
+
+class DatacronTemplate(_LeafStruct):
+    id: str = ""
+    set_id: int = 0
+    reference_template_id: str = ""
+    focused_icon: str = ""
+    focused_prefab: str = ""
+    focused: bool = False
+    allow_reroll: bool = False
+    initial_tiers: int = 0
+    max_rerolls: int = 0
+    fixed_tag: list[str] = msgspec.field(default_factory=list)
+    tier: list[DatacronTemplateTier] = msgspec.field(default_factory=list)
+
+
+class DatacronSetTier(_LeafStruct):
+    id: int = 0
+    scope_identifier: int = 0
+    dust_grant_recipe_id: str = ""
+    upgrade_cost_recipe_id: str = ""
+    reroll_cost_recipe_id: list[str] = msgspec.field(default_factory=list)
+
+
+class DatacronSetMaterial(_LeafStruct):
+    dust_grant_recipe_id: str = ""
+    material_id: str = ""
+    quantity_per_dust_grant: int = 0
+
+
+class DatacronSet(_LeafStruct):
+    id: int = 0
+    display_name: str = ""
+    detail_prefab: str = ""
+    icon: str = ""
+    expiration_time_ms: str = "0"
+    tier: list[DatacronSetTier] = msgspec.field(default_factory=list)
+    focused_tier: list[DatacronSetTier] = msgspec.field(default_factory=list)
+    set_material: list[DatacronSetMaterial] = msgspec.field(default_factory=list)
+
+
+class DatacronHelpEntry(_LeafStruct):
+    title: str = ""
+    body: str = ""
+
+
 # ── Decoders (one per response type; cached at module load) ─────────────────
 
 PLAYER_DECODER: msgspec.json.Decoder[Player] = msgspec.json.Decoder(Player)

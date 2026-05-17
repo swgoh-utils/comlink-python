@@ -10,6 +10,10 @@
   extra; raises a friendly install hint if pydantic isn't installed.
   This is v3.0's pydantic story per ADR-0006 / Phase 3 D6.
 
+* :func:`decode_segment` — opt-in typed decode of any ``/data`` segment.
+  Uses the :data:`STOCK_SEGMENT_TYPES` registry for canonical types or
+  accepts a user-supplied ``msgspec.Struct`` via the ``target=`` kwarg.
+
 Migration path for to_dict: prefer attribute access
 (``player.roster_unit`` instead of ``to_dict(player)['rosterUnit']``)
 or pin to ``swgoh-comlink<3.2`` if you depend on this module.
@@ -23,15 +27,60 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import msgspec
 
-from ._models import UNIT_LIST_DECODER, Unit
+from ._models import (
+    Ability,
+    Campaign,
+    DatacronAffixTemplateSet,
+    DatacronHelpEntry,
+    DatacronSet,
+    DatacronTemplate,
+    Effect,
+    Equipment,
+    Material,
+    Recipe,
+    SkillDefinition,
+    StatMod,
+    StatModSet,
+    Unit,
+)
 from ._optional import require
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
-__all__ = ["decode_units_segment", "to_dict", "to_pydantic"]
+__all__ = [
+    "STOCK_SEGMENT_TYPES",
+    "decode_segment",
+    "to_dict",
+    "to_pydantic",
+]
 
 _TModel = TypeVar("_TModel", bound="BaseModel")
+T = TypeVar("T")
+
+
+#: Canonical typed Struct for each ``/data`` segment the SDK knows about.
+#: Used by :func:`decode_segment` when no explicit ``target=`` is passed.
+#:
+#: Users with bespoke shapes pass their own ``msgspec.Struct`` subclass
+#: to ``decode_segment(payload, segment, target=...)`` — they do not need
+#: to mutate this registry.
+STOCK_SEGMENT_TYPES: Mapping[str, type] = {
+    "units": Unit,
+    "skill": SkillDefinition,
+    "material": Material,
+    "ability": Ability,
+    "campaign": Campaign,
+    "effect": Effect,
+    "equipment": Equipment,
+    "recipe": Recipe,
+    "statMod": StatMod,
+    "statModSet": StatModSet,
+    "datacronAffixTemplateSet": DatacronAffixTemplateSet,
+    "datacronTemplate": DatacronTemplate,
+    "datacronSet": DatacronSet,
+    "datacronHelpEntry": DatacronHelpEntry,
+}
 
 
 def to_dict(struct: Any) -> Any:
@@ -112,27 +161,42 @@ def to_pydantic(struct: Any, model_class: type[_TModel]) -> _TModel:
     return model_class.model_validate(msgspec.to_builtins(struct))
 
 
-def decode_units_segment(payload: Mapping[str, Any]) -> list[Unit]:
-    """Decode the ``units`` list inside a ``/data`` response into typed Structs.
+def decode_segment(
+    payload: Mapping[str, Any],
+    segment: str,
+    *,
+    target: type[T] | None = None,
+) -> list[T]:
+    """Decode a ``/data`` segment into typed :class:`msgspec.Struct` instances.
 
-    Pass the dict returned by :meth:`SwgohComlink.get_game_data`; the helper
-    extracts ``payload["units"]``, re-encodes it as JSON, and decodes via
-    a cached :class:`msgspec.json.Decoder` typed as ``list[Unit]``.
+    Two modes:
 
-    The re-encode round-trip is the honest cost users pay for opting into
-    typed access *after* the dict has materialized (e.g. after a
-    :class:`GameDataCache` hit). If a future v3.x release plumbs the
-    typed decoder straight through ``_request``, this helper still works
-    — its contract is "raw ``/data`` dict in, typed unit list out."
+    * **Curated (default):** omit ``target`` and the helper looks up the
+      canonical type for *segment* in :data:`STOCK_SEGMENT_TYPES`.
+    * **Custom:** pass your own ``msgspec.Struct`` subclass via
+      ``target=``. The segment key is used only for the dict lookup;
+      the registry is not consulted.
+
+    The helper calls :func:`msgspec.convert` on the existing dict tree —
+    no JSON re-encode hop. That matters because the common caller is
+    operating on a cached ``/data`` dict (e.g. via
+    :class:`GameDataCache`), not raw HTTP bytes.
 
     Args:
-        payload: The dict returned by ``client.get_game_data(...)``. May
-            contain a ``units`` key holding a ``list[dict]``; other
-            segments are ignored.
+        payload: The dict returned by ``client.get_game_data(...)``.
+        segment: The top-level segment key (e.g. ``"units"``,
+            ``"material"``, ``"datacronTemplate"``).
+        target: Optional ``msgspec.Struct`` subclass. If ``None``, the
+            canonical stock type for *segment* is used.
 
     Returns:
-        A list of :class:`Unit` Structs. Returns ``[]`` if *payload*
-        contains no ``units`` key or the list is empty.
+        A list of *target* (or canonical type) instances. Returns ``[]``
+        if *payload* contains no entry for *segment* or the entry is
+        empty.
+
+    Raises:
+        ValueError: If *target* is ``None`` and *segment* is not in
+            :data:`STOCK_SEGMENT_TYPES`.
 
     Example::
 
@@ -140,10 +204,28 @@ def decode_units_segment(payload: Mapping[str, Any]) -> list[Unit]:
 
         client = SwgohComlink(url="...")
         raw = client.get_game_data(request_segment=0)
-        units = compat.decode_units_segment(raw)
-        print(f"{len(units)} units; first: {units[0].name_key}")
+
+        units = compat.decode_segment(raw, "units")              # stock
+        materials = compat.decode_segment(raw, "material")       # stock
+
+        # Bring your own Struct for ad-hoc shapes:
+        import msgspec
+        class MyTinyMaterial(msgspec.Struct, rename="camel"):
+            id: str = ""
+            rarity: int = 0
+        tiny = compat.decode_segment(raw, "material", target=MyTinyMaterial)
     """
-    units = payload.get("units")
-    if not units:
+    if target is None:
+        target = STOCK_SEGMENT_TYPES.get(segment)
+        if target is None:
+            raise ValueError(
+                f"no stock type registered for segment {segment!r}; "
+                f"pass target=<YourStruct>. Known segments: "
+                f"{sorted(STOCK_SEGMENT_TYPES)}"
+            )
+    items = payload.get(segment)
+    if not items:
         return []
-    return UNIT_LIST_DECODER.decode(msgspec.json.encode(units))
+    # mypy can't infer that `target` (a runtime var) is a valid type for
+    # the list[] generic; msgspec handles it correctly at runtime.
+    return msgspec.convert(items, list[target])  # type: ignore[valid-type]
