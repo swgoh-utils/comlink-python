@@ -57,18 +57,25 @@ def main() -> int:
         written.append(out_path)
         sys.stderr.write(f"  wrote {out_path.relative_to(_PKG_ROOT.parent.parent)}\n")
 
-    # Format with ruff so generator whitespace doesn't matter.
-    sys.stderr.write("  ruff format ...\n")
-    result = subprocess.run(
-        ["uv", "run", "ruff", "format", *(str(p) for p in written)],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        sys.stderr.write(result.stdout)
-        sys.stderr.write(result.stderr)
-        return result.returncode
+    # Post-process with ruff so generator whitespace + import order
+    # don't matter. Run `ruff check --fix` first (sorts imports, fixes
+    # other lint), then `ruff format` (final whitespace pass). This
+    # ordering matters: format-then-fix can re-introduce changes.
+    file_args = [str(p) for p in written]
+    for cmd_name, cmd_args in (
+        ("ruff check --fix", ["uv", "run", "ruff", "check", "--fix", *file_args]),
+        ("ruff format", ["uv", "run", "ruff", "format", *file_args]),
+    ):
+        sys.stderr.write(f"  {cmd_name} ...\n")
+        result = subprocess.run(cmd_args, check=False, capture_output=True, text=True)
+        # ruff check exits non-zero when there are still errors after --fix
+        # (i.e. unfixable). We tolerate that here — the generator's job is
+        # to apply auto-fixes; lint policy is enforced by the pre-commit
+        # hook directly.
+        if result.returncode != 0 and cmd_name == "ruff format":
+            sys.stderr.write(result.stdout)
+            sys.stderr.write(result.stderr)
+            return result.returncode
 
     sys.stderr.write(f"\nGenerated {len(written)} client files.\n")
     return 0

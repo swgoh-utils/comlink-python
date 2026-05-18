@@ -35,6 +35,7 @@ __all__ = [
     "SwgohComlinkBase",
     "param_alias",
     "sanitize_url",
+    "resolve_profile",
 ]
 
 # Keys whose values must be masked in logs, repr, and debug output.

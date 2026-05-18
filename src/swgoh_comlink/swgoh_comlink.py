@@ -20,7 +20,7 @@ from ._base import (
     resolve_profile,
 )
 from ._escape_hatches_sync import _SyncEscapeHatchMixin
-from ._models import UNTYPED_DECODER
+from ._models import UNTYPED_DECODER, decode_guild_dict
 from ._payloads import (
     game_data_payload,
     game_metadata_payload,
@@ -58,6 +58,10 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         profile: Connection pool preset (``"default"`` / ``"bot"`` / ``"bulk"``).
         max_retries: Additional retry attempts after the first failure (default 3; 0 disables).
     """
+
+    # Identifies the class to helper functions (helpers/_guild.py / _gac.py
+    # gate on this so they can refuse the wrong sync/async variant).
+    __comlink_type__ = "SwgohComlink"
 
     def __init__(
         self,
@@ -276,6 +280,8 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         self,
         client_specs: dict[str, Any] | None = None,
         enums: bool = False,
+        *,
+        raw: bool = True,
     ) -> dict[str, Any]:
         """Get game metadata. Returns :class:`Metadata` by default (typed surface); ``raw=True`` for the v2 dict."""
         payload = game_metadata_payload(
@@ -301,6 +307,8 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         allycode: str | int | None = None,
         player_id: str | None = None,
         enums: bool = False,
+        *,
+        raw: bool = True,
     ) -> dict[str, Any]:
         """Get player info. Returns :class:`Player` by default (typed surface); ``raw=True`` for the v2 dict."""
         payload = player_payload(
@@ -355,6 +363,8 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         guild_id: str,
         include_recent_guild_activity_info: bool = False,
         enums: bool = False,
+        *,
+        raw: bool = True,
     ) -> dict[str, Any]:
         """Get guild info. Returns :class:`Guild` by default (typed surface); ``raw=True`` unwraps the ``"guild"`` envelope into a v2-shaped dict."""
         payload = guild_payload(
@@ -362,11 +372,13 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
             include_recent_guild_activity_info=include_recent_guild_activity_info,
             enums=enums,
         )
+        decoder = decode_guild_dict
         return cast(
             "dict[str, Any]",
             self._post(
                 endpoint="guild",
                 payload=payload,
+                decoder=decoder,
             ),
         )
 
@@ -429,6 +441,7 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         event_instance_id: str | None = None,
         group_id: str | None = None,
         enums: bool = False,
+        raw: bool = True,
     ) -> dict[str, Any]:
         """Get GAC leaderboard (type 4) or global leaderboard (type 6)."""
         payload = leaderboard_payload(

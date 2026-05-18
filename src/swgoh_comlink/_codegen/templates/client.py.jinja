@@ -46,7 +46,7 @@ from {{ rel }}_models import (
     decode_guild,
 )
 {% else %}
-from {{ rel }}_models import UNTYPED_DECODER
+from {{ rel }}_models import UNTYPED_DECODER, decode_guild_dict
 {% endif %}
 from {{ rel }}_payloads import (
     game_data_payload,
@@ -102,6 +102,10 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         profile: Connection pool preset (``"default"`` / ``"bot"`` / ``"bulk"``).
         max_retries: Additional retry attempts after the first failure (default 3; 0 disables).
     """
+
+    # Identifies the class to helper functions (helpers/_guild.py / _gac.py
+    # gate on this so they can refuse the wrong sync/async variant).
+    __comlink_type__ = "{{ client_self }}"
 
     def __init__(
         self,
@@ -247,7 +251,7 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
 {% for p in positional %}
         {{ p.name }}: {{ p.type }}{% if p.default %} = {{ p.default }}{% endif %},
 {% endfor %}
-{% if keyword or has_typed %}
+{% if keyword or has_typed or (not is_typed and ep.typed_return) %}
         *,
 {% endif %}
 {% for p in keyword %}
@@ -255,6 +259,8 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
 {% endfor %}
 {% if has_typed %}
         raw: bool = False,
+{% elif not is_typed and ep.typed_return %}
+        raw: bool = True,
 {% endif %}
     ) -> {% if has_typed %}{{ ep.typed_return }} | dict[str, Any]{% elif ep.name == "get_unit_stats" %}list[Any] | dict[str, Any]{% elif ep.name == "get_events" %}dict[str, list[Any]]{% else %}dict[str, Any]{% endif %}:
         """{{ ep.docstring }}"""
@@ -293,6 +299,8 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
 {% endif %}
 {% if has_typed %}
         decoder = None if raw else {{ ep.typed_decoder_callable if ep.typed_decoder_callable else (ep.typed_decoder ~ '.decode') }}
+{% elif not is_typed and ep.dict_decoder_callable %}
+        decoder = {{ ep.dict_decoder_callable }}
 {% endif %}
         return cast(
             "{% if has_typed %}{{ ep.typed_return }} | dict[str, Any]{% elif ep.name == "get_unit_stats" %}list[Any] | dict[str, Any]{% elif ep.name == "get_events" %}dict[str, list[Any]]{% else %}dict[str, Any]{% endif %}",
@@ -311,6 +319,8 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
                 timeout={{ ep.timeout_const }},
 {% endif %}
 {% if has_typed %}
+                decoder=decoder,
+{% elif not is_typed and ep.dict_decoder_callable %}
                 decoder=decoder,
 {% endif %}
             ),

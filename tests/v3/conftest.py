@@ -183,6 +183,37 @@ async def recorded_comlink_async(cassette_server: CassetteServer) -> AsyncIterat
 
 
 @pytest.fixture
+def recorded_comlink_typed(cassette_server: CassetteServer) -> Iterator[Any]:
+    """Sync typed-Struct :class:`swgoh_comlink.typed.SwgohComlink`.
+
+    For tests that need attribute access on typed Structs
+    (``player.name`` etc.). The default :func:`recorded_comlink` fixture
+    yields the dict-default client (``player["name"]``).
+    """
+    from swgoh_comlink.typed import SwgohComlink
+
+    _ = cassette_server
+    client = SwgohComlink(url="http://comlink.test")
+    try:
+        yield client
+    finally:
+        client.close()
+
+
+@pytest.fixture
+async def recorded_comlink_async_typed(cassette_server: CassetteServer) -> AsyncIterator[Any]:
+    """Async typed-Struct :class:`swgoh_comlink.typed.SwgohComlinkAsync`."""
+    from swgoh_comlink.typed import SwgohComlinkAsync
+
+    _ = cassette_server
+    client = SwgohComlinkAsync(url="http://comlink.test")
+    try:
+        yield client
+    finally:
+        await client.aclose()
+
+
+@pytest.fixture
 def golden() -> Callable[[str], Any]:
     """Loader for golden snapshot files under ``tests/v3/golden/``.
 

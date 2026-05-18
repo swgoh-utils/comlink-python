@@ -70,6 +70,10 @@ class SwgohComlinkAsync(SwgohComlinkBase, _AsyncEscapeHatchMixin):
         max_retries: Additional retry attempts after the first failure (default 3; 0 disables).
     """
 
+    # Identifies the class to helper functions (helpers/_guild.py / _gac.py
+    # gate on this so they can refuse the wrong sync/async variant).
+    __comlink_type__ = "SwgohComlinkAsync"
+
     def __init__(
         self,
         *,

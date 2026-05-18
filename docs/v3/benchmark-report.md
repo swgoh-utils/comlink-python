@@ -212,6 +212,28 @@ isolates the decoder cost. Real-world cost on the cached path is lower
 than the bench numbers because `msgspec.convert` walks the in-memory
 dict tree directly.
 
+### v3.1 — typed/dict client split + codegen
+
+Restructures the public surface into two import paths
+(`swgoh_comlink.*` = dict-default; `swgoh_comlink.typed.*` =
+typed-Struct default) and code-generates all four client classes
+(sync/async × dict/typed) from a single manifest. See
+`docs/adr/0005-typed-dict-client-split.md` and `docs/v3/codegen.md`.
+
+| Metric | Before (v3.0) | After (v3.1-research) | Δ |
+|---|---:|---:|---|
+| Cold `import swgoh_comlink` | 7.0 ms | **7.8 ms** | +11% (still well under Phase 5's headline) |
+| Public client classes | 2 | **4** | sync/async × dict/typed |
+| Hand-maintained endpoint method bodies | 32 (2 clients × 16) | **0** (all generated from manifest) | full elimination |
+| Manifest entries (single source of truth) | n/a | **15** | one entry per uniform endpoint |
+| Hand-written escape hatches | 8 (per-client) | **5** (per surface, in mixins) | shared across dict/typed |
+| Codegen invariant tests | 0 | **107** | guards the 2×2 surface contract |
+
+No runtime behavior changes — the four generated clients call the same
+`_post` / `_request` / `_retry` paths Phase 4 + Phase 2 set up. The
+codegen lets all four track a single manifest entry per endpoint so a
+schema change ripples through every variant atomically.
+
 ### v3.1 — async-aware `GameDataCache`
 
 `GameDataCache` grows `a*` twins of every client-touching method

@@ -84,6 +84,12 @@ class Endpoint:
     typed_return: str | None = None
     """Typed return type name (e.g. ``"Player"``). ``None`` = no typed variant."""
 
+    dict_decoder_callable: str | None = None
+    """If set, the dict-default client uses this callable as its decoder
+    (e.g. ``"decode_guild_dict"`` to unwrap the ``{"guild": {...}}``
+    envelope before returning to the caller). Defaults to the untyped
+    msgspec decoder (returns the raw dict shape)."""
+
     # ── Quirks (flags) ─────────────────────────────────────────────────
     stats_sub_service: bool = False
     """Routes to ``self.stats_client`` (used by ``get_unit_stats``)."""
@@ -245,6 +251,7 @@ ENDPOINTS: tuple[Endpoint, ...] = (
         payload_builder="guild_payload",
         typed_decoder_callable="decode_guild",
         typed_return="Guild",
+        dict_decoder_callable="decode_guild_dict",
         param_aliases={"include_recent_guild_activity_info": "includeRecent"},
         aliases=("getGuild",),
     ),
