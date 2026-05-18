@@ -29,7 +29,7 @@ decoder via :func:`decoder_for`.
 
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 import msgspec
 
@@ -74,6 +74,8 @@ __all__ = [
     "SquadDatacron",
     # Helpers
     "decoder_for",
+    "decode_guild",
+    "decode_guild_dict",
 ]
 
 T = TypeVar("T")
@@ -1217,3 +1219,16 @@ def decode_guild(content: bytes) -> Guild:
     if envelope.guild is not None:
         return envelope.guild
     return GUILD_DECODER.decode(content)
+
+
+def decode_guild_dict(content: bytes) -> dict[str, Any]:
+    """Dict-shape twin of :func:`decode_guild` — unwraps the envelope, returns dict.
+
+    Used by the dict-default client to preserve v2 wire compatibility:
+    callers always see the inner guild dict, never the ``{"guild": ...}``
+    envelope wrap.
+    """
+    decoded = UNTYPED_DECODER.decode(content)
+    if isinstance(decoded, dict) and "guild" in decoded and isinstance(decoded["guild"], dict):
+        return cast(dict[str, Any], decoded["guild"])
+    return cast(dict[str, Any], decoded)

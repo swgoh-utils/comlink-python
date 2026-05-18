@@ -6,9 +6,13 @@ encode the structural promises the v3 SDK makes to callers — the contracts
 Phase 4 and beyond inherit. A failure here is a louder signal than a
 golden diff: it means a *semantically* important field changed.
 
-Phase 3 rewrite: tests now use attribute access on Structs (``player.name``,
-``player.roster_unit``) instead of dict indexing. The ``raw=True`` path
-still returns dict-shaped data and is covered by the golden suite.
+Attribute-access tests use the ``recorded_comlink_typed`` fixture (typed
+:class:`swgoh_comlink.typed.SwgohComlink`). Dict-passthrough tests
+(``/data``, ``/localization``) use the default :func:`recorded_comlink`
+(dict-default :class:`swgoh_comlink.SwgohComlink`).
+
+The ``raw=True`` path on the typed client still returns dict-shaped data
+and is covered separately.
 """
 
 from __future__ import annotations
@@ -20,10 +24,10 @@ import pytest
 # ── /metadata ────────────────────────────────────────────────────────────────
 
 
-def test_metadata_has_version_fields(recorded_comlink: Any) -> None:
+def test_metadata_has_version_fields(recorded_comlink_typed: Any) -> None:
     """Both ``latest_gamedata_version`` and ``latest_localization_bundle_version``
     must be present — `GameDataCache` (Phase 7) keys on these."""
-    md = recorded_comlink.get_game_metadata()
+    md = recorded_comlink_typed.get_game_metadata()
     assert md.latest_gamedata_version, "metadata missing gamedata version"
     assert md.latest_localization_bundle_version, "metadata missing localization version"
     assert isinstance(md.latest_segmented_content_version, str)
@@ -32,14 +36,14 @@ def test_metadata_has_version_fields(recorded_comlink: Any) -> None:
 # ── /player ──────────────────────────────────────────────────────────────────
 
 
-def test_player_has_identity_and_roster(cassette_server: Any, recorded_comlink: Any) -> None:
+def test_player_has_identity_and_roster(cassette_server: Any, recorded_comlink_typed: Any) -> None:
     """``get_player`` returns the canonical player envelope.
 
     Phase 3 turns the dict into a Struct; the *names* (snake_case) and
     *types* below are part of the v3 API contract.
     """
     cassette_server.use("player", "player_large")
-    p = recorded_comlink.get_player(allycode=314927874)
+    p = recorded_comlink_typed.get_player(allycode=314927874)
     # Identity
     assert p.name
     assert p.ally_code
@@ -52,10 +56,10 @@ def test_player_has_identity_and_roster(cassette_server: Any, recorded_comlink: 
     assert len(p.roster_unit) > 0
 
 
-def test_player_roster_units_have_required_fields(cassette_server: Any, recorded_comlink: Any) -> None:
+def test_player_roster_units_have_required_fields(cassette_server: Any, recorded_comlink_typed: Any) -> None:
     """Each unit in ``roster_unit`` carries the keys StatCalc relies on."""
     cassette_server.use("player", "player_large")
-    p = recorded_comlink.get_player(allycode=314927874)
+    p = recorded_comlink_typed.get_player(allycode=314927874)
     unit = p.roster_unit[0]
     assert unit.definition_id
     assert isinstance(unit.current_level, int)
@@ -65,22 +69,22 @@ def test_player_roster_units_have_required_fields(cassette_server: Any, recorded
     assert isinstance(unit.equipped_stat_mod, list)
 
 
-def test_player_small_smaller_than_large(cassette_server: Any, recorded_comlink: Any) -> None:
+def test_player_small_smaller_than_large(cassette_server: Any, recorded_comlink_typed: Any) -> None:
     """The two cassettes represent meaningfully different scale.
 
     Phase 3 / Phase 4 latency comparisons rely on this distinction.
     """
     cassette_server.use("player", "player_small")
-    small = recorded_comlink.get_player(allycode=855566316)
+    small = recorded_comlink_typed.get_player(allycode=855566316)
     cassette_server.use("player", "player_large")
-    large = recorded_comlink.get_player(allycode=314927874)
+    large = recorded_comlink_typed.get_player(allycode=314927874)
     assert len(small.roster_unit) < len(large.roster_unit) // 2
 
 
-def test_player_raw_returns_dict_unchanged(cassette_server: Any, recorded_comlink: Any) -> None:
-    """``raw=True`` returns the v2 dict shape unchanged."""
+def test_player_raw_returns_dict_unchanged(cassette_server: Any, recorded_comlink_typed: Any) -> None:
+    """``raw=True`` on the typed client returns the v2 dict shape unchanged."""
     cassette_server.use("player", "player_large")
-    p = recorded_comlink.get_player(allycode=314927874, raw=True)
+    p = recorded_comlink_typed.get_player(allycode=314927874, raw=True)
     assert isinstance(p, dict)
     assert p["name"]
     assert isinstance(p["rosterUnit"], list)
@@ -89,9 +93,9 @@ def test_player_raw_returns_dict_unchanged(cassette_server: Any, recorded_comlin
 # ── /guild ───────────────────────────────────────────────────────────────────
 
 
-def test_guild_unwrapped_envelope(recorded_comlink: Any) -> None:
+def test_guild_unwrapped_envelope(recorded_comlink_typed: Any) -> None:
     """``get_guild`` returns a :class:`Guild` Struct (not the raw envelope)."""
-    g = recorded_comlink.get_guild(guild_id="GbsabjvbQESUd8r_qPqdYg")
+    g = recorded_comlink_typed.get_guild(guild_id="GbsabjvbQESUd8r_qPqdYg")
     # Should expose guild fields directly (no nested "guild" attribute).
     assert g.profile.name
     assert isinstance(g.member, list)
@@ -101,8 +105,8 @@ def test_guild_unwrapped_envelope(recorded_comlink: Any) -> None:
     assert m.player_id
 
 
-def test_guild_raw_keeps_dict_shape(recorded_comlink: Any) -> None:
-    g = recorded_comlink.get_guild(guild_id="GbsabjvbQESUd8r_qPqdYg", raw=True)
+def test_guild_raw_keeps_dict_shape(recorded_comlink_typed: Any) -> None:
+    g = recorded_comlink_typed.get_guild(guild_id="GbsabjvbQESUd8r_qPqdYg", raw=True)
     assert isinstance(g, dict)
     assert "profile" in g
     assert isinstance(g["member"], list)
@@ -111,9 +115,9 @@ def test_guild_raw_keeps_dict_shape(recorded_comlink: Any) -> None:
 # ── /getLeaderboard ──────────────────────────────────────────────────────────
 
 
-def test_leaderboard_envelope(recorded_comlink: Any) -> None:
+def test_leaderboard_envelope(recorded_comlink_typed: Any) -> None:
     """Type-6 (global) leaderboard returns a typed envelope with raw player entries."""
-    lb = recorded_comlink.get_leaderboard(leaderboard_type=6, league="kyber", division=1)
+    lb = recorded_comlink_typed.get_leaderboard(leaderboard_type=6, league="kyber", division=1)
     assert isinstance(lb.leaderboard, list)
     assert isinstance(lb.player, list)
     # Per-leaderboard player list (entries kept as dict to preserve full content)

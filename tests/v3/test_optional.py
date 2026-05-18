@@ -70,7 +70,7 @@ _HAS_PYDANTIC = has_extra("pydantic", "pydantic")
 
 
 @pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed in this venv")
-def test_to_pydantic_round_trips_player(cassette_server: Any, recorded_comlink: Any) -> None:
+def test_to_pydantic_round_trips_player(cassette_server: Any, recorded_comlink_typed: Any) -> None:
     """User-defined BaseModel validates against a real Player Struct."""
     from pydantic import BaseModel, Field
 
@@ -86,7 +86,7 @@ def test_to_pydantic_round_trips_player(cassette_server: Any, recorded_comlink: 
         model_config = {"extra": "ignore", "populate_by_name": True}
 
     cassette_server.use("player", "player_small")
-    p = recorded_comlink.get_player(allycode=855566316)
+    p = recorded_comlink_typed.get_player(allycode=855566316)
     mp = compat.to_pydantic(p, MyPlayer)
     assert isinstance(mp, MyPlayer)
     assert mp.name == "Mar Elezra"

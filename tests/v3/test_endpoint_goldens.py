@@ -150,10 +150,10 @@ def _to_dict(result: Any) -> Any:
 def test_sync_endpoint_matches_expected(
     case: EndpointCase,
     cassette_server: CassetteServer,
-    recorded_comlink: Any,
+    recorded_comlink_typed: Any,
     golden: Callable[[str], Any],
 ) -> None:
-    """SDK (sync, default typed return) round-trips through to_builtins == expected.
+    """Typed sync SDK round-trips through to_builtins == expected.
 
     For typed endpoints (Player, Metadata, Guild, Leaderboard), the SDK
     returns a Struct; we serialize back to dict for the golden compare.
@@ -161,7 +161,7 @@ def test_sync_endpoint_matches_expected(
     dict directly and we compare against the cassette.
     """
     _apply_overrides(case, cassette_server)
-    method = getattr(recorded_comlink, case.method)
+    method = getattr(recorded_comlink_typed, case.method)
     result = method(**case.kwargs)
     expected = _expected(case, golden)
     assert _to_dict(result) == expected
@@ -174,7 +174,7 @@ def test_sync_endpoint_matches_expected(
 async def test_async_endpoint_matches_expected(
     case: EndpointCase,
     cassette_server: CassetteServer,
-    recorded_comlink_async: Any,
+    recorded_comlink_async_typed: Any,
     golden: Callable[[str], Any],
 ) -> None:
     """Async parity: same Struct→dict round-trip yields the same expected payload.
@@ -183,13 +183,13 @@ async def test_async_endpoint_matches_expected(
     by transitivity.
     """
     _apply_overrides(case, cassette_server)
-    method: Callable[..., Awaitable[Any]] = getattr(recorded_comlink_async, case.method)
+    method: Callable[..., Awaitable[Any]] = getattr(recorded_comlink_async_typed, case.method)
     result = await method(**case.kwargs)
     expected = _expected(case, golden)
     assert _to_dict(result) == expected
 
 
-# ── raw=True path: existing v2 dict shape is preserved ──────────────────────
+# ── raw=True path on the typed client: dict shape preserved ─────────────────
 
 
 _RAW_TYPED_CASES = [c for c in CASES if c.golden is not None]
@@ -199,14 +199,33 @@ _RAW_TYPED_CASES = [c for c in CASES if c.golden is not None]
 def test_sync_endpoint_raw_returns_dict(
     case: EndpointCase,
     cassette_server: CassetteServer,
-    recorded_comlink: Any,
+    recorded_comlink_typed: Any,
     golden: Callable[[str], Any],
 ) -> None:
     """``raw=True`` on a typed endpoint returns the v2 dict shape unchanged."""
     _apply_overrides(case, cassette_server)
-    method = getattr(recorded_comlink, case.method)
+    method = getattr(recorded_comlink_typed, case.method)
     result = method(raw=True, **case.kwargs)
     assert isinstance(result, dict), f"raw=True should return dict, got {type(result).__name__}"
+    expected = _expected(case, golden)
+    assert result == expected
+
+
+# ── Dict client returns dict natively (no raw=True needed) ──────────────────
+
+
+@pytest.mark.parametrize("case", _RAW_TYPED_CASES, ids=[c.id for c in _RAW_TYPED_CASES])
+def test_sync_dict_client_returns_dict_natively(
+    case: EndpointCase,
+    cassette_server: CassetteServer,
+    recorded_comlink: Any,
+    golden: Callable[[str], Any],
+) -> None:
+    """The dict-default client returns the v2 dict shape with no ``raw=`` kwarg."""
+    _apply_overrides(case, cassette_server)
+    method = getattr(recorded_comlink, case.method)
+    result = method(**case.kwargs)
+    assert isinstance(result, dict), f"dict client should return dict, got {type(result).__name__}"
     expected = _expected(case, golden)
     assert result == expected
 
@@ -216,14 +235,14 @@ def test_sync_endpoint_raw_returns_dict(
 
 def test_compat_to_dict_round_trips_player(
     cassette_server: CassetteServer,
-    recorded_comlink: Any,
+    recorded_comlink_typed: Any,
     golden: Callable[[str], Any],
 ) -> None:
     """``compat.to_dict(player)`` round-trips lossless to the golden dict."""
     from swgoh_comlink import compat
 
     cassette_server.use("player", "player_small")
-    p = recorded_comlink.get_player(allycode=855566316)
+    p = recorded_comlink_typed.get_player(allycode=855566316)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         as_dict = compat.to_dict(p)
@@ -232,12 +251,12 @@ def test_compat_to_dict_round_trips_player(
 
 def test_compat_to_dict_emits_deprecation_warning(
     cassette_server: CassetteServer,
-    recorded_comlink: Any,
+    recorded_comlink_typed: Any,
 ) -> None:
     """First call to ``compat.to_dict()`` raises DeprecationWarning."""
     from swgoh_comlink import compat
 
     cassette_server.use("player", "player_small")
-    p = recorded_comlink.get_player(allycode=855566316)
+    p = recorded_comlink_typed.get_player(allycode=855566316)
     with pytest.warns(DeprecationWarning, match=r"removed in v3\.2"):
         compat.to_dict(p)

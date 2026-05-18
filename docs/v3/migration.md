@@ -1,12 +1,16 @@
 # v2 → v3 Migration Guide
 
-v3 is a major version with two breaking changes (typed Struct returns,
-Python floor bumped to 3.11) and a handful of non-breaking additions.
-This guide pairs the v2 way with the v3 way so you can scan a patch
-side-by-side.
+v3 is a major version with one breaking change (Python floor bumped to
+3.11) and a handful of non-breaking additions. **v2 dict semantics are
+preserved on the default import path** — `from swgoh_comlink import
+SwgohComlink` returns dicts exactly like v2. Opt into the typed
+`msgspec.Struct` surface by switching to `from swgoh_comlink.typed
+import SwgohComlink`.
 
-If you can't migrate immediately, every typed endpoint accepts
-`raw=True` for the v2 dict shape — see [§ Soft migration: `raw=True`](#soft-migration-rawtrue).
+If you ever did rely on `raw=True` on the typed surface (a v3-early
+intermediate state), it still works — and the dict-default surface
+accepts the same kwarg as a no-op so library code remains portable
+across both surfaces.
 
 For automated detection of patterns that need updating, run::
 
@@ -21,11 +25,10 @@ v2→v3 rule ids start with `V3*` (vs `DEP*` for the v1→v2 rules).
 |---|---|---|
 | Python version | ≥3.10 | **≥3.11** (ADR-0002) |
 | `import swgoh_comlink` cold time | ~65 ms | **~7 ms** (lazy via PEP 562) |
-| `get_player(...)` return type | `dict` | `Player` (msgspec.Struct) |
-| `get_guild(...)` return type | `dict` | `Guild` (msgspec.Struct) |
-| `get_game_metadata(...)` return | `dict` | `Metadata` (msgspec.Struct) |
-| `get_leaderboard(...)` return | `dict` | `LeaderboardResponse` (msgspec.Struct) |
-| Other endpoints (`get_game_data`, `get_localization`, `get_enums`, etc.) | `dict` | `dict` (unchanged passthrough) |
+| `get_player(...)` from `swgoh_comlink` | `dict` | `dict` (unchanged) |
+| `get_player(...)` from `swgoh_comlink.typed` | n/a | `Player` (msgspec.Struct) |
+| Same pattern for `get_guild`, `get_game_metadata`, `get_leaderboard` | `dict` | dict OR typed Struct per import path |
+| Other endpoints (`get_game_data`, `get_localization`, `get_enums`, …) | `dict` | `dict` (both import paths) |
 | Retry on transient errors | none | **on by default** (3 retries) |
 | HMAC auth | unchanged | unchanged |
 | Connection pool | httpx defaults | `profile="default"` preset |
@@ -34,30 +37,49 @@ v2→v3 rule ids start with `V3*` (vs `DEP*` for the v1→v2 rules).
 | Pydantic adapter | n/a | `compat.to_pydantic(struct, BaseModel)` (`[pydantic]` extra) |
 | Sync/async parity | identical signatures | identical signatures |
 
-## The big one: dict → Struct
+## Two import paths: dict-default vs typed
 
-The single largest breaking change. Every typed endpoint returns a
-`msgspec.Struct` instead of a `dict`.
+`v3.1-research` ships two parallel client surfaces. Pick by import path;
+the underlying transport, retry, and caching are shared.
 
 ```python
-# v2 — dict indexing
-player = client.get_player(allycode=123456789)
-name = player["name"]
-guild_id = player["guildId"]
-roster = player["rosterUnit"]
-first_unit_def = player["rosterUnit"][0]["definitionId"]
+# Dict-default surface (matches v2 wire shape exactly)
+from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 
-# v3 — attribute access (snake_case)
-player = client.get_player(allycode=123456789)
-name = player.name
-guild_id = player.guild_id
-roster = player.roster_unit
-first_unit_def = player.roster_unit[0].definition_id
+with SwgohComlink(url="...") as client:
+    player = client.get_player(allycode=123456789)
+    name = player["name"]              # dict indexing — v2 style
+    guild_id = player["guildId"]
+    roster = player["rosterUnit"]
 ```
 
-Field names follow PEP 8 (snake_case) regardless of the wire format
-(camelCase). msgspec's `rename="camel"` handles the wire mapping; you
-never type `player["rosterUnit"]` again.
+```python
+# Typed surface (msgspec.Struct attribute access)
+from swgoh_comlink.typed import SwgohComlink, SwgohComlinkAsync
+
+with SwgohComlink(url="...") as client:
+    player = client.get_player(allycode=123456789)
+    name = player.name                 # attribute access — typed
+    guild_id = player.guild_id         # snake_case Python; camelCase on the wire
+    roster = player.roster_unit
+    first_def = player.roster_unit[0].definition_id
+```
+
+The typed surface uses `msgspec`'s `rename="camel"` so wire camelCase
+maps to PEP-8 snake_case fields automatically.
+
+## Why two surfaces
+
+ADR-0005 records the rationale. Short version:
+
+- v2 wire compat preserved on the default import — no behavior change
+  for existing v2 callers.
+- Typed access opt-in via a one-line import change.
+- Both surfaces share transport, retry, decoding, caching code; only
+  the response shape differs.
+- All four client classes (sync/async × dict/typed) are code-generated
+  from a single manifest (`src/swgoh_comlink/_codegen/endpoints.py`)
+  via Jinja + ruff. See `docs/v3/codegen.md`.
 
 ## Soft migration: `raw=True`
 

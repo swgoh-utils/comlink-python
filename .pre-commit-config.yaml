@@ -46,6 +46,19 @@ repos:
           - cachetools>=5.3
         args: [--strict, --ignore-missing-imports]
 
+  # ── Codegen drift check ───────────────────────────────────────────────
+  # If the manifest, template, or generator changes, ensure the four
+  # generated client files were regenerated and committed alongside.
+  # Refuses the commit otherwise.
+  - repo: local
+    hooks:
+      - id: codegen-drift
+        name: codegen drift (manifest vs generated clients)
+        entry: make generate-check
+        language: system
+        pass_filenames: false
+        files: ^src/swgoh_comlink/(_codegen/|_escape_hatches_(sync|async)\.py|swgoh_comlink(_async)?\.py|typed/swgoh_comlink(_async)?\.py)
+
   # ── Commitlint (mirrors CI commitlint job) ────────────────────────────
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.21.0

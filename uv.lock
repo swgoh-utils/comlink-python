@@ -1181,7 +1181,11 @@ pydantic = [
 bench = [
     { name = "pympler" },
 ]
+codegen = [
+    { name = "jinja2" },
+]
 dev = [
+    { name = "jinja2" },
     { name = "mypy" },
     { name = "pympler" },
     { name = "pytest" },
@@ -1219,7 +1223,9 @@ provides-extras = ["all", "cache", "pydantic"]
 
 [package.metadata.requires-dev]
 bench = [{ name = "pympler", specifier = ">=1.0" }]
+codegen = [{ name = "jinja2", specifier = ">=3.1" }]
 dev = [
+    { name = "jinja2", specifier = ">=3.1" },
     { name = "mypy", specifier = ">=1.0" },
     { name = "pympler", specifier = ">=1.0" },
     { name = "pytest", specifier = ">=7.0" },
