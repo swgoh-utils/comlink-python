@@ -112,10 +112,14 @@ bench = [
 typecheck = [
     "mypy>=1.0",
 ]
+codegen = [
+    "jinja2>=3.1",
+]
 dev = [
     {include-group = "test"},
     {include-group = "typecheck"},
     {include-group = "bench"},
+    {include-group = "codegen"},
     "ruff>=0.8",
 ]
 docs = [
