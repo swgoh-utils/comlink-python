@@ -1,0 +1,675 @@
+{
+  "phase": "phase-v3_3-prototype-pure-python",
+  "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+  "python_version": "3.11.15",
+  "platform": "darwin",
+  "env": {
+    "comlink_url": "(unset)"
+  },
+  "results": [
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "cold_start_game_data_builder_plus_statcalc_init",
+      "value": 25.114,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "samples_ms": [
+          23.962334,
+          24.258042,
+          25.114,
+          25.187625,
+          25.528375
+        ],
+        "scenario": "cold: GameDataBuilder._build_game_data() + StatCalc(game_data=...) per process startup"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_input_format_dict_baseline",
+      "value": 3.010417,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "axis": "input_format",
+        "candidate": "dict_baseline",
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_input_format_struct_full_adapter",
+      "value": 3.012,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "axis": "input_format",
+        "candidate": "struct_full_adapter",
+        "size": "player_small",
+        "overhead_pct": 0.052584077222528336
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_input_format_struct_partial_adapter",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 2)",
+        "axis": "input_format",
+        "candidate": "struct_partial_adapter",
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_input_format_struct_accessor",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 2)",
+        "axis": "input_format",
+        "candidate": "struct_accessor",
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_game_data_legacy_dict_tables",
+      "value": 3.015542,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "axis": "game_data_shape",
+        "candidate": "legacy_dict_tables",
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_game_data_cached_normalized",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 4)",
+        "axis": "game_data_shape",
+        "candidate": "cached_normalized",
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_game_data_typed_structs",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 4)",
+        "axis": "game_data_shape",
+        "candidate": "typed_structs",
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_game_data_direct_segments",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 4)",
+        "axis": "game_data_shape",
+        "candidate": "direct_segments",
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_game_data_flat_indexed",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 4)",
+        "axis": "game_data_shape",
+        "candidate": "flat_indexed",
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_execution_serial",
+      "value": 3.002917,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "axis": "execution",
+        "candidate": "serial",
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_execution_parallel_2_workers",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 3)",
+        "axis": "execution",
+        "candidate": "parallel_2_workers",
+        "workers": 2,
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_execution_parallel_4_workers",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 3)",
+        "axis": "execution",
+        "candidate": "parallel_4_workers",
+        "workers": 4,
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_execution_parallel_8_workers",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 3)",
+        "axis": "execution",
+        "candidate": "parallel_8_workers",
+        "workers": 8,
+        "size": "player_small"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "to_builtins_player_small_n1",
+      "value": 0.0005,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "axis": "ergonomics",
+        "candidate": "to_builtins_baseline",
+        "size": "player_small",
+        "sample_count": 1,
+        "per_unit_us": 0.5
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "to_builtins_player_small_n6",
+      "value": 0.002125,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "axis": "ergonomics",
+        "candidate": "to_builtins_baseline",
+        "size": "player_small",
+        "sample_count": 6,
+        "per_unit_us": 0.3541666666666667
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "to_builtins_player_small_n50",
+      "value": 0.017667,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "axis": "ergonomics",
+        "candidate": "to_builtins_baseline",
+        "size": "player_small",
+        "sample_count": 50,
+        "per_unit_us": 0.35334
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "to_builtins_player_small_n115",
+      "value": 0.03875,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:15+00:00",
+      "meta": {
+        "axis": "ergonomics",
+        "candidate": "to_builtins_baseline",
+        "size": "player_small",
+        "sample_count": 115,
+        "per_unit_us": 0.33695652173913043
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_input_format_dict_baseline",
+      "value": 19.899875,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:16+00:00",
+      "meta": {
+        "axis": "input_format",
+        "candidate": "dict_baseline",
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_input_format_struct_full_adapter",
+      "value": 25.136125,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:17+00:00",
+      "meta": {
+        "axis": "input_format",
+        "candidate": "struct_full_adapter",
+        "size": "player_large",
+        "overhead_pct": 26.312979352885367
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_input_format_struct_partial_adapter",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:17+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 2)",
+        "axis": "input_format",
+        "candidate": "struct_partial_adapter",
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_input_format_struct_accessor",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:17+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 2)",
+        "axis": "input_format",
+        "candidate": "struct_accessor",
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_game_data_legacy_dict_tables",
+      "value": 19.878083,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "axis": "game_data_shape",
+        "candidate": "legacy_dict_tables",
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_game_data_cached_normalized",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 4)",
+        "axis": "game_data_shape",
+        "candidate": "cached_normalized",
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_game_data_typed_structs",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 4)",
+        "axis": "game_data_shape",
+        "candidate": "typed_structs",
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_game_data_direct_segments",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 4)",
+        "axis": "game_data_shape",
+        "candidate": "direct_segments",
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_game_data_flat_indexed",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 4)",
+        "axis": "game_data_shape",
+        "candidate": "flat_indexed",
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_execution_serial",
+      "value": 20.09775,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "axis": "execution",
+        "candidate": "serial",
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_execution_parallel_2_workers",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 3)",
+        "axis": "execution",
+        "candidate": "parallel_2_workers",
+        "workers": 2,
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_execution_parallel_4_workers",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 3)",
+        "axis": "execution",
+        "candidate": "parallel_4_workers",
+        "workers": 4,
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_execution_parallel_8_workers",
+      "value": null,
+      "unit": "ms",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (Phase 3)",
+        "axis": "execution",
+        "candidate": "parallel_8_workers",
+        "workers": 8,
+        "size": "player_large"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "to_builtins_player_large_n1",
+      "value": 0.006959,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "axis": "ergonomics",
+        "candidate": "to_builtins_baseline",
+        "size": "player_large",
+        "sample_count": 1,
+        "per_unit_us": 6.959
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "to_builtins_player_large_n6",
+      "value": 0.036458,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "axis": "ergonomics",
+        "candidate": "to_builtins_baseline",
+        "size": "player_large",
+        "sample_count": 6,
+        "per_unit_us": 6.076333333333333
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "to_builtins_player_large_n50",
+      "value": 0.300834,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "axis": "ergonomics",
+        "candidate": "to_builtins_baseline",
+        "size": "player_large",
+        "sample_count": 50,
+        "per_unit_us": 6.01668
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "to_builtins_player_large_n397",
+      "value": 2.436917,
+      "unit": "ms",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:18+00:00",
+      "meta": {
+        "axis": "ergonomics",
+        "candidate": "to_builtins_baseline",
+        "size": "player_large",
+        "sample_count": 397,
+        "per_unit_us": 6.138329974811084
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "game_data_resident_legacy_dict_tables",
+      "value": 13478744,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:19+00:00",
+      "meta": {
+        "axis": "memory",
+        "candidate": "legacy_dict_tables",
+        "tracemalloc_bytes": 10478315,
+        "asizeof_bytes": 13478744
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "game_data_resident_cached_normalized",
+      "value": null,
+      "unit": "bytes",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:19+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (v3.3 Phase 2-4)",
+        "axis": "memory",
+        "candidate": "cached_normalized"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "game_data_resident_typed_structs",
+      "value": null,
+      "unit": "bytes",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:19+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (v3.3 Phase 2-4)",
+        "axis": "memory",
+        "candidate": "typed_structs"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "game_data_resident_direct_segments",
+      "value": null,
+      "unit": "bytes",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:19+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (v3.3 Phase 2-4)",
+        "axis": "memory",
+        "candidate": "direct_segments"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "game_data_resident_flat_indexed",
+      "value": null,
+      "unit": "bytes",
+      "status": "skip",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:19+00:00",
+      "meta": {
+        "reason": "candidate not implemented yet (v3.3 Phase 2-4)",
+        "axis": "memory",
+        "candidate": "flat_indexed"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_small_transient_peak_legacy_dict",
+      "value": 509223,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:20+00:00",
+      "meta": {
+        "axis": "memory",
+        "candidate": "dict_baseline",
+        "size": "player_small",
+        "residual_bytes": 21944
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "calc_player_stats_player_large_transient_peak_legacy_dict",
+      "value": 18890155,
+      "unit": "bytes",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:21+00:00",
+      "meta": {
+        "axis": "memory",
+        "candidate": "dict_baseline",
+        "size": "player_large",
+        "residual_bytes": 21944
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "cprofile_attribution_dict_baseline_player_large",
+      "value": null,
+      "unit": "text",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:21+00:00",
+      "meta": {
+        "cprofile_top_25": "         1317006 function calls in 0.253 seconds\n\n   Ordered by: cumulative time\n   List reduced from 58 to 25 due to restriction <25>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        5    0.000    0.000    0.253    0.051 /Users/marktripod/code/comlink-python-v3/benchmarks/v3/bench_statcalc.py:431(<lambda>)\n        5    0.000    0.000    0.253    0.051 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:224(calc_player_stats)\n        5    0.002    0.000    0.253    0.051 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:147(calc_roster_stats)\n     1635    0.004    0.000    0.220    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:92(calc_char_stats)\n     1985    0.041    0.000    0.094    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:739(_format_stats)\n     1635    0.029    0.000    0.053    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:646(_calculate_mod_stats)\n   331400    0.044    0.000    0.048    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:354(_table_get)\n     1985    0.012    0.000    0.031    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:586(_calculate_base_stats)\n      350    0.001    0.000    0.029    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:121(calc_ship_stats)\n    19850    0.013    0.000    0.025    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:841(_convert_percent)\n     1635    0.008    0.000    0.024    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:878(_calc_char_gp)\n   583905    0.023    0.000    0.023    0.000 {method 'get' of 'dict' objects}\n    19130    0.011    0.000    0.016    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/_mod_stat_rules.py:106(apply_rule)\n     1635    0.011    0.000    0.016    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:828(_rename_stats)\n     8775    0.006    0.000    0.013    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:930(_get_skill_gp)\n    45500    0.008    0.000    0.010    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:382(_add_stat)\n     1635    0.005    0.000    0.010    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:446(_get_char_raw_stats)\n      350    0.003    0.000    0.008    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:493(_get_ship_raw_stats)\n    25590    0.004    0.000    0.005    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:1003(_floor)\n     1635    0.002    0.000    0.004    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:387(_normalize_char)\n    25435    0.004    0.000    0.004    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:788(add_stat_id)\n      325    0.002    0.000    0.004    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:527(_get_crew_rating)\n      350    0.001    0.000    0.004    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:946(_calc_ship_gp)\n     8875    0.001    0.000    0.003    0.000 {built-in method builtins.next}\n    17550    0.002    0.000    0.002    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:934(<genexpr>)\n\n\n",
+        "scenario": "cumulative-time breakdown for 5 iterations of calc_player_stats(dict)"
+      }
+    },
+    {
+      "phase": "phase-v3_3-prototype-pure-python",
+      "metric": "cprofile_attribution_bimorphic_struct_player_large",
+      "value": null,
+      "unit": "text",
+      "status": "ok",
+      "git_sha": "557be04cfe334baf612d0b7bcb0f684e29a65bfc",
+      "timestamp": "2026-05-19T02:52:21+00:00",
+      "meta": {
+        "cprofile_top_25": "         1317011 function calls in 0.280 seconds\n\n   Ordered by: cumulative time\n   List reduced from 59 to 25 due to restriction <25>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        5    0.008    0.002    0.280    0.056 /Users/marktripod/code/comlink-python-v3/benchmarks/v3/bench_statcalc.py:382(_bimorphic)\n        5    0.000    0.000    0.272    0.054 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:224(calc_player_stats)\n        5    0.002    0.000    0.251    0.050 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:147(calc_roster_stats)\n     1635    0.004    0.000    0.218    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:92(calc_char_stats)\n     1985    0.041    0.000    0.093    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:739(_format_stats)\n     1635    0.029    0.000    0.052    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:646(_calculate_mod_stats)\n   331400    0.044    0.000    0.047    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:354(_table_get)\n     1985    0.012    0.000    0.031    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:586(_calculate_base_stats)\n      350    0.001    0.000    0.029    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:121(calc_ship_stats)\n    19850    0.013    0.000    0.025    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:841(_convert_percent)\n     1635    0.007    0.000    0.024    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:878(_calc_char_gp)\n   583905    0.022    0.000    0.022    0.000 {method 'get' of 'dict' objects}\n        5    0.000    0.000    0.022    0.004 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:16(_to_dict_if_struct)\n        5    0.022    0.004    0.022    0.004 {built-in method msgspec._core.to_builtins}\n    19130    0.011    0.000    0.016    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/_mod_stat_rules.py:106(apply_rule)\n     1635    0.011    0.000    0.016    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:828(_rename_stats)\n     8775    0.006    0.000    0.013    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:930(_get_skill_gp)\n    45500    0.008    0.000    0.010    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:382(_add_stat)\n     1635    0.005    0.000    0.009    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:446(_get_char_raw_stats)\n      350    0.003    0.000    0.008    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:493(_get_ship_raw_stats)\n    25590    0.004    0.000    0.005    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:1003(_floor)\n     1635    0.002    0.000    0.004    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:387(_normalize_char)\n    25435    0.004    0.000    0.004    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:788(add_stat_id)\n      325    0.002    0.000    0.004    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:527(_get_crew_rating)\n      350    0.001    0.000    0.004    0.000 /Users/marktripod/code/comlink-python-v3/src/swgoh_comlink/StatCalc/calculator.py:946(_calc_ship_gp)\n\n\n",
+        "scenario": "cumulative-time breakdown for 5 iters of calc_player_stats(Player_struct) \u2014 v3.2 Candidate A path"
+      }
+    }
+  ]
+}
