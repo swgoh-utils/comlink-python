@@ -309,6 +309,50 @@ candidates stay on throwaway prototype branches.
   decision rule (written before any measurement) was load-bearing for
   not shipping things that didn't pay back.
 
+### v3.3 — StatCalc rewrite research (Phase 1 baseline, ADR-0007)
+
+Runs on `v3.3-research` (off `v3.2-research`; v3.0 surface stays
+frozen per ADR-0001). v3.3 is a broad research sweep — pure-Python
+restructure + native acceleration (Cython / mypyc / Rust) +
+algorithmic re-attacks of v3.2's H + a typed-fastpath for the
+bimorphic +22.9 % cost. Pre-registered decision rule lives in
+[ADR-0007](../adr/0007-statcalc-rewrite-evaluation.md).
+
+**Phase 1 baseline (recorded against v3.2 shipped code at SHA
+`ef7a542`):**
+
+| Metric | Measured | v3.3 ship threshold |
+|---|---:|---|
+| `calc_player_stats(dict)` warm, `player_large` (397 units) | **21.8 ms** | Hot-path: ≤ 19.6 ms (≥ 10 % improvement) |
+| `calc_player_stats(Player_struct)` warm, bimorphic | **27.4 ms** (+25.8 %) | Ergonomics: ≤ 22.9 ms (Struct overhead ≤ 5 %) |
+| `cold_start: GameDataBuilder + StatCalc.__init__` | 24.9 ms | already shipped (Candidate E cached path: 3.6 ms) |
+| `game_data resident size` (asizeof, legacy dict tables) | **12.9 MB** | Memory: ≤ 10.3 MB (≥ 20 % reduction) |
+| `calc_player_stats` transient peak, `player_large` | 18.0 MB | Informational — no bar |
+| `msgspec.to_builtins(roster_unit)` per-unit cost | **~6.0 µs** | (Phase 4b typed-fastpath target — replace with direct getattr) |
+
+**Surprises from the Phase 1 measurement** (vs. assumptions in the
+plan):
+
+- **`game_data` is ~13 MB, not 50–100 MB.** Plan over-estimated by
+  ~5×. The ≥ 20 % reduction bar (≤ 10.3 MB target) is still
+  meaningful but a smaller absolute win than imagined. Worth keeping
+  as a metric; not worth blocking a ship on it alone.
+- **`_format_stats` is the new #1 cProfile consumer, not
+  `_table_get`.** Cumulative time: `_format_stats` 119 ms (39 %) vs
+  `_table_get` 85 ms (28 %). The v3.2 cProfile attribution noted
+  `_table_get` because it was the loudest individual function; once
+  you sum the inner work _format_stats does, it dominates. Phase 2's
+  decomposition target is well-placed.
+- **Bimorphic conversion confirmed as 100 % `to_builtins`.**
+  cProfile dump shows `_to_dict_if_struct` + `msgspec._core.to_builtins`
+  together = 22 ms of the 330 ms profile run, exactly matching the
+  bench's +25.8 % overhead. Phase 4b's typed-fastpath has a
+  surgically clear target.
+
+Subsequent Phase 2–4 prototype branches measure against this baseline.
+Phase 5 will fill in the per-candidate matrix here once the integration
+commit lands.
+
 ## What v3 didn't deliver (deferred to v3.1/v3.2)
 
 - **`[ratelimit]`** + `[circuitbreaker]` extras — ADR-0004
