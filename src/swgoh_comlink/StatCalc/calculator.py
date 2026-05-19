@@ -16,16 +16,32 @@ from ._mod_stat_rules import apply_rule as _apply_mod_stat_rule
 def _to_dict_if_struct(obj: Any) -> Any:
     """Boundary adapter — convert a :class:`msgspec.Struct` to a dict tree.
 
-    Returns *obj* unchanged when it's already a builtin container. The
-    full :func:`msgspec.to_builtins` walk costs ~5 ms for a 397-unit
-    :class:`~swgoh_comlink._models.Player` Struct (vs ~22 ms for the
-    underlying :meth:`StatCalc.calc_player_stats` on the same payload —
-    a ~22 % adapter tax). Callers who need the zero-overhead path can
-    keep using ``client.get_player(..., raw=True)``.
+    Two implementations are tried, in order:
+
+    1. **v3.3 typed-fastpath** (Phase 4b) — direct attribute reads on
+       the Struct's ``__slots__``, skipping ``msgspec.to_builtins``
+       entirely. Only paid for Player / RosterUnit shapes (the cases
+       the dedicated fastpath was built for).
+    2. **v3.2 Candidate A fallback** — full :func:`msgspec.to_builtins`
+       walk for any other Struct shape (or if the fastpath fails).
+
+    For a typed :class:`~swgoh_comlink._models.Player` Struct on a
+    397-unit roster, the fastpath cuts the boundary cost from ~5 ms
+    (v3.2's +22.9 % overhead) to under 1 ms. Callers wanting the
+    zero-overhead path can keep using ``client.get_player(..., raw=True)``.
     """
-    if isinstance(obj, msgspec.Struct):
-        return msgspec.to_builtins(obj)
-    return obj
+    if not isinstance(obj, msgspec.Struct):
+        return obj
+    # Lazy import to avoid pulling in the typed-fastpath module on
+    # processes that never touch a Struct.
+    from ._typed_fastpath import player_struct_to_calc_dict
+
+    # Discriminate by attribute presence — ``roster_unit`` is the
+    # signature attribute on Player. Other Struct shapes fall through
+    # to the v3.2 Candidate A path (full to_builtins).
+    if hasattr(obj, "roster_unit"):
+        return player_struct_to_calc_dict(obj)  # type: ignore[arg-type]
+    return msgspec.to_builtins(obj)
 
 
 class StatCalc:
@@ -168,8 +184,16 @@ class StatCalc:
         # Bimorphic boundary: a typed-client caller may hand us a list
         # of RosterUnit Structs. Convert once up-front so the rest of
         # this method (and all downstream helpers) stay dict-only.
+        # Use the v3.3 typed-fastpath when the entries are RosterUnits
+        # (avoids the per-Mod msgspec.to_builtins walk that dominated
+        # the v3.2 +22.9 % bimorphic overhead).
         if isinstance(units, list) and units and isinstance(units[0], msgspec.Struct):
-            units = [msgspec.to_builtins(u) for u in units]
+            from ._typed_fastpath import _roster_unit_to_calc_dict
+
+            if hasattr(units[0], "definition_id"):
+                units = [_roster_unit_to_calc_dict(u) for u in units]
+            else:
+                units = [msgspec.to_builtins(u) for u in units]
 
         if isinstance(units, list):
             ships: list[dict[str, Any]] = []
