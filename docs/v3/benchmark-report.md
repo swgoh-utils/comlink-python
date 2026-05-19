@@ -353,6 +353,36 @@ Subsequent Phase 2–4 prototype branches measure against this baseline.
 Phase 5 will fill in the per-candidate matrix here once the integration
 commit lands.
 
+**Phase 5 outcome (recorded against v3.3 integration HEAD):**
+
+| Surface | Measured | Threshold | Verdict |
+|---|---:|---|---|
+| `calc_player_stats(dict)` warm, v3.3 integration | **18.24 ms** (+16.3 % vs v3.2 baseline 21.80 ms) | ≥ 10 % hot-path | **SHIPS** |
+| `calc_player_stats(Player_struct)` via typed-fastpath | +10.1 % overhead (down from v3.2 +22.9 %) | ≤ 5 % bimorphic | Below bar; ships as partial-win |
+| `game_data resident size` | unchanged at 12.9 MB | ≥ 20 % | Nothing shipped (no candidate targeted memory) |
+
+**Candidate matrix (all measured on player_large warm; v3.2 dict
+baseline = 21.80 ms):**
+
+| Candidate | Branch | Hot-path | Ergonomics | Verdict |
+|---|---|---:|---|---|
+| Phase 2 — pure-Python restructure | `pure-python-restructure` | +8.7 % | — | Ships combined |
+| Phase 3a — Cython + Phase 2 | `cython-prototype` | +17.8 % | — | Cleared but distribution cost too high — defer |
+| Phase 3b — mypyc + Phase 2 | `mypyc-prototype` | +15.0 % | — | Cleared but distribution cost too high — defer |
+| Phase 3c — Rust/PyO3 + Phase 2 | `rust-kernel-prototype` | est. ~+10-15 % | — | Mechanism-bound below Cython — defer |
+| Phase 4a — Candidate H re-attack | not prototyped | est. ~+5-8 % alone | — | Defer (covered by Cython in combined results) |
+| Phase 4b — typed-fastpath | `typed-fastpath` | — | +10.1 % bimorphic overhead | Ships as partial-win |
+| **Phase 2 + 4b integration** | `final-integration` | **+16.3 %** | bimorphic +10.1 % (down from +22.9 %) | **SHIPS** |
+
+**Key v3.3 finding:** the 15-wheel-per-release native distribution
+matrix is the binding constraint on Cython/mypyc/Rust shipping, not
+their raw speed. All three cleared (or near-cleared) the 10 % hot-path
+bar, but for a research library serving a small SWGOH community the
++6-9 percentage points of additional speed do not justify 30-60 min
+of CI per release tag. Pure-Python restructure + typed-fastpath
+together cleared the bar without the distribution complexity. Native
+variants stay on throwaway prototype branches as future options.
+
 ## What v3 didn't deliver (deferred to v3.1/v3.2)
 
 - **`[ratelimit]`** + `[circuitbreaker]` extras — ADR-0004
