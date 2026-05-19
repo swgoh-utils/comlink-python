@@ -14,13 +14,50 @@ Supports both **synchronous** and **asynchronous** usage via `SwgohComlink` and 
 
 **Requires Python 3.10 or higher.**
 
-## Installation
+## Alpha (v3) install
+
+v3 is in **alpha** and distributed via GitHub Releases. The PyPI
+package `swgoh_comlink` is still v2.x; passing `--pre` to pip will
+**NOT** pick up v3 alphas (they are not published to PyPI).
+
+Install the v3.0.0a1 wheel directly:
+
+```bash
+pip install https://github.com/swgoh-utils/comlink-python/releases/download/v3.0.0a1/swgoh_comlink-3.0.0a1-py3-none-any.whl
+```
+
+Or install from a git ref:
+
+```bash
+pip install git+https://github.com/swgoh-utils/comlink-python.git@v3.0.0a1
+```
+
+**What this gives you:**
+- Typed client at `from swgoh_comlink.typed import SwgohComlink`
+- Async parity (typed + dict) with `SwgohComlinkAsync`
+- `GameDataCache` — disk-persisted `/data` + `/localization`
+- Bimorphic `StatCalc.calc_player_stats(player_struct)` (no
+  `msgspec.to_builtins(...)` boilerplate required)
+- `healthcheck()`, `raw_request()`, retries via `profile="bot"`
+
+See [`docs/v3/migration.md`](docs/v3/migration.md) for v2 → v3
+patterns and [`examples/typed/`](examples/typed/) for ready-to-run
+examples of the typed surface.
+
+**What it does NOT promise:** API stability across alphas. Breaking
+changes between `aN` and `a(N+1)` are allowed. See
+[ADR-0008](docs/adr/0008-pre-release-distribution-via-github-releases.md)
+for the policy. **Report bugs against the `v3` label.**
+
+## Installation (stable v2)
 
 Install from [PyPi package repository](https://pypi.org/project/swgoh-comlink/) using the following shell command.
 
 ```bash
 uv pip install swgoh_comlink
 ```
+
+The PyPI release tracks v2.x. For the v3 alpha see "Alpha (v3) install" above.
 
 ## Synchronous Usage
 

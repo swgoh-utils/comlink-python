@@ -2,6 +2,87 @@
 
 <!-- insertion marker -->
 
+## [3.0.0a1](https://github.com/swgoh-utils/comlink-python/releases/tag/v3.0.0a1) - 2026-05-19
+
+First v3 alpha. Distributed via **GitHub Releases only** (the
+PyPI `swgoh_comlink` package remains at v2.x; `--pre` does NOT pick
+up this alpha). See [README "Alpha (v3) install"](README.md#alpha-v3-install)
+for install instructions and [ADR-0008](docs/adr/0008-pre-release-distribution-via-github-releases.md)
+for governance.
+
+### Added
+
+- **Typed client** at `swgoh_comlink.typed.SwgohComlink` and
+  `swgoh_comlink.typed.SwgohComlinkAsync`. Endpoint methods return
+  `msgspec.Struct` instances with typed attributes. The dict-default
+  `swgoh_comlink.SwgohComlink` import is unchanged for v2 callers.
+  (ADR-0005 — typed/dict client split.)
+- **`GameDataCache`** (sync + async) — disk-persisted, version-keyed,
+  in-process memo cache for `/data` and `/localization` responses,
+  backed by `diskcache` + `msgspec.msgpack`. Eliminates ~99 % of
+  `/data` traffic for long-running callers. Optional via the
+  `[cache]` extra.
+- **Typed `/data` segments** — `swgoh_comlink.compat.decode_segment()`
+  + `STOCK_SEGMENT_TYPES` registry typing all 14 `/data` segments
+  (Units, SkillDefinition, Equipment, StatMod, StatModSet, …) as
+  `msgspec.Struct` instances. Allows direct attribute access on
+  game-data internals.
+- **Bimorphic `StatCalc.calc_player_stats`** — accepts either a
+  Comlink-format `dict` (legacy) or a typed `msgspec.Struct` Player
+  / list-of-Players. Conversion happens once at the boundary via a
+  direct-attribute-read fastpath (Phase 4b typed-fastpath; ~+10 %
+  Struct overhead vs v3.2 Candidate A's +22.9 %).
+- **`get_statcalc_game_data(client, *, cache)`** — public helper that
+  caches the StatCalc-normalized game_data alongside the raw `/data`
+  payload via `GameDataCache`. Cold-start: 25.7 ms → 3.6 ms
+  (+85.9 %). (v3.2 Candidate E.)
+- **`raw_request(method, path, payload=None)`** escape hatch on
+  both client classes — direct HTTP access for endpoints the typed
+  surface doesn't cover.
+- **`healthcheck(timeout=5.0)`** on both client classes — startup
+  probe; returns `bool`.
+- **`stream=True`** on `get_game_data()` and `get_localization()` —
+  iterator-of-chunks for memory-constrained callers.
+- **`stamina`-based retry policy** with `profile=` kwarg (`"bot"`,
+  `"cli"`, etc.) selecting transient-error retry behavior +
+  back-off curves. Default `max_retries=3`.
+- **Optional extras** in `pyproject.toml`:
+  - `[cache]` — `diskcache>=5.6` + `cachetools>=5.3` (GameDataCache)
+  - `[pydantic]` — `pydantic>=2.5` (compat adapter)
+  - `[all]` — meta-extra (both above)
+
+### Changed
+
+- **Endpoint methods return `msgspec.Struct` by default** in the
+  typed client (`swgoh_comlink.typed`). The dict-default client
+  (`swgoh_comlink`) is byte-compatible with v2's wire surface.
+  Both clients are code-generated from a single manifest
+  (`src/swgoh_comlink/_codegen/endpoints.py`); see ADR-0005.
+- **Package layout** restructured to pure-Python lazy imports via
+  PEP 562 `__getattr__` — `import swgoh_comlink` no longer pulls
+  in `httpx` / `msgspec` / `diskcache` eagerly.
+- **StatCalc internals** (v3.3 Phase 2 — pure-Python restructure):
+  table-driven `_calculate_mod_stats` via the new
+  `_mod_stat_rules` module (165-line cascade → 5-line dispatch);
+  lightweight `_table_get` (dropped dead list-path branch);
+  eliminated 10 per-call lambdas in `_format_stats`.
+- **StatCalc bimorphic Struct overhead** dropped from +22.9 % (v3.2)
+  to +10.1 % (v3.3) via the new `_typed_fastpath` module.
+- **Test coverage ratchet** raised to **≥ 95 %** (was 92 %).
+- **Default `Python>=3.11`** (was 3.10).
+
+### Removed
+
+- **`click`** from core dependencies — moved behind the
+  `[migrate]` extra. Only the `swgoh-migrate` CLI command needs it.
+
+### Migration
+
+See [docs/v3/migration.md](docs/v3/migration.md) for v2 → v3 patterns,
+[docs/v3/recipes/](docs/v3/recipes/) for common-task templates, and
+[docs/v3/benchmark-report.md](docs/v3/benchmark-report.md) for the
+full performance characterization across all four research phases.
+
 ## [v2.0.6](https://github.com/swgoh-utils/comlink-python/releases/tag/v2.0.6) - 2026-03-29
 
 <small>[Compare with v1.18.0rc1](https://github.com/swgoh-utils/comlink-python/compare/v1.18.0rc1...v2.0.6)</small>

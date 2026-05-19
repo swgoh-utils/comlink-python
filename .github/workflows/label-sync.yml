@@ -1,0 +1,41 @@
+name: Sync GitHub labels
+
+# Pushes the declarative label catalog at .github/labels.yml to the
+# repo's actual labels. Idempotent — running twice is a no-op when
+# nothing has changed.
+#
+# Triggered automatically when the catalog or this workflow itself
+# changes on main, and manually via workflow_dispatch (for the
+# initial bootstrap from the alpha-release branch).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/labels.yml"
+      - ".github/workflows/label-sync.yml"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Apply labels.yml to the repo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v6
+
+      - name: Sync labels via EndBug/label-sync
+        uses: EndBug/label-sync@v2
+        with:
+          # Source-of-truth catalog.
+          config-file: .github/labels.yml
+          # Delete labels not in the catalog. SET TO FALSE on the first
+          # run if the repo has any out-of-band labels you want to keep.
+          delete-other-labels: false
+          # Dry-run mode — useful for testing in a fork.
+          dry-run: false

@@ -1,6 +1,6 @@
 # Standalone research repo, not a branch of upstream
 
-**Status:** accepted
+**Status:** accepted. **§Consequences line 14 ("No PRs, tags, releases, or pushes …") is superseded by [ADR-0008](0008-pre-release-distribution-via-github-releases.md) for PEP 440 pre-release versions distributed as GitHub Releases.** All other clauses of this ADR stay in force.
 
 v3 of `swgoh_comlink` is developed in a separate local clone at `/Users/marktripod/code/comlink-python-v3/`, decoupled from the public `swgoh-utils/comlink-python` repo. Once research is mature, a separate decision will be made about how (or whether) to re-incorporate changes upstream — by cherry-picking, opening a PR, forking, or abandoning.
 

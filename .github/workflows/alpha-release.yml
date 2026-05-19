@@ -1,0 +1,185 @@
+name: comlink-python alpha release (GitHub Releases only)
+
+# v3 alpha distribution per ADR-0008. This workflow does NOT publish
+# to PyPI — that responsibility stays with the existing release.yml
+# workflow which only runs on main + targets PyPI via OIDC trusted
+# publishing.
+#
+# Triggered manually via workflow_dispatch. Must run on a
+# release/v* branch — the branch-ref guard step enforces this.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "PEP 440 pre-release version (e.g. 3.0.0a1, 3.0.0b1, 3.0.0rc1)"
+        required: true
+        type: string
+      dry_run:
+        description: "Build + sign + upload as workflow artifact only; do NOT create the GitHub Release"
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  alpha-release:
+    name: Build + sign + GitHub Release
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref_name }}
+      cancel-in-progress: false
+
+    permissions:
+      # tag + release creation
+      contents: write
+      # Sigstore keyless OIDC signing
+      id-token: write
+      # GitHub artifact attestations
+      attestations: write
+
+    steps:
+      - name: Guard — only run from a release/v* branch
+        # ADR-0008 §"Branch source": pre-release tags MUST originate
+        # from a release/v* branch cut from a research branch or main.
+        # The workflow refuses to run from any other ref so an
+        # accidental run on a feature / research branch can't ship
+        # a tag.
+        run: |
+          if [[ ! "${{ github.ref }}" =~ ^refs/heads/release/v.+$ ]]; then
+            echo "::error::This workflow may only run on a release/v* branch (got ${{ github.ref }})"
+            echo "::error::See ADR-0008 §'Branch source' for the rationale."
+            exit 1
+          fi
+          echo "Branch guard OK: ${{ github.ref }}"
+
+      - name: Check-out repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install project dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Verify version.py matches workflow input
+        # version.py is the source of truth for hatchling. Failing
+        # here means the release branch wasn't bumped before invoking
+        # the workflow.
+        run: |
+          PY_VERSION=$(uv run python -c "from swgoh_comlink.version import __version__; print(__version__)")
+          if [[ "$PY_VERSION" != "${{ inputs.version }}" ]]; then
+            echo "::error::version.py reports $PY_VERSION but workflow input was ${{ inputs.version }}"
+            echo "::error::Run 'uvx hatch version \"${{ inputs.version }}\"' on the release branch first."
+            exit 1
+          fi
+          echo "Version OK: $PY_VERSION"
+
+      - name: Verify the version is a PEP 440 pre-release
+        # ADR-0008 forbids final (non-pre) releases. Anything not
+        # matching aN / bN / rcN is rejected.
+        run: |
+          if [[ ! "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(a|b|rc)[0-9]+$ ]]; then
+            echo "::error::Version '${{ inputs.version }}' is not a PEP 440 pre-release (aN/bN/rcN)"
+            echo "::error::ADR-0008 forbids final releases from this repo."
+            exit 1
+          fi
+          echo "Pre-release format OK"
+
+      - name: Run test suite
+        run: uv run pytest tests/ -q
+
+      - name: Lint (ruff)
+        run: |
+          uv run ruff check
+          uv run ruff format --check
+
+      - name: Type check (mypy)
+        run: uv run mypy src/swgoh_comlink/
+
+      - name: Codegen drift check
+        # Enforces ADR-0005 §"codegen-driven split" — the four client
+        # files must match what the manifest generates.
+        run: |
+          if grep -q "^generate-check:" Makefile 2>/dev/null; then
+            make generate-check
+          elif grep -q "^generate:" Makefile 2>/dev/null; then
+            # Fallback for repos using `make generate` + diff guard
+            make generate
+            git diff --exit-code || (echo "::error::Generated clients drift from manifest"; exit 1)
+          else
+            echo "::warning::No generate-check or generate target in Makefile; skipping codegen drift check"
+          fi
+
+      - name: Build wheel + sdist
+        run: uvx hatch build
+
+      - name: List build artifacts
+        run: ls -la dist/
+
+      - name: Sign artifacts with Sigstore (keyless OIDC)
+        uses: sigstore/gh-action-sigstore-python@v3.0.0
+        with:
+          inputs: ./dist/*.tar.gz ./dist/*.whl
+
+      - name: Generate SHA256SUMS
+        run: |
+          cd dist
+          sha256sum *.tar.gz *.whl *.sigstore* > SHA256SUMS
+          echo "--- SHA256SUMS ---"
+          cat SHA256SUMS
+
+      - name: Upload dist as workflow artifact
+        # Always upload so dry-run users can inspect; also gives the
+        # non-dry-run path a fallback if the Release-creation step
+        # fails for any reason.
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ inputs.version }}
+          path: dist/
+          retention-days: 14
+
+      - name: Stop here if dry_run=true
+        if: ${{ inputs.dry_run }}
+        run: |
+          echo "::notice::Dry run complete. Artifacts uploaded as 'dist-${{ inputs.version }}'."
+          echo "::notice::Re-run with dry_run=false to tag + create the GitHub Release."
+
+      - name: Configure git for tag push
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create + push annotated tag
+        if: ${{ !inputs.dry_run }}
+        run: |
+          TAG="v${{ inputs.version }}"
+          git tag -a "$TAG" -m "Release ${{ inputs.version }}
+
+          See docs/v3/releases/v${{ inputs.version }}.md for full notes."
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          name: v${{ inputs.version }}
+          body_path: docs/v3/releases/v${{ inputs.version }}.md
+          prerelease: true
+          draft: false
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/*.sigstore*
+            dist/SHA256SUMS
+          generate_release_notes: false

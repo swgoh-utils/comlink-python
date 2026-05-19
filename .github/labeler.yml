@@ -28,3 +28,27 @@ dependencies:
       - any-glob-to-any-file:
           - "pyproject.toml"
           - "uv.lock"
+
+# v3 alpha surface. PRs touching the v3-only code, examples,
+# benchmarks, or docs get auto-labelled so triagers can filter the
+# review queue by version. See ADR-0008.
+v3:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/swgoh_comlink/typed/**"
+          - "src/swgoh_comlink/StatCalc/**"
+          - "src/swgoh_comlink/_cache.py"
+          - "src/swgoh_comlink/_codegen/**"
+          - "src/swgoh_comlink/_models.py"
+          - "src/swgoh_comlink/_payloads.py"
+          - "src/swgoh_comlink/_retry.py"
+          - "src/swgoh_comlink/compat.py"
+          - "examples/typed/**"
+          - "benchmarks/v3/**"
+          - "docs/v3/**"
+          - "docs/adr/0005-typed-dict-client-split.md"
+          - "docs/adr/0006-statcalc-internals-overhaul.md"
+          - "docs/adr/0007-statcalc-rewrite-evaluation.md"
+          - "docs/adr/0008-pre-release-distribution-via-github-releases.md"
+          - "tests/v3/**"
+          - "tests/unit/test_statcalc_v3_*.py"

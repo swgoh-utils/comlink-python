@@ -48,7 +48,7 @@ Be respectful, constructive, and patient. We're all here because we enjoy the ga
    gh auth login
    gh repo fork swgoh-utils/comlink-python
    ```
-   
+
    ```bash
    git clone https://github.com/<your-username>/comlink-python.git
    cd comlink-python
@@ -60,7 +60,7 @@ Be respectful, constructive, and patient. We're all here because we enjoy the ga
     git config --local branch.main.remote upstream
     git remote set-url --push upstream github@github.com:<your-username>/comlink-python.git
    ```
-   
+
 2. **Install uv** (if you don't have it)
 
    ```bash
@@ -491,14 +491,34 @@ Before opening an issue, check the [existing issues](https://github.com/swgoh-ut
 
 **Labels used in this project:**
 
+The canonical label catalog lives at [`.github/labels.yml`](.github/labels.yml)
+and is synced to the GitHub repo by the
+[`label-sync`](.github/workflows/label-sync.yml) workflow on every
+change to that file (or via manual `workflow_dispatch`).
+
 | Label | Meaning |
 |-------|---------|
 | `bug` | Something isn't working correctly |
 | `security` | Security-related issue |
 | `enhancement` | New feature or capability |
 | `feature request` | Community-requested feature |
+| `v2` | Pertains to v2 (the PyPI-stable surface) |
+| `v3` | Pertains to the v3 alpha (GitHub Releases only — see [ADR-0008](docs/adr/0008-pre-release-distribution-via-github-releases.md)) |
 | `code maintenance` | Internal cleanup, refactoring, tech debt |
 | `testing` | Test coverage or infrastructure |
+| `documentation` | Documentation, README, or docs-site changes |
+| `ci` | GitHub Actions workflows or other CI infrastructure |
+| `dependencies` | Updates to project dependencies |
+| `code` | Source-code changes under `src/` |
+
+**Version-label discipline.** Every bug report and feature request
+issue should carry **exactly one** of `v2` / `v3`. The bug-report
+and feature-request issue templates collect this via a required
+Version dropdown so reporters don't have to know about the labels;
+triagers apply the matching label. PRs touching v3 paths
+(`src/swgoh_comlink/typed/`, `src/swgoh_comlink/StatCalc/`,
+`examples/typed/`, `docs/v3/`, the v3 ADRs, etc.) get the `v3`
+label auto-applied by [`actions/labeler`](.github/labeler.yml).
 
 ---
 

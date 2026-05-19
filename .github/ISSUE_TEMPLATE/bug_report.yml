@@ -2,6 +2,22 @@ name: Bug Report
 description: Report a bug in comlink-python
 labels: ["bug"]
 body:
+  - type: dropdown
+    id: version-line
+    attributes:
+      label: Which version line?
+      description: |
+        Select the version line your bug applies to. Triagers will
+        apply the matching `v2` / `v3` label so the bug is routed
+        to the right backlog. If you're unsure, run
+        `python -c "import swgoh_comlink; print(swgoh_comlink.version)"`
+        — `2.x.x` is v2, `3.x.x` is v3.
+      options:
+        - "v2 (PyPI stable — `pip install swgoh_comlink`)"
+        - "v3 (alpha — installed from GitHub Releases or git ref)"
+    validations:
+      required: true
+
   - type: textarea
     id: description
     attributes:

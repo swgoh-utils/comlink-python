@@ -2,6 +2,20 @@ name: Feature Request
 description: Suggest a new feature or enhancement
 labels: ["enhancement"]
 body:
+  - type: dropdown
+    id: version-line
+    attributes:
+      label: Which version line would this target?
+      description: |
+        Select the version line the feature should land in.
+        Triagers will apply the matching `v2` / `v3` label.
+      options:
+        - "v2 (PyPI stable — `pip install swgoh_comlink`)"
+        - "v3 (alpha — installed from GitHub Releases or git ref)"
+        - "Either / unsure — triager will decide"
+    validations:
+      required: true
+
   - type: textarea
     id: problem
     attributes:
