@@ -256,14 +256,67 @@ The 4.15×10⁴ warm headline still clears the Phase 7 100–1000× target
 by 40×. Async users were locked out of `GameDataCache` in v3.0; v3.1
 gives them the same disk + memo with the same correctness guarantees.
 
-## What v3 didn't deliver (deferred to v3.1)
+### v3.2 — StatCalc internals (bimorphic input + cached game_data)
+
+Runs on `v3.2-research` (off `v3.1-research`; v3.0 surface stays frozen
+per ADR-0001). Three orthogonal axes researched; two winners shipped
+per the pre-registered decision rule in
+[ADR-0006](../adr/0006-statcalc-internals-overhaul.md). The other six
+candidates stay on throwaway prototype branches.
+
+**What shipped**
+
+| Surface | Measured | Threshold | Verdict |
+|---|---:|---|---|
+| **A** — `StatCalc.calc_player_stats(player_struct)` bimorphic | +22.9 % vs dict input (5.2 ms on a 22.6 ms calc) | ≤ 10 % Struct overhead **OR** ship floor option | **SHIPS** (floor) |
+| **E** — `get_statcalc_game_data(client, cache=cache)` | 25.74 ms → 3.62 ms cold-start (+85.9 %) | ≥ 50 % cold-start improvement | **SHIPS** |
+
+**What didn't**
+
+| Surface | Measured | Threshold | Verdict |
+|---|---:|---|---|
+| B — partial-conversion adapter | +21.4 % | ≤ 10 % Struct overhead | Defer (within ±1 % of A) |
+| C — accessor-subclass | +23.6 % | ≤ 10 % Struct overhead | Defer (slightly worse than A) |
+| D — `ProcessPoolExecutor` fan-out | 21.59 ms → 25.40 ms at 4w (**0.85×**) | ≥ 2× speedup AND ≤ 1 % serial regression | Defer (regresses) |
+| F — typed-Struct game_data tables | ~+1.3 % (mechanism-bound; micro-bench, no prototype) | ≥ 10 % hot-path | Defer (mechanism-bound below threshold) |
+| G — direct v3.1 typed-segment consumption | est. -5 % to +10 % (extrapolation from F's micro-bench; no prototype) | ≥ 10 % hot-path | Defer (negative-bound payoff) |
+| H — hot-table index restructuring | +5.7 % targeted variant | ≥ 10 % hot-path | Defer (aggressive variant broke parity on mod-set bonuses) |
+
+**Key findings**
+
+- **Adapter cost is mechanism-bound by per-Mod conversion.** All three
+  bimorphic candidates (A/B/C) land within ±1 % of each other because
+  the bulk of the work is `msgspec.to_builtins` walking the Mod
+  sub-Structs. B's "skip Player metadata" saves ~0.3 ms; C's
+  "interleave with calc" adds isinstance overhead that cancels the
+  win. Conclusion: the simplest of the three (A) ships; the recipe
+  recommends `client.get_player(..., raw=True)` for hot loops.
+- **Parallelism is the wrong shape for this workload.** Python's
+  `ProcessPoolExecutor` IPC break-even (~500 µs/task even with
+  batching) exceeds StatCalc's per-unit work (~70 µs). Parallel wins
+  on `player_small` (1.6× at 4w) and loses on `player_large` (0.85×
+  at 8w) — the result-pickle cost scales with batch size and the
+  serial ship-pass tail eats into the chars-pass gain. Wait for either
+  Cython inner loops (per-unit work grows) or sub-interpreters / free-
+  threaded Python (IPC cost shrinks) before revisiting.
+- **Cold-start is the single most leveraged optimization in StatCalc
+  today.** Just persisting the normalized form (no algorithmic
+  change) gives 7× faster process startup. Big win for cron jobs and
+  serverless callers; no-op for long-running bots.
+- **Plan estimates ran consistently optimistic.** Across Phases 2-4,
+  none of the eight candidates exceeded its plan-stated payoff
+  estimate; six fell short or failed entirely. The pre-registered
+  decision rule (written before any measurement) was load-bearing for
+  not shipping things that didn't pay back.
+
+## What v3 didn't deliver (deferred to v3.1/v3.2)
 
 - **`[ratelimit]`** + `[circuitbreaker]` extras — ADR-0004
-- **Async-aware StatCalc** with threshold-based `ProcessPoolExecutor`
+- ~~**Async-aware StatCalc** with threshold-based `ProcessPoolExecutor`~~ — prototyped in `v3.2`; D regresses on large rosters; deferred without ship (ADR-0006)
 - **`StatCalc/` → `statcalc/`** PEP 8 rename
 - **Deeper `Mod.equipment` / `unit_stat`** typing (needs non-empty cassette samples)
 - ~~**Async-aware `GameDataCache`** for `SwgohComlinkAsync`~~ — landed in `v3.1-research`
-- **`GameDataBuilder` rewrite** atop GameDataCache
+- ~~**`GameDataBuilder` rewrite** atop GameDataCache~~ — landed in `v3.2-research` as `get_statcalc_game_data` helper (ADR-0006)
 - **`unasync`-style codegen** to actually eliminate sync/async duplication
 - **`stamina` dependency** — never added (Phase 2 hand-rolled the retry loop)
 - **`globals.py` rename** — collides with the builtin `globals()` function

@@ -7,7 +7,24 @@ import math
 import urllib.request
 from typing import Any
 
+import msgspec
+
 from ..helpers._stat_data import STATS as _CANONICAL_STATS
+
+
+def _to_dict_if_struct(obj: Any) -> Any:
+    """Boundary adapter — convert a :class:`msgspec.Struct` to a dict tree.
+
+    Returns *obj* unchanged when it's already a builtin container. The
+    full :func:`msgspec.to_builtins` walk costs ~5 ms for a 397-unit
+    :class:`~swgoh_comlink._models.Player` Struct (vs ~22 ms for the
+    underlying :meth:`StatCalc.calc_player_stats` on the same payload —
+    a ~22 % adapter tax). Callers who need the zero-overhead path can
+    keep using ``client.get_player(..., raw=True)``.
+    """
+    if isinstance(obj, msgspec.Struct):
+        return msgspec.to_builtins(obj)
+    return obj
 
 
 class StatCalc:
@@ -129,8 +146,16 @@ class StatCalc:
     def calc_roster_stats(self, units: Any) -> Any:
         """Calculate stats for all units in a roster-like payload.
 
+        Accepts either Comlink-format dicts/lists (the legacy surface)
+        OR :mod:`msgspec` Structs (e.g. a :class:`~swgoh_comlink._models.RosterUnit`
+        list from the typed client). Struct inputs are converted to the
+        equivalent dict tree at the boundary via :func:`msgspec.to_builtins`;
+        see :func:`_to_dict_if_struct` for the cost tradeoff.
+
         Args:
-            units: Either a list of units or a legacy dict keyed by unit id.
+            units: Either a list of units (dicts or
+                :class:`~swgoh_comlink._models.RosterUnit` Structs) or a
+                legacy dict keyed by unit id.
 
         Returns:
             Input object with `stats` and `gp` fields added for each unit.
@@ -138,6 +163,12 @@ class StatCalc:
         self._require_game_data()
         assert self._unit_data is not None
         self._LOGGER.debug("Calculating roster stats")
+
+        # Bimorphic boundary: a typed-client caller may hand us a list
+        # of RosterUnit Structs. Convert once up-front so the rest of
+        # this method (and all downstream helpers) stay dict-only.
+        if isinstance(units, list) and units and isinstance(units[0], msgspec.Struct):
+            units = [msgspec.to_builtins(u) for u in units]
 
         if isinstance(units, list):
             ships: list[dict[str, Any]] = []
@@ -190,35 +221,66 @@ class StatCalc:
         return units
 
     def calc_player_stats(
-        self, players: dict[str, Any] | list[dict[str, Any]]
+        self,
+        players: dict[str, Any] | list[dict[str, Any]] | msgspec.Struct | list[msgspec.Struct],
     ) -> dict[str, Any] | list[dict[str, Any]]:
         """Calculate stats for one or more player payloads.
 
+        Bimorphic at the boundary — accepts any of:
+
+        * a Comlink-format player dict (with a ``rosterUnit`` key),
+        * a list of such dicts,
+        * a typed :class:`~swgoh_comlink._models.Player` Struct,
+        * a list of :class:`~swgoh_comlink._models.Player` Structs.
+
+        Struct inputs are converted to the equivalent dict tree at the
+        boundary via :func:`msgspec.to_builtins`. This costs roughly +22 %
+        on a 397-unit roster vs handing the calculator the Comlink-format
+        dict directly; the conversion is dominated by the per-Mod walk
+        and shows up the same regardless of which Struct-to-dict
+        strategy is used.
+
+        Callers who need the zero-overhead path can keep using
+        ``client.get_player(..., raw=True)`` to receive the
+        Comlink-format dict and skip the typed surface entirely.
+
         Args:
-            players: One player object, or a list of player objects, each with a `rosterUnit` element.
+            players: One player object, or a list of player objects.
+                Each may be either a Comlink-format dict with a
+                ``rosterUnit`` key, or a typed
+                :class:`~swgoh_comlink._models.Player` Struct.
 
         Returns:
-            The input object with `stats` and `gp` fields added for each player's roster.
+            The input object with `stats` and `gp` fields added for each
+            player's roster. Struct inputs are returned as dicts (the
+            conversion is one-way at the boundary).
 
         Raises:
             RuntimeError: If a dict player is missing a 'rosterUnit' key.
-            TypeError: If the input object is not a list or dict.
+            TypeError: If the input object is not a list, dict, or
+                :class:`msgspec.Struct`.
         """
-        if not isinstance(players, (list, dict)):
+        # Bimorphic boundary: accept dict OR msgspec.Struct (or a list
+        # of either). Convert once here; downstream stays dict-only.
+        normalized: Any = _to_dict_if_struct(players)
+        if isinstance(normalized, list):
+            normalized = [_to_dict_if_struct(p) for p in normalized]
+
+        if not isinstance(normalized, (list, dict)):
             raise TypeError("Expected a list or dict of players")
 
         self._require_game_data()
         self._LOGGER.debug("Calculating player stats")
 
-        if isinstance(players, list):
-            for player in players:
+        if isinstance(normalized, list):
+            for player in normalized:
                 self.calc_roster_stats(player.get("rosterUnit"))
-            return players
-        elif isinstance(players, dict):
-            if "rosterUnit" not in players:
+            return normalized
+        elif isinstance(normalized, dict):
+            if "rosterUnit" not in normalized:
                 raise RuntimeError("Expected a dict with a 'rosterUnit' key")
-            self.calc_roster_stats(players["rosterUnit"])
-            return players
+            self.calc_roster_stats(normalized["rosterUnit"])
+            return normalized
         else:
             raise TypeError("Expected a list or dict of players")
 
