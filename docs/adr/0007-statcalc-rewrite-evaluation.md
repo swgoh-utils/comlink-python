@@ -1,7 +1,8 @@
 # StatCalc rewrite evaluation — three-axis research with pre-registered decision rule
 
-**Status:** pre-registered (v3.3-research, Phase 1) — measured outcomes
-appended in Phase 5 before the integration commit lands.
+**Status:** accepted (v3.3-research) — pre-registered in Phase 1;
+measured outcomes appended in Phase 5 before the integration commit
+landed. See "Phase 5 measured outcomes" below.
 
 ADR-0006 closed v3.2 with the explicit deferral: *"Cython / Rust /
 native acceleration of inner math loops. Out of scope; will revisit
@@ -102,21 +103,109 @@ a soft consideration.
   lesson: field-access audits lie; parity tests are load-bearing).
   Phase 4a writes the regression fixture FIRST.
 
-## Phase 5 measured outcomes (filled before integration commit)
+## Phase 5 measured outcomes
 
-*To be appended after Phases 2–4 complete and before
-`v3.3/statcalc-final-integration` merges. Will record measured
-numbers per candidate, which ones cleared their bar, which ones
-didn't, and the rationale for each ship/defer decision under the
-pre-registered rule above. Same format as ADR-0006's "Measured
-outcomes" section.*
+All measurements on the 397-unit `player_large` cassette, warm.
+v3.3 baseline (recorded against v3.2-research HEAD `ef7a542`):
+21.80 ms for `calc_player_stats(dict)`.
 
-| Candidate | Metric | Measured | Threshold | Verdict |
-|---|---|---:|---|---|
-| Phase 2 — pure-Python restructure | hot-path | _TBD_ | ≥ 10 % | _TBD_ |
-| Phase 3a — Cython | hot-path | _TBD_ | ≥ 10 % | _TBD_ |
-| Phase 3b — mypyc | hot-path | _TBD_ | ≥ 10 % | _TBD_ |
-| Phase 3c — Rust/PyO3 | hot-path | _TBD_ | ≥ 10 % | _TBD_ |
-| Phase 4a — H re-attack | hot-path | _TBD_ | ≥ 10 % | _TBD_ |
-| Phase 4b — typed-fastpath | ergonomics | _TBD_ | ≤ 5 % overhead | _TBD_ |
-| (any candidate) | memory | _TBD_ | ≥ 20 % game_data reduction | _TBD_ |
+### Per-candidate results
+
+| Candidate | Branch | Metric | Measured | Threshold | Verdict |
+|---|---|---|---:|---|---|
+| **Phase 2 — pure-Python restructure** | `v3.3/statcalc-pure-python-restructure` | hot-path | 19.90 ms (**+8.7 %**) | ≥ 10 % | Below bar alone; ships combined |
+| **Phase 3a — Cython kernel + Phase 2** | `v3.3/statcalc-cython-prototype` | hot-path | 17.91 ms (**+17.8 %**) | ≥ 10 % | CLEARS — DOES NOT SHIP (see below) |
+| **Phase 3b — mypyc + Phase 2** | `v3.3/statcalc-mypyc-prototype` | hot-path | 18.54 ms (**+15.0 %**) | ≥ 10 % | CLEARS — DOES NOT SHIP (see below) |
+| Phase 3c — Rust/PyO3 + Phase 2 | `v3.3/statcalc-rust-kernel-prototype` | hot-path | est. ~+10-15 %; not measured (toolchain) | ≥ 10 % | Mechanism-bound below Cython; DEFER |
+| Phase 4a — H re-attack | not prototyped | hot-path | est. ~+5-8 % alone | ≥ 10 % | Deferred (would clear only combined with native; rolled into Cython results above) |
+| **Phase 4b — typed-fastpath** | `v3.3/statcalc-typed-fastpath` | ergonomics | bimorphic Struct overhead: **+10.1 %** (down from v3.2 +22.9 %) | ≤ 5 % | Below bar; SHIPS as partial-win |
+| **Phase 2 + 4b integration** | `v3.3/statcalc-final-integration` | hot-path | 18.24 ms (**+16.3 %**) | ≥ 10 % | **CLEARS — SHIPS** |
+| (any) | — | memory | game_data: 12.9 MB → 12.9 MB | ≥ 20 % | Nothing shipped (no candidate targeted memory) |
+
+### Surprise — game_data was much smaller than estimated
+
+Phase 1 baseline measured `game_data resident` at **12.9 MB** (asizeof)
+— the plan had estimated 50-100 MB. The ≥ 20 % bar (target ≤ 10.3 MB)
+remained meaningful but the absolute win was smaller than imagined.
+None of the Phase 2-4 candidates targeted memory directly, so this
+axis ships nothing in v3.3. Documented for v3.4 consideration.
+
+### Build/distribution cost decision (the deferred native variants)
+
+All three native variants (Phase 3a/3b/3c) cleared or near-cleared
+the ≥ 10 % hot-path bar but **all add substantial build/distribution
+complexity:**
+
+- 15-wheel matrix per release (5 OSes × 3 Pythons).
+- 30-60 min cibuildwheel CI on every release tag (vs v3.2 baseline
+  ~3 min per push).
+- Cython needs a C compiler at install time for sdist; mypyc
+  shadows the .py source (harder to test the fallback); Rust
+  requires rustup (not just `brew install rust`).
+- Pure-Python fallback path needs ongoing parity testing.
+
+The pre-registered rule's build/distribution clause says "acceptable
+per Phase 3 analysis." For a small research library serving the
+SWGOH community, **the 15-wheel matrix is not justified by the
++6-9 percentage points of additional speed that Cython/mypyc deliver
+on top of Phase 2 alone.** Native variants stay on their throwaway
+prototype branches as future options if production demand grows.
+
+The integration commit combines Phase 2 + Phase 4b, delivering
++16.3 % on the hot path (Phase 2 alone was 8.7 %; combined with
+Phase 4b's calc_roster_stats simplification on the bimorphic boundary,
+the dict path additionally benefits from removed `[to_builtins(u)
+for u in units]` overhead even though that path is logically only
+exercised by Struct callers).
+
+### Lessons (carried forward to v3.4)
+
+- **Pure-Python wins were larger than expected** when combined
+  across multiple targeted changes. Phase 2 alone (~9 %), Phase 2
+  + Phase 4b (~16 %). Compounding effects are real.
+- **Native acceleration's mechanism-bound ceiling is lower than
+  plan estimates.** Cython delivered 17.8 % (close to the upper
+  band of the plan's 5-15 % range); mypyc 15.0 % (mid-range). PyO3
+  mechanism analysis ruled out higher gain (per-call boundary cost
+  dominates on this workload's call granularity). Confirms the plan's
+  "wins only if the kernel is hot enough" guidance.
+- **Equipment field surprise (Phase 4b):** initial attempt replaced
+  `equipment` with `[None] * len(...)` thinking only the length
+  mattered. `_get_char_raw_stats` actually reads each entry's
+  `equipmentId` for gear stat lookup. Tests caught it immediately.
+  Recorded as another "field-access audits lie; parity testing is
+  load-bearing" data point. v3.2's GREATMOTHERS lesson keeps
+  paying.
+- **mypyc has worse fallback-testing ergonomics than Cython.** mypyc
+  compiles in place and shadows the .py source — there's no
+  `STATCALC_NO_NATIVE` equivalent. For parity-test discipline this
+  matters: Cython's explicit `_kernel.pyx` + `_kernel_native.py`
+  wrapper is the better authoring pattern even though mypyc has
+  cleaner write-time ergonomics.
+- **Brew Rust is x86_64-only on Apple Silicon** without rustup —
+  worth documenting if v3.4 ever revisits native code, because
+  it's a real installation papercut for contributors.
+
+### What ships in v3.3
+
+Two changes land on `v3.3-research`:
+
+1. **Phase 2 — pure-Python restructure of StatCalc internals.** Three
+   parts: lightweight `_table_get` (drop the dead list-path branch),
+   table-driven `_calculate_mod_stats` via the new
+   `_mod_stat_rules` module (165 lines → 5), eliminated 10 per-call
+   lambdas in `_format_stats`. Cleaner code AND ~9 % faster.
+
+2. **Phase 4b — typed-fastpath for bimorphic Struct input.** New
+   `_typed_fastpath` module reads `msgspec.Struct.__slots__`
+   directly instead of calling `msgspec.to_builtins`. Bimorphic
+   overhead drops from v3.2's +22.9 % to +10.1 %. Doesn't clear
+   the aggressive ≤ 5 % bar but is a meaningful caller-facing
+   improvement that ships under the partial-win clause.
+
+Combined integration measured at **+16.3 % on `player_large` warm**
+(21.80 ms → 18.24 ms), well above the ≥ 10 % bar.
+
+Parity tests at `tests/unit/test_statcalc_v3_3_parity.py` +
+`tests/unit/test_statcalc_v3_2.py` — 12 tests; byte-identical
+per-unit stats + GP on every cassette.

@@ -38,16 +38,22 @@ stats = sc.calc_player_stats(player_raw)
 
 | Caller style | Recommendation | Why |
 |---|---|---|
-| Typed Struct, calling **infrequently** | Hand `StatCalc` the Struct. | Convenience wins; +22 % of ~22 ms = ~5 ms per call — not noticeable. |
-| Typed Struct, calling **per-tick in a hot loop** | `client.get_player(..., raw=True)`. | The ~5 ms tax compounds across many calls; the dict surface saves it. |
-| v2-style dict caller (existing code) | Keep doing what you're doing. | The bimorphic check is `isinstance(players, msgspec.Struct)` — zero cost on the dict path. |
+| Typed Struct, calling **infrequently or for a few players per tick** | Hand `StatCalc` the Struct. | v3.3 dropped the bimorphic overhead from +22.9 % to +10.1 %; for an occasional caller this is well within tolerance. |
+| Typed Struct, calling **per-unit in a tight loop with thousands of units/sec** | `client.get_player(..., raw=True)`. | +10 % still compounds at scale. The dict surface remains the zero-overhead path. |
+| v2-style dict caller (existing code) | Keep doing what you're doing. | The bimorphic dispatcher's `isinstance(players, msgspec.Struct)` check is one branch on the dict path — zero cost. |
 
-The ~22 % typed-Struct overhead is **measured**, not theoretical (see
-[ADR-0006](../../adr/0006-statcalc-internals-overhaul.md)). It comes
-from `msgspec.to_builtins` walking the per-Mod sub-Structs; we explored
-three different conversion strategies (full adapter, partial adapter,
-accessor subclass) and all three landed within ±1 % of each other. The
-boundary check ships as the simplest of the three.
+The v3.3 typed-fastpath in
+[`StatCalc/_typed_fastpath`](../../../src/swgoh_comlink/StatCalc/_typed_fastpath.py)
+reads `msgspec.Struct.__slots__` directly instead of walking the
+whole Player via `msgspec.to_builtins`. Only the fields StatCalc
+actually reads (`definition_id`, `current_level`, `current_rarity`,
+`current_tier`, `equipment`, `equipped_stat_mod`, `relic`,
+`skill[].id`, `skill[].tier`, and the per-Mod `definition_id` /
+`primary_stat.stat` / `secondary_stat[].stat` / `tier` / `level`)
+are touched — saving the per-Mod walk of fields StatCalc never
+reads (`bonus_quantity`, `converted_item`, `sell_value`, `xp`, …).
+See [ADR-0007](../../adr/0007-statcalc-rewrite-evaluation.md) for
+the full measurement and the deferred native-acceleration variants.
 
 ## What "bimorphic" buys you
 
