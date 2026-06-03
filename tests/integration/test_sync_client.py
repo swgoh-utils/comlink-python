@@ -72,7 +72,7 @@ def test_get_guilds_by_name(comlink):
 
 def test_get_game_data_filtered(comlink):
     """POST /data with DataItems filter returns game data subset."""
-    result = comlink.get_game_data(items=DataItems.UNITS)
+    result = comlink.get_game_data(items=DataItems.SEGMENT1)
     assert isinstance(result, dict)
     assert len(result) > 0
 
