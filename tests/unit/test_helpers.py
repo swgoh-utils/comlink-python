@@ -1567,6 +1567,42 @@ class TestIsOmicronSkillNoTier:
         assert is_omicron_skill(skill_list, skill_id="skill_B", skill_tier=1) is False
 
 
+class TestConstantsGameDataItemsEnumSync:
+    """Lock in helper alignment with the live `GameDataItemsEnum` from `get_enums()`."""
+
+    def test_new_items_resolve(self):
+        from swgoh_comlink.helpers._constants import Constants
+
+        assert Constants.get("AbilityDecisionTrees") == "1099511627776"
+        assert Constants.get("EraDefinitions") == "2251799813685248"
+        assert Constants.get("UBSUpdate") == "2150109456"
+
+    def test_episode_definitions_plural(self):
+        from swgoh_comlink.helpers._constants import Constants
+
+        assert Constants.get("EpisodeDefinitions") == "281474976710656"
+
+    def test_account_linking_alias(self):
+        from swgoh_comlink.helpers._constants import Constants
+
+        assert Constants.get("AccountLinking") == "562949953421312"
+
+    def test_segment_values_match_server(self):
+        from swgoh_comlink.helpers._constants import Constants
+
+        assert Constants.Segment1 == 2097151
+        assert Constants.Segment2 == 1125968624222208
+        assert Constants.Segment3 == 206158430208
+        assert Constants.Segment4 == 3377424842620928
+
+    def test_dataitems_members_present(self):
+        from swgoh_comlink.helpers._data_items import DataItems
+
+        assert DataItems.ABILITY_DECISION_TREE.value == 1099511627776
+        assert DataItems.ERA_DEFINITION.value == 2251799813685248
+        assert DataItems.UBS_UPDATE.value == 2150109456
+
+
 class TestConstantsGetLegacyKeyError:
     def test_legacy_name_with_missing_dataitems_returns_none(self):
         from unittest.mock import patch

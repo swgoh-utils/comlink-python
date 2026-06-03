@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 _LEGACY_NAME_MAP: dict[str, str] = {
     "ALL": "ALL",
+    "None": "NONE",
     "CategoryDefinitions": "CATEGORY",
     "UnlockAnnouncements": "UNLOCK_ANNOUNCEMENT_DEFINITION",
     "SkillDefinitions": "SKILL",
@@ -63,6 +64,7 @@ _LEGACY_NAME_MAP: dict[str, str] = {
     "Guild": "GUILD",
     "Mystery": "MYSTERY_BOX",
     "CooldownDefinitions": "COOLDOWN",
+    "UBSUpdate": "UBS_UPDATE",
     "DailyActionCapDefinitions": "DAILY_ACTION_CAP",
     "EnergyRewards": "ENERGY_REWARD",
     "UnitGuideDefinitions": "UNIT_GUIDE_DEFINITION",
@@ -71,6 +73,7 @@ _LEGACY_NAME_MAP: dict[str, str] = {
     "UnitDefinitions": "UNITS",
     "CampaignDefinitions": "CAMPAIGN",
     "Conquest": "CONQUEST",
+    "AbilityDecisionTrees": "ABILITY_DECISION_TREE",
     "RecommendedSquads": "RECOMMENDED_SQUAD",
     "UnitGuideLayouts": "UNIT_GUIDE_LAYOUT",
     "DailyLoginRewardDefinitions": "DAILY_LOGIN_REWARD_DEFINITION",
@@ -79,7 +82,10 @@ _LEGACY_NAME_MAP: dict[str, str] = {
     "DatacronDefinitions": "DATACRON",
     "DisplayableEnemyDefinitions": "DISPLAYABLE_ENEMY",
     "EpisodeDefinition": "EPISODE_DEFINITION",
+    "EpisodeDefinitions": "EPISODE_DEFINITION",
+    "EraDefinitions": "ERA_DEFINITION",
     "LinkingReward": "LINKING_REWARD",
+    "AccountLinking": "LINKING_REWARD",
 }
 
 
@@ -130,9 +136,9 @@ class Constants:
 
     # Segment convenience values (kept for backward compat with examples)
     Segment1 = 2097151
-    Segment2 = 68717379584
+    Segment2 = 1125968624222208
     Segment3 = 206158430208
-    Segment4 = 281200098803712
+    Segment4 = 3377424842620928
 
     # Proxied stat data from _stat_data (backward compat)
     STAT_ENUMS = STAT_ENUMS
