@@ -192,3 +192,6 @@ pyvenv.cfg
 # on the throwaway v3.3/statcalc-cython-prototype branch; not tracked
 # here because v3.3-research shipped the pure-Python kernel only).
 /src/swgoh_comlink/StatCalc/_kernel.c
+
+# hatch-vcs generated version file (derived from Git tag at build time)
+/src/swgoh_comlink/_version.py

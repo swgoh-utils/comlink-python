@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.27.0"]
+requires = ["hatchling>=1.27.0", "hatch-vcs>=0.4.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -80,7 +80,12 @@ markers = [
 ]
 
 [tool.hatch.version]
-path = 'src/swgoh_comlink/version.py'
+source = "vcs"
+
+# Write the resolved version to a generated, git-ignored module so it
+# is importable at runtime (consumed by src/swgoh_comlink/version.py).
+[tool.hatch.build.hooks.vcs]
+version-file = "src/swgoh_comlink/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/swgoh_comlink"]

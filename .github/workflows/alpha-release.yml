@@ -70,19 +70,6 @@ jobs:
       - name: Install project dependencies
         run: uv sync --all-extras --dev
 
-      - name: Verify version.py matches workflow input
-        # version.py is the source of truth for hatchling. Failing
-        # here means the release branch wasn't bumped before invoking
-        # the workflow.
-        run: |
-          PY_VERSION=$(uv run python -c "from swgoh_comlink.version import __version__; print(__version__)")
-          if [[ "$PY_VERSION" != "${{ inputs.version }}" ]]; then
-            echo "::error::version.py reports $PY_VERSION but workflow input was ${{ inputs.version }}"
-            echo "::error::Run 'uvx hatch version \"${{ inputs.version }}\"' on the release branch first."
-            exit 1
-          fi
-          echo "Version OK: $PY_VERSION"
-
       - name: Verify the version is a PEP 440 pre-release
         # ADR-0008 forbids final (non-pre) releases. Anything not
         # matching aN / bN / rcN is rejected.
@@ -98,9 +85,13 @@ jobs:
         run: uv run pytest tests/ -q
 
       - name: Lint (ruff)
+        # Scope matches ci.yml (src/ tests/). examples/ and benchmarks/
+        # carry pre-existing lint debt that CI does not gate on; the
+        # release workflow must not gate on it either, or it would fail
+        # on unrelated issues.
         run: |
-          uv run ruff check
-          uv run ruff format --check
+          uv run ruff check src/ tests/
+          uv run ruff format --check src/ tests/
 
       - name: Type check (mypy)
         run: uv run mypy src/swgoh_comlink/
@@ -120,7 +111,29 @@ jobs:
           fi
 
       - name: Build wheel + sdist
-        run: uvx hatch build
+        # SETUPTOOLS_SCM_PRETEND_VERSION tells hatch-vcs to use the
+        # supplied version string without needing the git tag to exist
+        # yet. The tag is only created AFTER a successful publish (in
+        # the steps below). This mirrors the pattern used by release.yml
+        # following upstream #97 (the hatch-vcs switch).
+        run: SETUPTOOLS_SCM_PRETEND_VERSION=${{ inputs.version }} uvx hatch build
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.version }}
+
+      - name: Verify wheel filename matches version input
+        # With hatch-vcs there is no static version.py to assert against.
+        # Instead, verify the built wheel filename contains the expected
+        # version — this confirms SETUPTOOLS_SCM_PRETEND_VERSION took
+        # effect correctly.
+        run: |
+          WHEEL=$(ls dist/*.whl | head -1)
+          WHEEL_VERSION=$(basename "$WHEEL" | sed 's/swgoh_comlink-//; s/-py3.*//')
+          if [[ "$WHEEL_VERSION" != "${{ inputs.version }}" ]]; then
+            echo "::error::Wheel version '$WHEEL_VERSION' != input '${{ inputs.version }}'"
+            echo "::error::SETUPTOOLS_SCM_PRETEND_VERSION may not have been picked up."
+            exit 1
+          fi
+          echo "Wheel version OK: $WHEEL_VERSION"
 
       - name: List build artifacts
         run: ls -la dist/
