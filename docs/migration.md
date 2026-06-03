@@ -159,15 +159,17 @@ from swgoh_comlink.helpers import Constants
 # All three forms still work:
 Constants.get("UnitDefinitions")  # -> '137438953472' (legacy name)
 Constants.get("UNITS")            # -> '137438953472' (DataItems name)
-Constants.get("Segment1")         # -> '206158430208' (class attribute)
+Constants.get("Segment1")         # -> '2097151' (class attribute)
 ```
 
-**Recommendation:** Prefer using `DataItems` enum values directly for type safety:
+**Recommendation:** Prefer using `DataItems` enum values directly for type safety, and
+use the segment aggregates (`SEGMENT1`–`SEGMENT4`) when calling `get_game_data()` — see
+[GameDataItems server alignment](#9-gamedataitems-server-alignment) below:
 
 ```python
 from swgoh_comlink.helpers import DataItems
 
-items = DataItems.UNITS | DataItems.CATEGORY
+items = DataItems.SEGMENT1 + DataItems.SEGMENT2
 data = comlink.get_game_data(items=items)
 ```
 
@@ -263,6 +265,41 @@ default to `None`.
    brackets in parallel batches via `asyncio.gather`. No code changes are needed
    on your side — the return format is identical.
 
+## 9. GameDataItems server alignment
+
+`DataItems` and `Constants` were re-synced against the live `GameDataItemsEnum` that
+`get_enums()` now exposes. Two practical impacts:
+
+**`Segment2` and `Segment4` aggregate values changed.** If you hardcoded the integers
+in your own code (rather than referencing the constants by name), update them:
+
+| Constant | Old value | New value |
+|----------|-----------|-----------|
+| `DataItems.SEGMENT2` / `Constants.Segment2` | `68717379584` | `1125968624222208` |
+| `DataItems.SEGMENT4` / `Constants.Segment4` | `281200098803712` | `3377424842620928` |
+
+`SEGMENT1` (`2097151`) and `SEGMENT3` (`206158430208`) are unchanged.
+
+Code that references the constant by name (`DataItems.SEGMENT2`, `Constants.Segment2`,
+`Constants.get("Segment2")`) picks up the new values automatically.
+
+**`get_game_data(items=...)` now requires server-accepted values.** Comlink servers
+validate `items` against the server-side `GameDataItemsEnum` and may reject raw
+single-collection bit values with an HTTP 400. Prefer the `SEGMENT1`–`SEGMENT4`
+aggregates and `DataItems.ALL`:
+
+```diff
+- comlink.get_game_data(items=DataItems.UNITS)
++ comlink.get_game_data(items=DataItems.SEGMENT1)
+```
+
+The single-bit `DataItems` members (e.g. `UNITS`, `SKILL`, `EQUIPMENT`) remain useful
+for inspecting / composing custom bitfields and for `Constants.get()` lookups.
+
+**New members added** (from the live `GameDataItemsEnum`): `ABILITY_DECISION_TREE`,
+`ERA_DEFINITION`, `UBS_UPDATE`. New legacy-name aliases: `AbilityDecisionTrees`,
+`EraDefinitions`, `UBSUpdate`, `EpisodeDefinitions` (plural), `AccountLinking`.
+
 ## Summary of changes
 
 | Area | Before (v1.x) | After |
@@ -281,3 +318,6 @@ default to `None`.
 | `get_gac_brackets(limit=)` | Sentinel default | `int` default `0` (0 = no limit) |
 | GAC bracket scanning | Linear O(n) | Exponential probe + binary search O(log n) |
 | Migration checker | Not available | `swgoh-migrate` CLI / `python -m swgoh_comlink.migrate` |
+| `DataItems.SEGMENT2` value | `68717379584` | `1125968624222208` (server-aligned) |
+| `DataItems.SEGMENT4` value | `281200098803712` | `3377424842620928` (server-aligned) |
+| `get_game_data(items=)` single-bit values | Accepted | Rejected (HTTP 400); use segment aggregates |
