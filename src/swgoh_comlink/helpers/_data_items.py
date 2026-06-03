@@ -16,9 +16,14 @@ class DataItems(IntFlag):
     more than one collection in a single call.
 
     Examples:
-        effect = comlink.get_game_data(items=DataItems.EFFECT)
-        skill_equipment = comlink.get_game_data(items=(DataItems.SKILL + DataItems.EQUIPMENT))
-        units_no_pve = comlink.get_game_data(items=DataItems.UNITS, include_pve_units=False)
+        segment1 = comlink.get_game_data(items=DataItems.SEGMENT1)
+        segments_1_and_2 = comlink.get_game_data(items=(DataItems.SEGMENT1 + DataItems.SEGMENT2))
+        segment3_no_pve = comlink.get_game_data(items=DataItems.SEGMENT3, include_pve_units=False)
+
+    Note:
+        Comlink servers validate `items` against the server-side `GameDataItemsEnum` and may reject
+        raw single-collection bit values (e.g. `DataItems.UNITS`) with an HTTP 400. The `SEGMENT1`–
+        `SEGMENT4` aggregates (and `DataItems.ALL`) are the values the server explicitly accepts.
 
     Some of the DataItems members are actually aliases for other members. For example, the `TABLE` member is an
     alias for the `XP_TABLE` member. This is done because both members represent the same collection in the game data.
@@ -85,6 +90,7 @@ class DataItems(IntFlag):
     MYSTERY_BOX = 1073741824
     MYSTERY_STAT_MOD = MYSTERY_BOX
     COOLDOWN = 2147483648
+    UBS_UPDATE = 2150109456
     DAILY_ACTION_CAP = 4294967296
     ENERGY_REWARD = 8589934592
     UNIT_GUIDE_DEFINITION = 17179869184
@@ -101,6 +107,7 @@ class DataItems(IntFlag):
     CONSUMABLE_TYPE = CONQUEST
     ARTIFACT_TIER_DEFINITION = CONQUEST
     CONSUMABLE_TIER_DEFINITION = CONQUEST
+    ABILITY_DECISION_TREE = 1099511627776
     RECOMMENDED_SQUAD = 2199023255552
     UNIT_GUIDE_LAYOUT = 4398046511104
     DAILY_LOGIN_REWARD_DEFINITION = 8796093022208
@@ -115,11 +122,12 @@ class DataItems(IntFlag):
     EPISODE_DEFINITION = 281474976710656
     LINKING_REWARD = 562949953421312
     LIGHTSPEED_TOKEN = 1125899906842624
+    ERA_DEFINITION = 2251799813685248
 
     SEGMENT1 = 2097151
-    SEGMENT2 = 68717379584
+    SEGMENT2 = 1125968624222208
     SEGMENT3 = RELIC_TIER_DEFINITION + UNITS
-    SEGMENT4 = 281200098803712
+    SEGMENT4 = 3377424842620928
 
     @classmethod
     def members(cls) -> KeysView[str]:

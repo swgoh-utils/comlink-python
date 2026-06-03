@@ -5,7 +5,7 @@ Sample script to retrieve game data from the SWGoH game servers
 """
 
 from swgoh_comlink import SwgohComlink
-from swgoh_comlink.helpers import Constants
+from swgoh_comlink.helpers import Constants, DataItems
 
 # Create an instance of SwgohComlink
 cl = SwgohComlink()
@@ -13,13 +13,15 @@ cl = SwgohComlink()
 # Retrieve all of the available game data
 game_data = cl.get_game_data(items="ALL")
 
-# Alternatively, retrieve only the unit information collection
-unit_data = cl.get_game_data(items="UnitDefinitions")
+# Retrieve a single segment. The Comlink server validates `items` against its
+# GameDataItemsEnum and accepts the Segment1-4 aggregates; raw single-collection
+# bit values (e.g. DataItems.UNITS) may be rejected with an HTTP 400.
+segment1_data = cl.get_game_data(items=DataItems.SEGMENT1)
 
-# This is the same call as above but without the PVE units
-unit_data_no_pve = cl.get_game_data(items="UnitDefinitions", include_pve_units=False)
+# The same call without the PVE units
+segment1_no_pve = cl.get_game_data(items=DataItems.SEGMENT1, include_pve_units=False)
 
-# If you want to get more than one collection at once, simply combine the collection values
+# Combine segments to request multiple collections at once
 game_data_segments_1_and_2 = cl.get_game_data(items=Constants.Segment1 + Constants.Segment2)
 
 # Note that the 'items' and legacy 'request_segment' parameters are mutually exclusive.
