@@ -48,7 +48,7 @@ Be respectful, constructive, and patient. We're all here because we enjoy the ga
    gh auth login
    gh repo fork swgoh-utils/comlink-python
    ```
-   
+
    ```bash
    git clone https://github.com/<your-username>/comlink-python.git
    cd comlink-python
@@ -60,7 +60,7 @@ Be respectful, constructive, and patient. We're all here because we enjoy the ga
     git config --local branch.main.remote upstream
     git remote set-url --push upstream github@github.com:<your-username>/comlink-python.git
    ```
-   
+
 2. **Install uv** (if you don't have it)
 
    ```bash
@@ -114,7 +114,7 @@ comlink-python/
 │   │   ├── commitlint.yml          # Commit message validation (npm-based)
 │   │   ├── integration.yml         # Integration tests against live comlink services
 │   │   ├── labeler.yml             # Auto-label PRs by file path
-│   │   ├── release.yml             # Semantic release → PyPI publish
+│   │   ├── release.yml             # Tag-driven release (build → PyPI → tag) via hatch-vcs
 │   │   └── test.yml                # Quick test + docs build
 │   ├── CODEOWNERS                  # Code ownership
 │   ├── dependabot.yml              # Automated dependency updates
@@ -164,7 +164,7 @@ comlink-python/
 │       ├── globals.py                # Logging configuration
 │       ├── swgoh_comlink.py          # SwgohComlink (sync client)
 │       ├── swgoh_comlink_async.py    # SwgohComlinkAsync (async client)
-│       └── version.py                # Package version (managed by hatch)
+│       └── version.py                # Exposes __version__ (derived from the Git tag via hatch-vcs)
 ├── tests/
 │   ├── integration/                  # Tests requiring a running comlink service
 │   ├── resources/                    # Test fixture data (example-player.json, etc.)
@@ -191,7 +191,7 @@ comlink-python/
 | `helpers/` | `DataItems` IntFlag enum, `Constants` class, 25+ utility functions split across focused submodules |
 | `exceptions.py` | `SwgohComlinkException`, `SwgohComlinkValueError`, and `SwgohComlinkTypeError` |
 | `globals.py` | Shared logging setup (`get_logger()`) |
-| `version.py` | Single `__version__` string, managed by hatch during releases |
+| `version.py` | Exposes `__version__`, derived from the Git tag at build time via hatch-vcs |
 
 ---
 
@@ -506,13 +506,13 @@ Before opening an issue, check the [existing issues](https://github.com/swgoh-ut
 
 Releases are handled by the maintainer through the GitHub Actions `release.yml` workflow. Contributors don't need to manage versioning or releases, but here's how it works for reference:
 
-1. The release workflow is triggered manually (`workflow_dispatch`)
-2. [Hatch](https://hatch.pypa.io/) bumps the version in `src/swgoh_comlink/version.py`
-3. [git-changelog](https://pawamoy.github.io/git-changelog/) regenerates `CHANGELOG.md` from commit history
-4. The new version is tagged and pushed
-5. The package is built with `hatch build` and published to [PyPI](https://pypi.org/project/swgoh-comlink/)
+1. The release workflow is triggered manually (`workflow_dispatch`) with a `bump` input (`patch`, `minor`, or `major`)
+2. The next version is computed from the latest release tag and the chosen bump level
+3. The package is built — [hatch-vcs](https://github.com/ofek/hatch-vcs) derives the version from that target tag, so **no version string is committed to the repo**
+4. The distributions are published to [PyPI](https://pypi.org/project/swgoh-comlink/) via trusted publishing
+5. Only after a successful publish is the Git tag created and a GitHub Release cut, with release notes auto-generated from the commit/PR history
 
-This is why conventional commit messages matter — they become the release notes automatically.
+Because the version comes from the Git tag (not a committed file), the release workflow never pushes to the protected `main` branch. This is why conventional commit messages matter — they become the auto-generated release notes.
 
 **Version scheme:** [Semantic Versioning](https://semver.org/)
 

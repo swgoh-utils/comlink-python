@@ -187,3 +187,6 @@ Pipfile*
 pyvenv.cfg
 /src/swgoh_comlink/tools.py
 /docs/exhaustive-tests.md
+
+# hatch-vcs generated version file (derived from Git tag at build time)
+/src/swgoh_comlink/_version.py
