@@ -22,15 +22,22 @@ from swgoh_comlink.helpers import DataItems
 
 comlink = SwgohComlink()
 
-# Single collection
-units = comlink.get_game_data(items=DataItems.UNITS)
+# Single segment (server-accepted)
+segment1 = comlink.get_game_data(items=DataItems.SEGMENT1)
 
-# Multiple collections via addition
-data = comlink.get_game_data(items=DataItems.SKILL + DataItems.EQUIPMENT)
+# Multiple segments combined
+data = comlink.get_game_data(items=DataItems.SEGMENT1 + DataItems.SEGMENT2)
 
 # All collections
 everything = comlink.get_game_data(items=DataItems.ALL)
 ```
+
+!!! note
+    Comlink servers validate `items` against the server-side `GameDataItemsEnum`. They
+    accept the `SEGMENT1`–`SEGMENT4` aggregates and `DataItems.ALL`, but may reject raw
+    single-collection bit values (e.g. `DataItems.UNITS`) with an HTTP 400. Prefer the
+    segment aggregates for `get_game_data()` calls. The single-bit members remain useful
+    for inspecting / composing custom bitfields and for `Constants.get()` lookups.
 
 Use `DataItems.members()` to list all available member names.
 
