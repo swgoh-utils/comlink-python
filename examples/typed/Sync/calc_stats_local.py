@@ -20,8 +20,8 @@ Requires the v3 alpha + the `[cache]` optional extra
 (``pip install ... swgoh_comlink-3.0.0a1...[cache]``).
 """
 
-from swgoh_comlink import StatCalc, get_statcalc_game_data
 from swgoh_comlink._cache import GameDataCache
+from swgoh_comlink.StatCalc import StatCalc, get_statcalc_game_data
 from swgoh_comlink.typed import SwgohComlink
 
 # ── Setup ───────────────────────────────────────────────────────────────────
