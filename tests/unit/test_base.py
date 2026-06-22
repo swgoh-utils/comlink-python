@@ -5,12 +5,20 @@ from __future__ import annotations
 import hashlib
 import logging
 from json import dumps
+from typing import TYPE_CHECKING
 
 import pytest
 
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink._base import _SENSITIVE_KEYS, SwgohComlinkBase, param_alias, sanitize_url
 from swgoh_comlink.exceptions import SwgohComlinkValueError
+
+if TYPE_CHECKING:
+    # `typing.assert_type` is 3.11+; `typing_extensions` works on every
+    # supported Python version and is already in the dev dependency closure.
+    from typing_extensions import assert_type
+
+    from swgoh_comlink import SwgohComlinkAsync
 
 # ── sanitize_url ─────────────────────────────────────────────────────────
 
@@ -77,6 +85,30 @@ class TestBaseDirectInstantiation:
     def test_cannot_instantiate_base_directly(self):
         with pytest.raises(TypeError, match="Only subclasses"):
             SwgohComlinkBase()
+
+
+# ── Constructor type inference (PR #98 regression guard) ─────────────────
+#
+# `SwgohComlinkBase.__new__` must return `Self` so that subclass constructor
+# calls infer as the concrete subclass, not the base. Without this, type
+# checkers reject subclass-only attribute access such as
+# `SwgohComlink(...).get_player(...)`.
+#
+# The function below is intentionally never invoked at runtime — it lives
+# under `if TYPE_CHECKING:` so the static type checker (mypy / ty) validates
+# the `assert_type` calls without spinning up real httpx clients.
+
+if TYPE_CHECKING:
+
+    def _typecheck_constructor_returns_concrete_subclass() -> None:
+        sync_client = SwgohComlink()
+        assert_type(sync_client, SwgohComlink)
+        # Subclass-only attribute access — must resolve without error.
+        _ = sync_client.get_player
+
+        async_client = SwgohComlinkAsync()
+        assert_type(async_client, SwgohComlinkAsync)
+        _ = async_client.get_player
 
 
 # ── Constructor ──────────────────────────────────────────────────────────

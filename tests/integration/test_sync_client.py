@@ -3,7 +3,6 @@
 import pytest
 
 from swgoh_comlink import SwgohComlink
-from swgoh_comlink.helpers import DataItems
 
 from .conftest import COMLINK_URL, TEST_ALLYCODE
 
@@ -71,8 +70,8 @@ def test_get_guilds_by_name(comlink):
 
 
 def test_get_game_data_filtered(comlink):
-    """POST /data with DataItems filter returns game data subset."""
-    result = comlink.get_game_data(items=DataItems.SEGMENT1)
+    """POST /data with request_segment=1 returns a non-empty game data subset."""
+    result = comlink.get_game_data(request_segment=1)
     assert isinstance(result, dict)
     assert len(result) > 0
 

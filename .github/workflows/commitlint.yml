@@ -27,7 +27,7 @@ jobs:
             "rules": {
               "type-enum": [2, "always", [
                 "feat", "fix", "refactor", "build", "deps", "bug",
-                "chore", "docs", "test", "style", "ci", "perf"
+                "chore", "docs", "test", "tests", "style", "ci", "perf"
               ]],
               "scope-enum": [1, "always", [
                 "core", "helpers", "deps", "release", "ci",

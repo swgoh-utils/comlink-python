@@ -23,6 +23,7 @@ classifiers = [
 ]
 dependencies = [
     "httpx>=0.28",
+    "typing-extensions>=4.15.0",
 ]
 
 [project.scripts]
