@@ -23,14 +23,15 @@ repos:
         exclude: ^examples/
       - id: ruff-format
 
-  # ── Mypy type checking (mirrors CI type-check job) ────────────────────
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
+  # ── ty type checking (Astral, run via local uv) ───────────────────────
+  - repo: local
     hooks:
-      - id: mypy
+      - id: ty
+        name: ty check
+        entry: uv run ty check
+        language: system
         files: ^src/swgoh_comlink/
-        additional_dependencies: [httpx>=0.28]
-        args: [--strict, --ignore-missing-imports]
+        types: [python]
 
   # ── Commitlint (mirrors CI commitlint job) ────────────────────────────
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
