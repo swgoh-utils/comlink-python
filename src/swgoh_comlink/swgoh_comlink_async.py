@@ -17,7 +17,7 @@ from ._base import (
     param_alias,
 )
 from .exceptions import SwgohComlinkException, SwgohComlinkValueError
-from .helpers import Constants
+from .helpers import Constants, DataItems
 
 __all__ = ["SwgohComlinkAsync"]
 
@@ -197,7 +197,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         include_pve_units: bool = True,
         request_segment: int = 0,
         enums: bool = False,
-        items: str | None = None,
+        items: str | DataItems | int | None = None,
         device_platform: str = "Android",
     ) -> dict[str, Any]:
         """
@@ -447,18 +447,14 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             division = divisions[str(division).lower()]
         if isinstance(division, str):
             division = divisions[division.lower()]
-        payload: dict[str, Any] = {
-            "payload": {
-                "leaderboardType": leaderboard_type,
-            },
-            "enums": enums,
-        }
+        inner_payload: dict[str, Any] = {"leaderboardType": leaderboard_type}
+        payload: dict[str, Any] = {"payload": inner_payload, "enums": enums}
         if leaderboard_type == 4:
-            payload["payload"]["eventInstanceId"] = event_instance_id
-            payload["payload"]["groupId"] = group_id
+            inner_payload["eventInstanceId"] = event_instance_id
+            inner_payload["groupId"] = group_id
         elif leaderboard_type == 6:
-            payload["payload"]["league"] = league
-            payload["payload"]["division"] = division
+            inner_payload["league"] = league
+            inner_payload["division"] = division
         return cast(dict[str, Any], await self._post(endpoint="getLeaderboard", payload=payload))
 
     # alias for non PEP usage of direct endpoint calls

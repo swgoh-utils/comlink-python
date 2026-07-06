@@ -229,7 +229,7 @@ This project follows standard Python conventions. Please keep these in mind:
 **General principles:**
 
 - Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting
-- Use **complete type annotations** on all functions, parameters, and return values — the project enforces `mypy --strict`
+- Use **complete type annotations** on all functions, parameters, and return values — the project type-checks with `ty` (Astral)
 - Use `from __future__ import annotations` at the top of each module for modern annotation syntax
 - Use docstrings (Google style) on all public classes and methods
 - Keep lines to 120 characters max (the project doesn't enforce 79)
@@ -411,7 +411,7 @@ Closes #12
    uvx ruff check src/ tests/
 
    # Type check
-   uv run mypy src/swgoh_comlink/
+   uv run ty check src/swgoh_comlink/
 
    # Tests
    uv run pytest tests/ -v
@@ -449,7 +449,7 @@ Closes #12
    - [ ] Commit messages follow Angular convention
    - [ ] Ruff linter passes (`uvx ruff check src/ tests/`)
    - [ ] Ruff formatter passes (`uvx ruff format --check src/ tests/`)
-   - [ ] Mypy strict passes (`uv run mypy src/swgoh_comlink/`)
+   - [ ] Type check passes (`uv run ty check src/swgoh_comlink/`)
    - [ ] No unrelated changes bundled in
 
 7. **After submitting:**
