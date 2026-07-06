@@ -3,8 +3,11 @@
 
 from __future__ import annotations
 
+import base64
+import io
 import logging
 import time
+import zipfile
 from math import floor
 from typing import Any
 
@@ -93,6 +96,105 @@ def create_localized_unit_name_dictionary(locale: str | list[Any]) -> dict[str, 
             if name_key.endswith("_NAME"):
                 unit_name_map[name_key] = desc
     return unit_name_map
+
+
+def _parse_localization_bundle(bundle: dict[str, Any], language: str) -> dict[str, str]:
+    """Decode a ``get_localization()`` response and parse one language file into a dictionary.
+
+    The Comlink ``localization`` endpoint returns a base64-encoded zip archive under the
+    ``localizationBundle`` key. Each archive entry is a newline-delimited text file whose lines
+    are ``KEY|value`` pairs (``#`` prefixed lines are comments).
+
+    Args:
+        bundle: The dictionary returned by ``SwgohComlink.get_localization()``.
+        language: Locale identifier (e.g. ``"eng_us"``) used to select the ``Loc_<LANG>.txt`` entry.
+
+    Returns:
+        A dictionary mapping localization keys to their localized string values.
+
+    Raises:
+        SwgohComlinkValueError: If the response is missing the ``localizationBundle`` key or the
+            archive does not contain a file for the requested language.
+
+    """
+    if "localizationBundle" not in bundle:
+        err_msg = f"{get_function_name()}: response is missing the 'localizationBundle' key."
+        raise SwgohComlinkValueError(err_msg)
+
+    decoded = base64.b64decode(bundle["localizationBundle"])
+    target = f"Loc_{language.upper()}.txt"
+    result: dict[str, str] = {}
+    with zipfile.ZipFile(io.BytesIO(decoded)) as zip_obj:
+        names = zip_obj.namelist()
+        if target not in names:
+            err_msg = f"{get_function_name()}: '{target}' not found in localization bundle (available: {names})."
+            raise SwgohComlinkValueError(err_msg)
+        with zip_obj.open(target) as raw, io.TextIOWrapper(raw, encoding="utf-8") as stream:
+            for line in stream:
+                if line.startswith("#"):
+                    continue
+                key, sep, value = line.rstrip("\r\n").partition("|")
+                if sep:
+                    result[key] = value
+    return result
+
+
+def get_localization_dictionary(comlink: Any, language: str = "eng_us") -> dict[str, str]:
+    """Fetch a localization bundle and parse it into a key/value dictionary.
+
+    Args:
+        comlink: Instance of SwgohComlink.
+        language: Locale identifier to retrieve. [Default: ``"eng_us"``]
+
+    Returns:
+        A dictionary mapping localization keys to their localized string values.
+
+    Raises:
+        SwgohComlinkValueError: If ``comlink`` is not a SwgohComlink instance, or the response
+            cannot be parsed for the requested language.
+
+    """
+    comlink_type = getattr(comlink, "__comlink_type__", None)
+    if comlink_type != "SwgohComlink":
+        err_msg = f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlink."
+        raise SwgohComlinkValueError(err_msg)
+
+    if not isinstance(language, str) or not language:
+        err_msg = f"{get_function_name()}: 'language' must be a non-empty string."
+        raise SwgohComlinkValueError(err_msg)
+
+    bundle = comlink.get_localization(locale=language)
+    return _parse_localization_bundle(bundle, language)
+
+
+async def async_get_localization_dictionary(comlink: Any, language: str = "eng_us") -> dict[str, str]:
+    """Fetch a localization bundle and parse it into a key/value dictionary (async version).
+
+    Args:
+        comlink: Instance of SwgohComlinkAsync.
+        language: Locale identifier to retrieve. [Default: ``"eng_us"``]
+
+    Returns:
+        A dictionary mapping localization keys to their localized string values.
+
+    Raises:
+        SwgohComlinkValueError: If ``comlink`` is not a SwgohComlinkAsync instance, or the response
+            cannot be parsed for the requested language.
+
+    """
+    comlink_type = getattr(comlink, "__comlink_type__", None)
+    if comlink_type != "SwgohComlinkAsync":
+        err_msg = (
+            f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlinkAsync."
+        )
+        raise SwgohComlinkValueError(err_msg)
+
+    if not isinstance(language, str) or not language:
+        err_msg = f"{get_function_name()}: 'language' must be a non-empty string."
+        raise SwgohComlinkValueError(err_msg)
+
+    bundle = await comlink.get_localization(locale=language)
+    return _parse_localization_bundle(bundle, language)
 
 
 def get_playable_units(units_collection: list[dict[str, Any]]) -> list[dict[str, Any]]:
