@@ -22,10 +22,12 @@ from ._gac import (
     search_gac_brackets,
 )
 from ._game_data import (
+    async_get_localization_dictionary,
     create_localized_unit_name_dictionary,
     get_current_datacron_sets,
     get_datacron_dismantle_total,
     get_datacron_dismantle_value,
+    get_localization_dictionary,
     get_playable_units,
     get_raid_leaderboard_ids,
 )
@@ -99,10 +101,12 @@ __all__ = [
     # Conquest
     "calc_current_stamina",
     # Game data
+    "async_get_localization_dictionary",
     "create_localized_unit_name_dictionary",
     "get_current_datacron_sets",
     "get_datacron_dismantle_total",
     "get_datacron_dismantle_value",
+    "get_localization_dictionary",
     "get_playable_units",
     "get_raid_leaderboard_ids",
     # Guild
