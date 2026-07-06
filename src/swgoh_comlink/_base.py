@@ -18,9 +18,9 @@ from urllib.parse import urlparse, urlunparse
 from typing_extensions import Self
 
 from .exceptions import SwgohComlinkValueError
-from .helpers import Constants
+from .helpers import Constants, DataItems
 
-__all__ = ["SwgohComlinkBase"]
+__all__ = ["SwgohComlinkBase", "param_alias", "DEFAULT_TIMEOUT", "GAME_DATA_TIMEOUT"]
 
 # Keys whose values must be masked in logs, repr, and debug output.
 _SENSITIVE_KEYS = frozenset({"secret_key", "access_key"})
@@ -203,7 +203,7 @@ class SwgohComlinkBase:
         include_pve_units: bool = True,
         request_segment: int = 0,
         enums: bool = False,
-        items: str | int | None = None,
+        items: str | int | DataItems | None = None,
         device_platform: str = "Android",
     ) -> dict[str, Any]:
         """Build payload for get_game_data().
@@ -211,30 +211,28 @@ class SwgohComlinkBase:
         Raises:
             SwgohComlinkValueError: If request_segment is out of range.
         """
-        payload: dict[str, Any] = {
-            "payload": {
-                "version": f"{game_version}",
-                "devicePlatform": device_platform,
-                "includePveUnits": include_pve_units,
-            },
-            "enums": enums,
+        inner_payload: dict[str, Any] = {
+            "version": f"{game_version}",
+            "devicePlatform": device_platform,
+            "includePveUnits": include_pve_units,
         }
+        payload: dict[str, Any] = {"payload": inner_payload, "enums": enums}
         if items:
             if isinstance(items, int):
                 # Direct integer (e.g. from IntFlag arithmetic)
-                payload["payload"]["items"] = str(items)
+                inner_payload["items"] = str(items)
             elif items.lstrip("-").isdigit():
                 # Numeric string — pass through as-is
-                payload["payload"]["items"] = items
+                inner_payload["items"] = items
             else:
                 # Named constant — resolve via Constants lookup
-                payload["payload"]["items"] = Constants.get(items) or "-1"
+                inner_payload["items"] = Constants.get(items) or "-1"
         else:
             if request_segment < 0 or request_segment > 4:
                 raise SwgohComlinkValueError(
                     "Invalid argument. <request_segment> should be an integer between 0 and 4, inclusive."
                 )
-            payload["payload"]["requestSegment"] = request_segment
+            inner_payload["requestSegment"] = request_segment
         return payload
 
     @staticmethod
