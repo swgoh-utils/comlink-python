@@ -1,8 +1,8 @@
 # coding=utf-8
-"""v3.3 Phase 4b — typed-fastpath input adapter.
+"""Typed-fastpath input adapter for StatCalc (shipped in v3.0.0a1).
 
-NOT for production import without Phase 5 approval. Lives on the
-throwaway ``v3.3/statcalc-typed-fastpath`` branch.
+Originated as the v3.3 Phase 4b prototype; approved and integrated into
+production via ``calculator.py``'s bimorphic dispatcher (``ADR-0007``).
 
 **What this does**
 
