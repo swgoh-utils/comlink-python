@@ -1,0 +1,72 @@
+name: prepare release
+
+# Manually dispatched from `develop`. Computes the next version from Conventional
+# Commits, regenerates CHANGELOG.md, and opens a PR into `main`. The PR carries the
+# full develop payload plus the changelog commit, so merging it promotes develop ->
+# main with the changelog already in place — BEFORE the release workflow cuts the tag.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump (auto = infer from Conventional Commits)"
+        type: choice
+        options: [auto, patch, minor, major]
+        default: auto
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    name: Regenerate changelog and open release PR
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Check out develop
+        uses: actions/checkout@v7
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install changelog tooling
+        run: uv sync --group changelog
+
+      - name: Compute next version
+        id: version
+        run: |
+          set -euo pipefail
+          version="$(uv run git-changelog --bump '${{ inputs.bump }}' --bumped-version)"
+          tag="v${version#v}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "Next version: ${tag}"
+
+      - name: Regenerate CHANGELOG.md
+        run: uv run git-changelog --bump '${{ inputs.bump }}'
+
+      - name: Open release PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${{ steps.version.outputs.tag }}"
+          branch="release/${tag}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "${branch}"
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): update for ${tag}"
+          git push --force-with-lease origin "${branch}"
+          gh pr create \
+            --base main --head "${branch}" \
+            --title "chore(release): ${tag}" \
+            --body "Automated release prep for **${tag}**. Regenerated CHANGELOG.md via git-changelog. Merging promotes develop -> main; then run the release workflow on main to build, publish, and tag ${tag}."

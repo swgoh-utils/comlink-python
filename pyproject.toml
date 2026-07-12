@@ -94,9 +94,13 @@ test = [
 typecheck = [
     "ty>=0.0.34",
 ]
+changelog = [
+    "git-changelog>=2.9,<3",
+]
 dev = [
     {include-group = "test"},
     {include-group = "typecheck"},
+    {include-group = "changelog"},
     "ruff>=0.8",
 ]
 docs = [
@@ -144,6 +148,18 @@ quote-style = "double"
 
 [tool.ty.environment]
 python-version = "3.10"
+
+# ── git-changelog ────────────────────────────────────────────────────────
+
+[tool.git-changelog]
+convention = "angular"
+template = "angular"
+provider = "github"
+versioning = "pep440"
+in-place = true
+output = "CHANGELOG.md"
+marker-line = "<!-- insertion marker -->"
+bump = "auto"
 
 # ── Coverage ─────────────────────────────────────────────────────────────
 
