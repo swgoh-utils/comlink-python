@@ -12,16 +12,7 @@ name: comlink-python release
 # behind if the build or upload fails.
 
 on:
-  workflow_dispatch:
-    inputs:
-      bump:
-        description: "Semantic version bump from the latest release tag"
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-        default: minor
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -56,32 +47,28 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Compute next version from the latest tag
+      - name: Read release version from CHANGELOG.md
         id: version
         run: |
           set -euo pipefail
-          latest="$(git tag --list 'v[0-9]*' --sort=-v:refname | head -n1)"
-          latest="${latest:-v0.0.0}"
-          base="${latest#v}"
-          base="${base%%[-+]*}"  # strip any pre-release / build metadata
-          IFS='.' read -r major minor patch <<< "$base"
-          case "${{ inputs.bump }}" in
-            major) major=$((major + 1)); minor=0; patch=0 ;;
-            minor) minor=$((minor + 1)); patch=0 ;;
-            patch) patch=$((patch + 1)) ;;
-          esac
-          version="${major}.${minor}.${patch}"
-          tag="v${version}"
-          if git rev-parse "$tag" >/dev/null 2>&1; then
-            echo "::error::Tag $tag already exists — choose a different bump or delete the tag."
+          version="$(grep -m1 -oE '^## \[v?[0-9]+\.[0-9]+\.[0-9]+[^]]*\]' CHANGELOG.md \
+                     | sed -E 's/^## \[(v?[0-9][^]]*)\]$/\1/')"
+          if [ -z "${version}" ]; then
+            echo "::error::Could not read a version heading from CHANGELOG.md."
+            exit 1
+          fi
+          tag="v${version#v}"
+          semver="${tag#v}"
+          if git rev-parse "${tag}" >/dev/null 2>&1; then
+            echo "::error::Tag ${tag} already exists — was CHANGELOG.md updated for a new version?"
             exit 1
           fi
           {
-            echo "version=$version"
-            echo "tag=$tag"
-            echo "sha=$GITHUB_SHA"
+            echo "version=${semver}"
+            echo "tag=${tag}"
+            echo "sha=${GITHUB_SHA}"
           } >> "$GITHUB_OUTPUT"
-          echo "Releasing $tag from $latest (bump=${{ inputs.bump }}) at $GITHUB_SHA"
+          echo "Releasing ${tag} (from CHANGELOG.md) at ${GITHUB_SHA}"
 
       - name: Build the package
         env:
