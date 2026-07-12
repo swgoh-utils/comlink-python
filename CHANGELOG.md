@@ -1,6 +1,36 @@
 # CHANGELOG
 
 <!-- insertion marker -->
+<a name="v2.2.0"></a>
+
+## [v2.2.0](https://github.com/swgoh-utils/comlink-python/compare/v2.1.0...v2.2.0) (2026-07-12)
+
+### Features
+
+- **helpers:** add localization dictionary parsing with sync and async support (#108) ([45dce8a](https://github.com/swgoh-utils/comlink-python/commit/45dce8a5f402ccb192b9598d308dd86a703ea43b))
+
+### Bug Fixes
+
+- **tests:** switch HMAC rejection tests from GET to POST endpoint (#89) ([75feb67](https://github.com/swgoh-utils/comlink-python/commit/75feb6701648cbaf986624bb90532b8fe24d443a))
+- **helpers:** ensure arena payout time adjusts correctly when shifted to past ([c9e3f59](https://github.com/swgoh-utils/comlink-python/commit/c9e3f59b91a51137867f766f448d7deda07e90b0))
+- **helpers:** handle multi-day offsets in get_arena_payout ([e8a6e05](https://github.com/swgoh-utils/comlink-python/commit/e8a6e05d997559c23734dda5fee2c44cd172d2e8))
+
+<a name="v2.1.0"></a>
+
+## [v2.1.0](https://github.com/swgoh-utils/comlink-python/compare/v2.0.7...v2.1.0) (2026-06-03)
+
+### Bug Fixes
+
+- **examples): update string quoting and rename params for localization bundle calls docs(helpers): document parse_swgoh_string and its extended tag grammar chore: add commitlint config and ignore .pythonrc.py fix(helpers:** extend parse_swgoh_string to cover full NGUI tag set (#83) ([1536853](https://github.com/swgoh-utils/comlink-python/commit/15368533fc09cbbf60964d3ca5044fc9e8c91499))
+
+<a name="v2.0.7"></a>
+
+## [v2.0.7](https://github.com/swgoh-utils/comlink-python/compare/v2.0.6...v2.0.7) (2026-03-30)
+
+### Bug Fixes
+
+- update `sanitize_url` to handle HTTPS URLs without ports, update tests for improved coverage ([577951a](https://github.com/swgoh-utils/comlink-python/commit/577951a6877f47a62c7bf062399fcca6611c9caf))
+
 
 ## [v2.0.6](https://github.com/swgoh-utils/comlink-python/releases/tag/v2.0.6) - 2026-03-29
 
