@@ -54,7 +54,7 @@ jobs:
           echo "Branch guard OK: ${{ github.ref }}"
 
       - name: Check-out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
