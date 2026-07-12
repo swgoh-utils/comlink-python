@@ -10,7 +10,7 @@ executed by the maintainer; nothing here runs automatically.
 - All release prep is committed on the local `release/v3.0.0a1` branch.
 - `docs/v3/releases/v3.0.0a1.md` exists — `alpha-release.yml` uses it as
   the GitHub Release body (`body_path`), so the run fails without it.
-- Local gates are green: ruff, mypy, codegen drift, pytest (≥ 95 % coverage
+- Local gates are green: ruff, ty, codegen drift, pytest (≥ 95 % coverage
   gate), `uv build`.
 
 ## 1. Create the fork
@@ -55,7 +55,7 @@ Fork → *Actions* → **alpha-release** → *Run workflow*:
 - **version:** `3.0.0a1`
 - **dry_run:** `true`
 
-The run executes the full gate suite (tests, ruff, mypy, codegen
+The run executes the full gate suite (tests, ruff, ty, codegen
 drift), builds wheel + sdist via hatch-vcs
 (`SETUPTOOLS_SCM_PRETEND_VERSION`), and Sigstore-signs the artifacts —
 but creates **no tag and no Release**. Inspect the run summary and the

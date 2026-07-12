@@ -23,7 +23,8 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from types import GenericAlias
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import msgspec
 
@@ -216,16 +217,21 @@ def decode_segment(
         tiny = compat.decode_segment(raw, "material", target=MyTinyMaterial)
     """
     if target is None:
-        target = STOCK_SEGMENT_TYPES.get(segment)
-        if target is None:
+        stock = STOCK_SEGMENT_TYPES.get(segment)
+        if stock is None:
             raise ValueError(
                 f"no stock type registered for segment {segment!r}; "
                 f"pass target=<YourStruct>. Known segments: "
                 f"{sorted(STOCK_SEGMENT_TYPES)}"
             )
+        # The registry maps to the canonical Struct for the segment; the
+        # caller's T binds to it when target is omitted.
+        target = cast("type[T]", stock)
     items = payload.get(segment)
     if not items:
         return []
-    # mypy can't infer that `target` (a runtime var) is a valid type for
-    # the list[] generic; msgspec handles it correctly at runtime.
-    return msgspec.convert(items, list[target])  # type: ignore[valid-type]
+    # Runtime type construction: equivalent to `list[target]`, spelled as a
+    # plain constructor call so type checkers don't read the subscript as a
+    # (variable-containing) type expression. msgspec accepts the alias.
+    item_list_type = GenericAlias(list, (target,))
+    return cast("list[T]", msgspec.convert(items, item_list_type))

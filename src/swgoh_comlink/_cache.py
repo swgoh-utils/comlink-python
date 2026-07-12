@@ -42,7 +42,7 @@ import asyncio
 import os
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import msgspec
 
@@ -267,12 +267,12 @@ class GameDataCache:
         version = await self.acurrent_version(client)
         key = self._data_key(version, request_segment, include_pve_units, enums)
         if key in self._inmem:
-            return self._inmem[key]  # type: ignore[no-any-return]
+            return self._inmem[key]
         cached: bytes | None = await asyncio.to_thread(self._cache.get, key)
         if cached is not None:
-            data = await asyncio.to_thread(msgspec.msgpack.decode, cached)
+            data = cast("dict[str, Any]", await asyncio.to_thread(msgspec.msgpack.decode, cached))
             self._inmem[key] = data
-            return data  # type: ignore[no-any-return]
+            return data
 
         try:
             data = await client.get_game_data(
@@ -331,12 +331,12 @@ class GameDataCache:
         version = await self.acurrent_version(client)
         key = self._localization_key(version, locale, unzip)
         if key in self._inmem:
-            return self._inmem[key]  # type: ignore[no-any-return]
+            return self._inmem[key]
         cached: bytes | None = await asyncio.to_thread(self._cache.get, key)
         if cached is not None:
-            data = await asyncio.to_thread(msgspec.msgpack.decode, cached)
+            data = cast("dict[str, Any]", await asyncio.to_thread(msgspec.msgpack.decode, cached))
             self._inmem[key] = data
-            return data  # type: ignore[no-any-return]
+            return data
 
         data = await client.get_localization(locale=locale, unzip=unzip)
         encoded = await asyncio.to_thread(msgspec.msgpack.encode, data)
