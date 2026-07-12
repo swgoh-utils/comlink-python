@@ -42,4 +42,24 @@ jobs:
           EOF
 
       - name: Validate commits
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --quiet origin main
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          # Lint only the commits this PR actually introduces: exclude merge
+          # commits and any commit already reachable from main. Mergeback and
+          # automated back-merge PRs re-introduce main's (sometimes
+          # non-conventional squash) commits — those are already on main and are
+          # not this PR's responsibility to police.
+          commits="$(git rev-list --no-merges --reverse "${base}..${head}" --not FETCH_HEAD)"
+          if [ -z "${commits}" ]; then
+            echo "No PR-unique commits to lint (mergeback/back-merge or merge-only PR)."
+            exit 0
+          fi
+          rc=0
+          while read -r sha; do
+            echo "── ${sha} ──"
+            git log -1 --format=%B "${sha}" | npx commitlint --verbose || rc=1
+          done <<< "${commits}"
+          exit "${rc}"
