@@ -185,11 +185,11 @@ class SwgohComlinkBase:
             f"secret_key={self._mask(self.secret_key)!r})"
         )
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> SwgohComlinkBase:
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         """Prevent instances of this base class from being created directly."""
         if cls is SwgohComlinkBase:
             raise TypeError(f"Only subclasses of '{cls.__name__}' may be instantiated.")
-        return object.__new__(cls)
+        return super().__new__(cls)
 
     def __init__(
         self,

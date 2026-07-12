@@ -119,7 +119,10 @@ bench = [
     "pympler>=1.0",
 ]
 typecheck = [
-    "mypy>=1.0",
+    "ty>=0.0.34",
+    # compat.py's TYPE_CHECKING import of pydantic must resolve for the
+    # [pydantic] extra's adapter to be type-checked.
+    "pydantic>=2.5",
 ]
 codegen = [
     "jinja2>=3.1",
@@ -172,12 +175,10 @@ known-first-party = ["swgoh_comlink"]
 [tool.ruff.format]
 quote-style = "double"
 
-# ── Mypy ─────────────────────────────────────────────────────────────────
+# ── ty (Astral type checker) ─────────────────────────────────────────────
 
-[tool.mypy]
-python_version = "3.11"
-strict = true
-ignore_missing_imports = true
+[tool.ty.environment]
+python-version = "3.11"
 
 # ── Coverage ─────────────────────────────────────────────────────────────
 

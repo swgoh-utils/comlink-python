@@ -7,7 +7,7 @@ help:
 	@echo "  generate-check  Regenerate + fail if output diverges from committed files (CI gate)."
 	@echo "  test            Run the pytest suite."
 	@echo "  lint            Run ruff check + format check."
-	@echo "  typecheck       Run mypy --strict on src/swgoh_comlink/."
+	@echo "  typecheck       Run ty check on src/swgoh_comlink/."
 
 # Regenerate the four client variants (sync/async x dict/typed) from the
 # manifest. Runs `ruff format` on the output so generator whitespace
@@ -34,4 +34,4 @@ lint:
 	uv run ruff format --check src/ tests/v3/ benchmarks/v3/
 
 typecheck:
-	uv run mypy src/swgoh_comlink/
+	uv run ty check src/swgoh_comlink/

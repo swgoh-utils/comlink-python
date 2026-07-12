@@ -171,27 +171,25 @@ def game_data_payload(
         SwgohComlinkValueError: If ``request_segment`` is out of range
             and ``items`` wasn't provided.
     """
-    payload: dict[str, Any] = {
-        "payload": {
-            "version": f"{game_version}",
-            "devicePlatform": device_platform,
-            "includePveUnits": include_pve_units,
-        },
-        "enums": enums,
+    inner: dict[str, Any] = {
+        "version": f"{game_version}",
+        "devicePlatform": device_platform,
+        "includePveUnits": include_pve_units,
     }
+    payload: dict[str, Any] = {"payload": inner, "enums": enums}
     if items:
         if isinstance(items, int):
-            payload["payload"]["items"] = str(items)
+            inner["items"] = str(items)
         elif items.lstrip("-").isdigit():
-            payload["payload"]["items"] = items
+            inner["items"] = items
         else:
-            payload["payload"]["items"] = Constants.get(items) or "-1"
+            inner["items"] = Constants.get(items) or "-1"
     else:
         if request_segment < 0 or request_segment > 4:
             raise SwgohComlinkValueError(
                 "Invalid argument. <request_segment> should be an integer between 0 and 4, inclusive.",
             )
-        payload["payload"]["requestSegment"] = request_segment
+        inner["requestSegment"] = request_segment
     return payload
 
 
@@ -248,16 +246,14 @@ def leaderboard_payload(
 ) -> dict[str, Any]:
     """Build payload for ``get_leaderboard`` (types 4 and 6)."""
     league_id, division_id = resolve_leaderboard_league_division(league, division)
-    payload: dict[str, Any] = {
-        "payload": {"leaderboardType": leaderboard_type},
-        "enums": enums,
-    }
+    inner: dict[str, Any] = {"leaderboardType": leaderboard_type}
+    payload: dict[str, Any] = {"payload": inner, "enums": enums}
     if leaderboard_type == 4:
-        payload["payload"]["eventInstanceId"] = event_instance_id
-        payload["payload"]["groupId"] = group_id
+        inner["eventInstanceId"] = event_instance_id
+        inner["groupId"] = group_id
     elif leaderboard_type == 6:
-        payload["payload"]["league"] = league_id
-        payload["payload"]["division"] = division_id
+        inner["league"] = league_id
+        inner["division"] = division_id
     return payload
 
 

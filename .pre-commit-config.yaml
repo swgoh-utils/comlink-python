@@ -28,23 +28,15 @@ repos:
         exclude: ^examples/
       - id: ruff-format
 
-  # ── Mypy type checking (mirrors CI type-check job) ────────────────────
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
+  # ── ty type checking (Astral, run via local uv) ───────────────────────
+  - repo: local
     hooks:
-      - id: mypy
+      - id: ty
+        name: ty check
+        entry: uv run ty check
+        language: system
         files: ^src/swgoh_comlink/
-        # Match the runtime SDK deps + every optional-extra dep that ships
-        # type stubs. Without these, mypy --strict in the isolated hook env
-        # treats them all as Any and emits spurious "unused type: ignore"
-        # vs "no-any-return" depending on which arrives first.
-        additional_dependencies:
-          - httpx>=0.28
-          - msgspec>=0.18
-          - pydantic>=2.5
-          - diskcache>=5.6
-          - cachetools>=5.3
-        args: [--strict, --ignore-missing-imports]
+        types: [python]
 
   # ── Codegen drift check ───────────────────────────────────────────────
   # If the manifest, template, or generator changes, ensure the four

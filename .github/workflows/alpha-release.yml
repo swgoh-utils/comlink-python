@@ -54,7 +54,7 @@ jobs:
           echo "Branch guard OK: ${{ github.ref }}"
 
       - name: Check-out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
@@ -93,8 +93,8 @@ jobs:
           uv run ruff check src/ tests/
           uv run ruff format --check src/ tests/
 
-      - name: Type check (mypy)
-        run: uv run mypy src/swgoh_comlink/
+      - name: Type check (ty)
+        run: uv run ty check src/swgoh_comlink/
 
       - name: Codegen drift check
         # Enforces ADR-0005 §"codegen-driven split" — the four client

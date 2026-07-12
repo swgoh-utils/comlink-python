@@ -35,9 +35,23 @@ if TYPE_CHECKING:
 class _SyncEscapeHatchMixin:
     """Mixed into sync client classes (dict and typed variants alike)."""
 
-    # The attributes used here are provided by :class:`SwgohComlinkBase` /
-    # the generated client class. Mixins don't redeclare them; they just
-    # reach in.
+    if TYPE_CHECKING:
+        # The attributes/methods below are provided at runtime by
+        # :class:`SwgohComlinkBase` / the generated client class. Declared
+        # here (type-checking only) so the mixin's contract is explicit.
+        client: httpx.Client
+
+        def _build_request_kwargs(
+            self,
+            method: str,
+            endpoint: str,
+            payload: dict[str, Any] | list[Any] | None,
+            timeout: float | None,
+        ) -> tuple[str, dict[str, Any]]: ...
+
+        def _get_game_version(self) -> str: ...
+
+        def get_game_metadata(self, *args: Any, **kwargs: Any) -> Any: ...
 
     def healthcheck(self, *, timeout: float = 5.0) -> bool:
         """Probe ``/enums`` and report reachability.
@@ -53,7 +67,7 @@ class _SyncEscapeHatchMixin:
         fast, not retry.
         """
         try:
-            r = self.client.request("GET", "/enums", timeout=timeout)  # type: ignore[attr-defined]
+            r = self.client.request("GET", "/enums", timeout=timeout)
         except (httpx.HTTPError, httpx.TimeoutException, httpx.RequestError):
             return False
         return bool(r.status_code == 200)
@@ -78,10 +92,8 @@ class _SyncEscapeHatchMixin:
         """
         method_u = method.upper()
         endpoint = path.lstrip("/")
-        full_path, request_kwargs = self._build_request_kwargs(  # type: ignore[attr-defined]
-            method_u, endpoint, payload, timeout
-        )
-        return cast(httpx.Response, self.client.request(method_u, full_path, **request_kwargs))  # type: ignore[attr-defined]
+        full_path, request_kwargs = self._build_request_kwargs(method_u, endpoint, payload, timeout)
+        return self.client.request(method_u, full_path, **request_kwargs)
 
     def stream_game_data(
         self,
@@ -102,7 +114,7 @@ class _SyncEscapeHatchMixin:
         Bypasses the retry loop (streaming + retry doesn't compose
         cleanly — a half-streamed response can't be replayed).
         """
-        game_version = version or self._get_game_version()  # type: ignore[attr-defined]
+        game_version = version or self._get_game_version()
         payload = game_data_payload(
             game_version=game_version,
             include_pve_units=include_pve_units,
@@ -111,10 +123,8 @@ class _SyncEscapeHatchMixin:
             items=items,
             device_platform=device_platform,
         )
-        full_path, request_kwargs = self._build_request_kwargs(  # type: ignore[attr-defined]
-            "POST", "data", payload, GAME_DATA_TIMEOUT
-        )
-        return self.client.stream("POST", full_path, **request_kwargs)  # type: ignore[attr-defined]
+        full_path, request_kwargs = self._build_request_kwargs("POST", "data", payload, GAME_DATA_TIMEOUT)
+        return self.client.stream("POST", full_path, **request_kwargs)
 
     def stream_localization(
         self,
@@ -127,10 +137,8 @@ class _SyncEscapeHatchMixin:
         if not localization_id:
             localization_id = self.get_latest_game_data_version()["language"]
         payload = localization_payload(localization_id, locale, unzip, enums)
-        full_path, request_kwargs = self._build_request_kwargs(  # type: ignore[attr-defined]
-            "POST", "localization", payload, None
-        )
-        return self.client.stream("POST", full_path, **request_kwargs)  # type: ignore[attr-defined]
+        full_path, request_kwargs = self._build_request_kwargs("POST", "localization", payload, None)
+        return self.client.stream("POST", full_path, **request_kwargs)
 
     def get_latest_game_data_version(self) -> dict[str, Any]:
         """Get the latest game data + language bundle versions.
@@ -141,7 +149,7 @@ class _SyncEscapeHatchMixin:
         # Both typed and dict variants of the client expose get_game_metadata.
         # On the typed variant it returns a Metadata Struct; on the dict
         # variant it returns the raw v2 dict. Handle both.
-        md: Any = self.get_game_metadata()  # type: ignore[attr-defined]
+        md: Any = self.get_game_metadata()
         if hasattr(md, "latest_gamedata_version"):
             md_struct = cast("Metadata", md)
             return {
