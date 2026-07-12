@@ -1,10 +1,10 @@
 # comlink-python
 
-[![CI](https://github.com/swgoh-utils/comlink-python/actions/workflows/ci.yml/badge.svg)](https://github.com/swgoh-utils/comlink-python/actions/workflows/ci.yml)
+[![CI](https://github.com/MarTrepodi/comlink-python/actions/workflows/ci.yml/badge.svg)](https://github.com/MarTrepodi/comlink-python/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/swgoh-comlink.svg)](https://pypi.org/project/swgoh-comlink/)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)](https://github.com/swgoh-utils/comlink-python)
+[![Coverage](https://img.shields.io/badge/coverage-95%25%2B-brightgreen.svg)](https://github.com/MarTrepodi/comlink-python)
 
 ## Description
 
@@ -12,7 +12,7 @@ A python wrapper for the [swgoh-comlink](https://github.com/swgoh-utils/swgoh-co
 
 Supports both **synchronous** and **asynchronous** usage via `SwgohComlink` and `SwgohComlinkAsync`.
 
-**Requires Python 3.10 or higher.**
+**Requires Python 3.11 or higher.**
 
 ## Alpha (v3) install
 
@@ -20,17 +20,24 @@ v3 is in **alpha** and distributed via GitHub Releases. The PyPI
 package `swgoh_comlink` is still v2.x; passing `--pre` to pip will
 **NOT** pick up v3 alphas (they are not published to PyPI).
 
-Install the v3.0.0a1 wheel directly:
+The alpha is hosted on the maintainer fork
+[MarTrepodi/comlink-python](https://github.com/MarTrepodi/comlink-python)
+(the upstream repo stays on v2.x until reintegration). Install the
+v3.0.0a1 wheel directly:
 
 ```bash
-pip install https://github.com/swgoh-utils/comlink-python/releases/download/v3.0.0a1/swgoh_comlink-3.0.0a1-py3-none-any.whl
+pip install https://github.com/MarTrepodi/comlink-python/releases/download/v3.0.0a1/swgoh_comlink-3.0.0a1-py3-none-any.whl
 ```
 
 Or install from a git ref:
 
 ```bash
-pip install git+https://github.com/swgoh-utils/comlink-python.git@v3.0.0a1
+pip install git+https://github.com/MarTrepodi/comlink-python.git@v3.0.0a1
 ```
+
+**Strongly recommended:** install the alpha in a dedicated virtual
+environment with a rollback path to the public v2.x release — see
+[`docs/v3/install-alpha.md`](docs/v3/install-alpha.md).
 
 **What this gives you:**
 - Typed client at `from swgoh_comlink.typed import SwgohComlink`
@@ -338,6 +345,6 @@ See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for mor
 
 ## Support
 
-Issues can be reported in [GitHub](https://github.com/swgoh-utils/comlink-python/issues).
+Issues for the **v3 alpha** can be reported at [MarTrepodi/comlink-python](https://github.com/MarTrepodi/comlink-python/issues) (use the `v3` label). Issues for the stable v2.x PyPI release belong upstream at [swgoh-utils/comlink-python](https://github.com/swgoh-utils/comlink-python/issues).
 
 Join the [discord server](https://discord.gg/6PBfG5MzR3)

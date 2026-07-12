@@ -53,9 +53,12 @@ all = [
 [project.scripts]
 swgoh-migrate = "swgoh_comlink.migrate:main"
 
+# Alpha-channel URLs (ADR-0008 addendum): the v3 pre-releases are hosted on
+# the maintainer fork. Revert to swgoh-utils/comlink-python on reintegration.
 [project.urls]
-"Homepage" = "https://github.com/swgoh-utils/comlink-python"
-"Bug Tracker" = "https://github.com/swgoh-utils/comlink-python/issues"
+"Homepage" = "https://github.com/MarTrepodi/comlink-python"
+"Bug Tracker" = "https://github.com/MarTrepodi/comlink-python/issues"
+"Upstream (v2.x)" = "https://github.com/swgoh-utils/comlink-python"
 
 [tool.pytest.ini_options]
 addopts = [

@@ -2,7 +2,7 @@
 
 <!-- insertion marker -->
 
-## [3.0.0a1](https://github.com/swgoh-utils/comlink-python/releases/tag/v3.0.0a1) - 2026-05-19
+## [3.0.0a1](https://github.com/MarTrepodi/comlink-python/releases/tag/v3.0.0a1) - 2026-05-19
 
 First v3 alpha. Distributed via **GitHub Releases only** (the
 PyPI `swgoh_comlink` package remains at v2.x; `--pre` does NOT pick

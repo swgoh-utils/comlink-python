@@ -64,6 +64,27 @@ publishing through `.github/workflows/release.yml` to PyPI, or
 (b) a new ADR that supersedes this one and explicitly permits final
 releases from the research repo.
 
+## Addendum: fork-hosted distribution (2026-07-12)
+
+This ADR originally assumed pre-release tags and GitHub Releases would
+live on this repo's `origin` (`swgoh-utils/comlink-python`). Pushing a
+`release/v*` branch, tag, and Release to the upstream org's repo is
+reintegration-adjacent in a way ADR-0001 flags as a separate decision.
+To keep the upstream repo fully untouched, **v3 pre-releases are hosted
+on the maintainer fork `MarTrepodi/comlink-python`** instead:
+
+- The `release/v*` branch is pushed to the fork; `alpha-release.yml`
+  runs there and creates the tag + prerelease GitHub Release on the fork.
+- All install URLs (README, CHANGELOG, release notes, wheel metadata
+  `project.urls`) point at the fork for the duration of the alpha channel.
+- On reintegration, hosting moves back per the sunset clause and the
+  URLs revert to `swgoh-utils/comlink-python`.
+
+Everything else in this ADR (permitted/forbidden actions, stability
+ladder, sunset) is unchanged; "this repo" in the clauses above now
+reads as "the fork" for distribution purposes, while the PyPI and
+final-tag prohibitions apply to both repos.
+
 ## Sunset
 
 This ADR's exception expires when **whichever first occurs:**
