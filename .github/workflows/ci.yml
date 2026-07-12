@@ -79,7 +79,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --group test
+        # --all-extras: the suite exercises the [cache] and [pydantic]
+        # optional extras directly (tests/unit/test_statcalc_v3_2.py,
+        # tests/v3/test_cache.py, tests/v3/test_optional.py), and the 95%
+        # coverage gate is calibrated with them installed.
+        run: uv sync --group test --all-extras
 
       - name: Run tests with coverage
         run: |
