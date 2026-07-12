@@ -23,6 +23,7 @@ from __future__ import annotations
 import importlib
 import logging
 import sys
+from types import ModuleType
 from typing import TYPE_CHECKING, Any
 
 # ── Eagerly loaded ─────────────────────────────────────────────────────────
@@ -47,13 +48,12 @@ if TYPE_CHECKING:
 # Each public name → the dotted submodule path it lives in. First access
 # triggers ``importlib.import_module`` + ``getattr(module, name)`` + cache.
 #
-# StatCalc the *class* lives inside swgoh_comlink.StatCalc the *module*
-# (case collision); both map here to the same module — getattr picks the
-# class by name.
+# StatCalc the *class* is NOT in this map: it collides with the
+# swgoh_comlink.StatCalc *subpackage* name and is served by a data
+# descriptor on :class:`_SwgohComlinkModule` instead (see below).
 _LAZY: dict[str, str] = {
     "SwgohComlink": "swgoh_comlink.swgoh_comlink",
     "SwgohComlinkAsync": "swgoh_comlink.swgoh_comlink_async",
-    "StatCalc": "swgoh_comlink.StatCalc",
     "StatCalcAsync": "swgoh_comlink.StatCalc",
     "GameDataBuilder": "swgoh_comlink.StatCalc",
     "GameDataBuilderAsync": "swgoh_comlink.StatCalc",
@@ -86,6 +86,43 @@ __all__ = [
 _this_module = sys.modules[__name__]
 
 
+class _SwgohComlinkModule(ModuleType):
+    """Package module type whose ``StatCalc`` attribute is always the class.
+
+    ``StatCalc`` the class collides with the ``swgoh_comlink.StatCalc``
+    subpackage name. Whenever any submodule path is imported
+    (``swgoh_comlink.StatCalc.data_builder…``), the import machinery
+    assigns the subpackage module onto this package as the ``StatCalc``
+    attribute — which would shadow the lazy class export for every later
+    ``from swgoh_comlink import StatCalc`` (a module-level ``__getattr__``
+    can't help: it only fires when normal lookup fails). A data descriptor
+    on the module's type outranks instance attributes, so the class stays
+    canonical regardless of import order, while dotted module paths keep
+    resolving through ``sys.modules``.
+    """
+
+    _statcalc_cls: Any = None
+
+    @property
+    def StatCalc(self) -> Any:  # noqa: N802 — public API name
+        cls = type(self)._statcalc_cls
+        if cls is None:
+            cls = importlib.import_module("swgoh_comlink.StatCalc").StatCalc
+            type(self)._statcalc_cls = cls
+        return cls
+
+    @StatCalc.setter
+    def StatCalc(self, value: Any) -> None:
+        # The import machinery lands here after any swgoh_comlink.StatCalc.*
+        # import, trying to bind the subpackage module. Discard it — reads
+        # must keep resolving to the class. Raising would break those
+        # submodule imports, so accept-and-ignore is the contract.
+        pass
+
+
+_this_module.__class__ = _SwgohComlinkModule
+
+
 def __getattr__(name: str) -> Any:
     """Resolve a lazy public name via :data:`_LAZY` / :data:`_LAZY_MODULES`.
 
@@ -110,7 +147,7 @@ def __getattr__(name: str) -> Any:
 
 def __dir__() -> list[str]:
     """Make ``dir(swgoh_comlink)`` show lazy names (helps REPL completion)."""
-    return sorted(set(vars(_this_module)) | set(_LAZY) | set(_LAZY_MODULES))
+    return sorted(set(vars(_this_module)) | set(_LAZY) | set(_LAZY_MODULES) | {"StatCalc"})
 
 
 # Library logging hygiene — only add NullHandler so the application
