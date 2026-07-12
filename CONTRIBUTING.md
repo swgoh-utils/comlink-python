@@ -524,7 +524,27 @@ label auto-applied by [`actions/labeler`](.github/labeler.yml).
 
 ## Release Process
 
-Releases are handled by the maintainer through the GitHub Actions `release.yml` workflow. Contributors don't need to manage versioning or releases, but here's how it works for reference:
+### v3 pre-releases (ADR-0008)
+
+v3 alphas/betas/RCs are **not** published to PyPI. Per
+[ADR-0008](docs/adr/0008-pre-release-distribution-via-github-releases.md),
+they ship as signed wheel + sdist assets on **GitHub Releases**, hosted on
+the maintainer fork ([MarTrepodi/comlink-python](https://github.com/MarTrepodi/comlink-python))
+until reintegration with upstream. The flow, driven by
+[`alpha-release.yml`](.github/workflows/alpha-release.yml):
+
+1. Cut a `release/v*` branch (pre-release tags may only originate there)
+2. Dispatch `alpha-release.yml` with the target version and `dry_run=true` — runs the
+   full test/lint/type/codegen gates, builds, and Sigstore-signs the artifacts without tagging
+3. Re-dispatch with `dry_run=false` — creates the annotated `vX.Y.ZaN` tag and the
+   prerelease GitHub Release, using `docs/v3/releases/vX.Y.ZaN.md` as the release body
+
+The operator-facing checklist lives at
+[`docs/v3/releases/runbook-v3.0.0a1.md`](docs/v3/releases/runbook-v3.0.0a1.md).
+
+### v2 stable releases (PyPI)
+
+Stable releases are handled by the maintainer through the GitHub Actions `release.yml` workflow. Contributors don't need to manage versioning or releases, but here's how it works for reference:
 
 1. The release workflow is triggered manually (`workflow_dispatch`)
 2. [Hatch](https://hatch.pypa.io/) bumps the version in `src/swgoh_comlink/version.py`

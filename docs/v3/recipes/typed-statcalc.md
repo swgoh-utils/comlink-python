@@ -43,7 +43,7 @@ stats = sc.calc_player_stats(player_raw)
 | v2-style dict caller (existing code) | Keep doing what you're doing. | The bimorphic dispatcher's `isinstance(players, msgspec.Struct)` check is one branch on the dict path — zero cost. |
 
 The v3.3 typed-fastpath in
-[`StatCalc/_typed_fastpath`](../../../src/swgoh_comlink/StatCalc/_typed_fastpath.py)
+`src/swgoh_comlink/StatCalc/_typed_fastpath.py`
 reads `msgspec.Struct.__slots__` directly instead of walking the
 whole Player via `msgspec.to_builtins`. Only the fields StatCalc
 actually reads (`definition_id`, `current_level`, `current_rarity`,

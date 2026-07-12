@@ -23,7 +23,7 @@ nav:
   - "Guides":
       - "Migration Guide": migration.md
       - "Logging": logging.md
-      - "xamples": examples.md
+      - "Examples": examples.md
   - "API":
       - "SwgohComlink": api/comlink.md
       - "SwgohComlinkAsync": api/async.md
