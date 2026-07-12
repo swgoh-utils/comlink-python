@@ -329,6 +329,23 @@ wheels = [
 ]
 
 [[package]]
+name = "git-changelog"
+version = "2.9.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jinja2" },
+    { name = "packaging" },
+    { name = "platformdirs" },
+    { name = "semver" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/01/7f/17e58ec656fd79d4a3b02517923e24a93b28fe2e4518568aedb4ce038fb9/git_changelog-2.9.4.tar.gz", hash = "sha256:06a38a0d174a069b760430ec41493bf53307be13f16b0e48ce379be1646ea9a0", size = 92601, upload-time = "2026-04-29T14:01:39.575Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/a6/fb6713ce5c128078492b5ce691bd27b8a7c6f2ad84aca99d3b847ab1721d/git_changelog-2.9.4-py3-none-any.whl", hash = "sha256:c19a099640518fbbc545cb240250cf8129e55e668d8374ba8061ea5456da204b", size = 40604, upload-time = "2026-04-29T14:01:38.195Z" },
+]
+
+[[package]]
 name = "griffelib"
 version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -882,6 +899,15 @@ wheels = [
 ]
 
 [[package]]
+name = "semver"
+version = "3.0.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/d1/d3159231aec234a59dd7d601e9dd9fe96f3afff15efd33c1070019b26132/semver-3.0.4.tar.gz", hash = "sha256:afc7d8c584a5ed0a11033af086e8af226a9c0b206f313e0301f8dd7b6b589602", size = 269730, upload-time = "2025-01-24T13:19:27.617Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a6/24/4d91e05817e92e3a61c8a21e08fd0f390f5301f1c448b137c57c4bc6e543/semver-3.0.4-py3-none-any.whl", hash = "sha256:9c824d87ba7f7ab4a1890799cec8596f15c1241cb473404ea1cb0c55e4b04746", size = 17912, upload-time = "2025-01-24T13:19:24.949Z" },
+]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -899,7 +925,11 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+changelog = [
+    { name = "git-changelog" },
+]
 dev = [
+    { name = "git-changelog" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -928,7 +958,9 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+changelog = [{ name = "git-changelog", specifier = ">=2.9,<3" }]
 dev = [
+    { name = "git-changelog", specifier = ">=2.9,<3" },
     { name = "pytest", specifier = ">=7.0" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov", specifier = ">=4.0" },
