@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import base64
+import io
+import zipfile
 from unittest.mock import patch
 
 import pytest
@@ -365,3 +368,116 @@ class TestCalcCurrentStamina:
         }
         result = calc_current_stamina(old_unit)
         assert result == 100
+
+
+# ── _game_data: get_localization_dictionary (sync + async) ───────────────
+
+_METADATA = {"latestGamedataVersion": "g1", "latestLocalizationBundleVersion": "loc-v1"}
+
+
+def _make_loc_bundle(*entries: tuple[str, str]) -> dict[str, str]:
+    """Build a base64-encoded zip mimicking the Comlink localization response.
+
+    Args:
+        *entries: (filename, text_content) pairs to add to the archive.
+
+    Returns:
+        A dict of the form ``{"localizationBundle": "<base64 zip>"}``.
+    """
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for name, content in entries:
+            zf.writestr(name, content)
+    return {"localizationBundle": base64.b64encode(buf.getvalue()).decode("utf-8")}
+
+
+_ENG_CONTENT = "UNIT_A|Vader\n#comment line\nUNIT_B|Yoda\n"
+
+
+class TestGetLocalizationDictionary:
+    def test_parses_default_language(self, httpx_mock: HTTPXMock, sync_client):
+        from swgoh_comlink.helpers._game_data import get_localization_dictionary
+
+        httpx_mock.add_response(json=_METADATA)  # get_metadata() lookup
+        httpx_mock.add_response(json=_make_loc_bundle(("Loc_ENG_US.txt", _ENG_CONTENT)))
+        result = get_localization_dictionary(sync_client)
+        assert result == {"UNIT_A": "Vader", "UNIT_B": "Yoda"}
+
+    def test_parses_non_default_language(self, httpx_mock: HTTPXMock, sync_client):
+        from swgoh_comlink.helpers._game_data import get_localization_dictionary
+
+        httpx_mock.add_response(json=_METADATA)
+        httpx_mock.add_response(json=_make_loc_bundle(("Loc_FRE_FR.txt", "UNIT_A|Vador\n")))
+        result = get_localization_dictionary(sync_client, language="fre_fr")
+        assert result == {"UNIT_A": "Vador"}
+
+    def test_missing_bundle_key_raises(self, httpx_mock: HTTPXMock, sync_client):
+        from swgoh_comlink.helpers._game_data import get_localization_dictionary
+
+        httpx_mock.add_response(json=_METADATA)
+        httpx_mock.add_response(json={"notTheBundle": "oops"})
+        with pytest.raises(SwgohComlinkValueError, match="localizationBundle"):
+            get_localization_dictionary(sync_client)
+
+    def test_language_not_in_bundle_raises(self, httpx_mock: HTTPXMock, sync_client):
+        from swgoh_comlink.helpers._game_data import get_localization_dictionary
+
+        httpx_mock.add_response(json=_METADATA)
+        httpx_mock.add_response(json=_make_loc_bundle(("Loc_ENG_US.txt", _ENG_CONTENT)))
+        with pytest.raises(SwgohComlinkValueError, match="Loc_FRE_FR.txt"):
+            get_localization_dictionary(sync_client, language="fre_fr")
+
+    def test_missing_comlink_raises(self):
+        from swgoh_comlink.helpers._game_data import get_localization_dictionary
+
+        with pytest.raises(SwgohComlinkValueError, match="comlink"):
+            get_localization_dictionary(None)
+
+    def test_wrong_comlink_type_raises(self):
+        from swgoh_comlink.helpers._game_data import get_localization_dictionary
+
+        with pytest.raises(SwgohComlinkValueError, match="comlink"):
+            get_localization_dictionary(object())
+
+    @pytest.mark.parametrize("bad_language", ["", None, 123])
+    def test_invalid_language_raises(self, sync_client, bad_language):
+        from swgoh_comlink.helpers._game_data import get_localization_dictionary
+
+        # Guard fires before any HTTP call, so no mocked response is queued.
+        with pytest.raises(SwgohComlinkValueError, match="non-empty string"):
+            get_localization_dictionary(sync_client, language=bad_language)
+
+
+class TestAsyncGetLocalizationDictionary:
+    @pytest.mark.asyncio
+    async def test_parses_default_language(self, httpx_mock: HTTPXMock, async_client):
+        from swgoh_comlink.helpers._game_data import async_get_localization_dictionary
+
+        httpx_mock.add_response(json=_METADATA)
+        httpx_mock.add_response(json=_make_loc_bundle(("Loc_ENG_US.txt", _ENG_CONTENT)))
+        result = await async_get_localization_dictionary(async_client)
+        assert result == {"UNIT_A": "Vader", "UNIT_B": "Yoda"}
+
+    @pytest.mark.asyncio
+    async def test_language_not_in_bundle_raises(self, httpx_mock: HTTPXMock, async_client):
+        from swgoh_comlink.helpers._game_data import async_get_localization_dictionary
+
+        httpx_mock.add_response(json=_METADATA)
+        httpx_mock.add_response(json=_make_loc_bundle(("Loc_ENG_US.txt", _ENG_CONTENT)))
+        with pytest.raises(SwgohComlinkValueError, match="Loc_FRE_FR.txt"):
+            await async_get_localization_dictionary(async_client, language="fre_fr")
+
+    @pytest.mark.asyncio
+    async def test_wrong_comlink_type_raises(self):
+        from swgoh_comlink.helpers._game_data import async_get_localization_dictionary
+
+        with pytest.raises(SwgohComlinkValueError, match="comlink"):
+            await async_get_localization_dictionary(object())
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("bad_language", ["", None, 123])
+    async def test_invalid_language_raises(self, async_client, bad_language):
+        from swgoh_comlink.helpers._game_data import async_get_localization_dictionary
+
+        with pytest.raises(SwgohComlinkValueError, match="non-empty string"):
+            await async_get_localization_dictionary(async_client, language=bad_language)
