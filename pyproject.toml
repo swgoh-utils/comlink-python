@@ -145,6 +145,9 @@ docs = [
 target-version = "py311"
 line-length = 120
 src = ["src", "tests"]
+# hatch-vcs writes this file at build/sync time (git-ignored); it is
+# machine-generated and not subject to lint/format gates.
+extend-exclude = ["src/swgoh_comlink/_version.py"]
 
 [tool.ruff.lint]
 select = [
