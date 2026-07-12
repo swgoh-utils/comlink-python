@@ -280,7 +280,7 @@ class SwgohComlink(SwgohComlinkBase):
             A dictionary containing the game metadata.
         """
         if client_specs:
-            payload: dict[str, Any] = {"payload": {"client_specs": client_specs}, "enums": enums}
+            payload: dict[str, Any] = {"payload": {"clientSpecs": client_specs}, "enums": enums}
         else:
             payload = {}
         return cast(dict[str, Any], self._post(endpoint="metadata", payload=payload))
