@@ -230,7 +230,7 @@ def test_get_game_metadata_with_client_specs(httpx_mock: HTTPXMock):
     client.get_game_metadata(client_specs=specs, enums=True)
 
     body = json.loads(httpx_mock.get_request().content)
-    assert body == {"payload": {"client_specs": specs}, "enums": True}
+    assert body == {"payload": {"clientSpecs": specs}, "enums": True}
 
 
 # ── Player Arena ─────────────────────────────────────────────────────────

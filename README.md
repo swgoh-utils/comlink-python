@@ -214,6 +214,23 @@ Constructor parameters for `SwgohComlink` and `SwgohComlinkAsync`:
 | `port` | `int` | `3000` | Comlink TCP port (used with `host`) |
 | `stats_port` | `int` | `3223` | Stats service TCP port (used with `host`) |
 | `verify_ssl` | `bool` | `True` | Enable TLS certificate verification |
+| `version_cache_ttl` | `float` | `3600` | Seconds to cache game/localization versions from `/metadata` (see below) |
+
+### Version caching
+
+Calls to `/data` and `/localization` require the current `latestGamedataVersion` /
+`latestLocalizationBundleVersion` values from the `/metadata` endpoint. When you call
+`get_game_data()`, `get_localization()`, or `get_latest_game_data_version()` without an explicit
+version, the client fetches these values once and caches them on the instance for
+`version_cache_ttl` seconds (default: 1 hour), instead of making a fresh `/metadata` request every
+time.
+
+- Pass `version_cache_ttl=0` to disable caching (the pre-v2.3 behavior), or `math.inf` to cache
+  for the client's lifetime.
+- Explicit `version=` / `localization_id=` arguments always bypass the cache.
+- Call `invalidate_version_cache()` or `get_latest_game_data_version(refresh=True)` to force a
+  re-fetch, e.g. right after a game update lands.
+- A successful `get_game_metadata()` call also refreshes the cache opportunistically.
 
 ## Available Methods
 
@@ -234,7 +251,8 @@ Methods available on both `SwgohComlink` and `SwgohComlinkAsync` (async methods 
 | `get_leaderboard(leaderboard_type, league, division, ...)` | Get GAC leaderboard data |
 | `get_guild_leaderboard(leaderboard_id, count, enums)` | Get guild leaderboard data |
 | `get_unit_stats(request_payload, flags, language)` | Calculate unit stats via swgoh-stats |
-| `get_latest_game_data_version()` | Get latest game data and language versions |
+| `get_latest_game_data_version(refresh)` | Get latest game data and language versions (cached) |
+| `invalidate_version_cache()` | Discard cached versions so the next lookup re-fetches `/metadata` |
 | `get_name_spaces(only_compatible, enums)` | Get available namespaces |
 | `get_segmented_content(content_name_space, accept_language, enums)` | Retrieve segmented content |
 

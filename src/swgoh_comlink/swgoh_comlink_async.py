@@ -5,6 +5,7 @@ Asynchronous Python 3 interface for swgoh-comlink.
 
 from __future__ import annotations
 
+import asyncio
 from json import loads
 from typing import Any, cast
 
@@ -14,6 +15,7 @@ from ._base import (
     DEFAULT_TIMEOUT,
     GAME_DATA_TIMEOUT,
     SwgohComlinkBase,
+    _CachedVersions,
     param_alias,
 )
 from .exceptions import SwgohComlinkException, SwgohComlinkValueError
@@ -38,6 +40,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         port (int): TCP port number where the swgoh-comlink service is running [Default: 3000]
         stats_port (int): TCP port number of where the comlink-stats service is running [Default: 3223]
         verify_ssl (bool): Whether to verify TLS certificates. [Default: True]
+        version_cache_ttl (float): Seconds to cache the game/localization versions fetched from
+            /metadata. 0 disables caching; ``math.inf`` caches for the client lifetime. [Default: 3600]
 
     Notes:
         If the 'host' and 'port' parameters are provided, the 'url' and 'stats_url' parameters are ignored.
@@ -53,6 +57,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
+        self._version_lock = asyncio.Lock()
         connection_limits = httpx.Limits(keepalive_expiry=None)
         self.client = httpx.AsyncClient(
             base_url=self.url_base,
@@ -136,9 +141,28 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         """
         return await self._request(method="POST", endpoint=endpoint, payload=payload, stats=stats, timeout=timeout)
 
+    async def _get_versions(self, refresh: bool = False) -> _CachedVersions:
+        """Return the current game/localization versions, served from the instance cache.
+
+        Args:
+            refresh: When True, bypass the cache and fetch fresh values from /metadata.
+        """
+        if not refresh:
+            cached = self._cached_versions()
+            if cached is not None:
+                return cached
+        async with self._version_lock:
+            # Double-check inside the lock so concurrent cold-cache callers
+            # coalesce into a single /metadata request.
+            if not refresh:
+                cached = self._cached_versions()
+                if cached is not None:
+                    return cached
+            metadata = await self.get_game_metadata()
+            return self._store_versions(*self._versions_from_metadata(metadata))
+
     async def _get_game_version(self) -> str:
-        md = await self.get_game_metadata()
-        return str(md["latestGamedataVersion"])
+        return (await self._get_versions()).require_game()
 
     # ── Public API methods ───────────────────────────────────────────────
 
@@ -249,8 +273,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             A dictionary containing the localization data.
         """
         if not localization_id:
-            current_game_version = await self.get_latest_game_data_version()
-            localization_id = current_game_version["language"]
+            localization_id = (await self._get_versions()).require_language()
 
         if locale:
             assert localization_id is not None
@@ -278,10 +301,17 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             A dictionary containing the game metadata.
         """
         if client_specs:
-            payload: dict[str, Any] = {"payload": {"client_specs": client_specs}, "enums": enums}
+            payload: dict[str, Any] = {"payload": {"clientSpecs": client_specs}, "enums": enums}
         else:
             payload = {}
-        return cast(dict[str, Any], await self._post(endpoint="metadata", payload=payload))
+        metadata = cast(dict[str, Any], await self._post(endpoint="metadata", payload=payload))
+        # Opportunistically refresh the version cache; enums=True responses are
+        # skipped since their values may be translated.
+        if not enums and isinstance(metadata, dict):
+            game, language = self._versions_from_metadata(metadata)
+            if game is not None and language is not None:
+                self._store_versions(game, language)
+        return metadata
 
     # alias for non PEP usage of direct endpoint calls
     getGameMetaData = get_game_metadata
@@ -499,17 +529,19 @@ class SwgohComlinkAsync(SwgohComlinkBase):
 
     # ── Helper methods ───────────────────────────────────────────────────
 
-    async def get_latest_game_data_version(self) -> dict[str, Any]:
+    async def get_latest_game_data_version(self, refresh: bool = False) -> dict[str, Any]:
         """Get the latest game data and language bundle versions.
+
+        Results are served from the instance version cache (see ``version_cache_ttl``).
+
+        Args:
+            refresh: When True, bypass the cache and fetch fresh values from /metadata.
 
         Returns:
             Dictionary with 'game' and 'language' version strings.
         """
-        current_metadata = await self.get_metadata()
-        return {
-            "game": current_metadata["latestGamedataVersion"],
-            "language": current_metadata["latestLocalizationBundleVersion"],
-        }
+        versions = await self._get_versions(refresh=refresh)
+        return {"game": versions.require_game(), "language": versions.require_language()}
 
     # alias for shorthand call
     getVersion = get_latest_game_data_version
