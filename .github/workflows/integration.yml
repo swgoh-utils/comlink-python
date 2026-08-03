@@ -23,14 +23,14 @@ jobs:
       # with no commit of ours and can turn the suite red (4.4.x deprecated the
       # `requestSegment` parameter this way). Bump this tag on purpose.
       comlink:
-        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.1
+        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.0
         env:
           APP_NAME: comlink-python-integration-tests
         ports:
           - 3000:3000
 
       comlink-hmac:
-        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.1
+        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.0
         env:
           APP_NAME: comlink-python-hmac-integration-tests
           ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
