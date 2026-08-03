@@ -18,28 +18,30 @@ async def test_get_enums(async_comlink):
 
 
 async def test_get_game_metadata(async_comlink):
-    """POST /metadata returns game metadata with version info."""
+    """POST /metadata returns game metadata with a populated version string."""
     result = await async_comlink.get_game_metadata()
     assert isinstance(result, dict)
-    assert "latestGamedataVersion" in result
+    assert result.get("latestGamedataVersion"), "version must be present and non-empty"
 
 
 async def test_get_latest_game_data_version(async_comlink):
-    """Helper returns dict with 'game' and 'language' version strings."""
+    """Helper returns dict with non-empty 'game' and 'language' version strings.
+
+    Asserting the type alone would pass on empty strings, which is the shape a
+    broken version lookup returns.
+    """
     result = await async_comlink.get_latest_game_data_version()
     assert isinstance(result, dict)
-    assert "game" in result
-    assert "language" in result
-    assert isinstance(result["game"], str)
-    assert isinstance(result["language"], str)
+    assert isinstance(result["game"], str) and result["game"], "game version must be non-empty"
+    assert isinstance(result["language"], str) and result["language"], "language version must be non-empty"
 
 
 async def test_get_events(async_comlink):
-    """POST /getEvents returns event data."""
+    """POST /getEvents returns a populated event list."""
     result = await async_comlink.get_events()
     assert isinstance(result, dict)
-    assert "gameEvent" in result
     assert isinstance(result["gameEvent"], list)
+    assert result["gameEvent"], "a live Comlink instance always has scheduled events"
 
 
 async def test_get_player(async_comlink):
@@ -54,11 +56,19 @@ async def test_get_player(async_comlink):
 
 
 async def test_get_player_arena(async_comlink):
-    """POST /playerArena returns arena profile."""
+    """POST /playerArena returns an arena profile with populated squads."""
     result = await async_comlink.get_player_arena(allycode=TEST_ALLYCODE)
     assert isinstance(result, dict)
-    assert "name" in result
-    assert "pvpProfile" in result
+    assert result["name"]
+    assert result["pvpProfile"], "arena profile must list at least one arena tab"
+    assert any(entry.get("squad") for entry in result["pvpProfile"]), "full response includes squad rosters"
+
+
+async def test_get_player_arena_details_only(async_comlink):
+    """player_details_only=True keeps the arena tabs but drops the squad rosters."""
+    result = await async_comlink.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
+    assert result["pvpProfile"], "arena tabs are still returned"
+    assert all(entry.get("squad") is None for entry in result["pvpProfile"]), "squads must be omitted"
 
 
 async def test_get_guilds_by_name(async_comlink):
@@ -84,7 +94,14 @@ async def test_get_game_data_filtered(async_comlink):
 
 
 async def test_async_context_manager():
-    """Async client works correctly as an async context manager."""
+    """Exiting the async context manager closes the underlying HTTP client.
+
+    Closure is the whole point of the context manager, so assert on it — a test
+    that only calls an endpoint inside the block would pass without it.
+    """
     async with SwgohComlinkAsync(url=COMLINK_URL) as client:
+        inner = client.client
+        assert not inner.is_closed
         result = await client.get_enums()
-        assert isinstance(result, dict)
+        assert "CombatType" in result
+    assert inner.is_closed, "exiting the context manager must close the HTTP client"
