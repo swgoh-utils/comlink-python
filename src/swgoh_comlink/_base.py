@@ -194,7 +194,13 @@ class SwgohComlinkBase:
             hmac_obj.update(f"/{endpoint}".encode())
             # json dumps separators needed for compact string formatting required for compatibility with
             # comlink since it is written with javascript as the primary object model
-            if payload:
+            #
+            # The digest has to cover exactly the bytes that go on the wire. A POST sends
+            # `json=payload`, so an empty dict is transmitted as `{}` — testing truthiness
+            # here hashed `""` instead and every empty-payload signed POST (get_game_metadata
+            # with no client_specs) was rejected with HTTP 403 HMACValidationError. Only a
+            # bodiless request (GET, payload=None) hashes the empty string.
+            if payload is not None:
                 payload_string = dumps(payload, separators=(",", ":"))
             else:
                 payload_string = dumps("")

@@ -24,24 +24,34 @@ hmac_configured = pytest.mark.skipif(
     reason="HMAC secrets not configured",
 )
 
+# SwgohComlinkException wraps transport failures as well as HTTP status errors, so a
+# bare `pytest.raises(SwgohComlinkException)` is satisfied by "connection refused" —
+# the rejection tests would pass if the HMAC service never came up. Matching the HTTP
+# status text asserts the server actually saw the request and turned it away.
+REJECTED = r"HTTP 4\d{2}"
+
 
 # ── Sync: valid HMAC ────────────────────────────────────────────────────
 
 
 @hmac_configured
 def test_hmac_sync_request_succeeds(comlink_hmac):
-    """Sync client with correct HMAC keys can access the protected endpoint."""
-    result = comlink_hmac.get_enums()
+    """Sync client with correct HMAC keys can reach a signed POST endpoint.
+
+    Uses `metadata` rather than `enums`: HMAC is only enforced on POST, so a GET
+    endpoint would pass whether or not request signing works at all.
+    """
+    result = comlink_hmac.get_game_metadata()
     assert isinstance(result, dict)
-    assert "CombatType" in result
+    assert result.get("latestGamedataVersion"), "signed POST must return real metadata"
 
 
 @hmac_configured
 def test_hmac_sync_player_request_succeeds(comlink_hmac):
     """Sync HMAC client can fetch a player profile from the protected endpoint."""
-    result = comlink_hmac.get_player(allycode=314927874)
+    result = comlink_hmac.get_player(allycode=TEST_ALLYCODE)
     assert isinstance(result, dict)
-    assert "name" in result
+    assert result["name"]
 
 
 # ── Sync: invalid HMAC ──────────────────────────────────────────────────
@@ -55,7 +65,7 @@ def test_hmac_no_key_rejected():
     only enforces HMAC on POST; GET endpoints like `/enums` are
     unauthenticated.
     """
-    with SwgohComlink(url=COMLINK_HMAC_URL) as client, pytest.raises(SwgohComlinkException):
+    with SwgohComlink(url=COMLINK_HMAC_URL) as client, pytest.raises(SwgohComlinkException, match=REJECTED):
         client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
 
 
@@ -73,7 +83,7 @@ def test_hmac_wrong_key_rejected():
             access_key=HMAC_ACCESS_KEY,
             secret_key="wrong_secret_key",
         ) as client,
-        pytest.raises(SwgohComlinkException),
+        pytest.raises(SwgohComlinkException, match=REJECTED),
     ):
         client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
 
@@ -84,19 +94,23 @@ def test_hmac_wrong_key_rejected():
 @hmac_configured
 @pytest.mark.asyncio
 async def test_hmac_async_request_succeeds(async_comlink_hmac):
-    """Async client with correct HMAC keys can access the protected endpoint."""
-    result = await async_comlink_hmac.get_enums()
+    """Async client with correct HMAC keys can reach a signed POST endpoint.
+
+    Uses `metadata` rather than `enums`: HMAC is only enforced on POST, so a GET
+    endpoint would pass whether or not request signing works at all.
+    """
+    result = await async_comlink_hmac.get_game_metadata()
     assert isinstance(result, dict)
-    assert "CombatType" in result
+    assert result.get("latestGamedataVersion"), "signed POST must return real metadata"
 
 
 @hmac_configured
 @pytest.mark.asyncio
 async def test_hmac_async_player_request_succeeds(async_comlink_hmac):
     """Async HMAC client can fetch a player profile from the protected endpoint."""
-    result = await async_comlink_hmac.get_player(allycode=314927874)
+    result = await async_comlink_hmac.get_player(allycode=TEST_ALLYCODE)
     assert isinstance(result, dict)
-    assert "name" in result
+    assert result["name"]
 
 
 # ── Async: invalid HMAC ─────────────────────────────────────────────────
@@ -112,7 +126,7 @@ async def test_hmac_no_key_async_rejected():
     unauthenticated.
     """
     async with SwgohComlinkAsync(url=COMLINK_HMAC_URL) as client:
-        with pytest.raises(SwgohComlinkException):
+        with pytest.raises(SwgohComlinkException, match=REJECTED):
             await client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
 
 
@@ -130,7 +144,7 @@ async def test_hmac_wrong_key_async_rejected():
         access_key=HMAC_ACCESS_KEY,
         secret_key="wrong_secret_key",
     ) as client:
-        with pytest.raises(SwgohComlinkException):
+        with pytest.raises(SwgohComlinkException, match=REJECTED):
             await client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
 
 
