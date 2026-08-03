@@ -64,7 +64,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "${branch}"
           git add CHANGELOG.md
-          git commit -m "docs(changelog): update for ${tag}"
+          # `chore` keeps this bookkeeping commit out of the rendered sections;
+          # `docs` would list every release's regeneration in the next release.
+          git commit -m "chore(changelog): update for ${tag}"
           git push --force-with-lease origin "${branch}"
           gh pr create \
             --base main --head "${branch}" \

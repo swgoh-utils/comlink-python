@@ -159,6 +159,9 @@ in-place = true
 output = "CHANGELOG.md"
 marker-line = "<!-- insertion marker -->"
 bump = "auto"
+# The angular convention renders only feat/fix/revert/refactor/perf by default.
+# Listing them explicitly is what lets `docs` join them.
+sections = ["feat", "fix", "revert", "refactor", "perf", "docs"]
 
 # ── Coverage ─────────────────────────────────────────────────────────────
 
