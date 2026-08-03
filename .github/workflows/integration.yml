@@ -21,8 +21,8 @@ jobs:
     services:
       # Pinned deliberately: on `latest`, an upstream Comlink release lands in CI with no
       # commit of ours, so a red suite carries no information about the change under test.
-      # Bump this tag on purpose. 4.4.1 is the current release and matches what `latest`
-      # resolved to when this was pinned.
+      # Bump this tag on purpose, and keep both services on the same tag.
+      # 4.4.2 fixes the /data fetch that 4.4.0 and 4.4.1 could not complete.
       comlink:
         image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.2
         env:
@@ -31,7 +31,7 @@ jobs:
           - 3000:3000
 
       comlink-hmac:
-        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.1
+        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.2
         env:
           APP_NAME: comlink-python-hmac-integration-tests
           ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
