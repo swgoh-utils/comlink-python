@@ -80,22 +80,23 @@ def test_get_guilds_by_name(comlink):
 
 
 def test_get_game_data_filtered(comlink):
-    """POST /data with the Segment1 items value populates only the Segment1 collections.
+    """POST /data with a single items collection populates that collection and no other.
 
     /data always returns the same full set of collection keys regardless of what was
     requested — the ones not asked for come back empty. So asserting on len(result)
     would pass even if the filter matched nothing; assert on which keys are populated.
 
-    The items value is read from the server's own GameDataItemsEnum rather than from
-    the client-side DataItems constants. Segment values are aggregate bitmasks, so they
-    shift whenever a collection is added to a segment, and a stale local copy is
-    rejected outright (HTTP 400) by newer Comlink builds.
+    The value comes from the server's own GameDataItemsEnum rather than the client-side
+    DataItems constants, which are a hand-maintained copy that can drift. A single
+    collection is used rather than a Segment aggregate: it isolates the filter exactly,
+    and it returns in well under a second where an aggregate takes ~10s and has been
+    seen to fail upstream against a cold service container.
     """
-    segment1 = comlink.get_enums()["GameDataItemsEnum"]["Segment1"]
-    result = comlink.get_game_data(items=segment1)
+    equipment_only = comlink.get_enums()["GameDataItemsEnum"]["EquipmentDefinitions"]
+    result = comlink.get_game_data(items=equipment_only)
     assert isinstance(result, dict)
-    assert result["equipment"], "requested SEGMENT1 collection should be populated"
-    assert not result["units"], "unrequested SEGMENT3 collection should be empty"
+    assert result["equipment"], "the requested collection should be populated"
+    assert not result["units"], "every unrequested collection should be empty"
 
 
 def test_context_manager():
