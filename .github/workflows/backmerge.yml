@@ -1,7 +1,13 @@
 name: back-merge main into develop
 
-# Fires when a release is published. Pushes a branch at main's tip so the post-release
-# state of main (changelog + tag lineage) can be merged back into develop.
+# Runs after the release workflow finishes. Pushes a branch at main's tip so the
+# post-release state of main (changelog + tag lineage) can be merged back into develop.
+#
+# NOT triggered by `release: published`, despite that being the obvious choice. release.yml
+# creates the release with `gh release create` under the default GITHUB_TOKEN, and GitHub
+# suppresses workflow triggers for events raised by that token — so a `release` trigger
+# never fires. It never fired for v2.2.0 or v2.3.0 either; both back-merges were done by
+# hand. `workflow_run` is not subject to that suppression, so it is used instead.
 #
 # Like prepare-release, this workflow deliberately does NOT open the pull request. A PR
 # opened by github-actions[bot] with the default GITHUB_TOKEN does not trigger the
@@ -13,8 +19,12 @@ name: back-merge main into develop
 # reason to commit a body file.
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["comlink-python release"]
+    types: [completed]
+  # Manual escape hatch: lets a maintainer stage the back-merge without cutting a release,
+  # and makes the workflow testable without waiting for one.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -22,6 +32,11 @@ permissions:
 jobs:
   backmerge:
     runs-on: ubuntu-latest
+    # workflow_run fires on completion regardless of outcome — only stage a back-merge
+    # when the release actually succeeded.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v7
         with:
