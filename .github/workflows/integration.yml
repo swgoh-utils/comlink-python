@@ -24,7 +24,7 @@ jobs:
       # Bump this tag on purpose. 4.4.1 is the current release and matches what `latest`
       # resolved to when this was pinned.
       comlink:
-        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.1
+        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.2
         env:
           APP_NAME: comlink-python-integration-tests
         ports:
