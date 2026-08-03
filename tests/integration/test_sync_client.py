@@ -71,10 +71,16 @@ def test_get_guilds_by_name(comlink):
 
 
 def test_get_game_data_filtered(comlink):
-    """POST /data with items=SEGMENT1 returns a non-empty game data subset."""
+    """POST /data with items=SEGMENT1 populates the SEGMENT1 collections and no others.
+
+    /data always returns the same full set of collection keys regardless of what was
+    requested — the ones not asked for come back empty. So asserting on len(result)
+    would pass even if the filter matched nothing; assert on which keys are populated.
+    """
     result = comlink.get_game_data(items=DataItems.SEGMENT1)
     assert isinstance(result, dict)
-    assert len(result) > 0
+    assert result["equipment"], "requested SEGMENT1 collection should be populated"
+    assert not result["units"], "unrequested SEGMENT3 collection should be empty"
 
 
 def test_context_manager():
