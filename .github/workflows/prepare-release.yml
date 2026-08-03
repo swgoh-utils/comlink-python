@@ -1,9 +1,16 @@
 name: prepare release
 
 # Manually dispatched from `develop`. Computes the next version from Conventional
-# Commits, regenerates CHANGELOG.md, and opens a PR into `main`. The PR carries the
-# full develop payload plus the changelog commit, so merging it promotes develop ->
+# Commits, regenerates CHANGELOG.md, and pushes a `release/<tag>` branch carrying the
+# full develop payload plus the changelog commit. Merging that branch promotes develop ->
 # main with the changelog already in place — BEFORE the release workflow cuts the tag.
+#
+# This workflow deliberately does NOT open the pull request. Opening it here would make
+# the PR authored by github-actions[bot], and a bot-authored PR does not trigger the
+# `pull_request` workflows (CI, Integration Tests, Commit Lint) that gate `main` — the
+# release would arrive unverified. Instead the release PR text is written to a file on
+# the release branch and a prefilled "create PR" link is put in the job summary, so a
+# maintainer opens it in two clicks and the checks run as normal.
 
 on:
   workflow_dispatch:
@@ -16,11 +23,10 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   prepare:
-    name: Regenerate changelog and open release PR
+    name: Regenerate changelog and stage the release branch
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
     steps:
@@ -53,9 +59,31 @@ jobs:
       - name: Regenerate CHANGELOG.md
         run: uv run git-changelog --bump '${{ inputs.bump }}'
 
-      - name: Open release PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Write the release PR text
+        id: pr_text
+        run: |
+          set -euo pipefail
+          tag="${{ steps.version.outputs.tag }}"
+          body_file=".github/release-pr/${tag}.md"
+          mkdir -p "$(dirname "${body_file}")"
+
+          # Pull just this version's section out of the freshly regenerated changelog:
+          # start at its anchor, stop at the next one.
+          notes="$(awk -v t="${tag}" \
+            'BEGIN{p="^<a name=\""t"\"></a>$"} $0 ~ p {f=1} f && /^<a name=/ && ++n>1 {exit} f' \
+            CHANGELOG.md)"
+
+          {
+            printf 'Automated release prep for **%s**. CHANGELOG.md regenerated via git-changelog.\n\n' "${tag}"
+            printf 'Merging promotes `develop` -> `main` with the changelog already in place.\n'
+            printf 'Afterwards, run the **release** workflow on `main` to build, publish, and tag %s.\n\n' "${tag}"
+            printf -- '---\n\n'
+            printf '%s\n' "${notes}"
+          } > "${body_file}"
+
+          echo "body_file=${body_file}" >> "$GITHUB_OUTPUT"
+
+      - name: Push the release branch
         run: |
           set -euo pipefail
           tag="${{ steps.version.outputs.tag }}"
@@ -63,12 +91,30 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "${branch}"
-          git add CHANGELOG.md
+          git add CHANGELOG.md "${{ steps.pr_text.outputs.body_file }}"
           # `chore` keeps this bookkeeping commit out of the rendered sections;
           # `docs` would list every release's regeneration in the next release.
           git commit -m "chore(changelog): update for ${tag}"
           git push --force-with-lease origin "${branch}"
-          gh pr create \
-            --base main --head "${branch}" \
-            --title "chore(release): ${tag}" \
-            --body "Automated release prep for **${tag}**. Regenerated CHANGELOG.md via git-changelog. Merging promotes develop -> main; then run the release workflow on main to build, publish, and tag ${tag}."
+
+      - name: Summarise how to open the release PR
+        run: |
+          set -euo pipefail
+          tag="${{ steps.version.outputs.tag }}"
+          branch="release/${tag}"
+          body_file="${{ steps.pr_text.outputs.body_file }}"
+          title="chore(release): ${tag}"
+          # Only the title is prefilled via the URL: bodies routinely exceed what a query
+          # string can carry, so the body is copied from the file on the branch instead.
+          encoded_title="$(jq -rn --arg t "${title}" '$t|@uri')"
+          url="${{ github.server_url }}/${{ github.repository }}/compare/main...${branch}?expand=1&title=${encoded_title}"
+
+          {
+            printf '## %s is staged\n\n' "${tag}"
+            printf 'Branch `%s` is pushed. Open the PR manually — a bot-authored PR would not run the `pull_request` checks that gate `main`.\n\n' "${branch}"
+            printf '### [→ Open the release PR](%s)\n\n' "${url}"
+            printf 'Base `main`, head `%s`, title:\n\n```\n%s\n```\n\n' "${branch}" "${title}"
+            printf 'The body below is also committed to `%s` on that branch — copy it in:\n\n' "${body_file}"
+            printf -- '---\n\n'
+            cat "${body_file}"
+          } >> "$GITHUB_STEP_SUMMARY"
