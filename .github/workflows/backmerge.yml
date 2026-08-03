@@ -1,12 +1,23 @@
 name: back-merge main into develop
 
+# Fires when a release is published. Pushes a branch at main's tip so the post-release
+# state of main (changelog + tag lineage) can be merged back into develop.
+#
+# Like prepare-release, this workflow deliberately does NOT open the pull request. A PR
+# opened by github-actions[bot] with the default GITHUB_TOKEN does not trigger the
+# `pull_request` workflows (CI, Integration Tests, Commit Lint) that gate `develop`, so
+# the back-merge would land unverified. The job summary carries a prefilled link instead.
+#
+# Unlike prepare-release, the PR body is one boilerplate sentence rather than an embedded
+# changelog, so it fits in the URL and is prefilled too — there is nothing to copy and no
+# reason to commit a body file.
+
 on:
   release:
     types: [published]
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   backmerge:
@@ -16,16 +27,49 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Open main -> develop PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Stage the back-merge branch
+        id: stage
         run: |
           set -euo pipefail
+          # Nothing to back-merge if develop already contains every commit on main —
+          # which is the normal state when the release PR was a fast-forward promotion.
+          git fetch --no-tags --quiet origin develop
+          if [ "$(git rev-list --count FETCH_HEAD..HEAD)" -eq 0 ]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           branch="backmerge/main-to-develop-${{ github.run_id }}"
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "${branch}"
           git push origin "${branch}"
-          gh pr create --base develop --head "${branch}" \
-            --title "chore: back-merge main into develop" \
-            --body "Post-release sync of main (changelog + tag lineage) back into develop."
+
+          echo "needed=true" >> "$GITHUB_OUTPUT"
+          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+
+      - name: Summarise how to open the back-merge PR
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.stage.outputs.needed }}" != "true" ]; then
+            {
+              printf '## No back-merge needed\n\n'
+              printf '`develop` already contains every commit on `main`. No branch was pushed.\n'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          branch="${{ steps.stage.outputs.branch }}"
+          title="chore: back-merge main into develop"
+          body="Post-release sync of \`main\` (changelog + tag lineage) back into \`develop\`."
+          encoded_title="$(jq -rn --arg t "${title}" '$t|@uri')"
+          encoded_body="$(jq -rn --arg b "${body}" '$b|@uri')"
+          url="${{ github.server_url }}/${{ github.repository }}/compare/develop...${branch}?expand=1&title=${encoded_title}&body=${encoded_body}"
+
+          {
+            printf '## Back-merge is staged\n\n'
+            printf 'Branch `%s` is pushed. Open the PR manually — a bot-authored PR would not run the `pull_request` checks that gate `develop`.\n\n' "${branch}"
+            printf '### [→ Open the back-merge PR](%s)\n\n' "${url}"
+            printf 'Title and body are prefilled. Base `develop`, head `%s`.\n' "${branch}"
+          } >> "$GITHUB_STEP_SUMMARY"
