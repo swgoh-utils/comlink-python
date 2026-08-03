@@ -135,7 +135,6 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # Existing violations to address incrementally — do not add new suppressions
 "src/swgoh_comlink/__init__.py" = ["UP036"]   # outdated version block (sys.exit check)
-"src/swgoh_comlink/exceptions.py" = ["B904"]  # raise-without-from (tracked in issue backlog)
 "src/swgoh_comlink/helpers/*.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
 
 [tool.ruff.lint.isort]
@@ -160,6 +159,9 @@ in-place = true
 output = "CHANGELOG.md"
 marker-line = "<!-- insertion marker -->"
 bump = "auto"
+# The angular convention renders only feat/fix/revert/refactor/perf by default.
+# Listing them explicitly is what lets `docs` join them.
+sections = ["feat", "fix", "revert", "refactor", "perf", "docs"]
 
 # ── Coverage ─────────────────────────────────────────────────────────────
 

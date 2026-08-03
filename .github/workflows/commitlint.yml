@@ -30,8 +30,10 @@ jobs:
                 "chore", "docs", "test", "tests", "style", "ci", "perf"
               ]],
               "scope-enum": [1, "always", [
-                "core", "helpers", "deps", "release", "ci",
-                "version", "hmac", "docs", "tests", "examples"
+                "core", "helpers", "client", "auth", "statcalc",
+                "exceptions", "cache", "defaults", "typing", "hmac",
+                "version", "deps", "release", "changelog", "ci",
+                "docs", "tests", "examples", "parity"
               ]],
               "subject-max-length": [1, "always", 100],
               "header-max-length": [0, "always"],

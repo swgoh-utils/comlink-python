@@ -11,22 +11,56 @@ import hmac
 import os
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from json import dumps
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 from typing_extensions import Self
 
-from .exceptions import SwgohComlinkValueError
+from .exceptions import SwgohComlinkException, SwgohComlinkValueError
 from .helpers import Constants, DataItems
 
-__all__ = ["SwgohComlinkBase", "param_alias", "DEFAULT_TIMEOUT", "GAME_DATA_TIMEOUT"]
+__all__ = [
+    "SwgohComlinkBase",
+    "param_alias",
+    "DEFAULT_TIMEOUT",
+    "GAME_DATA_TIMEOUT",
+    "DEFAULT_VERSION_CACHE_TTL",
+]
 
 # Keys whose values must be masked in logs, repr, and debug output.
 _SENSITIVE_KEYS = frozenset({"secret_key", "access_key"})
 
 DEFAULT_TIMEOUT: float = 120.0
 GAME_DATA_TIMEOUT: float = 300.0
+DEFAULT_VERSION_CACHE_TTL: float = 3600.0
+
+# Indirection over the monotonic clock so tests can control cache expiry.
+_now: Callable[[], float] = time.monotonic
+
+
+@dataclass(frozen=True)
+class _CachedVersions:
+    """Game data and localization bundle versions cached from a /metadata response.
+
+    Fields are optional because mocked or unusual /metadata responses may omit
+    either key; accessors raise only when the missing value is actually needed.
+    """
+
+    game: str | None
+    language: str | None
+    expires_at: float
+
+    def require_game(self) -> str:
+        if self.game is None:
+            raise SwgohComlinkException("'latestGamedataVersion' was missing from the /metadata response.")
+        return self.game
+
+    def require_language(self) -> str:
+        if self.language is None:
+            raise SwgohComlinkException("'latestLocalizationBundleVersion' was missing from the /metadata response.")
+        return self.language
 
 
 def param_alias(param: str, alias: str) -> Callable[..., Any]:
@@ -110,6 +144,7 @@ class SwgohComlinkBase:
         port: int = 3000,
         stats_port: int = 3223,
         verify_ssl: bool = True,
+        version_cache_ttl: float = DEFAULT_VERSION_CACHE_TTL,
     ):
         from swgoh_comlink import version
 
@@ -118,6 +153,11 @@ class SwgohComlinkBase:
         self.stats_url_base = sanitize_url(stats_url)
         self.hmac = False
         self.verify_ssl = verify_ssl
+        # NaN fails the >= comparison, so it is rejected here along with negatives.
+        if not version_cache_ttl >= 0:
+            raise SwgohComlinkValueError("version_cache_ttl must be a non-negative number of seconds.")
+        self.version_cache_ttl = version_cache_ttl
+        self._version_cache: _CachedVersions | None = None
 
         # host and port parameters override defaults
         if host:
@@ -154,7 +194,13 @@ class SwgohComlinkBase:
             hmac_obj.update(f"/{endpoint}".encode())
             # json dumps separators needed for compact string formatting required for compatibility with
             # comlink since it is written with javascript as the primary object model
-            if payload:
+            #
+            # The digest has to cover exactly the bytes that go on the wire. A POST sends
+            # `json=payload`, so an empty dict is transmitted as `{}` — testing truthiness
+            # here hashed `""` instead and every empty-payload signed POST (get_game_metadata
+            # with no client_specs) was rejected with HTTP 403 HMACValidationError. Only a
+            # bodiless request (GET, payload=None) hashes the empty string.
+            if payload is not None:
                 payload_string = dumps(payload, separators=(",", ":"))
             else:
                 payload_string = dumps("")
@@ -165,6 +211,33 @@ class SwgohComlinkBase:
             hmac_digest = hmac_obj.hexdigest()
             req_headers["Authorization"] = f"HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}"
         return req_headers
+
+    # ── Version cache ────────────────────────────────────────────────────
+
+    def invalidate_version_cache(self) -> None:
+        """Discard the cached game/localization versions so the next lookup re-fetches /metadata."""
+        self._version_cache = None
+
+    def _cached_versions(self) -> _CachedVersions | None:
+        """Return the cached version entry when caching is enabled and the entry is fresh."""
+        cached = self._version_cache
+        if cached is None or _now() >= cached.expires_at:
+            return None
+        return cached
+
+    def _store_versions(self, game: str | None, language: str | None) -> _CachedVersions:
+        """Build a version entry from *game* and *language* and cache it when caching applies."""
+        entry = _CachedVersions(game=game, language=language, expires_at=_now() + self.version_cache_ttl)
+        if self.version_cache_ttl > 0 and (game is not None or language is not None):
+            self._version_cache = entry
+        return entry
+
+    @staticmethod
+    def _versions_from_metadata(metadata: dict[str, Any]) -> tuple[str | None, str | None]:
+        """Extract the (game, language) version strings from a /metadata response, if present."""
+        game = metadata.get("latestGamedataVersion")
+        language = metadata.get("latestLocalizationBundleVersion")
+        return str(game) if game else None, str(language) if language else None
 
     # ── Static payload builders ──────────────────────────────────────────
 

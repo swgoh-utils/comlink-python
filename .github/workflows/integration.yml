@@ -19,15 +19,19 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     services:
+      # Pinned deliberately: on `latest`, an upstream Comlink release lands in CI with no
+      # commit of ours, so a red suite carries no information about the change under test.
+      # Bump this tag on purpose, and keep both services on the same tag.
+      # 4.4.2 fixes the /data fetch that 4.4.0 and 4.4.1 could not complete.
       comlink:
-        image: ghcr.io/swgoh-utils/swgoh-comlink:latest
+        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.2
         env:
           APP_NAME: comlink-python-integration-tests
         ports:
           - 3000:3000
 
       comlink-hmac:
-        image: ghcr.io/swgoh-utils/swgoh-comlink:latest
+        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.2
         env:
           APP_NAME: comlink-python-hmac-integration-tests
           ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
@@ -59,7 +63,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 

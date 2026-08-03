@@ -32,7 +32,7 @@ class TestGetMetadata(TestCase):
 
         call_kwargs = mock_post.call_args
         payload = call_kwargs.kwargs.get("payload") or call_kwargs[1].get("payload")
-        self.assertIn("client_specs", payload["payload"])
+        self.assertIn("clientSpecs", payload["payload"])
 
 
 if __name__ == "__main__":
