@@ -3,7 +3,6 @@
 import pytest
 
 from swgoh_comlink import SwgohComlink
-from swgoh_comlink.helpers import DataItems
 
 from .conftest import COMLINK_URL, TEST_ALLYCODE
 
@@ -81,13 +80,19 @@ def test_get_guilds_by_name(comlink):
 
 
 def test_get_game_data_filtered(comlink):
-    """POST /data with items=SEGMENT1 populates the SEGMENT1 collections and no others.
+    """POST /data with the Segment1 items value populates only the Segment1 collections.
 
     /data always returns the same full set of collection keys regardless of what was
     requested — the ones not asked for come back empty. So asserting on len(result)
     would pass even if the filter matched nothing; assert on which keys are populated.
+
+    The items value is read from the server's own GameDataItemsEnum rather than from
+    the client-side DataItems constants. Segment values are aggregate bitmasks, so they
+    shift whenever a collection is added to a segment, and a stale local copy is
+    rejected outright (HTTP 400) by newer Comlink builds.
     """
-    result = comlink.get_game_data(items=DataItems.SEGMENT1)
+    segment1 = comlink.get_enums()["GameDataItemsEnum"]["Segment1"]
+    result = comlink.get_game_data(items=segment1)
     assert isinstance(result, dict)
     assert result["equipment"], "requested SEGMENT1 collection should be populated"
     assert not result["units"], "unrequested SEGMENT3 collection should be empty"
