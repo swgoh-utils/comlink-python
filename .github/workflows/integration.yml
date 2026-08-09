@@ -24,14 +24,14 @@ jobs:
       # Bump this tag on purpose, and keep both services on the same tag.
       # 4.4.2 fixes the /data fetch that 4.4.0 and 4.4.1 could not complete.
       comlink:
-        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.2
+        image: ghcr.io/swgoh-utils/swgoh-comlink:4.5.0
         env:
           APP_NAME: comlink-python-integration-tests
         ports:
           - 3000:3000
 
       comlink-hmac:
-        image: ghcr.io/swgoh-utils/swgoh-comlink:4.4.2
+        image: ghcr.io/swgoh-utils/swgoh-comlink:4.5.0
         env:
           APP_NAME: comlink-python-hmac-integration-tests
           ACCESS_KEY: ${{ secrets.COMLINK_ACCESS_KEY }}
