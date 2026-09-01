@@ -92,8 +92,8 @@ def create_localized_unit_name_dictionary(locale: str | list[Any]) -> dict[str, 
         if line.startswith("#") or "|" not in line:
             continue
         if line.startswith("UNIT_"):
-            name_key, desc = line.split("|")
-            if name_key.endswith("_NAME"):
+            name_key, desc = line.split("|", 1)
+            if "_NAME" in name_key:
                 unit_name_map[name_key] = desc
     return unit_name_map
 
