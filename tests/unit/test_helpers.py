@@ -478,6 +478,20 @@ class TestCreateLocalizedUnitNameDictionary:
         result = create_localized_unit_name_dictionary(locale_list)
         assert result == {"UNIT_LUKE_NAME": "Luke Skywalker"}
 
+    def test_name_variant_suffixes_included(self):
+        from swgoh_comlink.helpers._game_data import create_localized_unit_name_dictionary
+
+        locale_list = [
+            "UNIT_JEDIKNIGHTREVAN_NAME_V2|Jedi Knight Revan",
+            "UNIT_BOSSK_NAME|Bossk",
+            "UNIT_BOSSK_DESC|A hunter",
+        ]
+        result = create_localized_unit_name_dictionary(locale_list)
+        assert result == {
+            "UNIT_JEDIKNIGHTREVAN_NAME_V2": "Jedi Knight Revan",
+            "UNIT_BOSSK_NAME": "Bossk",
+        }
+
     def test_comments_and_non_unit_lines_skipped(self):
         from swgoh_comlink.helpers._game_data import create_localized_unit_name_dictionary
 
