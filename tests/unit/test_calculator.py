@@ -873,3 +873,47 @@ class TestRawEquipmentSlotGP:
 
         assert piece_gp > 0
         assert calc.calc_char_gp(raw) - calc.calc_char_gp(bare) == pytest.approx(piece_gp * 1.5, abs=1)
+
+
+class TestSlotlessEquipmentGP:
+    def test_duplicate_gear_ids_resolve_to_distinct_slots(self, calc, game_data):
+        gear_set = game_data["unitData"]["GLREY"]["gearLvl"]["12"]["gear"]
+        dup_id = next(g for g in gear_set if gear_set.count(g) > 1)
+        expected = [i for i, g in enumerate(gear_set) if g == dup_id][:2]
+        char = {"defId": "GLREY", "gear": 12, "equipped": [{"equipmentId": dup_id}, dup_id]}
+
+        assert calc._resolve_gear_slots(char) == expected
+
+    def test_explicit_slots_are_not_reassigned(self, calc, game_data):
+        gear_set = game_data["unitData"]["GLREY"]["gearLvl"]["12"]["gear"]
+        dup_id = next(g for g in gear_set if gear_set.count(g) > 1)
+        first, second = [i for i, g in enumerate(gear_set) if g == dup_id][:2]
+        char = {
+            "defId": "GLREY",
+            "gear": 12,
+            "equipped": [{"equipmentId": dup_id}, {"equipmentId": dup_id, "slot": first}],
+        }
+
+        assert calc._resolve_gear_slots(char) == [second, first]
+
+    def test_unknown_gear_id_warns_and_adds_no_gp(self, calc, caplog):
+        char = {"defId": "GLREY", "gear": 12, "equipped": [{"equipmentId": "NOT_IN_GEAR_SET"}]}
+
+        with caplog.at_level("WARNING", logger=StatCalc._LOGGER.name):
+            assert calc._resolve_gear_slots(char) == [None]
+        assert "NOT_IN_GEAR_SET" in caplog.text
+
+    def test_legacy_dict_roster_counts_gear_gp(self, calc, game_data, player):
+        raw = _find_char(player["rosterUnit"], relic_min=3)
+        def_id = raw["definitionId"].split(":")[0]
+        gear_ids = game_data["unitData"][def_id]["gearLvl"]["12"]["gear"][:3]
+
+        def legacy_gp(gear: list[str]) -> int:
+            unit = {"currentRarity": 7, "currentLevel": 85, "currentTier": 12, "gear": gear, "skill": []}
+            calc.calc_roster_stats({def_id: [unit]})
+            return unit["gp"]
+
+        piece_gp = calc._gp_tables["gearPieceGP"]["12"]["0"]
+
+        assert piece_gp > 0
+        assert legacy_gp(gear_ids) - legacy_gp([]) == pytest.approx(3 * piece_gp * 1.5, abs=1)

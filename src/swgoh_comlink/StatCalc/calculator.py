@@ -933,12 +933,8 @@ class StatCalc:
         gp += self._table_get(self._gp_tables["unitRarityGP"], char["rarity"])
         gp += self._table_get(self._gp_tables["gearLevelGP"], char["gear"])
 
-        for piece in char.get("equipped", []):
-            slot = piece.get("slot") if isinstance(piece, dict) else None
-            gp += self._table_get(
-                self._table_get(self._gp_tables["gearPieceGP"], char["gear"]),
-                slot,
-            )
+        piece_gp = self._table_get(self._gp_tables["gearPieceGP"], char["gear"])
+        gp += sum(self._table_get(piece_gp, slot) for slot in self._resolve_gear_slots(char) if slot is not None)
 
         for skill in char.get("skills", []):
             gp += self._get_skill_gp(char["defId"], skill)
@@ -978,6 +974,38 @@ class StatCalc:
             gp += char["level"] * self._table_get(self._gp_tables["relicTierLevelFactor"], tier)
 
         return int(self._floor(gp * 1.5))
+
+    def _resolve_gear_slots(self, char: dict[str, Any]) -> list[Any]:
+        """Return the 0-based `gearPieceGP` slot for each equipped piece.
+
+        Comlink equipment entries carry a `slot`. Entries without one (bare gear IDs, or the
+        legacy dict roster's `{"equipmentId": ...}`) are matched against the unit's gear set
+        for its current tier, taking the first unclaimed matching slot so duplicate pieces
+        map to distinct slots. Unmatched pieces resolve to None and add no GP.
+        """
+        assert self._unit_data is not None
+        pieces = char.get("equipped", [])
+        slots = [piece.get("slot") if isinstance(piece, dict) else None for piece in pieces]
+        if None not in slots:
+            return slots
+
+        gear_set = [
+            str(g) for g in self._table_get(self._unit_data[char["defId"]]["gearLvl"], char["gear"], {}).get("gear", [])
+        ]
+        claimed = {int(slot) for slot in slots if slot is not None}
+        for idx, piece in enumerate(pieces):
+            if slots[idx] is not None:
+                continue
+            gear_id = str(piece.get("equipmentId") if isinstance(piece, dict) else piece)
+            slot = next((i for i, g in enumerate(gear_set) if g == gear_id and i not in claimed), None)
+            if slot is None:
+                self._LOGGER.warning(
+                    "Gear %s not found in %s's gear tier %s set; no GP added", gear_id, char["defId"], char["gear"]
+                )
+                continue
+            claimed.add(slot)
+            slots[idx] = slot
+        return slots
 
     def _get_skill_gp(self, unit_id: str, skill: dict[str, Any]) -> float:
         assert self._unit_data is not None
