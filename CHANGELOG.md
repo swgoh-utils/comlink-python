@@ -1,6 +1,17 @@
 # CHANGELOG
 
 <!-- insertion marker -->
+<a name="v2.3.1"></a>
+
+## [v2.3.1](https://github.com/swgoh-utils/comlink-python/compare/v2.3.0...v2.3.1) (2026-10-05)
+
+### Bug Fixes
+
+- **statcalc:** resolve gear slot for slot-less equipment entries ([8bd7e73](https://github.com/swgoh-utils/comlink-python/commit/8bd7e735a8545d4d688dcfca4ae184219c3bd10b))
+- **statcalc:** skip ships with incomplete crew instead of aborting roster ([2e5d514](https://github.com/swgoh-utils/comlink-python/commit/2e5d5140e7e63cd695bbdcb3bcbbf2897970f9a1))
+- **statcalc:** carry purchasedAbilityId through raw unit normalization ([bc3e0e8](https://github.com/swgoh-utils/comlink-python/commit/bc3e0e8ee64869f4622640431262369e373f48f0))
+- **helpers:** include unit name keys with variant suffixes like _NAME_V2 ([bfe109a](https://github.com/swgoh-utils/comlink-python/commit/bfe109ad8669a7657d2f9d8e55c2d78fa5f20e39))
+
 <a name="v2.3.0"></a>
 
 ## [v2.3.0](https://github.com/swgoh-utils/comlink-python/compare/v2.2.0...v2.3.0) (2026-08-03)
