@@ -57,7 +57,9 @@ player = comlink.get_player(allycode=245866537)
 calc.calc_roster_stats(player["rosterUnit"])
 ```
 
-Characters are processed first, then ships (which depend on their crew stats).
+Characters are processed first, then ships (which depend on their crew stats). A ship whose crew
+is not fully present in the roster is skipped (no `stats` or `gp` key) with a logged warning,
+and processing continues with the remaining ships.
 
 ### Calculate stats for one or more players
 
