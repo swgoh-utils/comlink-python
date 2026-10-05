@@ -327,6 +327,7 @@ class StatCalc:
                 "equippedStatMod": char.get("equippedStatMod"),
                 "relic": char.get("relic"),
                 "skills": [{"id": skill["id"], "tier": skill["tier"] + 2} for skill in char.get("skill", [])],
+                "purchasedAbilityId": char.get("purchasedAbilityId", []),
             }
         else:
             normalized = copy.deepcopy(char)
@@ -360,6 +361,7 @@ class StatCalc:
                         "mods": c.get("mods"),
                         "relic": c.get("relic"),
                         "skills": [{"id": s["id"], "tier": s["tier"] + 2} for s in c.get("skill", [])],
+                        "purchasedAbilityId": c.get("purchasedAbilityId", []),
                         "gp": c.get("gp"),
                     }
                 )

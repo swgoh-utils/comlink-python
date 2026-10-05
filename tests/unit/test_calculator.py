@@ -474,7 +474,7 @@ class TestCalcGP:
         """Cover purchasedAbilityId GP contribution (lines 1018-1021)."""
         for u in player["rosterUnit"]:
             if u.get("purchasedAbilityId") and len(u["purchasedAbilityId"]) > 0:
-                # Use normalized format so purchasedAbilityId is passed through
+                # Use normalized format to toggle purchasedAbilityId directly
                 raw = copy.deepcopy(u)
                 defid = raw["definitionId"].split(":")[0]
                 normalized_with = {
@@ -716,13 +716,15 @@ class TestCalcRosterStatsDict:
             meta = game_data["unitData"].get(defid, {})
             if meta.get("combatType") != 1:
                 continue
-            unit_dict[defid] = [{
-                "currentRarity": u.get("currentRarity", u.get("rarity")),
-                "currentLevel": u.get("currentLevel", u.get("level")),
-                "currentTier": u.get("currentTier", u.get("gear")),
-                "gear": [],
-                "skill": u.get("skill", []),
-            }]
+            unit_dict[defid] = [
+                {
+                    "currentRarity": u.get("currentRarity", u.get("rarity")),
+                    "currentLevel": u.get("currentLevel", u.get("level")),
+                    "currentTier": u.get("currentTier", u.get("gear")),
+                    "gear": [],
+                    "skill": u.get("skill", []),
+                }
+            ]
             if len(unit_dict) >= 3:
                 break
         if unit_dict:
@@ -766,3 +768,56 @@ class TestShipGPCrewValidation:
             fake_crew[0]["defId"] = "FAKE_CREW_MEMBER"
             with pytest.raises(ValueError, match="not in"):
                 calc._calc_ship_gp(norm_ship, fake_crew)
+
+
+# ── Raw-format ultimate ability GP ───────────────────────────────────────
+
+
+def _find_ultimate_char(roster: list[dict]) -> dict[str, Any]:
+    """Return a deepcopy of the first raw unit with a purchased ultimate ability."""
+    for u in roster:
+        if u.get("purchasedAbilityId"):
+            return copy.deepcopy(u)
+    pytest.skip("No character with purchasedAbilityId found")
+
+
+def _to_normalized(raw: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "defId": raw["definitionId"].split(":")[0],
+        "rarity": raw["currentRarity"],
+        "level": raw["currentLevel"],
+        "gear": raw["currentTier"],
+        "equipped": raw.get("equipment", []),
+        "relic": raw.get("relic"),
+        "skills": [{"id": s["id"], "tier": s["tier"] + 2} for s in raw.get("skill", [])],
+        "purchasedAbilityId": raw["purchasedAbilityId"],
+        "equippedStatMod": raw.get("equippedStatMod"),
+    }
+
+
+class TestRawUltimateGP:
+    def test_raw_and_normalized_gp_match(self, calc, player):
+        raw = _find_ultimate_char(player["rosterUnit"])
+        normalized = _to_normalized(raw)
+        without_ultimate = {**normalized, "purchasedAbilityId": []}
+
+        raw_gp = calc.calc_char_gp(raw)
+
+        assert raw_gp == calc.calc_char_gp(normalized)
+        assert raw_gp > calc.calc_char_gp(without_ultimate)
+
+    def test_roster_stats_includes_ultimate_gp(self, calc, player):
+        p = copy.deepcopy(player)
+        calc.calc_player_stats(p)
+
+        for unit in p["rosterUnit"]:
+            if unit.get("purchasedAbilityId"):
+                assert unit["gp"] == calc.calc_char_gp(_to_normalized(unit))
+
+    def test_raw_crew_normalization_keeps_purchased_ability(self, calc, game_data, player):
+        ship, crew = _find_ship(player["rosterUnit"], game_data["unitData"], with_crew=True)
+        crew[0]["purchasedAbilityId"] = ["ultimateability_test"]
+
+        _, norm_crew = calc._normalize_ship_and_crew(ship, crew)
+
+        assert norm_crew[0]["purchasedAbilityId"] == ["ultimateability_test"]
