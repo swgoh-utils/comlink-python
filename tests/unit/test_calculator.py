@@ -855,3 +855,21 @@ class TestRosterShipMissingCrew:
         ]
         assert other_ships
         assert all(isinstance(u.get("gp"), int) and u["gp"] > 0 for u in other_ships)
+
+
+# ── Raw equipment slot handling ──────────────────────────────────────────
+
+
+class TestRawEquipmentSlotGP:
+    def test_comlink_equipment_slot_zero_adds_gp(self, calc, player):
+        """Comlink emits 0-based ``slot`` (including the falsy 0) on each equipment entry."""
+        raw = _find_char(player["rosterUnit"])
+        raw["currentTier"] = 12
+        bare = copy.deepcopy(raw)
+        bare["equipment"] = []
+        raw["equipment"] = [{"equipmentId": "172", "slot": 0, "isAtMaxLevel": False}]
+
+        piece_gp = calc._gp_tables["gearPieceGP"]["12"]["0"]
+
+        assert piece_gp > 0
+        assert calc.calc_char_gp(raw) - calc.calc_char_gp(bare) == pytest.approx(piece_gp * 1.5, abs=1)
