@@ -133,7 +133,9 @@ class StatCalc:
             units: Either a list of units or a legacy dict keyed by unit id.
 
         Returns:
-            Input object with `stats` and `gp` fields added for each unit.
+            Input object with `stats` and `gp` fields added for each unit. Ships
+            whose crew is not fully present in a list-format roster are skipped
+            (no `stats` or `gp` added) and a warning is logged.
         """
         self._require_game_data()
         assert self._unit_data is not None
@@ -164,6 +166,15 @@ class StatCalc:
                 if not meta:
                     continue
                 crw = [crew[cid] for cid in meta["crew"] if cid in crew]
+                if len(crw) != len(meta["crew"]):
+                    # Ship stats and GP are derived from the full crew, so neither can be computed
+                    self._LOGGER.warning(
+                        "Skipping ship %s: %d of %d crew members found in roster",
+                        def_id,
+                        len(crw),
+                        len(meta["crew"]),
+                    )
+                    continue
                 unit = self.calc_ship_stats(ship, crw)
 
         elif isinstance(units, dict):
@@ -327,6 +338,7 @@ class StatCalc:
                 "equippedStatMod": char.get("equippedStatMod"),
                 "relic": char.get("relic"),
                 "skills": [{"id": skill["id"], "tier": skill["tier"] + 2} for skill in char.get("skill", [])],
+                "purchasedAbilityId": char.get("purchasedAbilityId", []),
             }
         else:
             normalized = copy.deepcopy(char)
@@ -360,6 +372,7 @@ class StatCalc:
                         "mods": c.get("mods"),
                         "relic": c.get("relic"),
                         "skills": [{"id": s["id"], "tier": s["tier"] + 2} for s in c.get("skill", [])],
+                        "purchasedAbilityId": c.get("purchasedAbilityId", []),
                         "gp": c.get("gp"),
                     }
                 )
