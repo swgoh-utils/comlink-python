@@ -22,22 +22,37 @@ from swgoh_comlink.helpers import DataItems
 
 comlink = SwgohComlink()
 
-# Single segment (server-accepted)
-segment1 = comlink.get_game_data(items=DataItems.SEGMENT1)
+# A single collection
+units = comlink.get_game_data(items=DataItems.UNITS)
 
-# Multiple segments combined
-data = comlink.get_game_data(items=DataItems.SEGMENT1 + DataItems.SEGMENT2)
+# Only the collections you need, combined with `|`
+data = comlink.get_game_data(items=DataItems.SKILL | DataItems.EQUIPMENT)
+
+# Whole segments (the collections returned by the legacy request_segment= calls)
+segments = comlink.get_game_data(items=DataItems.SEGMENT1 | DataItems.SEGMENT2)
 
 # All collections
 everything = comlink.get_game_data(items=DataItems.ALL)
 ```
 
+Request only the collections you need where you can. Comlink assembles the whole
+response before sending it, so smaller masks are faster and use less memory on both
+sides. For example, `DataItems.CHALLENGE | DataItems.CONQUEST` returns about 32 MB
+in about 2.4 seconds, versus about 147 MB in about 12.5 seconds for
+`SEGMENT2 | SEGMENT4`.
+
+!!! warning "Combine members with `|`, not `+`"
+    Some members are aliases that share a bit with another member. For example,
+    `CONQUEST_DEFINITION`, `ARTIFACT_DEFINITION` and `CONQUEST_MISSION` are all the
+    `CONQUEST` bit. Adding aliases together sets a different bit:
+    `DataItems.CONQUEST_DEFINITION + DataItems.ARTIFACT_DEFINITION` requests
+    `ABILITY_DECISION_TREE`. Bitwise OR (`|`) is always safe.
+
 !!! note
-    Comlink servers validate `items` against the server-side `GameDataItemsEnum`. They
-    accept the `SEGMENT1`–`SEGMENT4` aggregates and `DataItems.ALL`, but may reject raw
-    single-collection bit values (e.g. `DataItems.UNITS`) with an HTTP 400. Prefer the
-    segment aggregates for `get_game_data()` calls. The single-bit members remain useful
-    for inspecting / composing custom bitfields and for `Constants.get()` lookups.
+    Comlink accepts any `items` bitmask from 1 to 2<sup>52</sup> − 1, or `-1`
+    (`DataItems.ALL`) for everything, and rejects values outside that range with an
+    HTTP 400. Older Comlink releases had a bug in how CDN URLs were built that could
+    make some single-collection requests fail; upgrade Comlink if you see that.
 
 Use `DataItems.members()` to list all available member names.
 
@@ -227,11 +242,50 @@ with `async_` accept a `SwgohComlinkAsync` instance and must be awaited.
 ## Conquest Helpers
 
 Functions for working with Conquest game mode data. These are pure calculation
-functions and do not require a comlink instance.
+and data-transformation functions and do not require a comlink instance.
 
 ### calc_current_stamina
 
 ::: swgoh_comlink.helpers._conquest.calc_current_stamina
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_conquest_feats
+
+Lists the feats for a Conquest event (the newest one by default), covering both
+global and per-sector feats, with keycard rewards and any bonus artifact.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import DataItems, get_conquest_feats, get_localization_dictionary
+
+comlink = SwgohComlink()
+# The CONQUEST bit also covers 'conquestDefinition' and 'artifactDefinition'
+game_data = comlink.get_game_data(items=DataItems.CHALLENGE | DataItems.CONQUEST)
+loc = get_localization_dictionary(comlink)
+
+feats = get_conquest_feats(
+    game_data["conquestDefinition"],
+    game_data["challenge"],
+    loc,
+    game_data["artifactDefinition"],
+    difficulty="hard",
+)
+for feat in feats:
+    print(feat["scope"], feat["name"], feat["keycards"])
+```
+
+!!! tip
+    Requesting only the `CHALLENGE` and `CONQUEST` collections returns about 32 MB of
+    game data instead of about 147 MB for `SEGMENT2 | SEGMENT4`, and is roughly 5x faster.
+
+::: swgoh_comlink.helpers._conquest.get_conquest_feats
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._conquest.ConquestFeat
     options:
       show_root_heading: true
       show_root_full_path: false
