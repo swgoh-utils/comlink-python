@@ -12,18 +12,23 @@ class DataItems(IntFlag):
     Integer flag enum class mapping game data collection names to the integer values of their bit positions for use
     in the `items` parameter of the `get_game_data()` method.
 
-    Since the member values are integers, they can be combined using normal integer arithmetic operations to specify
-    more than one collection in a single call.
+    Members can be combined with the bitwise OR operator (`|`) to request more than one collection in a single call.
+    Requesting only the collections you need is significantly faster and uses less memory than requesting whole
+    segments.
 
     Examples:
-        segment1 = comlink.get_game_data(items=DataItems.SEGMENT1)
-        segments_1_and_2 = comlink.get_game_data(items=(DataItems.SEGMENT1 + DataItems.SEGMENT2))
-        segment3_no_pve = comlink.get_game_data(items=DataItems.SEGMENT3, include_pve_units=False)
+        units = comlink.get_game_data(items=DataItems.UNITS)
+        skill_equipment = comlink.get_game_data(items=DataItems.SKILL | DataItems.EQUIPMENT)
+        units_no_pve = comlink.get_game_data(items=DataItems.UNITS, include_pve_units=False)
+        segments_1_and_2 = comlink.get_game_data(items=DataItems.SEGMENT1 | DataItems.SEGMENT2)
 
     Note:
-        Comlink servers validate `items` against the server-side `GameDataItemsEnum` and may reject
-        raw single-collection bit values (e.g. `DataItems.UNITS`) with an HTTP 400. The `SEGMENT1`–
-        `SEGMENT4` aggregates (and `DataItems.ALL`) are the values the server explicitly accepts.
+        Combine members with `|`, not `+`. Aliased members share a bit, so adding them sets a different bit:
+        `DataItems.CONQUEST_DEFINITION + DataItems.ARTIFACT_DEFINITION` requests `ABILITY_DECISION_TREE`, while
+        `DataItems.CONQUEST_DEFINITION | DataItems.ARTIFACT_DEFINITION` correctly requests `CONQUEST`.
+
+        Comlink accepts any bitmask from 1 to 2**52 - 1, or -1 (`DataItems.ALL`) for everything. Values outside
+        that range are rejected with an HTTP 400.
 
     Some of the DataItems members are actually aliases for other members. For example, the `TABLE` member is an
     alias for the `XP_TABLE` member. This is done because both members represent the same collection in the game data.
