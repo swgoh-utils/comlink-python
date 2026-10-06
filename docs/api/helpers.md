@@ -227,11 +227,50 @@ with `async_` accept a `SwgohComlinkAsync` instance and must be awaited.
 ## Conquest Helpers
 
 Functions for working with Conquest game mode data. These are pure calculation
-functions and do not require a comlink instance.
+and data-transformation functions and do not require a comlink instance.
 
 ### calc_current_stamina
 
 ::: swgoh_comlink.helpers._conquest.calc_current_stamina
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_conquest_feats
+
+Lists the feats for a Conquest event (the newest one by default), covering both
+global and per-sector feats, with keycard rewards and any bonus artifact.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import DataItems, get_conquest_feats, get_localization_dictionary
+
+comlink = SwgohComlink()
+# The CONQUEST bit also covers 'conquestDefinition' and 'artifactDefinition'
+game_data = comlink.get_game_data(items=DataItems.CHALLENGE | DataItems.CONQUEST)
+loc = get_localization_dictionary(comlink)
+
+feats = get_conquest_feats(
+    game_data["conquestDefinition"],
+    game_data["challenge"],
+    loc,
+    game_data["artifactDefinition"],
+    difficulty="hard",
+)
+for feat in feats:
+    print(feat["scope"], feat["name"], feat["keycards"])
+```
+
+!!! tip
+    Requesting only the `CHALLENGE` and `CONQUEST` collections returns about 32 MB of
+    game data instead of about 147 MB for `SEGMENT2 | SEGMENT4`, and is roughly 5x faster.
+
+::: swgoh_comlink.helpers._conquest.get_conquest_feats
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._conquest.ConquestFeat
     options:
       show_root_heading: true
       show_root_full_path: false

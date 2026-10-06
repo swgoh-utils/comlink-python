@@ -624,6 +624,109 @@ class TestGetDatacronDismantleTotal:
         assert get_datacron_dismantle_total([], [], []) == {}
 
 
+# ── _conquest ──────────────────────────────────────────────────────────
+
+
+def _feat(challenge_id: str, keycards: int = 1, artifact: str | None = None, reward_type: Any = 22) -> dict[str, Any]:
+    rewards = [{"id": "", "type": reward_type, "maxQuantity": keycards}]
+    if artifact:
+        rewards.append({"id": artifact, "type": 23, "maxQuantity": 1})
+    return {"id": challenge_id, "nameKey": f"{challenge_id}_NAME", "descKey": f"{challenge_id}_DESC", "reward": rewards}
+
+
+_CONQUEST_DEFS = [
+    {"id": "CONQUEST_VOL1", "conquestDifficulty": []},
+    {
+        "id": "CONQUEST_VOL2",
+        "conquestDifficulty": [
+            {"sector": [{"id": "S0", "titleKey": "SECTOR_1"}, {"id": "S1", "titleKey": "SECTOR_2"}]}
+        ],
+    },
+]
+_CHALLENGES = [
+    _feat("CONQUEST_VOL2_BOSS_KILL_III_DIFF_S1", keycards=5),
+    _feat("CONQUEST_VOL2_SECTOR_WIN_III_DIFF_S0", keycards=3),
+    _feat("CONQUEST_VOL2_EVENT_BOMBS_III_DIFF", keycards=15, artifact="artifact_x"),
+    _feat("CONQUEST_VOL2_EVENT_BOMBS_I_DIFF", keycards=10),
+    _feat("CONQUEST_VOL2_MINIBOSS_HIT_II_DIFF_S0", reward_type="CONQUEST_POINT"),
+    _feat("CONQUEST_VOL1_EVENT_OLD_III_DIFF"),
+    _feat("CONQUEST_VOL2_NOT_A_FEAT"),
+]
+_LOC = {
+    "SECTOR_1": "[c][FFFF00]SECTOR 1[-][/c]",
+    "SECTOR_2": "SECTOR 2",
+    "CONQUEST_VOL2_EVENT_BOMBS_III_DIFF_NAME": "[b]Bombs Away[/b]",
+    "ARTIFACT_X_NAME": "Thermal Kit",
+}
+_ARTIFACTS = [{"id": "artifact_x", "nameKey": "ARTIFACT_X_NAME"}]
+
+
+class TestGetConquestFeats:
+    def test_defaults_to_newest_conquest_and_orders_feats(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES)
+        assert [f["challenge_id"] for f in feats] == [
+            "CONQUEST_VOL2_EVENT_BOMBS_I_DIFF",
+            "CONQUEST_VOL2_MINIBOSS_HIT_II_DIFF_S0",
+            "CONQUEST_VOL2_EVENT_BOMBS_III_DIFF",
+            "CONQUEST_VOL2_SECTOR_WIN_III_DIFF_S0",
+            "CONQUEST_VOL2_BOSS_KILL_III_DIFF_S1",
+        ]
+        assert [f["difficulty"] for f in feats] == ["Easy", "Normal", "Hard", "Hard", "Hard"]
+        assert [f["kind"] for f in feats] == ["Global", "Mini-Boss", "Global", "Sector", "Boss"]
+
+    def test_localizes_names_sectors_and_artifacts(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, _LOC, _ARTIFACTS, difficulty="hard")
+        bombs, sector, boss = feats
+        assert bombs["name"] == "Bombs Away"
+        assert bombs["scope"] == "Global" and bombs["sector_id"] is None
+        assert bombs["keycards"] == 15
+        assert bombs["reward_artifact_id"] == "artifact_x"
+        assert bombs["reward_artifact"] == "Thermal Kit"
+        assert sector["scope"] == "Sector 1" and sector["sector_id"] == "S0"
+        assert boss["scope"] == "Sector 2"
+        # Unresolved keys fall back to the localization key
+        assert sector["name"] == "CONQUEST_VOL2_SECTOR_WIN_III_DIFF_S0_NAME"
+
+    def test_without_localization_uses_ids(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, difficulty="Hard")
+        assert feats[0]["reward_artifact"] == "artifact_x"
+        assert feats[1]["scope"] == "S0"
+
+    def test_enum_name_reward_types(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        (feat,) = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, difficulty="normal")
+        assert feat["keycards"] == 1
+
+    def test_explicit_conquest_id_is_case_insensitive(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, conquest_id="conquest_vol1")
+        assert [f["challenge_id"] for f in feats] == ["CONQUEST_VOL1_EVENT_OLD_III_DIFF"]
+
+    @pytest.mark.parametrize(
+        ("args", "kwargs"),
+        [
+            ((_CONQUEST_DEFS, _CHALLENGES), {"conquest_id": "CONQUEST_VOL99"}),
+            ((_CONQUEST_DEFS, _CHALLENGES), {"difficulty": "nightmare"}),
+            (({"id": "x"}, _CHALLENGES), {}),
+            ((_CONQUEST_DEFS, None), {}),
+            (([], _CHALLENGES), {}),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_conquest_feats(*args, **kwargs)
+
+
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 
