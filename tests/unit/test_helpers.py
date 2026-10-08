@@ -699,6 +699,90 @@ class TestGetDatacronDismantleTotal:
 # ── _conquest ──────────────────────────────────────────────────────────
 
 
+_REFRESH = 1_790_164_800  # 2026-09-23 12:00:00 UTC, in seconds as lastRefreshTime carries it
+
+
+def _utc(seconds: float):
+    from datetime import datetime, timezone
+
+    return datetime.fromtimestamp(seconds, tz=timezone.utc)
+
+
+class TestCalcStaminaFullTime:
+    def test_one_point_per_thirty_minutes(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"unitId": "u1", "remainingStamina": 90, "lastRefreshTime": str(_REFRESH)}
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 3600)) == _utc(_REFRESH + 10 * 1800)
+
+    def test_returns_aware_utc(self):
+        from datetime import timezone
+
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        result = calc_stamina_full_time({"remainingStamina": 50, "lastRefreshTime": _REFRESH})
+        assert result.tzinfo == timezone.utc
+
+    @pytest.mark.parametrize("pass_plus", [False, True])
+    @pytest.mark.parametrize("remaining", [0, 1, 37, 99])
+    def test_agrees_with_calc_current_stamina(self, remaining: int, pass_plus: bool):
+        from unittest.mock import patch
+
+        from swgoh_comlink.helpers import calc_current_stamina, calc_stamina_full_time
+
+        unit = {"remainingStamina": remaining, "lastRefreshTime": _REFRESH}
+        full = calc_stamina_full_time(unit, pass_plus, now=_utc(_REFRESH)).timestamp()
+        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full):
+            assert calc_current_stamina(unit, pass_plus) == 100
+        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full - 1):
+            assert calc_current_stamina(unit, pass_plus) < 100
+
+    def test_pass_plus_is_faster(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"remainingStamina": 0, "lastRefreshTime": _REFRESH}
+        now = _utc(_REFRESH)
+        assert calc_stamina_full_time(unit, True, now=now) < calc_stamina_full_time(unit, now=now)
+
+    def test_full_unit_returns_the_moment_it_filled(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"remainingStamina": 98, "lastRefreshTime": _REFRESH}
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 86_400)) == _utc(_REFRESH + 3600)
+        assert calc_stamina_full_time({"remainingStamina": 100, "lastRefreshTime": _REFRESH}) == _utc(_REFRESH)
+
+    @pytest.mark.parametrize("refresh", [None, 0, "", "junk"])
+    def test_missing_refresh_time_counts_from_now(self, refresh: Any):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit: dict[str, Any] = {"remainingStamina": 99}
+        if refresh is not None:
+            unit["lastRefreshTime"] = refresh
+        # Whole seconds, as lastRefreshTime carries them
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 0.75)) == _utc(_REFRESH + 1800)
+
+    def test_future_refresh_time_counts_from_now(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"remainingStamina": 99, "lastRefreshTime": _REFRESH + 600}
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH)) == _utc(_REFRESH + 1800)
+
+    def test_naive_now_is_local_time(self):
+        from datetime import datetime
+
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        now = datetime.now()
+        assert calc_stamina_full_time({"remainingStamina": 99}, now=now) == _utc(int(now.timestamp()) + 1800)
+
+    @pytest.mark.parametrize("unit", [None, [], {"lastRefreshTime": _REFRESH}, {"remainingStamina": "full"}])
+    def test_invalid_unit_raises(self, unit: Any):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        with pytest.raises(SwgohComlinkValueError, match="calc_stamina_full_time"):
+            calc_stamina_full_time(unit)
+
+
 def _feat(challenge_id: str, keycards: int = 1, artifact: str | None = None, reward_type: Any = 22) -> dict[str, Any]:
     rewards = [{"id": "", "type": reward_type, "maxQuantity": keycards}]
     if artifact:

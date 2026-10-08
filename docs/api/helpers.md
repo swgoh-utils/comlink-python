@@ -359,6 +359,27 @@ and data-transformation functions and do not require a comlink instance.
       show_root_heading: true
       show_root_full_path: false
 
+### calc_stamina_full_time
+
+Returns when a unit's Conquest stamina reaches 100, using the same regeneration
+model as `calc_current_stamina`.
+
+```python
+from datetime import datetime, timedelta, timezone
+
+from swgoh_comlink.helpers import calc_stamina_full_time
+
+# One entry of a player's Conquest status 'unitStamina' list
+unit = {"unitId": "...", "remainingStamina": 90, "lastRefreshTime": "1790164800"}
+full_at = calc_stamina_full_time(unit)
+time_left = max(full_at - datetime.now(timezone.utc), timedelta(0))
+```
+
+::: swgoh_comlink.helpers._conquest.calc_stamina_full_time
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
 ### get_conquest_feats
 
 Lists the feats for a Conquest event (the newest one by default), covering both
