@@ -518,6 +518,137 @@ print(effects["Potency Up"]["description"])
 
 ---
 
+## Item and Reward Helpers
+
+Functions for naming the items that rewards, previews and inventories carry, and
+catalogs for game data whose names cannot be derived from their ids. These do not
+require a comlink instance.
+
+### ItemNames
+
+Resolves an `(ItemType, id)` pair to a display name. Item ids are only unique within
+an `ItemType`, so both are needed. `ItemType` may be a number (`7`) or an enum name
+(`"MATERIAL"`), so game data fetched with or without `enums=True` works.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import DataItems, ItemNames, get_localization_dictionary
+
+comlink = SwgohComlink()
+game_data = comlink.get_game_data(
+    items=DataItems.MATERIAL
+    | DataItems.EQUIPMENT
+    | DataItems.UNITS
+    | DataItems.MYSTERY_STAT_MOD  # also covers 'mysteryBox'
+    | DataItems.STAT_MOD_SET
+    | DataItems.PLAYER_TITLE
+    | DataItems.PLAYER_PORTRAIT
+)
+names = ItemNames(game_data, get_localization_dictionary(comlink))
+
+names.get("MATERIAL", "unitshard_GLLEIA")  # 'Leia Organa'
+names.get(3, "GRIND")                      # 'Credits'
+names.get(16, "35155")                     # '5-dot Defense Square mod (A)'
+names.get(6, "")                           # None: XP names no particular item
+```
+
+!!! note
+    No game data collection names a currency, so currencies are named from
+    `CURRENCY_NAMES`, which is English whatever the localization. A mystery mod has
+    no name of its own and is described by what it rolls, in English with a
+    localized set name.
+
+::: swgoh_comlink.helpers._items.ItemNames
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_named_rewards
+
+Reads a reward preview list (a campaign mission's `rewardPreview`,
+`firstCompleteRewardPreview`, `instanceFirstCompleteRewardPreview` or
+`conditionalRewardsPreview`, or an event instance's `rewardPreview`) into named
+rewards. Items of a `conditionalRewardsPreview` are nested one level down, under
+`bucketItem`, and are listed with the requirement they depend on.
+
+```python
+from swgoh_comlink.helpers import get_named_rewards
+
+game_data = comlink.get_game_data(items=DataItems.CAMPAIGN | DataItems.MATERIAL | DataItems.UNITS)
+names = ItemNames(game_data, get_localization_dictionary(comlink))
+
+events = next(c for c in game_data["campaign"] if c["id"] == "EVENTS")
+for campaign_map in events["campaignMap"]:
+    for group in campaign_map["campaignNodeDifficultyGroup"]:
+        for node in group["campaignNode"]:
+            for mission in node["campaignNodeMission"]:
+                for reward in get_named_rewards(mission["conditionalRewardsPreview"], names):
+                    print(node["id"], mission["id"], reward["name"], reward["max_quantity"])
+```
+
+::: swgoh_comlink.helpers._items.get_named_rewards
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._items.NamedReward
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_mod_catalog
+
+Recovers an equipped mod's set, slot and rarity from its `definitionId`, and each
+set's name and how many mods complete it.
+
+```python
+from swgoh_comlink.helpers import get_mod_catalog
+
+game_data = comlink.get_game_data(items=DataItems.STAT_MOD_SET)  # also covers 'statMod'
+catalog = get_mod_catalog(game_data["statMod"], game_data["statModSet"], get_localization_dictionary(comlink))
+
+player = comlink.get_player(allycode=123456789)
+for equipped in player["rosterUnit"][0]["equippedStatMod"]:
+    mod = catalog["definitions"][equipped["definitionId"]]
+    print(mod["set_name"], mod["slot_name"], mod["rarity"], catalog["sets"][mod["set_id"]]["set_count"])
+```
+
+::: swgoh_comlink.helpers._items.get_mod_catalog
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._items.ModCatalog
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._items.ModSet
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._items.ModDefinition
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_data_disc_names
+
+::: swgoh_comlink.helpers._items.get_data_disc_names
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_player_title_names
+
+::: swgoh_comlink.helpers._items.get_player_title_names
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Omicron Helpers
 
 Functions for querying omicron skill data from game data collections.
@@ -643,3 +774,6 @@ accessible via `Constants` for backward compatibility.
 | `UNIT_RARITY_NAMES` | Rarity integer to display name mapping |
 | `LANGUAGES` | Supported game language codes |
 | `OMICRON_MODE` | Omicron mode IDs to game mode names |
+| `ITEM_TYPES` | `ItemType` number to enum member name |
+| `CURRENCY_TYPES` | `CurrencyType` number to enum member name |
+| `CURRENCY_NAMES` | `CurrencyType` member name to English display name |
