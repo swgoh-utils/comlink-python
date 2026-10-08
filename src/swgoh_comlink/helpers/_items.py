@@ -11,16 +11,16 @@ from ._localization import _localize
 from ._stat_data import CURRENCY_NAMES, CURRENCY_TYPES, ITEM_TYPES, MOD_SET_IDS, MOD_SLOTS, UNIT_RARITY_NAMES
 
 _ITEM_TYPE_NUMBERS = {name: number for number, name in ITEM_TYPES.items()}
-_UNIT = 2
-_CURRENCY = 3
-_MATERIAL = 7
-_EQUIPMENT = 11
-_MYSTERY_BOX = 14
-_MYSTERY_STAT_MOD = 16
-_PLAYER_TITLE = 17
-_PLAYER_PORTRAIT = 19
-_ARTIFACT = 23
-_LIGHTSPEED_TOKEN = 34
+_UNIT = _ITEM_TYPE_NUMBERS["UNIT"]
+_CURRENCY = _ITEM_TYPE_NUMBERS["CURRENCY"]
+_MATERIAL = _ITEM_TYPE_NUMBERS["MATERIAL"]
+_EQUIPMENT = _ITEM_TYPE_NUMBERS["EQUIPMENT"]
+_MYSTERY_BOX = _ITEM_TYPE_NUMBERS["MYSTERY_BOX"]
+_MYSTERY_STAT_MOD = _ITEM_TYPE_NUMBERS["MYSTERY_STAT_MOD"]
+_PLAYER_TITLE = _ITEM_TYPE_NUMBERS["PLAYER_TITLE"]
+_PLAYER_PORTRAIT = _ITEM_TYPE_NUMBERS["PLAYER_PORTRAIT"]
+_ARTIFACT = _ITEM_TYPE_NUMBERS["ARTIFACT"]
+_LIGHTSPEED_TOKEN = _ITEM_TYPE_NUMBERS["LIGHTSPEED_TOKEN"]
 
 # ItemType -> (game data collection, field holding the item's localization key). A mystery box is
 # named by its titleKey; everything else by nameKey.
@@ -43,7 +43,8 @@ _SHARD_PREFIX = "unitshard_"
 # numbers start at 2: STATMOD_SLOT_01 is the Square (see MOD_SLOTS).
 _MOD_SLOT_ENUMS = {f"STATMOD_SLOT_{n:02d}": n + 1 for n in range(1, 7)}
 _MOD_TIER_ENUMS = {f"STATMOD_TIER_{n:02d}": n for n in range(1, 6)}
-_RARITY_ENUMS = {name: int(number) for name, number in UNIT_RARITY_NAMES.items()}
+# Rarity also has NO_STAR (8), which UNIT_RARITY_NAMES leaves out.
+_RARITY_ENUMS = {**{name: int(number) for name, number in UNIT_RARITY_NAMES.items()}, "NO_STAR": 8}
 # A mod's tier as the letter the game shows on it.
 _MOD_TIER_LETTERS = {1: "E", 2: "D", 3: "C", 4: "B", 5: "A"}
 
@@ -83,12 +84,13 @@ class ModCatalog(TypedDict):
 class NamedReward(TypedDict):
     """A single reward item as returned by :func:`get_named_rewards`."""
 
-    item_type: int | str
-    """The ``ItemType`` number (see ``ITEM_TYPES``). An enum name the table does not list is kept as given."""
+    item_type: int | str | None
+    """The ``ItemType`` number (see ``ITEM_TYPES``). An enum name the table does not list is kept as given;
+    an item with no ``type`` has ``None``."""
     id: str
     name: str
-    """Display name; the item ``id`` (or the ``ItemType`` name for an item with no id) when it cannot be
-    resolved."""
+    """Display name; the item ``id`` (or the ``ItemType`` name for an item with no id, or ``""`` when it has
+    neither) when it cannot be resolved."""
     min_quantity: int
     max_quantity: int
     base_id: str | None
@@ -135,7 +137,7 @@ def _names_by_id(records: list[dict[str, Any]], localization: dict[str, str] | N
     return {
         record["id"]: _localize(localization, name_key, name_key)
         for record in records
-        if record.get("id") and (name_key := record.get("nameKey"))
+        if isinstance(record, dict) and record.get("id") and (name_key := record.get("nameKey"))
     }
 
 
@@ -214,6 +216,8 @@ def _mod_set_names(stat_mod_sets: list[dict[str, Any]], localization: dict[str, 
     """Set id to set name. A ``statModSet`` record keeps its localization key in ``name``, not ``nameKey``."""
     names: dict[str, str] = {}
     for mod_set in stat_mod_sets:
+        if not isinstance(mod_set, dict):
+            continue
         set_id = str(mod_set.get("id", ""))
         fallback = MOD_SET_IDS.get(set_id) or mod_set.get("name") or set_id
         names[set_id] = _localize(localization, mod_set.get("name"), fallback)
@@ -263,12 +267,12 @@ def get_mod_catalog(
             "set_count": _as_int(mod_set.get("setCount")) or 0,
         }
         for mod_set in stat_mod_sets
-        if mod_set.get("id") is not None
+        if isinstance(mod_set, dict) and mod_set.get("id") is not None
     }
 
     definitions: dict[str, ModDefinition] = {}
     for mod in stat_mods:
-        if not mod.get("id"):
+        if not isinstance(mod, dict) or not mod.get("id"):
             continue
         set_id = str(mod.get("setId", ""))
         slot = _as_int(mod.get("slot"), _MOD_SLOT_ENUMS) or 0
@@ -352,14 +356,21 @@ class ItemNames:
         _check_localization(localization, "ItemNames")
         self._localization = localization
         self._records: dict[int, dict[str, dict[str, Any]]] = {
-            item_type: {str(r["id"]): r for r in game_data.get(collection) or [] if r.get("id") is not None}
+            item_type: {
+                str(r["id"]): r
+                for r in game_data.get(collection) or []
+                if isinstance(r, dict) and r.get("id") is not None
+            }
             for item_type, (collection, _) in _NAMED_COLLECTIONS.items()
         }
         # The units collection has a row per rarity; any of them names the unit.
         self._units: dict[str, dict[str, Any]] = {}
         for unit in game_data.get("units") or []:
-            self._units.setdefault(unit.get("baseId", ""), unit)
-        self._mystery_mods = {str(r["id"]): r for r in game_data.get("mysteryStatMod") or [] if r.get("id")}
+            if isinstance(unit, dict):
+                self._units.setdefault(unit.get("baseId", ""), unit)
+        self._mystery_mods = {
+            str(r["id"]): r for r in game_data.get("mysteryStatMod") or [] if isinstance(r, dict) and r.get("id")
+        }
         self._mod_sets = _mod_set_names(game_data.get("statModSet") or [], localization)
         self._cache: dict[tuple[int, str], str | None] = {}
 
@@ -436,7 +447,13 @@ def get_named_rewards(rewards: list[dict[str, Any]], item_names: ItemNames) -> l
     ``rewardPreview``. A ``conditionalRewardsPreview`` entry does not hold an item itself: its items are
     nested under ``bucketItem``, paid while its ``requirementId`` holds (a Galactic Legend event's shards
     until the tier's allotment is exhausted, for example). Those items are listed in their place, with
-    ``requirement_id`` set. Entries that are neither an item nor a bucket are skipped.
+    ``requirement_id`` set. Entries that are neither an item nor a bucket are skipped, as are entries and
+    bucket items that are not dictionaries.
+
+    A campaign mission's rank reward previews (``rankRewardPreview``,
+    ``immediateRegularRankRewardPreview``) are not reward lists of this shape: each entry is a rank range
+    holding its items under ``primaryReward`` and ``detailedReward``. Passed as a whole they read as
+    ``[]``; pass an entry's ``detailedReward`` (or ``primaryReward``) list instead.
 
     Args:
         rewards: A reward preview list.
@@ -467,26 +484,34 @@ def get_named_rewards(rewards: list[dict[str, Any]], item_names: ItemNames) -> l
         if not isinstance(entry, dict):
             continue
         if "bucketItem" in entry:
-            items = [(item, entry.get("requirementId") or None) for item in entry.get("bucketItem") or []]
+            items = [
+                (item, entry.get("requirementId") or None)
+                for item in entry.get("bucketItem") or []
+                if isinstance(item, dict)
+            ]
         elif "type" in entry:
             items = [(entry, None)]
         else:
             continue
         for item, requirement_id in items:
-            number = _item_type_number(item.get("type"))
-            item_type: int | str = number if number is not None else str(item.get("type"))
+            raw_type = item.get("type")
+            number = _item_type_number(raw_type)
+            item_type: int | str | None = (
+                number if number is not None else (None if raw_type is None else str(raw_type))
+            )
             item_id = str(item.get("id") or "")
             base_id: str | None = None
             if number == _UNIT:
                 base_id = item_id.split(":", 1)[0]
             elif number == _MATERIAL and item_id.startswith(_SHARD_PREFIX):
                 base_id = item_id.removeprefix(_SHARD_PREFIX)
-            fallback = item_id or ITEM_TYPES.get(number or 0) or str(item_type)
+            fallback = item_id or ITEM_TYPES.get(number or 0) or ("" if item_type is None else str(item_type))
+            name = fallback if item_type is None else item_names.get(item_type, item_id, fallback) or fallback
             result.append(
                 {
                     "item_type": item_type,
                     "id": item_id,
-                    "name": item_names.get(item_type, item_id, fallback) or fallback,
+                    "name": name,
                     "min_quantity": _as_int(item.get("minQuantity")) or 0,
                     "max_quantity": _as_int(item.get("maxQuantity")) or 0,
                     "base_id": base_id,

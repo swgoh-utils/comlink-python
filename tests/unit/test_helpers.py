@@ -1612,8 +1612,40 @@ class TestGetNamedRewards:
         with pytest.raises(SwgohComlinkValueError, match="item_names"):
             get_named_rewards([], not_item_names)
 
+    def test_item_without_type_and_non_dict_bucket_items(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        rewards: list[Any] = [
+            {"bucketItem": ["not an item", None, {"id": "x"}, {"type": 6}], "requirementId": "req"},
+        ]
+        result = get_named_rewards(rewards, ItemNames(_ITEM_GAME_DATA, _ITEM_LOC))
+        assert [(r["item_type"], r["id"], r["name"]) for r in result] == [(None, "x", "x"), (6, "", "XP")]
+
 
 class TestItemHelpersRobustness:
+    def test_non_dict_records_are_skipped(self):
+        from swgoh_comlink.helpers import ItemNames, get_data_disc_names, get_mod_catalog
+
+        junk: list[Any] = ["x", None]
+        assert get_data_disc_names([*junk, *_ITEM_GAME_DATA["artifactDefinition"]], _ITEM_LOC) == {
+            "artifact_guard_and_pentrate_3_cost_rare": "Guard and Penetrate"
+        }
+        catalog = get_mod_catalog([*junk, {"id": "1", "setId": "4", "slot": 2, "rarity": 5}], junk)
+        assert catalog["sets"] == {} and list(catalog["definitions"]) == ["1"]
+        game_data = {key: [*junk, *records] for key, records in _ITEM_GAME_DATA.items()}
+        names = ItemNames(game_data, _ITEM_LOC)
+        assert names.get(7, "unitshard_GLLEIA") == "Leia Organa"
+        assert names.get(2, "ANAKINKNIGHT") == "Jedi Knight Anakin"
+        assert names.get(16, "35155") == "5-dot Defense Square mod (A)"
+
+    def test_no_star_rarity_enum(self):
+        from swgoh_comlink.helpers import ItemNames, get_mod_catalog
+
+        catalog = get_mod_catalog([{"id": "1", "rarity": "NO_STAR"}, {"id": "2", "rarity": 8}], [])
+        assert catalog["definitions"]["1"]["rarity"] == catalog["definitions"]["2"]["rarity"] == 8
+        mod = {"id": "m", "slot": [2], "setId": "4", "minRarity": "NO_STAR", "maxRarity": 8, "minTier": 1, "maxTier": 1}
+        assert ItemNames({"mysteryStatMod": [mod]}).get(16, "m") == "8-dot Speed Square mod (E)"
+
     def test_valid_calls_do_not_walk_the_stack(self, monkeypatch: pytest.MonkeyPatch):
         import inspect
 

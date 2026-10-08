@@ -569,7 +569,10 @@ Reads a reward preview list (a campaign mission's `rewardPreview`,
 `firstCompleteRewardPreview`, `instanceFirstCompleteRewardPreview` or
 `conditionalRewardsPreview`, or an event instance's `rewardPreview`) into named
 rewards. Items of a `conditionalRewardsPreview` are nested one level down, under
-`bucketItem`, and are listed with the requirement they depend on.
+`bucketItem`, and are listed with the requirement they depend on. A mission's rank
+reward previews (`rankRewardPreview`, `immediateRegularRankRewardPreview`) are
+not read: each of their entries is a rank range, so pass an entry's
+`detailedReward` (or `primaryReward`) list instead.
 
 ```python
 from swgoh_comlink.helpers import get_named_rewards
