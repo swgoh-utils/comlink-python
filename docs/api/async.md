@@ -27,8 +27,10 @@ finally:
 
 The `retry` argument takes the same [`RetryPolicy`](comlink.md#retries-and-pacing)
 as the synchronous client. Waits use `asyncio.sleep`, so they do not block the
-event loop. Pacing applies across concurrent tasks on one client, and the
-tasks start in the order they asked:
+event loop. Pacing and the hold after a rate refusal apply across concurrent
+tasks on one client, and the tasks start in the order they asked. A task
+cancelled while it waits gives its slot back, so cancelling a batch does not
+delay the calls that follow it:
 
 ```python
 import asyncio

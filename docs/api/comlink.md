@@ -13,8 +13,15 @@ was not carried out:
 
 Before each retry the client waits for the `Retry-After` header when the
 response has one (capped at `max_retry_after`), otherwise for the next value
-of `backoff` (5, 10, 20 and 40 seconds by default). Other errors are raised at
-once.
+of `backoff` (5, 10, 20 and 40 seconds by default), plus a random extra of up
+to `jitter` times that wait (20% by default) so that calls refused together do
+not all retry at once. Jitter only adds time: no retry starts before the
+backoff or `Retry-After` wait. Other errors are raised at once.
+
+A rate refusal also holds back the endpoint it came from. Until the retry wait
+has passed, no call to that endpoint starts on the client, whether it is a
+retry or a new call, so concurrent callers back off together rather than
+adding to the refusal. Endpoints listed in `unpaced_endpoints` are never held.
 
 `min_interval` also spaces calls to the same endpoint. The game refuses calls
 with `Rate exceeded!` at roughly 15 calls a second per RPC on one session,
