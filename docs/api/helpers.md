@@ -137,6 +137,99 @@ General-purpose validation and conversion helpers.
 
 ---
 
+## Wire Value Helpers
+
+Comlink payloads are loosely typed. These functions read one raw field each and fail
+soft to a fixed default, so one unusable field never costs the whole record. They do
+not need a comlink instance.
+
+| Payload quirk | Helper |
+|---------------|--------|
+| `int64` values arrive as strings (`"1655938556"`) | `as_int` |
+| Ids such as `matchId` sometimes arrive as integers | `as_id` |
+| Enums arrive as an int, a numeric string, the member name, or a decoder-style name such as `CURRENCYTYPE_SHARDCURRENCY` | `parse_enum`, `as_scalar` |
+| Timestamps are seconds (`guildJoinTime`, Conquest `lastRefreshTime`) or milliseconds (`lastActivityTime`), and `0` means "no time" | `as_epoch` |
+| A repeated field with one element can decode as a single object | `as_list` |
+| Unit identifiers are `"BASEID:SEVEN_STAR"` or a bare `"BASEID"` | `base_id` |
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import as_epoch, as_int, base_id, parse_enum
+
+comlink = SwgohComlink()
+player = comlink.get_player(allycode=123456789)
+last_active = as_epoch(player["lastActivityTime"])  # aware UTC datetime, or None
+season_score = as_int(player.get("lifetimeSeasonScore"))
+roster = {base_id(unit["definitionId"]) for unit in player["rosterUnit"]}
+
+currency = comlink.get_enums()["CurrencyType"]
+parse_enum(16, currency)                            # 'SHARD_CURRENCY'
+parse_enum("CURRENCYTYPE_SHARDCURRENCY", currency)  # 'SHARD_CURRENCY'
+```
+
+!!! note
+    `bool` is never read as a number: `as_int(True)` is `0`, not `1`, and
+    `parse_enum(True, ...)` is `None`. Values below 10<sup>11</sup> are read as
+    seconds by `as_epoch` (10<sup>11</sup> seconds is the year 5138).
+
+### as_int
+
+::: swgoh_comlink.helpers._wire.as_int
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### as_str
+
+::: swgoh_comlink.helpers._wire.as_str
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### as_id
+
+::: swgoh_comlink.helpers._wire.as_id
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### as_scalar
+
+::: swgoh_comlink.helpers._wire.as_scalar
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### as_epoch
+
+::: swgoh_comlink.helpers._wire.as_epoch
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### as_list
+
+::: swgoh_comlink.helpers._wire.as_list
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### base_id
+
+::: swgoh_comlink.helpers._wire.base_id
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### parse_enum
+
+::: swgoh_comlink.helpers._wire.parse_enum
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Arena Helpers
 
 ### get_arena_payout
