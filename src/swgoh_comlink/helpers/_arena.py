@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from math import floor
 
 
@@ -27,32 +27,29 @@ def get_max_rank_jump(current_rank: int) -> int:
         return int(round(current_rank * 0.85 - 1))
 
 
-def get_arena_payout(offset: int, fleet: bool = False) -> datetime:
+def get_arena_payout(offset: int, fleet: bool = False, *, now: datetime | None = None) -> datetime:
     """
     Calculate the next arena payout time.
 
-    This function computes the next payout time based on the given offset, considering
-    whether the requested payout is for fleet or squad arena. It adjusts for time zone
-    offsets and ensures that the computed payout time is always in the future relative
-    to the current time.
+    A player's payout is a fixed time each day: 18:00 UTC (squad) or 19:00 UTC (fleet), moved back by
+    the player's ``localTimeZoneOffsetMinutes``.
 
     Args:
-        offset (int): Time offset in minutes to adjust the payout time.
-        fleet (bool): Indicates if the payout is for fleet arena (True) or regular arena
+        offset (int): The player's ``localTimeZoneOffsetMinutes`` from ``get_player()``.
+        fleet (bool): Indicates if the payout is for fleet arena (True) or squad arena
             (False). Defaults to False.
+        now (datetime | None): The time to count from. A naive value is read as local time.
+            Defaults to the current time.
 
     Returns:
-        datetime: The computed next payout time as a datetime object.
+        datetime: The next payout after ``now``, as a timezone-aware UTC datetime.
     """
-    payout = datetime.now()
-    utc_offset = payout.astimezone().utcoffset()
-    local_offset = -(utc_offset.total_seconds() / 60) if utc_offset is not None else 0.0
-    if fleet:
-        payout = payout.replace(hour=19, minute=0, second=0, microsecond=0)
-    else:
-        payout = payout.replace(hour=18, minute=0, second=0, microsecond=0)
-    payout = payout - timedelta(minutes=(offset + local_offset))
-    # Loop until payout time is in the future in case payout time is adjusted to a past time
-    while payout < datetime.now():
-        payout = payout + timedelta(days=1)
+    now = datetime.now(timezone.utc) if now is None else now.astimezone(timezone.utc)
+    hour = 19 if fleet else 18
+    payout = now.replace(hour=hour, minute=0, second=0, microsecond=0) - timedelta(minutes=offset)
+    # The offset can move the payout onto another UTC day, so step back as well as forward.
+    while payout - timedelta(days=1) > now:
+        payout -= timedelta(days=1)
+    while payout <= now:
+        payout += timedelta(days=1)
     return payout

@@ -249,27 +249,53 @@ class TestGetMaxRankJump:
 
 
 class TestGetArenaPayout:
-    def test_squad_uses_hour_18(self):
+    # localTimeZoneOffsetMinutes: payout is 18:00 (squad) / 19:00 (fleet) UTC moved back by the offset
+    @staticmethod
+    def _at(hour: int, minute: int = 0, day: int = 8):
+        from datetime import datetime, timezone
+
+        return datetime(2026, 10, day, hour, minute, tzinfo=timezone.utc)
+
+    def test_squad_and_fleet_anchor_hours(self):
         from swgoh_comlink.helpers._arena import get_arena_payout
 
-        result = get_arena_payout(offset=0, fleet=False)
-        # The payout should be at 18:00 local adjusted for UTC offset
-        assert result is not None
+        assert get_arena_payout(0, now=self._at(12)) == self._at(18)
+        assert get_arena_payout(0, fleet=True, now=self._at(12)) == self._at(19)
 
-    def test_fleet_uses_hour_19(self):
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        result = get_arena_payout(offset=0, fleet=True)
-        assert result is not None
-
-    def test_returns_future_datetime(self):
-        from datetime import datetime
+    def test_returns_aware_utc(self):
+        from datetime import timezone
 
         from swgoh_comlink.helpers._arena import get_arena_payout
 
-        # Using a large negative offset to push payout into the future
-        result = get_arena_payout(offset=-1440)
-        assert result > datetime.now()
+        assert get_arena_payout(0).tzinfo == timezone.utc
+
+    def test_offset_moves_payout(self):
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        # UTC+10: 19:00 local is 09:00 UTC
+        assert get_arena_payout(600, fleet=True, now=self._at(8)) == self._at(9)
+
+    def test_passed_payout_rolls_to_next_day(self):
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        assert get_arena_payout(0, now=self._at(18)) == self._at(18, day=9)
+        assert get_arena_payout(0, now=self._at(20)) == self._at(18, day=9)
+
+    def test_payout_on_the_next_utc_day_is_not_skipped(self):
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        # US Pacific (UTC-7) fleet pays at 02:00 UTC. At 01:00 UTC the next payout is an hour away,
+        # not the one 25 hours later.
+        assert get_arena_payout(-420, fleet=True, now=self._at(1)) == self._at(2)
+
+    def test_naive_now_is_local_time(self):
+        from datetime import datetime, timedelta
+
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        now = datetime.now()
+        payout = get_arena_payout(0, now=now)
+        assert timedelta(0) < payout - now.astimezone() <= timedelta(days=1)
 
 
 # ── _omicron ────────────────────────────────────────────────────────────
@@ -1998,15 +2024,3 @@ class TestGetDatacronDismantleValueNoDustRecipe:
         sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": None}]}]
         result = get_datacron_dismantle_value(datacron, sets, [])
         assert result == {}
-
-
-class TestGetArenaPayoutEdge:
-    def test_payout_already_passed_adds_day(self):
-        from datetime import datetime
-
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        # Use a large positive offset to push payout well into the past
-        # This forces the payout < datetime.now() branch
-        result = get_arena_payout(offset=1440)
-        assert result > datetime.now()
