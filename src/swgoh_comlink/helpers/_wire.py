@@ -246,9 +246,10 @@ def parse_enum(value: Any, members: Mapping[str, int], *, enum_name: str | None 
     upper-cased and without underscores (``"CURRENCYTYPE_SHARDCURRENCY"``). All four resolve to
     ``"SHARD_CURRENCY"``. Names are also matched ignoring case and underscores.
 
-    A decoder-style name must hold exactly one underscore, and its first half must be the enum's
-    type name when that is known: from *enum_name*, or else from a ``<TypeName>_DEFAULT`` member
-    (most of the game's enums have one, such as ``CurrencyType_DEFAULT``). This keeps an unknown
+    A decoder-style name must be upper-case and hold exactly one underscore, and its first half
+    must be the enum's type name when that is known: from *enum_name*, or else from a
+    ``<TypeName>_DEFAULT`` member (most of the game's enums have one, such as
+    ``CurrencyType_DEFAULT``). This keeps an unknown
     member from a newer game version, such as ``"NEW_GRIND"``, from being read as ``"GRIND"``.
     When the type name is not known, any first half is accepted. ``bool`` and floats are never read
     as a member value.
@@ -293,11 +294,17 @@ def parse_enum(value: Any, members: Mapping[str, int], *, enum_name: str | None 
         return text
     digits = text.removeprefix("-")
     if digits.isascii() and digits.isdigit():
-        return parse_enum(int(text), members)
+        try:
+            number = int(text)
+        except ValueError:  # past the interpreter's limit on digits in an int string
+            return None
+        return parse_enum(number, members)
 
     candidates = [_squash(text)]
     head, _, tail = text.partition("_")
-    if tail and "_" not in tail:
+    # Decoders upper-case the whole name, so a mixed or lower-case spelling ("server_error") is only
+    # ever a member name. Without this, "server_error" would also offer "ERROR" and fit two members.
+    if tail and "_" not in tail and text.isupper():
         type_name = enum_name if enum_name is not None else _enum_type_name(members)
         if type_name is None or _squash(head) == _squash(type_name):
             candidates.append(_squash(tail))

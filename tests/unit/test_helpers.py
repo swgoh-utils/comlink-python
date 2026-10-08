@@ -1257,6 +1257,8 @@ class TestParseEnum:
             # Not plain ASCII whole numbers
             "--16",
             "¹⁶",
+            # Past the interpreter's limit on digits in an int string
+            "1" * 5000,
         ],
     )
     def test_unknown_returns_none(self, value: Any):
@@ -1283,6 +1285,32 @@ class TestParseEnum:
         assert parse_enum("METADATAREQUESTTYPE_DEFAULT", members) is None
         assert parse_enum("DEFAULT", members) == "DEFAULT"
         assert parse_enum("METADATAREQUESTTYPE_CLIENTPARAMS", members) == "CLIENT_PARAMS"
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("server_error", "SERVER_ERROR"),
+            ("Server_Error", "SERVER_ERROR"),
+            ("SERVER_ERROR", "SERVER_ERROR"),
+            ("error", "ERROR"),
+            ("feature_suspended", "FEATURE_SUSPENDED"),
+            # Upper-case with one underscore is still read as a decoder-style name
+            ("RESPONSECODE_SUSPENDED", "SUSPENDED"),
+        ],
+    )
+    def test_case_variant_without_known_type(self, value: str, expected: str):
+        from swgoh_comlink.helpers import parse_enum
+
+        # No <Type>_DEFAULT member, and one member is another's last word: a lower-case member
+        # name must not also be read as a decoder-style name for that last word.
+        members = {"OK": 0, "SERVER_ERROR": 1, "ERROR": 2, "FEATURE_SUSPENDED": 3, "SUSPENDED": 4}
+        assert parse_enum(value, members) == expected
+
+    def test_lower_case_type_default_member(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        members = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
+        assert parse_enum("metadatarequesttype_default", members) == "MetadataRequestType_DEFAULT"
 
     def test_alias_value_returns_first_name(self):
         from swgoh_comlink.helpers import parse_enum
