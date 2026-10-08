@@ -9,7 +9,7 @@ from math import floor
 from typing import Any, TypedDict
 
 from ..exceptions import SwgohComlinkValueError
-from ._localization import parse_swgoh_string
+from ._localization import _localize
 from ._utils import get_function_name
 
 # Roman numeral in a feat challenge id -> difficulty name (I = Easy, II = Normal, III = Hard)
@@ -79,13 +79,6 @@ def calc_current_stamina(unit: dict[str, Any], pass_plus: bool = False) -> int:
     # Conquest Pass+ holders increase stamina regeneration by 33%
 
     return min(floor(time_diff_minutes / 30 * acceleration_factor) + remaining_stamina, 100)
-
-
-def _localize(localization: dict[str, str] | None, key: str | None, default: str) -> str:
-    """Return the markup-free localized string for ``key``, or ``default`` when it cannot be resolved."""
-    if not key or localization is None or (raw := localization.get(key)) is None:
-        return default
-    return parse_swgoh_string(raw).strip() or default
 
 
 def get_conquest_feats(
