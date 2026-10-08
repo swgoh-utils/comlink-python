@@ -1111,7 +1111,7 @@ class TestAsId:
 
 class TestAsScalar:
     @pytest.mark.parametrize(
-        ("value", "expected"), [(3, 3), (0, 0), ("ZONE_OPEN", "ZONE_OPEN"), (True, None), (None, None), (1.5, None)]
+        ("value", "expected"), [(3, 3), (0, 0), ("CHARACTER", "CHARACTER"), (True, None), (None, None), (1.5, None)]
     )
     def test_keeps_int_or_str(self, value: Any, expected: int | str | None):
         from swgoh_comlink.helpers import as_scalar

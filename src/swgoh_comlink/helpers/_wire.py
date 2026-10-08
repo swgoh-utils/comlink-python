@@ -110,7 +110,7 @@ def as_id(value: Any, default: str = "") -> str:
 def as_scalar(value: Any) -> int | str | None:
     """Read an enum-rendered field exactly as sent: an int or a string, otherwise ``None``.
 
-    An enum field (``TerritoryZoneState``, ``ChannelEventType`` and the like) is a bare integer
+    An enum field (``CombatType``, ``ForceAlignment`` and the like) is a bare integer
     when fetched with ``enums=False`` and a name with ``enums=True``, so both are kept unchanged.
     ``bool`` is excluded despite subclassing ``int``. Use :func:`parse_enum` to resolve either
     form to the member name.
@@ -122,10 +122,10 @@ def as_scalar(value: Any) -> int | str | None:
         *value* when it is an ``int`` or a ``str``, otherwise ``None``.
 
     Examples:
-        >>> as_scalar(3)
-        3
-        >>> as_scalar("ZONE_OPEN")
-        'ZONE_OPEN'
+        >>> as_scalar(1)
+        1
+        >>> as_scalar("CHARACTER")
+        'CHARACTER'
         >>> as_scalar(True) is None
         True
     """
@@ -203,9 +203,8 @@ def as_list(value: Any) -> list[Any]:
 def base_id(unit_identifier: Any) -> str:
     """Return the base id from a unit identifier such as ``"GENERALSKYWALKER:SEVEN_STAR"``.
 
-    Unit identifiers carry the unit's rarity after a colon, but not always: an unfilled
-    Territory Battle platoon slot names its required unit with the bare base id (``"BOUSHH"``),
-    so the identifier is split rather than sliced.
+    Unit identifiers usually carry the unit's rarity after a colon, but some payloads name a unit
+    by its bare base id (``"BOUSHH"``), so the identifier is split rather than sliced.
 
     Args:
         unit_identifier: A unit ``definitionId``, ``unitIdentifier`` or game data unit ``id``.
