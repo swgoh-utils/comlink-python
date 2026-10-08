@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import httpx
 import pytest
@@ -265,6 +266,46 @@ def test_sync_retry_re_signs_each_attempt(httpx_mock: HTTPXMock, waits: list[flo
     requests = httpx_mock.get_requests()
     assert len(requests) == 2
     assert all("Authorization" in request.headers and "X-Date" in request.headers for request in requests)
+
+
+# ── Giving up ────────────────────────────────────────────────────────────
+
+
+def test_sync_logs_when_retries_run_out(
+    httpx_mock: HTTPXMock, waits: list[float], caplog: pytest.LogCaptureFixture
+) -> None:
+    httpx_mock.add_response(status_code=429, is_reusable=True)
+
+    with caplog.at_level(logging.INFO, logger="swgoh_comlink"), pytest.raises(SwgohComlinkRateLimitError):
+        SwgohComlink(url=URL, retry=RetryPolicy(attempts=2)).get_player(allycode=123456789)
+
+    assert caplog.messages[-1] == "SwgohComlinkRateLimitError on player; giving up after 2 attempts"
+
+
+async def test_async_logs_when_retries_run_out(
+    httpx_mock: HTTPXMock, waits: list[float], caplog: pytest.LogCaptureFixture
+) -> None:
+    httpx_mock.add_response(status_code=503, json=UNAVAILABLE, is_reusable=True)
+
+    with caplog.at_level(logging.INFO, logger="swgoh_comlink"):
+        async with SwgohComlinkAsync(url=URL, retry=RetryPolicy(attempts=2)) as client:
+            with pytest.raises(SwgohComlinkUnavailableError):
+                await client.get_player(allycode=123456789)
+
+    assert caplog.messages[-1] == "SwgohComlinkUnavailableError on player; giving up after 2 attempts"
+
+
+def test_no_give_up_log_without_a_retry(
+    httpx_mock: HTTPXMock, waits: list[float], caplog: pytest.LogCaptureFixture
+) -> None:
+    httpx_mock.add_response(status_code=400, is_reusable=True)
+
+    with caplog.at_level(logging.INFO, logger="swgoh_comlink"):
+        for client in (SwgohComlink(url=URL), SwgohComlink(url=URL, retry=RetryPolicy())):
+            with pytest.raises(SwgohComlinkClientError):
+                client.get_player(allycode=123456789)
+
+    assert not any("giving up" in message for message in caplog.messages)
 
 
 # ── Pacing ───────────────────────────────────────────────────────────────

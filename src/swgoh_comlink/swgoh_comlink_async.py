@@ -137,6 +137,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             except SwgohComlinkHTTPError as exc:
                 delay = None if policy is None else policy.retry_delay(exc, attempt)
                 if policy is None or delay is None:
+                    if policy is not None and attempt > 1:
+                        logger.info("%s on %s; giving up after %d attempts", type(exc).__name__, endpoint, attempt)
                     raise
                 logger.info(
                     "%s on %s (attempt %d of %d); retrying in %.1fs",
