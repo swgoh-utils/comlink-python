@@ -2166,6 +2166,67 @@ class TestGetTbPlatoonDefinitions:
             get_tb_platoon_definitions(_TB_DEFS, tb_id="t99D")
 
 
+def test_tb_helpers_read_type_prefixed_enum_names():
+    from swgoh_comlink.helpers import get_tb_mission_requirements, get_tb_platoon_definitions, get_tb_star_thresholds
+
+    # Some servers send enums=True names prefixed with their type and without inner underscores.
+    definition = {
+        "id": "t05D",
+        "conflictZoneDefinition": [
+            {
+                "zoneDefinition": _tb_zone("tb3_phase03_conflict01_bonus"),
+                "victoryPointRewards": [
+                    _tb_bracket("50", "TERRITORYREWARDTYPE_MYSTERYBOXCONFLICT"),
+                    _tb_bracket("90", "TERRITORYREWARDTYPE_VICTORYPOINT"),
+                ],
+            }
+        ],
+        "strikeZoneDefinition": [
+            {**_tb_mission_zone("tb3_phase01_conflict01_strike02", "p", "COMBAT_02"), "combatType": "COMBATTYPE_SHIP"}
+        ],
+        "reconZoneDefinition": [
+            {
+                "zoneDefinition": _tb_zone("tb3_phase01_conflict01_recon01", "p"),
+                "unitRarity": "RARITY_SIXSTAR",
+                "unitRelicTier": "RELICTIER_RELICTIER07",
+                "combatType": "COMBATTYPE_CHARACTER",
+                "platoonDefinition": [
+                    _tb_platoon("platoon-1", "100", "TERRITORYREWARDTYPE_GALACTICSCORE"),
+                    _tb_platoon("platoon-2", "999", "TERRITORYREWARDTYPE_MYSTERYBOXCONFLICT"),
+                ],
+            }
+        ],
+    }
+    gate = _tb_gate(minimumRelicTier="RELICTIER_RELICTIER05", minimumUnitRarity="RARITY_SEVENSTAR",
+                    minimumUnitTier="UNITTIER_TIER12")  # fmt: skip
+    campaigns = [
+        {
+            "id": "t05D",
+            "campaignMap": [
+                {
+                    "id": "TB_MAP",
+                    "campaignNodeDifficultyGroup": [
+                        {
+                            "campaignNodeDifficulty": 4,
+                            "campaignNode": [
+                                {"id": "NODE_1", "campaignNodeMission": [_tb_campaign_mission("COMBAT_02", gate)]}
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+
+    (zone,) = get_tb_star_thresholds([definition])
+    assert zone["stars"] == [90]
+    (mission,) = get_tb_mission_requirements([definition], campaigns, _TB_CATEGORIES)
+    assert mission["is_fleet"] is True
+    assert (mission["min_relic"], mission["min_rarity"], mission["min_gear"]) == (5, 7, 12)
+    (recon,) = get_tb_platoon_definitions([definition])
+    assert (recon["is_fleet"], recon["min_rarity"], recon["min_relic"], recon["total_points"]) == (False, 6, 7, 100)
+
+
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 

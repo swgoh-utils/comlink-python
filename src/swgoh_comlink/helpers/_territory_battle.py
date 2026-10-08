@@ -16,11 +16,11 @@ from ._utils import get_function_name
 # The two zone arrays that hold missions, and the mission type each one means. A special-mission campaign
 # mission can still sit in the strike array (the Geonosis maps put their point-paying ones there).
 _MISSION_ZONES = (("strikeZoneDefinition", "combat"), ("covertZoneDefinition", "special"))
-# TerritoryRewardType values, as integers (enums=False) or names (enums=True). A victoryPointRewards bracket
-# that pays MYSTERY_BOX_CONFLICT (3) is not a star.
-_GALACTIC_SCORE = {1, "GALACTIC_SCORE"}
-_VICTORY_POINT = {2, "VICTORY_POINT"}
-_SHIP = {2, "SHIP"}
+# TerritoryRewardType and CombatType values. A victoryPointRewards bracket that pays MYSTERY_BOX_CONFLICT (3)
+# is not a star.
+_GALACTIC_SCORE = 1
+_VICTORY_POINT = 2
+_SHIP = 2
 # Over a third of the game's categories key their name as the literal 'PLACEHOLDER'; none is a real name.
 _PLACEHOLDER = "PLACEHOLDER"
 _SCORE_ROW = "GALACTIC_SCORE"
@@ -29,14 +29,27 @@ _VERSION_3_KEYS = ("territoryBattleVersion3", "territoryBattleVersion_3")
 # int32 max: the game's "no limit" for maxUnitCountPerPlayer and maxAttemptsAllowed.
 _UNLIMITED = 2**31 - 1
 _PHASE = re.compile(r"phase(\d+)", re.IGNORECASE)
-# Enum names sent with enums=True for the integer gate fields.
-_RARITY_NAMES = {name: rarity for rarity, name in UNIT_RARITY.items()}
-_UNIT_TIER_NAMES = {f"TIER_{tier:02d}": tier for tier in range(1, 21)}
-_RELIC_TIER_NAMES = {
-    "RELIC_LOCKED": 1,
-    "RELIC_UNLOCKED": 2,
-    **{f"RELIC_TIER_{tier:02d}": tier + Constants.RELIC_OFFSET for tier in range(1, 51)},
-}
+
+
+def _enum_names(names: Mapping[str, int]) -> tuple[tuple[str, int], ...]:
+    """Enum names as matched by :func:`_wire_int`: upper case without underscores, longest first."""
+    return tuple(sorted(((name.replace("_", ""), number) for name, number in names.items()), key=lambda n: -len(n[0])))
+
+
+# Enum names sent with enums=True. Servers spell them either bare (VICTORY_POINT, RELIC_TIER_05) or prefixed
+# with their type and without inner underscores (TERRITORYREWARDTYPE_VICTORYPOINT, RELICTIER_RELICTIER05);
+# both end in the same letters once underscores are removed, so names are matched by suffix.
+_REWARD_TYPE_NAMES = _enum_names({"GALACTIC_SCORE": 1, "VICTORY_POINT": 2, "MYSTERY_BOX_CONFLICT": 3})
+_COMBAT_TYPE_NAMES = _enum_names({"CHARACTER": 1, "SHIP": 2})
+_RARITY_NAMES = _enum_names({name: rarity for rarity, name in UNIT_RARITY.items()})
+_UNIT_TIER_NAMES = _enum_names({f"TIER_{tier:02d}": tier for tier in range(1, 21)})
+_RELIC_TIER_NAMES = _enum_names(
+    {
+        "RELIC_LOCKED": 1,
+        "RELIC_UNLOCKED": 2,
+        **{f"RELIC_TIER_{tier:02d}": tier + Constants.RELIC_OFFSET for tier in range(1, 51)},
+    }
+)
 
 
 class TBZoneStars(TypedDict):
@@ -161,11 +174,12 @@ class TBReconZone(TypedDict):
     total_points: int
 
 
-def _wire_int(value: Any, names: Mapping[str, int] | None = None) -> int:
+def _wire_int(value: Any, names: tuple[tuple[str, int], ...] = ()) -> int:
     """An integer game data field as sent with or without enums.
 
     Numbers may arrive as ints or, for int64 fields, as strings; with ``enums=True`` an enum field arrives as
-    its name, which is looked up in ``names``. Anything unrecognized is 0.
+    its name, which is matched against ``names`` (from :func:`_enum_names`) by suffix, so both the bare and
+    the type-prefixed spelling are read. Anything unrecognized is 0.
     """
     if isinstance(value, int):
         return int(value)
@@ -173,7 +187,8 @@ def _wire_int(value: Any, names: Mapping[str, int] | None = None) -> int:
         try:
             return int(value)
         except ValueError:
-            return (names or {}).get(value.upper(), 0)
+            spelled = value.upper().replace("_", "")
+            return next((number for name, number in names if spelled.endswith(name)), 0)
     return 0
 
 
@@ -312,7 +327,7 @@ def get_tb_star_thresholds(
             stars = sorted(
                 _wire_int(bracket.get("galacticScoreRequirement"))
                 for bracket in zone.get("victoryPointRewards") or []
-                if (bracket.get("reward") or {}).get("type") in _VICTORY_POINT
+                if _wire_int((bracket.get("reward") or {}).get("type"), _REWARD_TYPE_NAMES) == _VICTORY_POINT
             )
             result.append(
                 {
@@ -423,7 +438,7 @@ def get_tb_mission_requirements(
                     "conflict_zone_id": zone_definition.get("linkedConflictId", ""),
                     "phase": _phase(zone_id),
                     "mission_type": mission_type,
-                    "is_fleet": zone.get("combatType") in _SHIP,
+                    "is_fleet": _wire_int(zone.get("combatType"), _COMBAT_TYPE_NAMES) == _SHIP,
                     "name": _localize(
                         localization, zone_definition.get("nameKey"), zone_definition.get("nameKey") or zone_id
                     ),
@@ -552,7 +567,9 @@ def _platoon(platoon: dict[str, Any]) -> TBPlatoon:
     return {
         "platoon_id": platoon.get("id", ""),
         "squad_ids": [squad.get("id", "") for squad in platoon.get("squad") or []],
-        "points": _wire_int(reward.get("value")) if reward.get("type") in _GALACTIC_SCORE else 0,
+        "points": _wire_int(reward.get("value"))
+        if _wire_int(reward.get("type"), _REWARD_TYPE_NAMES) == _GALACTIC_SCORE
+        else 0,
     }
 
 
@@ -606,7 +623,7 @@ def get_tb_platoon_definitions(
                     "name": _localize(
                         localization, zone_definition.get("nameKey"), zone_definition.get("nameKey") or zone_id
                     ),
-                    "is_fleet": zone.get("combatType") in _SHIP,
+                    "is_fleet": _wire_int(zone.get("combatType"), _COMBAT_TYPE_NAMES) == _SHIP,
                     "min_rarity": _wire_int(zone.get("unitRarity"), _RARITY_NAMES),
                     "min_relic": _relic_level(zone.get("unitRelicTier")),
                     "max_units_per_player": None if max_units in (0, _UNLIMITED) else max_units,
