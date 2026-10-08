@@ -7,17 +7,30 @@ import inspect
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from ..exceptions import SwgohComlinkValueError
 from ._constants import Constants
 
 logger = logging.getLogger(__name__)
 
+_CLIENT_KINDS: dict[str, Literal["sync", "async"]] = {"SwgohComlink": "sync", "SwgohComlinkAsync": "async"}
+
 
 def get_function_name() -> str:
     """Return the name of the calling function"""
     return f"{inspect.stack()[1].function}()"
+
+
+def _client_kind(comlink: Any) -> Literal["sync", "async"] | None:
+    """Return whether *comlink* is a sync or an async client, or ``None`` when it is neither.
+
+    ``__comlink_type__`` is read from the instance and then from each class in its MRO, so a subclass
+    that sets a ``__comlink_type__`` of its own is still recognised as the client it extends.
+    """
+    candidates = [getattr(comlink, "__comlink_type__", None)]
+    candidates += [vars(cls).get("__comlink_type__") for cls in type(comlink).__mro__]
+    return next((_CLIENT_KINDS[name] for name in candidates if name in _CLIENT_KINDS), None)
 
 
 def get_enum_key_by_value(enum_dict: dict[str, Any], category: Any, enum_value: Any, default_return: Any = None) -> Any:
