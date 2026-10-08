@@ -62,6 +62,7 @@ from ._utils import (
     sanitize_allycode,
     validate_file_path,
 )
+from ._wire import as_epoch, as_id, as_int, as_list, as_scalar, as_str, base_id, parse_enum
 
 __all__ = [
     # Enums and constants
@@ -127,4 +128,13 @@ __all__ = [
     "get_tw_omicrons",
     "get_unit_from_skill",
     "is_omicron_skill",
+    # Wire values
+    "as_epoch",
+    "as_id",
+    "as_int",
+    "as_list",
+    "as_scalar",
+    "as_str",
+    "base_id",
+    "parse_enum",
 ]
