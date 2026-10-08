@@ -775,6 +775,22 @@ class TestGetConquestFeats:
         (feat,) = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, difficulty="normal")
         assert feat["keycards"] == 1
 
+    def test_feats_without_a_kind_token(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        challenges = [
+            _feat("CONQUEST_VOL2_SILVO_VANE_III_DIFF_S0", keycards=5),
+            _feat("CONQUEST_VOL2_NO_TANKS_I_DIFF"),
+            # A longer volume id must not be read as this volume's feat
+            _feat("CONQUEST_VOL24_SECTOR_WIN_III_DIFF_S0"),
+        ]
+        feats = get_conquest_feats(_CONQUEST_DEFS, challenges)
+        assert [(f["challenge_id"], f["kind"], f["scope"]) for f in feats] == [
+            ("CONQUEST_VOL2_NO_TANKS_I_DIFF", "Global", "Global"),
+            ("CONQUEST_VOL2_SILVO_VANE_III_DIFF_S0", "Sector", "S0"),
+        ]
+        assert feats[1]["keycards"] == 5
+
     def test_explicit_conquest_id_is_case_insensitive(self):
         from swgoh_comlink.helpers import get_conquest_feats
 
