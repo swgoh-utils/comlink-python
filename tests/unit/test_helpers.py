@@ -1085,6 +1085,169 @@ class TestGetEventSchedule:
             get_event_schedule(_GAME_EVENTS, localization)
 
 
+# ── _guild (pure functions) ─────────────────────────────────────────────
+
+
+def _guild_payload(**overrides: Any) -> dict[str, Any]:
+    guild: dict[str, Any] = {
+        "profile": {
+            "id": "g1",
+            "name": "Test Guild",
+            "memberCount": 48,
+            "memberMax": 50,
+            "guildGalacticPower": "755564483",
+        },
+        "member": [
+            {
+                "playerId": "p1",
+                "playerName": "Leader",
+                "memberLevel": 4,
+                "galacticPower": "11000000",
+                "guildJoinTime": "1655938556",
+                "lastActivityTime": "1790164800000",
+            },
+            {"playerId": "p2", "playerName": "Officer", "memberLevel": "GUILD_OFFICER", "guildJoinTime": 1579804504},
+            {"playerId": "p3", "playerName": "New", "memberLevel": 2, "guildJoinTime": "0", "lastActivityTime": "0"},
+        ],
+        "recentTerritoryBattleResult": [
+            {"definitionId": "t05D", "totalStars": 40},
+            {"definitionId": "t05D", "totalStars": "47"},
+        ],
+        "recentTerritoryWarResult": [
+            {
+                "territoryWarId": "TW1",
+                "score": "27361",
+                "opponentScore": "11916",
+                "opponentGuildProfile": {"name": "A"},
+            },
+            {"territoryWarId": "TW2", "score": "12842", "opponentScore": "26567"},
+            {"territoryWarId": "TW3", "score": 100, "opponentScore": 100},
+        ],
+        "recentRaidResult": [
+            {
+                "raidId": "order66",
+                "guildRewardScore": "33500000",
+                "raidMember": [
+                    {"playerId": "p1", "memberProgress": "13500000"},
+                    {"playerId": "p2", "memberProgress": "20000000"},
+                ],
+            }
+        ],
+    }
+    guild.update(overrides)
+    return guild
+
+
+class TestGetGuildActivity:
+    def test_profile_totals(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload())
+        assert (activity["guild_id"], activity["name"]) == ("g1", "Test Guild")
+        assert (activity["member_count"], activity["member_max"]) == (48, 50)
+        assert activity["galactic_power"] == 755564483
+
+    def test_wrapped_response_is_accepted(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        assert get_guild_activity({"guild": _guild_payload()}) == get_guild_activity(_guild_payload())
+
+    def test_best_territory_battle_is_the_most_stars(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        assert get_guild_activity(_guild_payload())["best_territory_battle"] == {
+            "definition_id": "t05D",
+            "total_stars": 47,
+        }
+
+    def test_territory_war_record(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload())
+        assert [(w["territory_war_id"], w["result"]) for w in activity["territory_wars"]] == [
+            ("TW1", "win"),
+            ("TW2", "loss"),
+            ("TW3", "tie"),
+        ]
+        assert activity["territory_wars"][0]["score"] == 27361
+        assert activity["territory_wars"][0]["opponent_name"] == "A"
+        assert activity["territory_wars"][1]["opponent_name"] is None
+        assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (1, 1)
+
+    def test_last_raid_and_member_scores(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload())
+        raid = activity["last_raid"]
+        assert raid is not None
+        assert raid["raid_id"] == "order66"
+        assert raid["guild_score"] == 33_500_000 == sum(raid["member_scores"].values())
+        assert [m["raid_score"] for m in activity["members"]] == [13_500_000, 20_000_000, None]
+
+    def test_members(self):
+        from datetime import datetime, timezone
+
+        from swgoh_comlink.helpers import get_guild_activity
+
+        leader, officer, new = get_guild_activity(_guild_payload())["members"]
+        assert (leader["player_id"], leader["name"], leader["galactic_power"]) == ("p1", "Leader", 11_000_000)
+        # guildJoinTime is in seconds, lastActivityTime in milliseconds
+        assert leader["joined"] == datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)
+        assert leader["last_activity"] == datetime(2026, 9, 23, 12, tzinfo=timezone.utc)
+        assert officer["joined"] == datetime(2020, 1, 23, 18, 35, 4, tzinfo=timezone.utc)
+        assert officer["last_activity"] is None
+        assert new["joined"] is None and new["last_activity"] is None
+
+    @pytest.mark.parametrize(
+        ("member_level", "expected"),
+        [
+            (1, (1, "Pending")),
+            (2, (2, "Member")),
+            (3, (3, "Officer")),
+            (4, (4, "Leader")),
+            ("4", (4, "Leader")),
+            ("GUILD_PENDING", (1, "Pending")),
+            ("GUILD_MEMBER", (2, "Member")),
+            ("GUILD_OFFICER", (3, "Officer")),
+            ("GUILD_LEADER", (4, "Leader")),
+            (0, (None, None)),
+            (None, (None, None)),
+            ([4], (None, None)),
+        ],
+    )
+    def test_member_roles(self, member_level: Any, expected: tuple[Any, Any]):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        (member,) = get_guild_activity({"member": [{"playerId": "p", "memberLevel": member_level}]})["members"]
+        assert (member["member_level"], member["role"]) == expected
+
+    def test_without_recent_activity(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(
+            _guild_payload(recentTerritoryBattleResult=[], recentTerritoryWarResult=None, recentRaidResult=[])
+        )
+        assert activity["best_territory_battle"] is None
+        assert activity["territory_wars"] == []
+        assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (0, 0)
+        assert activity["last_raid"] is None
+        assert all(m["raid_score"] is None for m in activity["members"])
+
+    def test_member_count_falls_back_to_roster(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload(profile={"id": "g1"}))
+        assert activity["member_count"] == 3
+        assert (activity["name"], activity["member_max"], activity["galactic_power"]) == ("", 0, 0)
+
+    @pytest.mark.parametrize("guild", [None, [], "guild"])
+    def test_invalid_guild_raises(self, guild: Any):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        with pytest.raises(SwgohComlinkValueError, match="get_guild_activity"):
+            get_guild_activity(guild)
+
+
 # ── _abilities ─────────────────────────────────────────────────────────
 
 

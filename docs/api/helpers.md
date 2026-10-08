@@ -387,6 +387,67 @@ for event in get_event_schedule(comlink.get_events(), loc):
       show_root_heading: true
       show_root_full_path: false
 
+### get_guild_activity
+
+Summarizes a guild's recent Territory Battles, Territory Wars and raid, and lists its
+members with their role, join time, last activity and score in the last raid. Pass it
+the result of `get_guild()` requested with `include_recent_guild_activity_info=True`;
+without that flag the recent results are empty.
+
+```python
+from datetime import datetime, timezone
+
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import get_guild_activity
+
+comlink = SwgohComlink()
+guild = comlink.get_guild(guild_id, include_recent_guild_activity_info=True)
+activity = get_guild_activity(guild)
+
+print(f"TW record: {activity['territory_war_wins']}-{activity['territory_war_losses']}")
+if activity["best_territory_battle"]:
+    print("Best recent TB:", activity["best_territory_battle"]["total_stars"], "stars")
+
+now = datetime.now(timezone.utc)
+for member in activity["members"]:
+    days = (now - member["joined"]).days if member["joined"] else None
+    print(member["name"], member["role"], days, member["raid_score"])
+```
+
+!!! note
+    `guildJoinTime` is in epoch seconds while `lastActivityTime` is in epoch
+    milliseconds; both are returned as timezone-aware UTC datetimes.
+
+::: swgoh_comlink.helpers._guild.get_guild_activity
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.GuildActivity
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.GuildMemberActivity
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.TerritoryBattleResult
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.TerritoryWarResult
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.RaidResult
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
 ---
 
 ## Conquest Helpers

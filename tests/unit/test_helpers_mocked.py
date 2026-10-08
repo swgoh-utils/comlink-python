@@ -356,6 +356,54 @@ class TestAsyncGetGuildMembers:
         sync_client.close()
 
 
+# ── _guild: get_guild_activity over get_guild() ─────────────────────────
+
+_ACTIVITY_GUILD = {
+    "guild": {
+        "profile": {"id": "guild_abc", "name": "Test Guild", "memberCount": 2, "memberMax": 50},
+        "member": [
+            {"playerId": "p1", "playerName": "One", "memberLevel": 4, "guildJoinTime": "1655938556"},
+            {"playerId": "p2", "playerName": "Two", "memberLevel": 2, "lastActivityTime": "1790164800000"},
+        ],
+        "recentTerritoryBattleResult": [{"definitionId": "t05D", "totalStars": 47}],
+        "recentTerritoryWarResult": [{"score": "27361", "opponentScore": "11916"}],
+        "recentRaidResult": [
+            {
+                "raidId": "order66",
+                "guildRewardScore": "100",
+                "raidMember": [{"playerId": "p2", "memberProgress": "100"}],
+            }
+        ],
+    }
+}
+
+
+class TestGetGuildActivityFromClient:
+    def test_summarizes_unwrapped_guild(self, httpx_mock: HTTPXMock, sync_client):
+        import json
+
+        from swgoh_comlink.helpers import get_guild_activity
+
+        httpx_mock.add_response(json=_ACTIVITY_GUILD)
+        activity = get_guild_activity(sync_client.get_guild("guild_abc", include_recent_guild_activity_info=True))
+        request = json.loads(httpx_mock.get_requests()[-1].content)
+        assert request["payload"]["includeRecentGuildActivityInfo"] is True
+        assert activity["guild_id"] == "guild_abc"
+        assert activity["best_territory_battle"] == {"definition_id": "t05D", "total_stars": 47}
+        assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (1, 0)
+        assert [(m["role"], m["raid_score"]) for m in activity["members"]] == [("Leader", None), ("Member", 100)]
+
+    @pytest.mark.asyncio
+    async def test_async_client(self, httpx_mock: HTTPXMock, async_client):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        httpx_mock.add_response(json=_ACTIVITY_GUILD)
+        guild = await async_client.get_guild("guild_abc", include_recent_guild_activity_info=True)
+        activity = get_guild_activity(guild)
+        assert activity["last_raid"] is not None and activity["last_raid"]["guild_score"] == 100
+        await async_client.aclose()
+
+
 # ── _events: get_event_schedule over get_events() ───────────────────────
 
 

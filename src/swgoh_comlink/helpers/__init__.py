@@ -33,7 +33,16 @@ from ._game_data import (
     get_playable_units,
     get_raid_leaderboard_ids,
 )
-from ._guild import async_get_guild_members, get_guild_members
+from ._guild import (
+    GuildActivity,
+    GuildMemberActivity,
+    RaidResult,
+    TerritoryBattleResult,
+    TerritoryWarResult,
+    async_get_guild_members,
+    get_guild_activity,
+    get_guild_members,
+)
 from ._items import (
     ItemNames,
     ModCatalog,
@@ -180,7 +189,13 @@ __all__ = [
     "get_playable_units",
     "get_raid_leaderboard_ids",
     # Guild
+    "GuildActivity",
+    "GuildMemberActivity",
+    "RaidResult",
+    "TerritoryBattleResult",
+    "TerritoryWarResult",
     "async_get_guild_members",
+    "get_guild_activity",
     "get_guild_members",
     # Items, rewards and catalogs
     "ItemNames",
