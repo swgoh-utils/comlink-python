@@ -291,6 +291,33 @@ async def test_async_paces_concurrent_calls_in_order(httpx_mock: HTTPXMock, wait
     assert sorted(waits) == [pytest.approx(0.4), pytest.approx(0.8)]
 
 
+async def test_async_cancelled_wait_gives_its_slot_back(
+    httpx_mock: HTTPXMock, waits: list[float], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    httpx_mock.add_response(json={"name": "Test Player"}, is_reusable=True)
+    parked = asyncio.Event()
+
+    async def blocking_sleep(seconds: float) -> None:
+        waits.append(seconds)
+        parked.set()
+        await asyncio.Event().wait()
+
+    async with SwgohComlinkAsync(url=URL, retry=RetryPolicy(min_interval=0.4)) as client:
+        await client.get_player(allycode=123456789)
+        monkeypatch.setattr(retry_module, "_async_sleep", blocking_sleep)
+        task = asyncio.create_task(client.get_player(allycode=123456789))
+        await parked.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        # The cancelled task's slot is free, so the next caller waits one interval, not two.
+        assert client._pace_delay("player", stats=False) == pytest.approx(0.4)
+
+    assert waits == [pytest.approx(0.4)]
+    assert len(httpx_mock.get_requests()) == 1
+
+
 def test_sync_pacing_applies_to_retries(httpx_mock: HTTPXMock, waits: list[float]) -> None:
     httpx_mock.add_response(status_code=429, headers={"Retry-After": "0"})
     httpx_mock.add_response(json={"name": "Test Player"})

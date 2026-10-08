@@ -20,7 +20,7 @@ from typing_extensions import Self
 
 from .exceptions import SwgohComlinkException, SwgohComlinkTypeError, SwgohComlinkValueError
 from .helpers import Constants, DataItems
-from .retry import RetryPolicy, _Pacer
+from .retry import RetryPolicy, _no_release, _Pacer
 
 __all__ = [
     "SwgohComlinkBase",
@@ -185,10 +185,14 @@ class SwgohComlinkBase:
 
         Always ``0.0`` unless the client's retry policy sets ``min_interval``.
         """
+        return self._pace_slot(endpoint, stats)[0]
+
+    def _pace_slot(self, endpoint: str, stats: bool) -> tuple[float, Callable[[], None]]:
+        """Like :meth:`_pace_delay`, also returning a callable that gives the slot back if it goes unused."""
         if self._pacer is None:
-            return 0.0
+            return 0.0, _no_release
         name = endpoint.split("?", 1)[0]
-        return self._pacer.reserve(f"{'stats' if stats else 'comlink'}:{name}", name)
+        return self._pacer.reserve_slot(f"{'stats' if stats else 'comlink'}:{name}", name)
 
     def _construct_request_headers(
         self, method: str, endpoint: str, payload: dict[str, Any] | list[Any] | None = None

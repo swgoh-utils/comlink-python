@@ -123,10 +123,15 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         policy = self.retry_policy
         attempt = 1
         while True:
-            wait = self._pace_delay(endpoint, stats)
+            wait, release = self._pace_slot(endpoint, stats)
             if wait > 0:
                 logger.debug("Pacing %s for %.2fs", endpoint, wait)
-                await _retry._async_sleep(wait)
+                try:
+                    await _retry._async_sleep(wait)
+                except asyncio.CancelledError:
+                    # Hand the unused slot back so later callers do not wait for a call that never happens.
+                    release()
+                    raise
             try:
                 return await self._send(method, endpoint, payload, stats, timeout)
             except SwgohComlinkHTTPError as exc:

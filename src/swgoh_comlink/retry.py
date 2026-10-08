@@ -174,10 +174,32 @@ class _Pacer:
 
     def reserve(self, key: str, endpoint: str) -> float:
         """Take the next slot for *key* and return how long to wait for it."""
+        return self.reserve_slot(key, endpoint)[0]
+
+    def reserve_slot(self, key: str, endpoint: str) -> tuple[float, Callable[[], None]]:
+        """Take the next slot for *key*; return the wait and a callable that gives the slot back.
+
+        Call the returned callable when the caller abandons the slot before using
+        it, such as a task cancelled while it waits. The slot is returned only
+        while it is still the last one taken for *key*; once a later caller has
+        queued behind it, the queue is left as it is.
+        """
         if self._interval <= 0 or endpoint in self._unpaced:
-            return 0.0
+            return 0.0, _no_release
         with self._lock:
             now = _clock()
             due = max(self._next.get(key, now), now)
-            self._next[key] = due + self._interval
-            return due - now
+            end = due + self._interval
+            self._next[key] = end
+            wait = due - now
+
+        def release() -> None:
+            with self._lock:
+                if self._next.get(key) == end:
+                    self._next[key] = due
+
+        return wait, release
+
+
+def _no_release() -> None:
+    """Release callable for a call that reserved no slot."""

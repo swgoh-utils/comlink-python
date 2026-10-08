@@ -185,3 +185,26 @@ def test_client_pace_keys_ignore_query_and_split_services(clock: list[float]) ->
     assert client._pace_delay("api?flags=gameStyle", stats=True) == 0.0
     assert client._pace_delay("api?flags=calcGP", stats=True) == pytest.approx(0.4)
     assert client._pace_delay("api", stats=False) == 0.0
+
+
+def test_pacer_release_returns_the_last_slot(clock: list[float]) -> None:
+    pacer = _Pacer(0.4, frozenset())
+    pacer.reserve("comlink:data", "data")
+    wait, release = pacer.reserve_slot("comlink:data", "data")
+
+    release()
+
+    assert wait == pytest.approx(0.4)
+    # The abandoned slot is free again, so the next caller takes it.
+    assert pacer.reserve("comlink:data", "data") == pytest.approx(0.4)
+
+
+def test_pacer_release_keeps_the_queue_once_someone_is_behind(clock: list[float]) -> None:
+    pacer = _Pacer(0.4, frozenset())
+    pacer.reserve("comlink:data", "data")
+    _, release = pacer.reserve_slot("comlink:data", "data")
+    pacer.reserve("comlink:data", "data")
+
+    release()
+
+    assert pacer.reserve("comlink:data", "data") == pytest.approx(1.2)
