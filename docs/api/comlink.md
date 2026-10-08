@@ -1,6 +1,6 @@
 # SwgohComlink API
 
-## Retries and pacing
+## Retries and Pacing
 
 By default a client makes exactly one attempt per call and raises the
 [typed HTTP error](exceptions.md#http-errors) on failure. Pass a `RetryPolicy`
