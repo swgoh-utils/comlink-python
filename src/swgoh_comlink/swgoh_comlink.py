@@ -5,12 +5,14 @@ Synchronous Python 3 interface for swgoh-comlink.
 
 from __future__ import annotations
 
+import logging
 import threading
 from json import loads
 from typing import Any, cast
 
 import httpx
 
+from . import retry as _retry
 from ._base import (
     DEFAULT_TIMEOUT,
     GAME_DATA_TIMEOUT,
@@ -18,10 +20,12 @@ from ._base import (
     _CachedVersions,
     param_alias,
 )
-from .exceptions import SwgohComlinkException, SwgohComlinkValueError
+from .exceptions import SwgohComlinkException, SwgohComlinkHTTPError, SwgohComlinkValueError
 from .helpers import Constants, DataItems
 
 __all__ = ["SwgohComlink"]
+
+logger = logging.getLogger(__name__)
 
 
 class SwgohComlink(SwgohComlinkBase):
@@ -42,6 +46,9 @@ class SwgohComlink(SwgohComlinkBase):
         verify_ssl (bool): Whether to verify TLS certificates. [Default: True]
         version_cache_ttl (float): Seconds to cache the game/localization versions fetched from
             /metadata. 0 disables caching; ``math.inf`` caches for the client lifetime. [Default: 3600]
+        retry (RetryPolicy | None): Keyword-only. Retry rate refusals and HTTP 503 responses, and optionally
+            space calls to the same endpoint, as described by a
+            :class:`~swgoh_comlink.retry.RetryPolicy`. [Default: None, one attempt per call and no waiting]
 
     Notes:
         If the 'host' and 'port' parameters are provided, the 'url' and 'stats_url' parameters are ignored.
@@ -113,8 +120,43 @@ class SwgohComlink(SwgohComlinkBase):
             Decoded JSON response (dict or list).
 
         Raises:
+            SwgohComlinkHTTPError: When the service answers with an HTTP error status, after any retries
+                allowed by the client's retry policy. Subclasses identify rate refusals, HTTP 503 and 4xx.
             SwgohComlinkException: On any network or decoding error.
         """
+        policy = self.retry_policy
+        attempt = 1
+        while True:
+            wait = self._pace_delay(endpoint, stats)
+            if wait > 0:
+                logger.debug("Pacing %s for %.2fs", endpoint, wait)
+                _retry._sleep(wait)
+            try:
+                return self._send(method, endpoint, payload, stats, timeout)
+            except SwgohComlinkHTTPError as exc:
+                delay = None if policy is None else policy.retry_delay(exc, attempt)
+                if policy is None or delay is None:
+                    raise
+                logger.info(
+                    "%s on %s (attempt %d of %d); retrying in %.1fs",
+                    type(exc).__name__,
+                    endpoint,
+                    attempt,
+                    policy.attempts,
+                    delay,
+                )
+                _retry._sleep(delay)
+                attempt += 1
+
+    def _send(
+        self,
+        method: str,
+        endpoint: str,
+        payload: dict[str, Any] | list[Any] | None,
+        stats: bool,
+        timeout: float | None,
+    ) -> dict[str, Any] | list[Any]:
+        """Make one attempt at a request. Headers, including the HMAC signature, are rebuilt per attempt."""
         req_headers = self._construct_request_headers(method, endpoint, payload)
         client = self.stats_client if stats else self.client
 
@@ -129,7 +171,7 @@ class SwgohComlink(SwgohComlinkBase):
             r.raise_for_status()
             return cast(dict[str, Any] | list[Any], loads(r.content.decode("utf-8")))
         except httpx.HTTPStatusError as e:
-            raise SwgohComlinkException(f"HTTP {e.response.status_code}: {e.response.text}") from e
+            raise SwgohComlinkHTTPError.from_response(e.response) from e
         except httpx.RequestError as e:
             raise SwgohComlinkException(e) from e
 
