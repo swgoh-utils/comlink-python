@@ -7,6 +7,7 @@ All existing ``from swgoh_comlink.helpers import X`` imports continue to work.
 
 from __future__ import annotations
 
+from ._abilities import AbilityTier, NamedEffect, UnitAbility, get_named_effects, get_unit_abilities
 from ._arena import get_arena_payout, get_max_rank_jump
 from ._conquest import ConquestFeat, calc_current_stamina, get_conquest_feats
 from ._constants import Constants
@@ -87,6 +88,12 @@ __all__ = [
     "sanitize_allycode",
     "validate_file_path",
     "parse_swgoh_string",
+    # Abilities and effects
+    "AbilityTier",
+    "NamedEffect",
+    "UnitAbility",
+    "get_named_effects",
+    "get_unit_abilities",
     # Arena
     "get_arena_payout",
     "get_max_rank_jump",

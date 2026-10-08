@@ -341,6 +341,90 @@ These do not require a comlink instance.
 
 ---
 
+## Ability and Effect Helpers
+
+Functions for reading unit abilities and named battle effects from game data and a
+localization dictionary. These do not require a comlink instance.
+
+### get_unit_abilities
+
+Lists units' abilities with their name, kind, description at every level, and which
+level is a zeta or an omicron. Ships include their crew members' abilities.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import (
+    OMICRON_MODE,
+    DataItems,
+    get_localization_dictionary,
+    get_playable_units,
+    get_unit_abilities,
+)
+
+comlink = SwgohComlink()
+game_data = comlink.get_game_data(items=DataItems.UNITS | DataItems.SKILL | DataItems.ABILITY)
+loc = get_localization_dictionary(comlink)
+
+# Every Territory War omicron, with what it adds
+for ability in get_unit_abilities(
+    get_playable_units(game_data["units"]),
+    game_data["skill"],
+    game_data["ability"],
+    loc,
+    omicron_mode=8,
+):
+    omicron_tier = next(tier for tier in ability["tiers"] if tier["is_omicron"])
+    print(ability["unit_name"], ability["name"], OMICRON_MODE[ability["omicron_mode"]])
+    print("   ", omicron_tier["upgrade"])
+```
+
+!!! note
+    Names and descriptions come from the keys each `ability` record names, so a
+    reworked ability shows its current text rather than the original wording the
+    game keeps under the old key. `skill.nameKey` is not used: it is usually a
+    placeholder such as `DEFENSE_UP_NAME_KEY`.
+
+::: swgoh_comlink.helpers._abilities.get_unit_abilities
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._abilities.UnitAbility
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._abilities.AbilityTier
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_named_effects
+
+Maps every named buff and debuff (Potency Up, Fear, Overcharge, ...) to its in-game
+description. Useful for tooltips, help commands, or resolving an effect name a user
+typed.
+
+```python
+from swgoh_comlink.helpers import get_localization_dictionary, get_named_effects
+
+effects = get_named_effects(get_localization_dictionary(comlink))
+print(effects["Potency Up"]["description"])
+# Increased chance to apply detrimental effects
+```
+
+::: swgoh_comlink.helpers._abilities.get_named_effects
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._abilities.NamedEffect
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Omicron Helpers
 
 Functions for querying omicron skill data from game data collections.
