@@ -5,6 +5,7 @@ Custom exceptions for swgoh_comlink
 
 from __future__ import annotations
 
+import functools
 import json
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -86,6 +87,12 @@ class SwgohComlinkHTTPError(SwgohComlinkException):
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(status={self.status!r}, code={self.code!r}, detail={self.detail!r})"
+
+    def __reduce__(self) -> tuple[Any, ...]:
+        # The default reduce rebuilds the exception as ``cls(*self.args)``, which
+        # omits the required ``status`` keyword. Pass it explicitly so pickle and
+        # copy keep working; the remaining attributes travel in the state dict.
+        return functools.partial(type(self), *self.args, status=self.status), (), self.__dict__
 
     @classmethod
     def from_response(cls, response: httpx.Response) -> SwgohComlinkHTTPError:

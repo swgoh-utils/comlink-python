@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import copy
 import logging
+import pickle
 from datetime import datetime, timedelta, timezone
 from email.utils import format_datetime
+from typing import Any
 
 import httpx
 import pytest
@@ -145,3 +148,31 @@ def test_http_error_repr_and_direct_construction() -> None:
     assert repr(error) == "SwgohComlinkClientError(status=400, code='BAD_REQUEST', detail='nope')"
     assert error.retry_after is None
     assert error.response is None
+
+
+@pytest.mark.parametrize(
+    ("status", "body"),
+    [
+        (500, {"code": "INTERNAL", "message": "boom"}),
+        (502, {"code": "GAME_6", "message": "Rate exceeded!"}),
+        (503, {"code": "UNAVAILABLE", "message": "busy"}),
+        (400, {"code": "BAD_REQUEST", "message": "nope"}),
+    ],
+)
+@pytest.mark.parametrize("duplicate", [lambda e: pickle.loads(pickle.dumps(e)), copy.copy, copy.deepcopy])
+def test_http_errors_pickle_and_copy(status: int, body: dict[str, str], duplicate: Any) -> None:
+    original = SwgohComlinkHTTPError.from_response(httpx.Response(status, json=body, headers={"Retry-After": "3"}))
+
+    clone = duplicate(original)
+
+    assert type(clone) is type(original)
+    assert str(clone) == str(original)
+    assert str(clone).startswith(f"HTTP {status}: ")
+    assert (clone.status, clone.code, clone.detail, clone.retry_after) == (
+        original.status,
+        original.code,
+        original.detail,
+        3.0,
+    )
+    assert clone.response is not None
+    assert clone.response.status_code == status
