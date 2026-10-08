@@ -81,6 +81,19 @@ from ._territory_battle import (
     get_tb_platoon_definitions,
     get_tb_star_thresholds,
 )
+from ._upgrades import (
+    AbilityUpgradeCosts,
+    AbilityUpgradeTier,
+    GearCraftNode,
+    GearTier,
+    RelicPromotionCost,
+    UpgradeCost,
+    get_ability_upgrade_costs,
+    get_gear_craft_tree,
+    get_relic_promotion_costs,
+    get_unit_gear_tiers,
+    sum_upgrade_costs,
+)
 from ._utils import (
     convert_relic_tier,
     get_enum_key_by_value,
@@ -189,4 +202,16 @@ __all__ = [
     "as_str",
     "base_id",
     "parse_enum",
+    # Upgrade costs
+    "AbilityUpgradeCosts",
+    "AbilityUpgradeTier",
+    "GearCraftNode",
+    "GearTier",
+    "RelicPromotionCost",
+    "UpgradeCost",
+    "get_ability_upgrade_costs",
+    "get_gear_craft_tree",
+    "get_relic_promotion_costs",
+    "get_unit_gear_tiers",
+    "sum_upgrade_costs",
 ]
