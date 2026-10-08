@@ -31,7 +31,9 @@ class DataItems(IntFlag):
         that range are rejected with an HTTP 400.
 
     Some of the DataItems members are actually aliases for other members. For example, the `TABLE` member is an
-    alias for the `XP_TABLE` member. This is done because both members represent the same collection in the game data.
+    alias for the `XP_TABLE` member. This is done because both members name the same bit, which Comlink calls
+    `AllTables`: requesting it returns two collections, `xpTable` and `table` (the latter holds lookup tables such as
+    `relic_promotion_table`).
 
     Other members are provided as a convenience. For example, the `SEGMENT1` member is assigned the integer value of
     all the collections that are included when using the original (request_segment=) style of calling the
