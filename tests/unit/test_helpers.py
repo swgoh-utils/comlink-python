@@ -2297,6 +2297,11 @@ _UPGRADE_SKILLS = [
 ]  # fmt: skip
 
 
+def _enum_tiers(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """``rows`` with their UnitTier ``tier`` as the enum names returned with enums=True."""
+    return [{**row, "tier": f"TIER_{row['tier']:02d}"} for row in rows]
+
+
 def _cost(credits: int = 0, ship_credits: int = 0, materials: Any = None, equipment: Any = None) -> dict[str, Any]:
     return {"credits": credits, "ship_credits": ship_credits, "materials": materials or {},
             "equipment": equipment or {}}  # fmt: skip
@@ -2318,7 +2323,21 @@ class TestGetUnitGearTiers:
 
         assert get_unit_gear_tiers(_UPGRADE_UNITS, "SHIP") == []
 
-    @pytest.mark.parametrize(("units", "base_id"), [({}, "HERO"), (_UPGRADE_UNITS, None), (_UPGRADE_UNITS, "NOBODY")])
+    def test_enum_tier_names_match_integers(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers
+
+        units = [{**_UPGRADE_UNITS[0], "unitTier": _enum_tiers(_HERO_TIERS)}]
+        assert get_unit_gear_tiers(units, "HERO") == get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
+
+    @pytest.mark.parametrize(
+        ("units", "base_id"),
+        [
+            ({}, "HERO"),
+            (_UPGRADE_UNITS, None),
+            (_UPGRADE_UNITS, "NOBODY"),
+            ([{"baseId": "HERO", "unitTier": [{"tier": "GEAR_ONE", "equipmentSet": []}]}], "HERO"),
+        ],
+    )
     def test_invalid_input_raises(self, units: Any, base_id: Any):
         from swgoh_comlink.helpers import get_unit_gear_tiers
 
@@ -2353,6 +2372,20 @@ class TestGetGearCraftTree:
         assert tree["cost"] == _cost(
             credits=20350 + 14000 + 2 * 5150, equipment={"164PrototypeSalvage": 30, "156Salvage": 40}
         )
+
+    def test_enum_tier_names_match_integers(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        enum_equipment = _enum_tiers(_UPGRADE_EQUIPMENT)
+        tree = get_gear_craft_tree(enum_equipment, _UPGRADE_RECIPES, "164")
+        assert tree == get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164")
+        assert (tree["tier"], tree["ingredients"][1]["tier"]) == (12, 7)
+
+    def test_unrecognized_tier_raises(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        with pytest.raises(SwgohComlinkValueError, match="unrecognized tier 'TWELVE'"):
+            get_gear_craft_tree([{**_piece("001"), "tier": "TWELVE"}], [], "001")
 
     def test_farmed_piece_is_a_leaf(self):
         from swgoh_comlink.helpers import get_gear_craft_tree
@@ -2498,6 +2531,17 @@ class TestSumUpgradeCosts:
             credits=20350 + 14000 + 4 * 5150, equipment={"001": 69, "156Salvage": 80, "164PrototypeSalvage": 30}
         )
         assert list(crafted["equipment"]) == sorted(crafted["equipment"])
+
+    def test_crafts_enum_tier_gear_like_integer_tier_gear(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers, sum_upgrade_costs
+
+        units = [{**_UPGRADE_UNITS[0], "unitTier": _enum_tiers(_HERO_TIERS)}]
+        enum_tiers = get_unit_gear_tiers(units, "HERO")
+        int_tiers = get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
+        enum_total = sum_upgrade_costs(
+            (t["cost"] for t in enum_tiers), _enum_tiers(_UPGRADE_EQUIPMENT), _UPGRADE_RECIPES
+        )
+        assert enum_total == sum_upgrade_costs((t["cost"] for t in int_tiers), _UPGRADE_EQUIPMENT, _UPGRADE_RECIPES)
 
     @pytest.mark.parametrize(
         ("args", "message"),

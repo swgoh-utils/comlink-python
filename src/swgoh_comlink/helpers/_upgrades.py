@@ -22,6 +22,10 @@ _CURRENCY_FIELDS: dict[str, Literal["credits", "ship_credits"]] = {"GRIND": "cre
 _PLACEHOLDER_PIECE = "9999"
 _RELIC_TABLE = "relic_promotion_table"
 _RELIC_ROW_KEY = re.compile(r"^TIER_(?P<tier>\d+)$")
+# units.unitTier[].tier and equipment.tier (UnitTier), as integers (enums=False) or names such as "TIER_01"
+# (enums=True); TIER_UNDEFINED is 0.
+_UNIT_TIER_NAME = re.compile(r"^TIER_(?P<tier>\d+)$")
+_UNIT_TIER_UNDEFINED = "TIER_UNDEFINED"
 # skill.tier[0] upgrades the ability from level 1 to level 2.
 _FIRST_TIER_LEVEL = 2
 
@@ -145,6 +149,20 @@ def _recipe_cost(recipe: dict[str, Any], func_name: str) -> UpgradeCost:
     return cost
 
 
+def _tier_number(value: Any, owner: str, func_name: str) -> int:
+    """Read a ``UnitTier`` value as an integer; a missing tier counts as 0."""
+    if value is None or value == _UNIT_TIER_UNDEFINED:
+        return 0
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        if value.isdigit():
+            return int(value)
+        if (match := _UNIT_TIER_NAME.match(value)) is not None:
+            return int(match["tier"])
+    raise SwgohComlinkValueError(f"{func_name}: {owner} has unrecognized tier {value!r}")
+
+
 def _get_recipe(recipe_map: dict[str, dict[str, Any]], recipe_id: str, owner: str, func_name: str) -> dict[str, Any]:
     if (recipe := recipe_map.get(recipe_id)) is None:
         raise SwgohComlinkValueError(f"{func_name}: recipe {recipe_id!r} of {owner} is not in 'recipes'")
@@ -184,7 +202,7 @@ def _build_craft_tree(
     node: GearCraftNode = {
         "id": piece_id,
         "name": _localize(localization, piece.get("nameKey"), piece.get("nameKey") or piece_id),
-        "tier": int(piece.get("tier") or 0),
+        "tier": _tier_number(piece.get("tier"), f"equipment {piece_id!r}", func_name),
         "mark": str(piece.get("mark") or ""),
         "quantity": quantity,
         "recipe_credits": 0,
@@ -236,7 +254,7 @@ def get_unit_gear_tiers(units: list[dict[str, Any]], base_id: str) -> list[GearT
 
     Raises:
         SwgohComlinkValueError: If ``units`` is not a list, ``base_id`` is not a string or is not in
-            ``units``.
+            ``units``, or a ``unitTier`` has a tier that is not a number or ``UnitTier`` name.
 
     Examples:
         >>> game_data = comlink.get_game_data(items=DataItems.UNITS)  # doctest: +SKIP
@@ -248,13 +266,15 @@ def get_unit_gear_tiers(units: list[dict[str, Any]], base_id: str) -> list[GearT
     _check_lists(func_name, units=units)
     unit = _find_unit(units, base_id, func_name)
 
+    owner = f"unit {unit.get('baseId')!r}"
+    numbered = [(_tier_number(t.get("tier"), owner, func_name), t) for t in unit.get("unitTier") or []]
     result: list[GearTier] = []
-    for unit_tier in sorted(unit.get("unitTier") or [], key=lambda t: int(t.get("tier") or 0)):
+    for tier, unit_tier in sorted(numbered, key=lambda pair: pair[0]):
         pieces = [str(piece) for piece in unit_tier.get("equipmentSet") or [] if str(piece) != _PLACEHOLDER_PIECE]
         cost = _empty_cost()
         for piece in pieces:
             cost["equipment"][piece] = cost["equipment"].get(piece, 0) + 1
-        result.append({"tier": int(unit_tier.get("tier") or 0), "equipment": pieces, "cost": cost})
+        result.append({"tier": tier, "equipment": pieces, "cost": cost})
     return result
 
 
@@ -282,13 +302,15 @@ def get_gear_craft_tree(
 
     Raises:
         SwgohComlinkValueError: If a collection is not a list, ``localization`` is not a dictionary, a piece
-            or recipe in the tree is missing, or a recipe has an ingredient that is not exact or is of a
-            kind a gear recipe should not hold.
+            or recipe in the tree is missing or a piece's tier is not a number or ``UnitTier`` name, or a
+            recipe has an ingredient that is not exact or is of a kind a gear recipe should not hold.
 
     Examples:
         >>> game_data = comlink.get_game_data(items=DataItems.EQUIPMENT | DataItems.RECIPE)  # doctest: +SKIP
+        >>> loc = get_localization_dictionary(comlink)  # doctest: +SKIP
         >>> tree = get_gear_craft_tree(game_data["equipment"], game_data["recipe"], "164", loc)  # doctest: +SKIP
-        >>> tree["cost"]["credits"], tree["cost"]["equipment"]  # doctest: +SKIP
+        >>> tree["cost"]["credits"]  # doctest: +SKIP
+        44650
     """
     func_name = get_function_name()
     _check_lists(func_name, equipment=equipment, recipes=recipes)
