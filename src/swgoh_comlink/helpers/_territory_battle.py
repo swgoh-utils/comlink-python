@@ -202,14 +202,19 @@ def _phase(zone_id: str) -> int | None:
     return int(match[1]) if match else None
 
 
+def _check_collection(arg_name: str, collection: Any, func_name: str) -> None:
+    """Raise unless ``collection`` is a game data collection: a list of dictionaries."""
+    if not isinstance(collection, list):
+        raise SwgohComlinkValueError(f"{func_name}: '{arg_name}' must be a list, not {type(collection)}")
+    if not all(isinstance(item, dict) for item in collection):
+        raise SwgohComlinkValueError(f"{func_name}: '{arg_name}' must be a list of dictionaries")
+
+
 def _select_definitions(
     definitions: list[dict[str, Any]], localization: dict[str, str] | None, tb_id: str | None, func_name: str
 ) -> list[dict[str, Any]]:
     """Validate the shared arguments and return the definitions to read: all of them, or the one ``tb_id`` names."""
-    if not isinstance(definitions, list):
-        raise SwgohComlinkValueError(
-            f"{func_name}: 'territory_battle_definitions' must be a list, not {type(definitions)}"
-        )
+    _check_collection("territory_battle_definitions", definitions, func_name)
     if localization is not None and not isinstance(localization, dict):
         raise SwgohComlinkValueError(f"{func_name}: 'localization' must be a dictionary, not {type(localization)}")
     if tb_id is None:
@@ -309,8 +314,8 @@ def get_tb_star_thresholds(
         A list of :class:`TBZoneStars` dictionaries, in definition order.
 
     Raises:
-        SwgohComlinkValueError: If ``territory_battle_definitions`` is not a list, ``localization`` is not a
-            dictionary, or ``tb_id`` does not match any definition.
+        SwgohComlinkValueError: If ``territory_battle_definitions`` is not a list of dictionaries,
+            ``localization`` is not a dictionary, or ``tb_id`` does not match any definition.
 
     Examples:
         >>> game_data = comlink.get_game_data(items=DataItems.TERRITORY_BATTLE_DEFINITION)  # doctest: +SKIP
@@ -381,8 +386,8 @@ def get_tb_mission_requirements(
         combat missions before its special missions.
 
     Raises:
-        SwgohComlinkValueError: If a collection is not a list, ``localization`` is not a dictionary, or
-            ``tb_id`` does not match any definition.
+        SwgohComlinkValueError: If a collection is not a list of dictionaries, ``localization`` is not a
+            dictionary, or ``tb_id`` does not match any definition.
 
     Examples:
         >>> game_data = comlink.get_game_data(
@@ -397,9 +402,8 @@ def get_tb_mission_requirements(
     """
     func_name = get_function_name()
     definitions = _select_definitions(territory_battle_definitions, localization, tb_id, func_name)
-    for arg_name, arg in (("campaigns", campaigns), ("categories", categories)):
-        if not isinstance(arg, list):
-            raise SwgohComlinkValueError(f"{func_name}: '{arg_name}' must be a list, not {type(arg)}")
+    _check_collection("campaigns", campaigns, func_name)
+    _check_collection("categories", categories, func_name)
 
     missions = _campaign_missions(
         campaigns,
@@ -494,8 +498,8 @@ def get_tb_mission_scores(
         A list of :class:`TBMissionScore` dictionaries, in definition order.
 
     Raises:
-        SwgohComlinkValueError: If a collection is not a list, ``tb_id`` does not match any definition, or a
-            mission names a table that is not in ``tables``.
+        SwgohComlinkValueError: If a collection is not a list of dictionaries, ``tb_id`` does not match any
+            definition, or a mission names a table that is not in ``tables``.
 
     Examples:
         >>> game_data = comlink.get_game_data(
@@ -509,8 +513,7 @@ def get_tb_mission_scores(
     """
     func_name = get_function_name()
     definitions = _select_definitions(territory_battle_definitions, None, tb_id, func_name)
-    if not isinstance(tables, list):
-        raise SwgohComlinkValueError(f"{func_name}: 'tables' must be a list, not {type(tables)}")
+    _check_collection("tables", tables, func_name)
 
     wanted = {
         zone.get("encounterRewardTableId")
@@ -597,8 +600,8 @@ def get_tb_platoon_definitions(
         A list of :class:`TBReconZone` dictionaries, in definition order.
 
     Raises:
-        SwgohComlinkValueError: If ``territory_battle_definitions`` is not a list, ``localization`` is not a
-            dictionary, or ``tb_id`` does not match any definition.
+        SwgohComlinkValueError: If ``territory_battle_definitions`` is not a list of dictionaries,
+            ``localization`` is not a dictionary, or ``tb_id`` does not match any definition.
 
     Examples:
         >>> game_data = comlink.get_game_data(items=DataItems.TERRITORY_BATTLE_DEFINITION)  # doctest: +SKIP

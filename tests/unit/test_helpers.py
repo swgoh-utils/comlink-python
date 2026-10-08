@@ -1971,6 +1971,8 @@ class TestGetTbStarThresholds:
             ((_TB_DEFS, ["not", "a", "dict"]), {}),
             ((_TB_DEFS,), {"tb_id": "t99D"}),
             ((_TB_DEFS,), {"tb_id": 5}),
+            (([None],), {}),
+            ((["t05D"],), {"tb_id": "t05D"}),
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
@@ -2084,6 +2086,8 @@ class TestGetTbMissionRequirements:
             (_TB_DEFS, None, _TB_CATEGORIES),
             (_TB_DEFS, _TB_CAMPAIGNS, "category"),
             (_TB_DEFS, _TB_CAMPAIGNS, _TB_CATEGORIES, "loc"),
+            (_TB_DEFS, [None], _TB_CATEGORIES),
+            (_TB_DEFS, _TB_CAMPAIGNS, ["profession_jedi"]),
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...]):
@@ -2124,6 +2128,7 @@ class TestGetTbMissionScores:
         [
             ({"id": "t05D"}, _TB_TABLES),
             (_TB_DEFS, None),
+            (_TB_DEFS, [*_TB_TABLES, "tb3_p1"]),
             # The mission's table is not in the collection.
             (_TB_DEFS, _TB_TABLES[1:]),
         ],
