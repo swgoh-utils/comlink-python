@@ -578,6 +578,19 @@ class TestGetPlayableUnits:
         assert len(result) == 1
         assert result[0]["rarity"] == 7
 
+    def test_tolerates_missing_fields_and_enum_rarity(self):
+        from swgoh_comlink.helpers._game_data import get_playable_units
+
+        units = [
+            {"baseId": "OLD_DUMP", "rarity": 7, "obtainable": True},  # predates obtainableTime
+            {"baseId": "ENUMS", "rarity": "SEVEN_STAR", "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "INT_TIME", "rarity": 7, "obtainable": True, "obtainableTime": 0},
+            {"baseId": "NO_RARITY", "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "NO_OBTAINABLE", "rarity": 7, "obtainableTime": "0"},
+            {"baseId": "GL_TEMPLATE", "rarity": 7, "obtainable": True, "obtainableTime": "4102444800000"},
+        ]
+        assert [u["baseId"] for u in get_playable_units(units)] == ["OLD_DUMP", "ENUMS", "INT_TIME"]
+
     def test_invalid_type_raises(self):
         from swgoh_comlink.helpers._game_data import get_playable_units
 

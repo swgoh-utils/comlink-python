@@ -16,6 +16,9 @@ from ._utils import get_function_name
 
 logger = logging.getLogger(__name__)
 
+# Unit rarity as sent with enums=False and enums=True
+_SEVEN_STAR = (7, "SEVEN_STAR")
+
 
 def get_raid_leaderboard_ids(campaign_data: list[dict[str, Any]]) -> list[str]:
     """
@@ -198,14 +201,21 @@ async def async_get_localization_dictionary(comlink: Any, language: str = "eng_u
 
 
 def get_playable_units(units_collection: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return a list of playable units from game data 'units' collection"""
+    """Return the playable units from the game data 'units' collection, one seven-star row per unit.
+
+    A unit is playable when it is obtainable and its ``obtainableTime`` is ``"0"``. Event and Galactic
+    Legend template variants carry a far-future ``obtainableTime`` instead. A missing ``obtainableTime``
+    (older game data) counts as ``"0"``, and ``rarity`` may be ``7`` or ``"SEVEN_STAR"`` (``enums=True``).
+    """
     if not isinstance(units_collection, list):
         raise SwgohComlinkValueError(f"'units_collection' must be a list, not {type(units_collection)}")
 
     return [
         unit
         for unit in units_collection
-        if unit["rarity"] == 7 and unit["obtainable"] is True and unit["obtainableTime"] == "0"
+        if unit.get("rarity") in _SEVEN_STAR
+        and unit.get("obtainable") is True
+        and str(unit.get("obtainableTime") or "0") == "0"
     ]
 
 
