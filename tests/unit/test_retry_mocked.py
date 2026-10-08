@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+from types import SimpleNamespace
 
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
 from swgoh_comlink import RetryPolicy, SwgohComlink, SwgohComlinkAsync
+from swgoh_comlink import _base as base_module
 from swgoh_comlink import retry as retry_module
 from swgoh_comlink.exceptions import (
     SwgohComlinkClientError,
@@ -256,16 +259,22 @@ async def test_async_no_retry_on_transport_error(httpx_mock: HTTPXMock, waits: l
     assert waits == []
 
 
-def test_sync_retry_re_signs_each_attempt(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+def test_sync_retry_re_signs_each_attempt(
+    httpx_mock: HTTPXMock, waits: list[float], monkeypatch: pytest.MonkeyPatch
+) -> None:
     httpx_mock.add_response(status_code=503, json=UNAVAILABLE)
     httpx_mock.add_response(json={"name": "Test Player"})
+    # A wall clock that moves on between attempts, so a reused signature would show.
+    ticks = iter([1_700_000_000.0, 1_700_000_005.0])
+    monkeypatch.setattr(base_module, "time", SimpleNamespace(time=lambda: next(ticks)))
 
     client = SwgohComlink(url=URL, access_key="access", secret_key="secret", retry=RetryPolicy())
     client.get_player(allycode=123456789)
 
-    requests = httpx_mock.get_requests()
-    assert len(requests) == 2
-    assert all("Authorization" in request.headers and "X-Date" in request.headers for request in requests)
+    first, second = httpx_mock.get_requests()
+    assert first.headers["X-Date"] == "1700000000000"
+    assert second.headers["X-Date"] == "1700000005000"
+    assert first.headers["Authorization"] != second.headers["Authorization"]
 
 
 # ── Giving up ────────────────────────────────────────────────────────────
@@ -323,13 +332,26 @@ def test_sync_paces_calls_to_the_same_endpoint(httpx_mock: HTTPXMock, waits: lis
     assert waits == [pytest.approx(0.4), pytest.approx(0.8)]
 
 
-async def test_async_paces_concurrent_calls_in_order(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+async def test_async_paces_concurrent_calls_in_order(
+    httpx_mock: HTTPXMock, waits: list[float], monkeypatch: pytest.MonkeyPatch
+) -> None:
     httpx_mock.add_response(json={"name": "Test Player"}, is_reusable=True)
+    real_sleep = asyncio.sleep
+
+    async def scaled_sleep(seconds: float) -> None:
+        # Actually yield, at 1/100 speed, so the tasks can overtake one another.
+        waits.append(seconds)
+        await real_sleep(seconds / 100)
+
+    monkeypatch.setattr(retry_module, "_async_sleep", scaled_sleep)
+    allycodes = [111111111, 222222222, 333333333]
 
     async with SwgohComlinkAsync(url=URL, retry=RetryPolicy(min_interval=0.4)) as client:
-        await asyncio.gather(*(client.get_player(allycode=123456789) for _ in range(3)))
+        await asyncio.gather(*(client.get_player(allycode=code) for code in allycodes))
 
-    assert sorted(waits) == [pytest.approx(0.4), pytest.approx(0.8)]
+    assert waits == [pytest.approx(0.4), pytest.approx(0.8)]
+    sent = [json.loads(request.content)["payload"]["allyCode"] for request in httpx_mock.get_requests()]
+    assert sent == [str(code) for code in allycodes]
 
 
 async def test_async_cancelled_wait_gives_its_slot_back(
