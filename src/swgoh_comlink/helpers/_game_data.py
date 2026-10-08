@@ -68,16 +68,23 @@ def create_localized_unit_name_dictionary(locale: str | list[Any]) -> dict[str, 
     """Create localized translation mapping for unit names
 
     Take a localization element from the SwgohComlink.get_localization() result dictionary and
-    extract the UNIT_NAME entries for building a conversion dictionary to translate BASEID values to in game
-    descriptive names
+    extract the unit name entries (``UNIT_*`` keys containing ``_NAME``).
+
+    The keys are localization keys, not base ids: look a unit up with its ``nameKey`` from the game
+    data ``units`` collection. Many name keys cannot be derived from the base id (``CT7567`` is
+    ``UNIT_REX_NAME``, ``VEERS`` is ``UNIT_VEERS_GENERAL_NAME``, reworked units use ``_NAME_V2``).
 
     Args:
         locale: The string element or List[bytes] from the SwgohComlink.get_localization()
                                         result key value
 
     Returns:
-        A dictionary with the UNIT_NAME BASEID as keys and the UNIT_NAME description as values
+        A dictionary of unit name localization key (e.g. ``"UNIT_REX_NAME"``) to the unit's name.
 
+    Examples:
+        >>> names = create_localized_unit_name_dictionary(locale)  # doctest: +SKIP
+        >>> names[unit["nameKey"]]  # doctest: +SKIP
+        'CT-7567 "Rex"'
     """
     if not isinstance(locale, list) and not isinstance(locale, str):
         raise SwgohComlinkValueError("'locale' must be a list of strings or string containing newlines.")
