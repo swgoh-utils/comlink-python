@@ -1335,7 +1335,9 @@ def test_wire_docstring_examples():
 
     from swgoh_comlink.helpers import _wire
 
-    assert doctest.testmod(_wire).failed == 0
+    results = doctest.testmod(_wire)
+    assert results.failed == 0
+    assert results.attempted >= 20
 
 
 # ── _gac (pure functions) ──────────────────────────────────────────────
