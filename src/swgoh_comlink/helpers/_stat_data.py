@@ -816,7 +816,9 @@ carries the member name as its ``id``.
 
 # No game data collection names a currency. These are the in-game English names, taken from the
 # localization bundle's Shared_Currency_* (and SHARED_LIGHT/DARK_SIDE_CURRENCY) strings where one
-# matches the member, and spelled out from the member name otherwise.
+# matches the member, and spelled out from the member name otherwise. GALACTIC_BUNDLE_CURRENCY is the
+# Hyperdrive Token (Shared_Currency_Hyperdrive_Bundle): game metadata names it the
+# galactic-bundle-exchange-currency, and the exchange screen reads "You have received a Hyperdrive Token".
 CURRENCY_NAMES: dict[str, str] = {
     "GRIND": "Credits",
     "PREMIUM": "Crystals",
@@ -849,7 +851,7 @@ CURRENCY_NAMES: dict[str, str] = {
     "TERRITORY_BATTLE_CURRENCY": "Mk I Guild Event Tokens",
     "SEASONS_CURRENCY": "Championship Tokens",
     "TERRITORY_BATTLE_CURRENCY_02": "Mk II Guild Event Tokens",
-    "GALACTIC_BUNDLE_CURRENCY": "Galactic Bundle Currency",
+    "GALACTIC_BUNDLE_CURRENCY": "Hyperdrive Token",
     "LIGHT_SIDE_CURRENCY": "Light Side Currency",
     "DARK_SIDE_CURRENCY": "Dark Side Currency",
     "GALACTIC_CHALLENGE_CURRENCY": "Galactic Challenge Tickets",
