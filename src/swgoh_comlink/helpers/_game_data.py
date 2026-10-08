@@ -16,6 +16,9 @@ from ._utils import get_function_name
 
 logger = logging.getLogger(__name__)
 
+# Unit rarity as sent with enums=False and enums=True
+_SEVEN_STAR = (7, "SEVEN_STAR")
+
 
 def get_raid_leaderboard_ids(campaign_data: list[dict[str, Any]]) -> list[str]:
     """
@@ -65,16 +68,23 @@ def create_localized_unit_name_dictionary(locale: str | list[Any]) -> dict[str, 
     """Create localized translation mapping for unit names
 
     Take a localization element from the SwgohComlink.get_localization() result dictionary and
-    extract the UNIT_NAME entries for building a conversion dictionary to translate BASEID values to in game
-    descriptive names
+    extract the unit name entries (``UNIT_*`` keys containing ``_NAME``).
+
+    The keys are localization keys, not base ids: look a unit up with its ``nameKey`` from the game
+    data ``units`` collection. Many name keys cannot be derived from the base id (``CT7567`` is
+    ``UNIT_REX_NAME``, ``VEERS`` is ``UNIT_VEERS_GENERAL_NAME``, reworked units use ``_NAME_V2``).
 
     Args:
         locale: The string element or List[bytes] from the SwgohComlink.get_localization()
                                         result key value
 
     Returns:
-        A dictionary with the UNIT_NAME BASEID as keys and the UNIT_NAME description as values
+        A dictionary of unit name localization key (e.g. ``"UNIT_REX_NAME"``) to the unit's name.
 
+    Examples:
+        >>> names = create_localized_unit_name_dictionary(locale)  # doctest: +SKIP
+        >>> names[unit["nameKey"]]  # doctest: +SKIP
+        'CT-7567 "Rex"'
     """
     if not isinstance(locale, list) and not isinstance(locale, str):
         raise SwgohComlinkValueError("'locale' must be a list of strings or string containing newlines.")
@@ -198,14 +208,21 @@ async def async_get_localization_dictionary(comlink: Any, language: str = "eng_u
 
 
 def get_playable_units(units_collection: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return a list of playable units from game data 'units' collection"""
+    """Return the playable units from the game data 'units' collection, one seven-star row per unit.
+
+    A unit is playable when it is obtainable and its ``obtainableTime`` is ``"0"``. Event and Galactic
+    Legend template variants carry a far-future ``obtainableTime`` instead. A missing ``obtainableTime``
+    (older game data) counts as ``"0"``, and ``rarity`` may be ``7`` or ``"SEVEN_STAR"`` (``enums=True``).
+    """
     if not isinstance(units_collection, list):
         raise SwgohComlinkValueError(f"'units_collection' must be a list, not {type(units_collection)}")
 
     return [
         unit
         for unit in units_collection
-        if unit["rarity"] == 7 and unit["obtainable"] is True and unit["obtainableTime"] == "0"
+        if unit.get("rarity") in _SEVEN_STAR
+        and unit.get("obtainable") is True
+        and str(unit.get("obtainableTime") or "0") == "0"
     ]
 
 

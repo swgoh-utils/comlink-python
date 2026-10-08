@@ -155,28 +155,60 @@ class TestHumanTime:
 
 
 class TestConvertRelicTier:
+    # The game's RelicTier enum: RelicTier_DEFAULT = 0, RELIC_LOCKED = 1, RELIC_UNLOCKED = 2, RELIC_TIER_01 = 3
     def test_valid_int(self):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
         assert convert_relic_tier(0) == "LOCKED"
-        assert convert_relic_tier(1) == "UNLOCKED"
-        assert convert_relic_tier(2) == "1"
+        assert convert_relic_tier(1) == "LOCKED"
+        assert convert_relic_tier(2) == "UNLOCKED"
+        assert convert_relic_tier(3) == "1"
+        assert convert_relic_tier(12) == "10"
 
     def test_valid_string(self):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
-        assert convert_relic_tier("9") == "8"
+        assert convert_relic_tier("9") == "7"
+
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [
+            ("RelicTier_DEFAULT", "LOCKED"),
+            ("RELIC_LOCKED", "LOCKED"),
+            ("RELIC_UNLOCKED", "UNLOCKED"),
+            ("RELIC_TIER_01", "1"),
+            ("RELIC_TIER_10", "10"),
+            ("RELIC_TIER_11", None),
+            ("RELIC_TIER_", None),
+            ("NOT_A_TIER", None),
+        ],
+    )
+    def test_enum_names(self, name: str, expected: str | None):
+        from swgoh_comlink.helpers._utils import convert_relic_tier
+
+        assert convert_relic_tier(name) == expected
+
+    def test_every_relic_in_example_player_converts(self):
+        import json
+
+        from swgoh_comlink.helpers._utils import convert_relic_tier
+
+        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+        tiers = {unit["relic"]["currentTier"] for unit in player["rosterUnit"] if unit.get("relic")}
+        assert 12 in tiers  # relic 10, the maximum
+        assert all(convert_relic_tier(tier) is not None for tier in tiers)
 
     def test_unknown_tier_returns_none(self):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
         assert convert_relic_tier(99) is None
 
-    def test_invalid_type_raises(self):
+    @pytest.mark.parametrize("value", [None, True, 1.0])
+    def test_invalid_type_raises(self, value: Any):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
         with pytest.raises(SwgohComlinkValueError, match="relic_tier"):
-            convert_relic_tier(None)
+            convert_relic_tier(value)
 
 
 # ── _arena ──────────────────────────────────────────────────────────────
@@ -217,27 +249,53 @@ class TestGetMaxRankJump:
 
 
 class TestGetArenaPayout:
-    def test_squad_uses_hour_18(self):
+    # localTimeZoneOffsetMinutes: payout is 18:00 (squad) / 19:00 (fleet) UTC moved back by the offset
+    @staticmethod
+    def _at(hour: int, minute: int = 0, day: int = 8):
+        from datetime import datetime, timezone
+
+        return datetime(2026, 10, day, hour, minute, tzinfo=timezone.utc)
+
+    def test_squad_and_fleet_anchor_hours(self):
         from swgoh_comlink.helpers._arena import get_arena_payout
 
-        result = get_arena_payout(offset=0, fleet=False)
-        # The payout should be at 18:00 local adjusted for UTC offset
-        assert result is not None
+        assert get_arena_payout(0, now=self._at(12)) == self._at(18)
+        assert get_arena_payout(0, fleet=True, now=self._at(12)) == self._at(19)
 
-    def test_fleet_uses_hour_19(self):
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        result = get_arena_payout(offset=0, fleet=True)
-        assert result is not None
-
-    def test_returns_future_datetime(self):
-        from datetime import datetime
+    def test_returns_aware_utc(self):
+        from datetime import timezone
 
         from swgoh_comlink.helpers._arena import get_arena_payout
 
-        # Using a large negative offset to push payout into the future
-        result = get_arena_payout(offset=-1440)
-        assert result > datetime.now()
+        assert get_arena_payout(0).tzinfo == timezone.utc
+
+    def test_offset_moves_payout(self):
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        # UTC+10: 19:00 local is 09:00 UTC
+        assert get_arena_payout(600, fleet=True, now=self._at(8)) == self._at(9)
+
+    def test_passed_payout_rolls_to_next_day(self):
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        assert get_arena_payout(0, now=self._at(18)) == self._at(18, day=9)
+        assert get_arena_payout(0, now=self._at(20)) == self._at(18, day=9)
+
+    def test_payout_on_the_next_utc_day_is_not_skipped(self):
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        # US Pacific (UTC-7) fleet pays at 02:00 UTC. At 01:00 UTC the next payout is an hour away,
+        # not the one 25 hours later.
+        assert get_arena_payout(-420, fleet=True, now=self._at(1)) == self._at(2)
+
+    def test_naive_now_is_local_time(self):
+        from datetime import datetime, timedelta
+
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        now = datetime.now()
+        payout = get_arena_payout(0, now=now)
+        assert timedelta(0) < payout - now.astimezone() <= timedelta(days=1)
 
 
 # ── _omicron ────────────────────────────────────────────────────────────
@@ -520,6 +578,19 @@ class TestGetPlayableUnits:
         assert len(result) == 1
         assert result[0]["rarity"] == 7
 
+    def test_tolerates_missing_fields_and_enum_rarity(self):
+        from swgoh_comlink.helpers._game_data import get_playable_units
+
+        units = [
+            {"baseId": "OLD_DUMP", "rarity": 7, "obtainable": True},  # predates obtainableTime
+            {"baseId": "ENUMS", "rarity": "SEVEN_STAR", "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "INT_TIME", "rarity": 7, "obtainable": True, "obtainableTime": 0},
+            {"baseId": "NO_RARITY", "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "NO_OBTAINABLE", "rarity": 7, "obtainableTime": "0"},
+            {"baseId": "GL_TEMPLATE", "rarity": 7, "obtainable": True, "obtainableTime": "4102444800000"},
+        ]
+        assert [u["baseId"] for u in get_playable_units(units)] == ["OLD_DUMP", "ENUMS", "INT_TIME"]
+
     def test_invalid_type_raises(self):
         from swgoh_comlink.helpers._game_data import get_playable_units
 
@@ -703,6 +774,22 @@ class TestGetConquestFeats:
 
         (feat,) = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, difficulty="normal")
         assert feat["keycards"] == 1
+
+    def test_feats_without_a_kind_token(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        challenges = [
+            _feat("CONQUEST_VOL2_SILVO_VANE_III_DIFF_S0", keycards=5),
+            _feat("CONQUEST_VOL2_NO_TANKS_I_DIFF"),
+            # A longer volume id must not be read as this volume's feat
+            _feat("CONQUEST_VOL24_SECTOR_WIN_III_DIFF_S0"),
+        ]
+        feats = get_conquest_feats(_CONQUEST_DEFS, challenges)
+        assert [(f["challenge_id"], f["kind"], f["scope"]) for f in feats] == [
+            ("CONQUEST_VOL2_NO_TANKS_I_DIFF", "Global", "Global"),
+            ("CONQUEST_VOL2_SILVO_VANE_III_DIFF_S0", "Sector", "S0"),
+        ]
+        assert feats[1]["keycards"] == 5
 
     def test_explicit_conquest_id_is_case_insensitive(self):
         from swgoh_comlink.helpers import get_conquest_feats
@@ -1966,15 +2053,3 @@ class TestGetDatacronDismantleValueNoDustRecipe:
         sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": None}]}]
         result = get_datacron_dismantle_value(datacron, sets, [])
         assert result == {}
-
-
-class TestGetArenaPayoutEdge:
-    def test_payout_already_passed_adds_day(self):
-        from datetime import datetime
-
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        # Use a large positive offset to push payout well into the past
-        # This forces the payout < datetime.now() branch
-        result = get_arena_payout(offset=1440)
-        assert result > datetime.now()

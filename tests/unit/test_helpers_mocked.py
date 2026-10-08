@@ -230,6 +230,17 @@ class TestGetGuildMembers:
         result = get_guild_members(sync_client, allycode=123456789)
         assert len(result) == 1
 
+    def test_requests_recent_activity_info(self, httpx_mock: HTTPXMock, sync_client):
+        import json
+
+        from swgoh_comlink.helpers._guild import get_guild_members
+
+        httpx_mock.add_response(json={"guildId": "guild_abc"})
+        httpx_mock.add_response(json={"member": []})
+        get_guild_members(sync_client, player_id="pid_123")
+        guild_request = json.loads(httpx_mock.get_requests()[-1].content)
+        assert guild_request["payload"] == {"guildId": "guild_abc", "includeRecentGuildActivityInfo": True}
+
     def test_both_provided_raises(self, sync_client):
         from swgoh_comlink.helpers._guild import get_guild_members
 
@@ -260,6 +271,19 @@ class TestGetGuildMembers:
 
 
 class TestAsyncGetGuildMembers:
+    @pytest.mark.asyncio
+    async def test_requests_recent_activity_info(self, httpx_mock: HTTPXMock, async_client):
+        import json
+
+        from swgoh_comlink.helpers._guild import async_get_guild_members
+
+        httpx_mock.add_response(json={"guildId": "guild_abc"})
+        httpx_mock.add_response(json={"member": []})
+        await async_get_guild_members(async_client, player_id="pid_123")
+        guild_request = json.loads(httpx_mock.get_requests()[-1].content)
+        assert guild_request["payload"] == {"guildId": "guild_abc", "includeRecentGuildActivityInfo": True}
+        await async_client.aclose()
+
     @pytest.mark.asyncio
     async def test_via_player_id(self, httpx_mock: HTTPXMock, async_client):
         from swgoh_comlink.helpers._guild import async_get_guild_members

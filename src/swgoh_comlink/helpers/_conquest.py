@@ -93,9 +93,11 @@ def get_conquest_feats(
     """List the feats for a Conquest event, covering both global and per-sector feats.
 
     Feats are not referenced from ``conquestDefinition``; they are linked to an event only by the
-    ``challenge`` id convention ``<CONQUEST_ID>_<KIND>_<NAME>_<I|II|III>_DIFF[_S<n>]``, where KIND is
+    ``challenge`` id convention ``<CONQUEST_ID>_[<KIND>_]<NAME>_<I|II|III>_DIFF[_S<n>]``, where KIND is
     ``EVENT`` (global feat, no sector suffix), ``SECTOR``, ``MINIBOSS`` or ``BOSS``, and the roman
-    numeral is the difficulty (I = Easy, II = Normal, III = Hard).
+    numeral is the difficulty (I = Easy, II = Normal, III = Hard). Many feats, mostly in older
+    conquests, have no KIND token (``CONQUEST_VOL23_SILVO_VANE_III_DIFF_S0``); their kind is
+    ``"Sector"`` when the id has a sector suffix and ``"Global"`` otherwise.
 
     Args:
         conquest_definitions: The game data ``conquestDefinition`` collection.
@@ -157,7 +159,7 @@ def get_conquest_feats(
         for artifact in artifact_definitions or []
     }
     pattern = re.compile(
-        rf"^{re.escape(conquest['id'])}_(EVENT|SECTOR|MINIBOSS|BOSS)_.+?_(I{{1,3}})_DIFF(?:_(S\d+))?$",
+        rf"^{re.escape(conquest['id'])}_(?:(EVENT|SECTOR|MINIBOSS|BOSS)_)?.+?_(I{{1,3}})_DIFF(?:_(S\d+))?$",
         re.IGNORECASE,
     )
 
@@ -176,7 +178,7 @@ def get_conquest_feats(
                 "difficulty": feat_difficulty,
                 "scope": sector_titles.get(sector_id, sector_id) if sector_id else "Global",
                 "sector_id": sector_id,
-                "kind": _FEAT_KINDS[kind.upper()],
+                "kind": _FEAT_KINDS[kind.upper()] if kind else "Sector" if sector_id else "Global",
                 "name": _localize(localization, challenge.get("nameKey"), challenge.get("nameKey", "")),
                 "description": _localize(localization, challenge.get("descKey"), challenge.get("descKey", "")),
                 "keycards": sum(int(r.get("maxQuantity", 0)) for r in rewards if r.get("type") in _CONQUEST_POINT),
