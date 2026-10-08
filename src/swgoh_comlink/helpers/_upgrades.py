@@ -447,7 +447,7 @@ def get_ability_upgrade_costs(
 
 
 def sum_upgrade_costs(
-    costs: Iterable[UpgradeCost],
+    costs: Iterable[Mapping[str, Any]],
     equipment: list[dict[str, Any]] | None = None,
     recipes: list[dict[str, Any]] | None = None,
 ) -> UpgradeCost:
@@ -484,6 +484,8 @@ def sum_upgrade_costs(
     func_name = get_function_name()
     if (equipment is None) != (recipes is None):
         raise SwgohComlinkValueError(f"{func_name}: pass both 'equipment' and 'recipes' to craft gear, or neither")
+    if equipment is not None and recipes is not None:
+        _check_lists(func_name, equipment=equipment, recipes=recipes)
 
     total = _empty_cost()
     for cost in costs:
@@ -492,7 +494,6 @@ def sum_upgrade_costs(
         _add_cost(total, cost)
 
     if equipment is not None and recipes is not None:
-        _check_lists(func_name, equipment=equipment, recipes=recipes)
         piece_map = {str(piece.get("id")): piece for piece in equipment}
         recipe_map = {str(recipe.get("id")): recipe for recipe in recipes}
         pieces, total["equipment"] = total["equipment"], {}

@@ -2515,8 +2515,7 @@ class TestSumUpgradeCosts:
     def test_missing_fields_count_as_zero(self):
         from swgoh_comlink.helpers import sum_upgrade_costs
 
-        partial: Any = [{"equipment": {"164": 2}}, {"credits": 5}]
-        assert sum_upgrade_costs(partial) == _cost(credits=5, equipment={"164": 2})
+        assert sum_upgrade_costs([{"equipment": {"164": 2}}, {"credits": 5}]) == _cost(credits=5, equipment={"164": 2})
         assert sum_upgrade_costs([]) == _cost()
 
     def test_crafts_gear_down_to_salvage(self):
@@ -2542,6 +2541,15 @@ class TestSumUpgradeCosts:
             (t["cost"] for t in enum_tiers), _enum_tiers(_UPGRADE_EQUIPMENT), _UPGRADE_RECIPES
         )
         assert enum_total == sum_upgrade_costs((t["cost"] for t in int_tiers), _UPGRADE_EQUIPMENT, _UPGRADE_RECIPES)
+
+    def test_checks_collections_before_consuming_costs(self):
+        from swgoh_comlink.helpers import sum_upgrade_costs
+
+        costs = iter([_cost(credits=1)])
+        not_a_list: Any = {}
+        with pytest.raises(SwgohComlinkValueError, match="must be a list"):
+            sum_upgrade_costs(costs, not_a_list, [])
+        assert next(costs) == _cost(credits=1)
 
     @pytest.mark.parametrize(
         ("args", "message"),
