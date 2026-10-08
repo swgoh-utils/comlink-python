@@ -1739,6 +1739,422 @@ class TestItemHelpersRobustness:
         get_mod_catalog([], _ITEM_GAME_DATA["statModSet"], _ITEM_LOC)
 
 
+# ── _territory_battle ──────────────────────────────────────────────────
+
+
+def _tb_zone(zone_id: str, planet: str = "", name_key: str = "") -> dict[str, Any]:
+    return {"zoneId": zone_id, "linkedConflictId": planet, "nameKey": name_key, "maxUnitCountPerPlayer": 2147483647}
+
+
+def _tb_mission_zone(zone_id: str, planet: str, mission_id: str, table: str | None = None, difficulty: Any = 4):
+    zone: dict[str, Any] = {
+        "zoneDefinition": _tb_zone(zone_id, planet, "COMBAT_MISSION_NAME"),
+        "campaignElementIdentifier": {
+            "campaignId": "t05D",
+            "campaignMapId": "TB_MAP",
+            "campaignNodeDifficulty": difficulty,
+            "campaignNodeId": "NODE_1",
+            "campaignMissionId": mission_id,
+        },
+        "combatType": 1,
+    }
+    if table:
+        zone["encounterRewardTableId"] = table
+    return zone
+
+
+def _tb_bracket(score: Any, reward_type: Any = 2) -> dict[str, Any]:
+    return {"galacticScoreRequirement": score, "reward": {"type": reward_type, "value": "1"}}
+
+
+def _tb_platoon(platoon_id: str, points: str, reward_type: Any = 1) -> dict[str, Any]:
+    return {
+        "id": platoon_id,
+        "squad": [{"id": "squad-01"}, {"id": "squad-02"}],
+        "reward": {"type": reward_type, "value": points},
+    }
+
+
+_TB_DEFS = [
+    {
+        "id": "t04D",
+        "territoryBattleVersion_3": False,
+        "conflictZoneDefinition": [
+            {"zoneDefinition": _tb_zone("geo_phase01_conflict01"), "victoryPointRewards": [_tb_bracket("10")]}
+        ],
+        # Before version 3, special missions in the strike array are real, playable missions.
+        "strikeZoneDefinition": [_tb_mission_zone("geo_phase01_conflict01_strike01", "p", "X_SPECIALMISSION", "t1")],
+    },
+    {
+        "id": "t05D",
+        # Comlink's spelling; the on-disk dump of the game data spells it territoryBattleVersion_3.
+        "territoryBattleVersion3": True,
+        "conflictZoneDefinition": [
+            {
+                "zoneDefinition": _tb_zone("tb3_phase01_conflict01", name_key="PLANET_CORUSCANT"),
+                "forceAlignment": 2,
+                "victoryPointRewards": [_tb_bracket("300"), _tb_bracket(100), _tb_bracket("200", "VICTORY_POINT")],
+            },
+            {
+                "zoneDefinition": _tb_zone("tb3_phase03_conflict01_bonus"),
+                "isBonus": True,
+                # The first two brackets pay a mystery box, not a star.
+                "victoryPointRewards": [_tb_bracket("50", 3), _tb_bracket("80", 3), _tb_bracket("90")],
+            },
+        ],
+        "strikeZoneDefinition": [
+            _tb_mission_zone("tb3_phase01_conflict01_strike01", "tb3_phase01_conflict01", "COMBAT_01", "tb3_p1"),
+            _tb_mission_zone("tb3_phase01_conflict01_strike02", "tb3_phase01_conflict01", "COMBAT_02", "tb3_p1"),
+            # Shares its campaign mission with strike02 on the same planet.
+            _tb_mission_zone("tb3_phase01_conflict01_dup", "tb3_phase01_conflict01", "COMBAT_02", "tb3_p1"),
+            # A special mission left in the strike array of a version 3 map.
+            _tb_mission_zone(
+                "tb3_phase01_conflict02_specialmission", "tb3_phase01_conflict02", "P1_SPECIALMISSION", "tb3_p1"
+            ),
+            # Names a mission the campaign does not have.
+            _tb_mission_zone("tb3_phase01_conflict02_strike01", "tb3_phase01_conflict02", "MISSING", "tb3_gap"),
+        ],  # fmt: skip
+        "covertZoneDefinition": [
+            {
+                **_tb_mission_zone("tb3_phase01_conflict01_covert01", "tb3_phase01_conflict01", "SPECIAL_01"),
+                "combatType": "SHIP",
+            }
+        ],
+        "reconZoneDefinition": [
+            {
+                "zoneDefinition": {
+                    **_tb_zone("tb3_phase01_conflict01_recon01", "tb3_phase01_conflict01"),
+                    "nameKey": "RECON_NAME",
+                    "maxUnitCountPerPlayer": 10,
+                },
+                "unitRarity": 7,
+                "unitRelicTier": 7,
+                "combatType": 1,
+                "platoonDefinition": [
+                    _tb_platoon("platoon-1", "100"),
+                    _tb_platoon("platoon-2", "250"),
+                    _tb_platoon("platoon-3", "999", reward_type=3),
+                ],
+            },
+            {
+                "zoneDefinition": _tb_zone("tb3_phase01_conflict02_recon01", "tb3_phase01_conflict02"),
+                "unitRarity": "SIX_STAR",
+                "unitRelicTier": "RELIC_LOCKED",
+                "combatType": 2,
+                "platoonDefinition": [],
+            },
+        ],  # fmt: skip
+    },
+]
+
+
+def _tb_gate(**overrides: Any) -> dict[str, Any]:
+    gate = {
+        "categoryId": ["profession_jedi", "hidden_tag"],
+        "commanderCategoryId": [],
+        "excludeCategoryId": [],
+        "mandatoryRosterUnit": [],
+        "matchType": 2,
+        "minimumRequiredUnitQuantity": 5,
+        "maximumAllowedUnitQuantity": 5,
+        "minimumUnitRarity": 7,
+        "minimumUnitLevel": 85,
+        "minimumUnitTier": 13,
+        "minimumRelicTier": 9,
+    }
+    return gate | overrides
+
+
+def _tb_campaign_mission(mission_id: str, gate: dict[str, Any], desc_key: str = "") -> dict[str, Any]:
+    return {"id": mission_id, "descKey": desc_key, "entryCategoryAllowed": gate}
+
+
+_TB_CAMPAIGNS = [
+    {
+        "id": "t05D",
+        "campaignMap": [
+            {
+                "id": "TB_MAP",
+                "campaignNodeDifficultyGroup": [
+                    # The same node and mission ids under another difficulty, with a different gate.
+                    {
+                        "campaignNodeDifficulty": 5,
+                        "campaignNode": [
+                            {"id": "NODE_1", "campaignNodeMission": [_tb_campaign_mission("COMBAT_01", _tb_gate(
+                                minimumRelicTier=12))]}
+                        ],
+                    },
+                    {
+                        "campaignNodeDifficulty": 4,
+                        "campaignNode": [
+                            {
+                                "id": "NODE_1",
+                                "campaignNodeMission": [
+                                    _tb_campaign_mission(
+                                        "COMBAT_01",
+                                        _tb_gate(
+                                            mandatoryRosterUnit=[{"id": "KITFISTO", "slot": 1},
+                                                                 {"id": "MACEWINDU", "slot": 0}],
+                                        ),
+                                        "COMBAT_01_REQUIREMENTS",
+                                    ),
+                                    _tb_campaign_mission(
+                                        "COMBAT_02",
+                                        _tb_gate(categoryId=["role_leader"], commanderCategoryId=["profession_jedi"],
+                                                 excludeCategoryId=["unknown_tag"], minimumRelicTier="RELIC_TIER_05",
+                                                 minimumUnitRarity="SEVEN_STAR", minimumUnitTier="TIER_12"),
+                                    ),
+                                    _tb_campaign_mission("P1_SPECIALMISSION", _tb_gate()),
+                                    # Ships cannot hold relics: RELIC_LOCKED is no relic floor.
+                                    _tb_campaign_mission("SPECIAL_01", _tb_gate(categoryId=[], minimumRelicTier=1)),
+                                ],
+                            }
+                        ],
+                    },
+                ],
+            }
+        ],
+    },
+    {"id": "OTHER_CAMPAIGN", "campaignMap": []},
+]  # fmt: skip
+_TB_CATEGORIES = [
+    {"id": "profession_jedi", "descKey": "CATEGORY_JEDI_DESC"},
+    {"id": "role_leader", "descKey": "CATEGORY_LEADER_DESC"},
+    {"id": "hidden_tag", "descKey": "PLACEHOLDER"},
+]
+_TB_LOC = {
+    "PLANET_CORUSCANT": "[c][ffff33]Coruscant[-][/c]",
+    "COMBAT_MISSION_NAME": "Combat Mission",
+    "RECON_NAME": "Coruscant Operation",
+    "CATEGORY_JEDI_DESC": "Jedi",
+    "PLACEHOLDER": "Placeholder",
+    "COMBAT_01_REQUIREMENTS": "5x Jedi (Relic 7+)\\n[c][f0ff23]Mace Windu[-][/c]\\n[c][f0ff23]Kit Fisto[-][/c]",
+}
+_TB_TABLES = [
+    # Rows keyed by wave count as strings, out of order, with a non-score row.
+    {"id": "tb3_p1", "row": [{"key": "2", "value": "GALACTIC_SCORE:200"}, {"key": "0", "value": "GALACTIC_SCORE:0"},
+                             {"key": "1", "value": "GALACTIC_SCORE:100"}, {"key": "3", "value": "ITEM:abc"}]},
+    # Wave 1 is missing; it repeats wave 0's total.
+    {"id": "tb3_gap", "row": [{"key": "0", "value": "GALACTIC_SCORE:0"}, {"key": "2", "value": "GALACTIC_SCORE:50"}]},
+    {"id": "t1", "row": [{"key": "0", "value": "GALACTIC_SCORE:0"}, {"key": "1", "value": "GALACTIC_SCORE:7"}]},
+    {"id": "unrelated", "row": [{"key": "x", "value": "SPRITE:y"}]},
+]  # fmt: skip
+
+
+class TestGetTbStarThresholds:
+    def test_reads_only_victory_point_brackets_sorted(self):
+        from swgoh_comlink.helpers import get_tb_star_thresholds
+
+        zones = get_tb_star_thresholds(_TB_DEFS, _TB_LOC)
+        assert [(z["tb_id"], z["zone_id"], z["stars"]) for z in zones] == [
+            ("t04D", "geo_phase01_conflict01", [10]),
+            ("t05D", "tb3_phase01_conflict01", [100, 200, 300]),
+            ("t05D", "tb3_phase03_conflict01_bonus", [90]),
+        ]
+        coruscant, bonus = zones[1:]
+        assert coruscant["name"] == "Coruscant"
+        assert (coruscant["phase"], coruscant["is_bonus"], coruscant["force_alignment"]) == (1, False, 2)
+        assert (bonus["phase"], bonus["is_bonus"]) == (3, True)
+        # Without a localization entry the name is its key, or the zone id when there is no key.
+        assert zones[0]["name"] == "geo_phase01_conflict01"
+
+    def test_tb_id_is_case_insensitive(self):
+        from swgoh_comlink.helpers import get_tb_star_thresholds
+
+        assert {z["tb_id"] for z in get_tb_star_thresholds(_TB_DEFS, tb_id="T04d")} == {"t04D"}
+
+    @pytest.mark.parametrize(
+        ("args", "kwargs"),
+        [
+            (({"id": "t05D"},), {}),
+            ((_TB_DEFS, ["not", "a", "dict"]), {}),
+            ((_TB_DEFS,), {"tb_id": "t99D"}),
+            ((_TB_DEFS,), {"tb_id": 5}),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
+        from swgoh_comlink.helpers import get_tb_star_thresholds
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_tb_star_thresholds(*args, **kwargs)
+
+
+class TestGetTbMissionRequirements:
+    def _get(self, **kwargs: Any) -> dict[str, Any]:
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        missions = get_tb_mission_requirements(_TB_DEFS, _TB_CAMPAIGNS, _TB_CATEGORIES, _TB_LOC, **kwargs)
+        return {m["zone_id"]: m for m in missions}
+
+    def test_lists_combat_then_special_missions(self):
+        missions = self._get(tb_id="t05D")
+        assert [(zone_id, m["mission_type"]) for zone_id, m in missions.items()] == [
+            ("tb3_phase01_conflict01_strike01", "combat"),
+            ("tb3_phase01_conflict01_strike02", "combat"),
+            ("tb3_phase01_conflict01_dup", "combat"),
+            ("tb3_phase01_conflict02_specialmission", "combat"),
+            ("tb3_phase01_conflict02_strike01", "combat"),
+            ("tb3_phase01_conflict01_covert01", "special"),
+        ]
+
+    def test_resolves_the_gate_at_the_zones_difficulty(self):
+        strike = self._get()["tb3_phase01_conflict01_strike01"]
+        assert strike["resolved"] is True
+        assert strike["campaign_mission_id"] == "COMBAT_01"
+        assert (strike["conflict_zone_id"], strike["phase"], strike["name"]) == (
+            "tb3_phase01_conflict01",
+            1,
+            "Combat Mission",
+        )
+        # Wire relic tier 9 is relic 7; the difficulty 5 copy of this mission (wire 12) is not used.
+        assert strike["min_relic"] == 7
+        assert (strike["min_rarity"], strike["min_gear"], strike["min_level"]) == (7, 13, 85)
+        assert (strike["min_squad_size"], strike["max_squad_size"], strike["category_match_type"]) == (5, 5, 2)
+        assert strike["mandatory_units"] == [{"base_id": "MACEWINDU", "slot": 0}, {"base_id": "KITFISTO", "slot": 1}]
+        assert strike["requirement_text"] == "5x Jedi (Relic 7+)\nMace Windu\nKit Fisto"
+        assert strike["is_fleet"] is False
+
+    def test_names_categories_and_skips_placeholder_names(self):
+        missions = self._get()
+        assert missions["tb3_phase01_conflict01_strike01"]["allowed_categories"] == [
+            {"id": "profession_jedi", "name": "Jedi"},
+            {"id": "hidden_tag", "name": "hidden_tag"},
+        ]
+        strike = missions["tb3_phase01_conflict01_strike02"]
+        # A category with no localization entry keeps its key; one missing from 'categories' its id.
+        assert strike["allowed_categories"] == [{"id": "role_leader", "name": "CATEGORY_LEADER_DESC"}]
+        assert strike["commander_categories"] == [{"id": "profession_jedi", "name": "Jedi"}]
+        assert strike["excluded_categories"] == [{"id": "unknown_tag", "name": "unknown_tag"}]
+
+    def test_enum_names_and_relic_locked(self):
+        missions = self._get()
+        strike = missions["tb3_phase01_conflict01_strike02"]
+        assert (strike["min_relic"], strike["min_rarity"], strike["min_gear"]) == (5, 7, 12)
+        fleet = missions["tb3_phase01_conflict01_covert01"]
+        assert fleet["is_fleet"] is True
+        assert fleet["min_relic"] == 0
+
+    def test_unresolved_mission_is_kept_without_a_gate(self):
+        strike = self._get()["tb3_phase01_conflict02_strike01"]
+        assert strike["resolved"] is False
+        assert strike["requirement_text"] == ""
+        assert strike["allowed_categories"] == [] and strike["min_squad_size"] == 0
+
+    def test_hidden_reasons(self):
+        missions = self._get()
+        assert {zone_id: m["hidden_reason"] for zone_id, m in missions.items() if m["hidden_reason"]} == {
+            "tb3_phase01_conflict01_dup": "duplicate",
+            "tb3_phase01_conflict02_specialmission": "special",
+        }
+        # Not a version 3 map, so a special mission in the strike array is a normal mission.
+        assert missions["geo_phase01_conflict01_strike01"]["hidden_reason"] is None
+
+    def test_dump_spelling_of_the_version_3_flag(self):
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        definition = {k: v for k, v in _TB_DEFS[1].items() if k != "territoryBattleVersion3"}
+        missions = get_tb_mission_requirements([definition], _TB_CAMPAIGNS, _TB_CATEGORIES)
+        assert sum(m["hidden_reason"] == "special" for m in missions) == 0
+        definition["territoryBattleVersion_3"] = True
+        missions = get_tb_mission_requirements([definition], _TB_CAMPAIGNS, _TB_CATEGORIES)
+        assert sum(m["hidden_reason"] == "special" for m in missions) == 1
+
+    def test_without_localization_returns_keys(self):
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        missions = get_tb_mission_requirements(_TB_DEFS, _TB_CAMPAIGNS, _TB_CATEGORIES, tb_id="t05D")
+        assert missions[0]["requirement_text"] == "COMBAT_01_REQUIREMENTS"
+        assert missions[0]["allowed_categories"][0]["name"] == "CATEGORY_JEDI_DESC"
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ({"id": "t05D"}, _TB_CAMPAIGNS, _TB_CATEGORIES),
+            (_TB_DEFS, None, _TB_CATEGORIES),
+            (_TB_DEFS, _TB_CAMPAIGNS, "category"),
+            (_TB_DEFS, _TB_CAMPAIGNS, _TB_CATEGORIES, "loc"),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...]):
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_tb_mission_requirements(*args)
+
+
+class TestGetTbMissionScores:
+    def test_cumulative_points_by_waves(self):
+        from swgoh_comlink.helpers import get_tb_mission_scores
+
+        scores = {s["zone_id"]: s for s in get_tb_mission_scores(_TB_DEFS, _TB_TABLES)}
+        # The covert zone has no points table and is not listed.
+        assert list(scores) == [
+            "geo_phase01_conflict01_strike01",
+            "tb3_phase01_conflict01_strike01",
+            "tb3_phase01_conflict01_strike02",
+            "tb3_phase01_conflict01_dup",
+            "tb3_phase01_conflict02_specialmission",
+            "tb3_phase01_conflict02_strike01",
+        ]
+        strike = scores["tb3_phase01_conflict01_strike01"]
+        assert strike["wave_points"] == [0, 100, 200]
+        assert (strike["max_points"], strike["reward_table_id"], strike["mission_type"]) == (200, "tb3_p1", "combat")
+        assert scores["tb3_phase01_conflict02_strike01"]["wave_points"] == [0, 0, 50]
+        assert scores["tb3_phase01_conflict01_dup"]["hidden_reason"] == "duplicate"
+        assert scores["geo_phase01_conflict01_strike01"]["max_points"] == 7
+
+    def test_tb_id_filter(self):
+        from swgoh_comlink.helpers import get_tb_mission_scores
+
+        assert {s["tb_id"] for s in get_tb_mission_scores(_TB_DEFS, _TB_TABLES, tb_id="t04d")} == {"t04D"}
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ({"id": "t05D"}, _TB_TABLES),
+            (_TB_DEFS, None),
+            # The mission's table is not in the collection.
+            (_TB_DEFS, _TB_TABLES[1:]),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...]):
+        from swgoh_comlink.helpers import get_tb_mission_scores
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_tb_mission_scores(*args)
+
+
+class TestGetTbPlatoonDefinitions:
+    def test_reads_floors_and_points_per_platoon(self):
+        from swgoh_comlink.helpers import get_tb_platoon_definitions
+
+        zone, fleet = get_tb_platoon_definitions(_TB_DEFS, _TB_LOC)
+        assert (zone["tb_id"], zone["zone_id"], zone["conflict_zone_id"], zone["phase"]) == (
+            "t05D",
+            "tb3_phase01_conflict01_recon01",
+            "tb3_phase01_conflict01",
+            1,
+        )
+        assert zone["name"] == "Coruscant Operation"
+        assert (zone["min_rarity"], zone["min_relic"], zone["max_units_per_player"]) == (7, 5, 10)
+        assert zone["platoons"] == [
+            {"platoon_id": "platoon-1", "squad_ids": ["squad-01", "squad-02"], "points": 100},
+            {"platoon_id": "platoon-2", "squad_ids": ["squad-01", "squad-02"], "points": 250},
+            # Not a territory points reward.
+            {"platoon_id": "platoon-3", "squad_ids": ["squad-01", "squad-02"], "points": 0},
+        ]
+        assert zone["total_points"] == 350
+        assert (fleet["is_fleet"], fleet["min_rarity"], fleet["min_relic"]) == (True, 6, 0)
+        assert fleet["max_units_per_player"] is None
+        assert (fleet["platoons"], fleet["total_points"]) == ([], 0)
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_tb_platoon_definitions
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_tb_platoon_definitions(_TB_DEFS, tb_id="t99D")
+
+
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 
