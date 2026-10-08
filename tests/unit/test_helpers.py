@@ -727,6 +727,231 @@ class TestGetConquestFeats:
             get_conquest_feats(*args, **kwargs)
 
 
+# ── _abilities ─────────────────────────────────────────────────────────
+
+
+def _skill(skill_id: str, ability_id: str, zeta: int | None = None, omicron: int | None = None, mode: Any = 1):
+    """A 'skill' record with seven upgrade tiers; zeta/omicron are tier indexes."""
+    tiers = [{"isZetaTier": i == zeta, "isOmicronTier": i == omicron} for i in range(7)]
+    return {
+        "id": skill_id,
+        "abilityReference": ability_id,
+        "nameKey": "DEFENSE_UP_NAME_KEY",
+        "omicronMode": mode,
+        "tier": tiers,
+    }
+
+
+def _ability(ability_id: str, tier_desc_keys: list[str], upgrade_keys: list[str] | None = None) -> dict[str, Any]:
+    upgrades = upgrade_keys or [""] * len(tier_desc_keys)
+    stem = ability_id.upper()
+    return {
+        "id": ability_id,
+        "nameKey": f"{stem}_NAME",
+        "descKey": f"{stem}_DESC",
+        "tier": [{"descKey": d, "upgradeDescKey": u} for d, u in zip(tier_desc_keys, upgrades, strict=True)],
+    }
+
+
+_ABILITY_SKILLS = [
+    # Trench's basic: a TW omicron at the last tier, text keyed under _OBTAINABLE_TIER_<nn>_DESC.
+    _skill("basicskill_TRENCH", "basicability_trench", omicron=6, mode=8),
+    # Ackbar's special: reworked, so every key the record names carries _V2.
+    _skill("specialskill_ADMIRALACKBAR02", "specialability_admiralackbar02", zeta=6),
+    # The game data spells one prefix with a capital letter.
+    _skill("Contractskill_TRENCH", "contractability_trench"),
+    # A ship's own ability, and a crew member's ability attached to the ship.
+    _skill("basicskill_CAPITALEXECUTOR", "basicability_capitalexecutor"),
+    _skill("uniqueskill_CAPITALEXECUTOR01", "uniqueability_capitalexecutor01", omicron=6, mode=9),
+]
+_ABILITIES = [
+    _ability(
+        "basicability_trench",
+        ["BASICABILITY_TRENCH_OBTAINABLE_DESC"] * 3
+        + [f"BASICABILITY_TRENCH_OBTAINABLE_TIER_0{i}_DESC" for i in range(4, 8)],
+        ["ABILITYUPGRADE_STAT_DAMAGE05PCT_DESC"] * 6 + ["ABILITYUPGRADE_BASICABILITY_TRENCH_TIER_07_DESC"],
+    ),
+    {
+        **_ability(
+            "specialability_admiralackbar02",
+            [f"SPECIALABILITY_ADMIRALACKBAR02_TIER0{i}_DESC_V2" for i in range(1, 8)],
+        ),
+        "descKey": "SPECIALABILITY_ADMIRALACKBAR02_DESC_V2",
+    },
+    # Fewer text tiers than the skill has upgrades: the last known text carries forward.
+    _ability("contractability_trench", ["CONTRACT_TIER01_DESC"]),
+    _ability("basicability_capitalexecutor", ["X_DESC"] * 7),
+    _ability("uniqueability_capitalexecutor01", ["Y_DESC"] * 7),
+]
+_ABILITY_UNITS = [
+    {"baseId": "TRENCH", "nameKey": "UNIT_TRENCH_NAME", "rarity": 1,
+     "skillReference": [{"skillId": "basicskill_TRENCH"}, {"skillId": "Contractskill_TRENCH"}, {"skillId": "missing"}]},
+    # A second rarity row for the same unit is not listed again.
+    {"baseId": "TRENCH", "nameKey": "UNIT_TRENCH_NAME", "rarity": 7, "skillReference": [{"skillId": "basicskill_TRENCH"}]},
+    {"baseId": "ADMIRALACKBAR", "nameKey": "UNIT_ACKBAR_NAME", "skillReference": [{"skillId": "specialskill_ADMIRALACKBAR02"}]},
+    {"baseId": "CAPITALEXECUTOR", "nameKey": "UNIT_EXECUTOR_NAME",
+     "skillReference": [{"skillId": "basicskill_CAPITALEXECUTOR"}],
+     "crew": [{"unitId": "ADMIRALPIETT", "skillReference": [{"skillId": "uniqueskill_CAPITALEXECUTOR01"}]}]},
+]  # fmt: skip
+_ABILITY_LOC = {
+    "UNIT_TRENCH_NAME": "Admiral Trench",
+    "BASICABILITY_TRENCH_NAME": "Unfinished Business ",
+    "BASICABILITY_TRENCH_DESC": "base text",
+    "BASICABILITY_TRENCH_OBTAINABLE_DESC": "early text",
+    "BASICABILITY_TRENCH_OBTAINABLE_TIER_07_DESC": "[c][ffff33]final[-][/c] text",
+    "ABILITYUPGRADE_STAT_DAMAGE05PCT_DESC": "+5% Damage",
+    "ABILITYUPGRADE_BASICABILITY_TRENCH_TIER_07_DESC": "[c][e7e7e7]While in Territory Wars:[-][/c] Ability Block",
+    "SPECIALABILITY_ADMIRALACKBAR02_NAME": "Tactical Genius",
+    "SPECIALABILITY_ADMIRALACKBAR02_DESC": "pre-rework text",
+    "SPECIALABILITY_ADMIRALACKBAR02_DESC_V2": "current text",
+    "SPECIALABILITY_ADMIRALACKBAR02_TIER07_DESC": "pre-rework L8",
+    "SPECIALABILITY_ADMIRALACKBAR02_TIER07_DESC_V2": "current L8",
+    "DEFENSE_UP_NAME_KEY": "DEFENSE UP",
+}
+
+
+class TestGetUnitAbilities:
+    def _get(self, **kwargs: Any) -> list[Any]:
+        from swgoh_comlink.helpers import get_unit_abilities
+
+        return get_unit_abilities(_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES, _ABILITY_LOC, **kwargs)
+
+    def test_lists_each_unit_once_with_crew_abilities_last(self):
+        abilities = self._get()
+        assert [(a["base_id"], a["skill_id"], a["crew_base_id"]) for a in abilities] == [
+            ("TRENCH", "basicskill_TRENCH", None),
+            ("TRENCH", "Contractskill_TRENCH", None),
+            ("ADMIRALACKBAR", "specialskill_ADMIRALACKBAR02", None),
+            ("CAPITALEXECUTOR", "basicskill_CAPITALEXECUTOR", None),
+            ("CAPITALEXECUTOR", "uniqueskill_CAPITALEXECUTOR01", "ADMIRALPIETT"),
+        ]
+        assert [a["kind"] for a in abilities] == ["basic", "contract", "special", "basic", "unique"]
+
+    def test_reads_text_through_the_ability_records_keys(self):
+        trench = self._get(base_id="trench")[0]
+        assert trench["unit_name"] == "Admiral Trench"
+        # ability.nameKey, not the skill's placeholder, and trimmed
+        assert trench["name"] == "Unfinished Business"
+        assert trench["description"] == "base text"
+        assert [t["level"] for t in trench["tiers"]] == [2, 3, 4, 5, 6, 7, 8]
+        assert trench["tiers"][0]["description"] == "early text"
+        assert trench["tiers"][0]["upgrade"] == "+5% Damage"
+        assert trench["tiers"][-1]["description"] == "final text"
+        assert trench["tiers"][-1]["upgrade"] == "While in Territory Wars: Ability Block"
+
+        (ackbar,) = self._get(base_id="ADMIRALACKBAR")
+        assert ackbar["description"] == "current text"
+        assert ackbar["tiers"][-1]["description"] == "current L8"
+
+        # Keys missing from the dictionary fall back to the key itself
+        executor = self._get(base_id="CAPITALEXECUTOR")[0]
+        assert executor["unit_name"] == "UNIT_EXECUTOR_NAME"
+        assert executor["tiers"][0]["description"] == "X_DESC"
+
+    def test_zeta_and_omicron_levels(self):
+        trench, contract = self._get(base_id=["TRENCH"])
+        assert trench["max_level"] == 8
+        assert (trench["zeta_level"], trench["omicron_level"], trench["omicron_mode"]) == (None, 8, 8)
+        assert [t["is_omicron"] for t in trench["tiers"]] == [False] * 6 + [True]
+        # A skill without an omicron tier reports mode 1, the unset default; that is not surfaced.
+        assert (contract["omicron_level"], contract["omicron_mode"]) == (None, None)
+        (ackbar,) = self._get(base_id="ADMIRALACKBAR")
+        assert (ackbar["zeta_level"], ackbar["omicron_mode"]) == (8, None)
+
+    def test_missing_ability_tiers_carry_text_forward(self):
+        contract = self._get(base_id="TRENCH")[1]
+        assert {t["description"] for t in contract["tiers"]} == {"CONTRACT_TIER01_DESC"}
+        assert contract["max_level"] == 8
+
+    def test_omicron_mode_filter(self):
+        assert [a["skill_id"] for a in self._get(omicron_mode=8)] == ["basicskill_TRENCH"]
+        assert len(self._get(omicron_mode=[8, 9])) == 2
+        # Mode 1 is the default on every skill without an omicron, so it matches nothing here.
+        assert self._get(omicron_mode=1) == []
+
+    def test_without_localization_returns_keys(self):
+        from swgoh_comlink.helpers import get_unit_abilities
+
+        (ackbar,) = get_unit_abilities(_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES, base_id="ADMIRALACKBAR")
+        assert ackbar["unit_name"] == "UNIT_ACKBAR_NAME"
+        assert ackbar["name"] == "SPECIALABILITY_ADMIRALACKBAR02_NAME"
+
+    @pytest.mark.parametrize(
+        ("args", "kwargs"),
+        [
+            (({}, _ABILITY_SKILLS, _ABILITIES), {}),
+            ((_ABILITY_UNITS, None, _ABILITIES), {}),
+            ((_ABILITY_UNITS, _ABILITY_SKILLS, "ability"), {}),
+            ((_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES, ["not", "a", "dict"]), {}),
+            ((_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES), {"base_id": 5}),
+            ((_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES), {"omicron_mode": [8, None]}),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
+        from swgoh_comlink.helpers import get_unit_abilities
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_unit_abilities(*args, **kwargs)
+
+
+_EFFECT_LOC = {
+    "BattleEffect_PotencyUp": "[c][ffff33]Potency Up:[-][/c] Increased chance to apply detrimental effects",
+    # Colon after the closing tags
+    "BattleEffect_Overcharge": "[c][F0FF23]Overcharge[-][/c]: Protection Temporarily Increased",
+    # Whitespace before the closing tags
+    "BattleEffect_Provoked": "[c][ffff33]Provoked: [-][/c]old wording",
+    "BattleEffect_Provoked_V2": "[c][ffff33]Provoked: [-][/c]+100% counter chance\\nnext line",
+    # 'Vulnerable' starts with V; only a trailing _V<n> is a version
+    "BattleEffect_Vulnerable": "[c][ffff33]Vulnerable:[-][/c] old",
+    "BattleEffect_Vulnerable_V2": "[c][ffff33]Vulnerable:[-][/c] current",
+    "Battleeffect_ConcussionMine": "[c][ffff33]Concussion Mine:[-][/c] Deals damage",
+    "FEAR_DEBUFF_DESC": "[c][ffff33]Fear:[-][/c] Miss the next turn",
+    "DEMORALIZED_DEBUFF_TIER1": "[c][ffff33]Demoralized:[-][/c] tier 1",
+    "DEMORALIZED_DEBUFF_TIER0": "[c][ffff33]Demoralized:[-][/c] tier 0",
+    "MOFFGIDEON_INSIGHT_V2": "[c][ffff33]Insight:[-][/c] additional effects",
+    "50RT_VIP_ALLY": "[c][ffff33]VIP:[-][/c] gain bonuses",
+    # Generic key, but BattleEffect_ wins for the same name
+    "OVERCHARGE_BUFF_DESC": "[c][ffff33]Overcharge:[-][/c] generic wording",
+    # Not named effects
+    "BattleEffect_AccuracyUp_Stat": "[c][ffff33]+15% Accuracy:[-][/c] stat line",
+    "BattleEffect_Mission": "Inflict 10 stacks of Distract to obtain victory!",
+    "SPECIALABILITY_X_DESC": "[c][ffff33]Expose:[-][/c] ability text is not an effect key",
+}
+
+
+class TestGetNamedEffects:
+    def test_reads_every_key_family(self):
+        from swgoh_comlink.helpers import get_named_effects
+
+        effects = get_named_effects(_EFFECT_LOC)
+        assert list(effects) == sorted(
+            ["Concussion Mine", "Demoralized", "Fear", "Insight", "Overcharge", "Potency Up", "Provoked", "VIP",
+             "Vulnerable"]
+        )  # fmt: skip
+        assert effects["Potency Up"] == {
+            "name": "Potency Up",
+            "description": "Increased chance to apply detrimental effects",
+            "key": "BattleEffect_PotencyUp",
+        }
+
+    def test_picks_the_authoritative_definition(self):
+        from swgoh_comlink.helpers import get_named_effects
+
+        effects = get_named_effects(_EFFECT_LOC)
+        assert effects["Overcharge"]["key"] == "BattleEffect_Overcharge"
+        assert effects["Overcharge"]["description"] == "Protection Temporarily Increased"
+        assert effects["Provoked"]["description"] == "+100% counter chance\nnext line"
+        assert effects["Vulnerable"]["description"] == "current"
+        assert effects["Demoralized"]["key"] == "DEMORALIZED_DEBUFF_TIER0"
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_named_effects
+
+        not_a_dict: Any = []
+        with pytest.raises(SwgohComlinkValueError):
+            get_named_effects(not_a_dict)
+
+
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 
