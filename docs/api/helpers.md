@@ -400,6 +400,125 @@ for feat in feats:
 
 ---
 
+## Territory Battle Helpers
+
+Functions for reading what a Territory Battle asks for and pays from its definition
+in the game data: the points each planet's stars need, each mission's squad
+requirement and points, and each platoon's points. They read only game data
+collections and a localization dictionary, so they do not require a comlink instance
+and say nothing about a battle in progress.
+
+Each function covers every Territory Battle in the collection unless `tb_id` names
+one: `"t01D"` Hoth Rebel Assault, `"t02D"` Hoth Imperial Retaliation, `"t03D"`
+Geonosis Separatist Might, `"t04D"` Geonosis Republic Offensive or `"t05D"` Rise of
+the Empire.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import (
+    DataItems,
+    get_localization_dictionary,
+    get_tb_mission_requirements,
+    get_tb_mission_scores,
+    get_tb_platoon_definitions,
+    get_tb_star_thresholds,
+)
+
+comlink = SwgohComlink()
+# TERRITORY_BATTLE_DEFINITION is the GUILD bit, CAMPAIGN carries 'campaign',
+# CATEGORY 'category', and TABLE (the XP_TABLE bit) carries 'table'.
+game_data = comlink.get_game_data(
+    items=DataItems.TERRITORY_BATTLE_DEFINITION | DataItems.CAMPAIGN | DataItems.CATEGORY | DataItems.TABLE
+)
+loc = get_localization_dictionary(comlink)
+definitions = game_data["territoryBattleDefinition"]
+
+for zone in get_tb_star_thresholds(definitions, loc, tb_id="t05D"):
+    print(zone["name"], zone["stars"])
+
+for mission in get_tb_mission_requirements(
+    definitions, game_data["campaign"], game_data["category"], loc, tb_id="t05D"
+):
+    if mission["hidden_reason"] is None:
+        print(mission["zone_id"], mission["requirement_text"].replace("\n", " / "))
+
+points = {m["zone_id"]: m["max_points"] for m in get_tb_mission_scores(definitions, game_data["table"])}
+
+for zone in get_tb_platoon_definitions(definitions, loc, tb_id="t05D"):
+    print(zone["name"], f"R{zone['min_relic']}", zone["total_points"])
+```
+
+!!! note
+    A mission's requirement is not in the battle definition. Each mission zone names
+    a campaign mission, and `get_tb_mission_requirements` reads that mission's
+    entry gate from the `campaign` collection. Relic floors are returned as the relic
+    level shown in game, not the wire `RelicTier` value.
+
+### get_tb_star_thresholds
+
+::: swgoh_comlink.helpers._territory_battle.get_tb_star_thresholds
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBZoneStars
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_tb_mission_requirements
+
+::: swgoh_comlink.helpers._territory_battle.get_tb_mission_requirements
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBMissionRequirement
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBCategory
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBMandatoryUnit
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_tb_mission_scores
+
+::: swgoh_comlink.helpers._territory_battle.get_tb_mission_scores
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBMissionScore
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_tb_platoon_definitions
+
+::: swgoh_comlink.helpers._territory_battle.get_tb_platoon_definitions
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBReconZone
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBPlatoon
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Game Data Helpers
 
 Pure data-transformation functions for working with game data collections.
