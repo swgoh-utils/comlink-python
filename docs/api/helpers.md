@@ -442,7 +442,9 @@ for mission in get_tb_mission_requirements(
     if mission["hidden_reason"] is None:
         print(mission["zone_id"], mission["requirement_text"].replace("\n", " / "))
 
-points = {m["zone_id"]: m["max_points"] for m in get_tb_mission_scores(definitions, game_data["table"])}
+for score in get_tb_mission_scores(definitions, game_data["table"], tb_id="t05D"):
+    if score["hidden_reason"] is None:
+        print(score["zone_id"], score["wave_points"])
 
 for zone in get_tb_platoon_definitions(definitions, loc, tb_id="t05D"):
     print(zone["name"], f"R{zone['min_relic']}", zone["total_points"])
