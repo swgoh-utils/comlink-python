@@ -702,6 +702,46 @@ These do not require a comlink instance.
 
 ---
 
+## Game Configuration Helpers
+
+Functions for reading the game's own configuration values (limits and tuning) from
+`get_game_metadata()`. These do not call comlink themselves.
+
+### get_game_config
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import get_game_config, get_game_config_int
+
+comlink = SwgohComlink()
+metadata = comlink.get_game_metadata()
+
+config = get_game_config(metadata)               # every key, as strings
+config["stat-mod-highlight-stat"]                # 'SPEED'
+get_game_config_int(metadata, "max-conquest-currency")   # 3500
+get_game_config_int(metadata, "stat-mod-max-storage")    # 500
+get_game_config_int(metadata, "max-datacron-currency")   # 100000000
+```
+
+!!! note
+    Every configuration value is a string, including the numeric ones, and some keys
+    hold text such as `"true"` or `"SPEED"`. `get_game_config_int` returns its
+    `default` (`None` unless given) for a missing key or a value that is not an integer.
+
+::: swgoh_comlink.helpers._game_config.get_game_config
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_game_config_int
+
+::: swgoh_comlink.helpers._game_config.get_game_config_int
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Ability and Effect Helpers
 
 Functions for reading unit abilities and named battle effects from game data and a

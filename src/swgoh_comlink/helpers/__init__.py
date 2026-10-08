@@ -23,6 +23,7 @@ from ._gac import (
     get_gac_brackets,
     search_gac_brackets,
 )
+from ._game_config import get_game_config, get_game_config_int
 from ._game_data import (
     async_get_localization_dictionary,
     create_localized_unit_name_dictionary,
@@ -179,6 +180,9 @@ __all__ = [
     # Events
     "ScheduledEvent",
     "get_event_schedule",
+    # Game configuration
+    "get_game_config",
+    "get_game_config_int",
     # Game data
     "async_get_localization_dictionary",
     "create_localized_unit_name_dictionary",

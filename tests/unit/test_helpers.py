@@ -1248,6 +1248,82 @@ class TestGetGuildActivity:
             get_guild_activity(guild)
 
 
+# ── _game_config ────────────────────────────────────────────────────────
+
+# Shaped like get_game_metadata(): every config value is a string, and a key can be listed twice
+_METADATA: dict[str, Any] = {
+    "config": [
+        {"key": "max-conquest-currency", "value": "3500"},
+        {"key": "stat-mod-max-storage", "value": "500"},
+        {"key": "stat-mod-max-level", "value": "15"},
+        {"key": "squad-preset-tab-total-max-squads-saved", "value": "200"},
+        {"key": "stat-mod-highlight-stat", "value": "SPEED"},
+        {"key": "conquest-energy-refresh-daily-cap", "value": "CONQUEST_ENERGY_REFRESH_DAILY_CAP"},
+        {"key": "stat-mod-max-level", "value": "16"},
+        {"key": "no-value"},
+    ],
+    "latestGamedataVersion": "0.40.6:abc",
+    "latestLocalizationBundleVersion": "xyz",
+}
+
+
+class TestGetGameConfig:
+    def test_all_keys(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        config = get_game_config(_METADATA)
+        assert config["max-conquest-currency"] == "3500"
+        assert config["stat-mod-highlight-stat"] == "SPEED"
+        assert "no-value" not in config
+        assert len(config) == 6
+
+    def test_duplicate_key_keeps_first_value(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        assert get_game_config(_METADATA)["stat-mod-max-level"] == "15"
+        assert get_game_config(_METADATA, "stat-mod-max-level") == "15"
+
+    def test_single_key(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        assert get_game_config(_METADATA, "stat-mod-max-storage") == "500"
+        assert get_game_config(_METADATA, "missing-key") is None
+        assert get_game_config(_METADATA, "no-value") is None
+
+    def test_config_list_is_accepted(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        assert get_game_config(_METADATA["config"], "max-conquest-currency") == "3500"
+
+    @pytest.mark.parametrize("metadata", [None, "config", {"latestGamedataVersion": "x"}, {"config": "x"}])
+    def test_invalid_metadata_raises(self, metadata: Any):
+        from swgoh_comlink.helpers import get_game_config
+
+        with pytest.raises(SwgohComlinkValueError, match="get_game_config"):
+            get_game_config(metadata)
+
+
+class TestGetGameConfigInt:
+    def test_numeric_values(self):
+        from swgoh_comlink.helpers import get_game_config_int
+
+        assert get_game_config_int(_METADATA, "max-conquest-currency") == 3500
+        assert get_game_config_int(_METADATA, "squad-preset-tab-total-max-squads-saved") == 200
+
+    @pytest.mark.parametrize("key", ["missing-key", "stat-mod-highlight-stat", "conquest-energy-refresh-daily-cap"])
+    def test_missing_or_text_value_returns_default(self, key: str):
+        from swgoh_comlink.helpers import get_game_config_int
+
+        assert get_game_config_int(_METADATA, key) is None
+        assert get_game_config_int(_METADATA, key, 0) == 0
+
+    def test_invalid_metadata_raises(self):
+        from swgoh_comlink.helpers import get_game_config_int
+
+        with pytest.raises(SwgohComlinkValueError, match="get_game_config_int"):
+            get_game_config_int({}, "max-conquest-currency")
+
+
 # ── _abilities ─────────────────────────────────────────────────────────
 
 

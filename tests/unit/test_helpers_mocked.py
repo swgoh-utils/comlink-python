@@ -433,6 +433,28 @@ class TestGetEventScheduleFromClient:
         assert journey["status"] == "live" and journey["end"] is None
 
 
+# ── _game_config: get_game_config over get_game_metadata() ──────────────
+
+
+class TestGetGameConfigFromClient:
+    def test_config_from_get_game_metadata(self, httpx_mock: HTTPXMock, sync_client):
+        from swgoh_comlink.helpers import get_game_config, get_game_config_int
+
+        httpx_mock.add_response(
+            json={
+                "config": [
+                    {"key": "max-datacron-currency", "value": "100000000"},
+                    {"key": "stat-mod-max-storage", "value": "500"},
+                ],
+                "latestGamedataVersion": "0.40.6:abc",
+                "latestLocalizationBundleVersion": "xyz",
+            }
+        )
+        metadata = sync_client.get_game_metadata()
+        assert get_game_config(metadata) == {"max-datacron-currency": "100000000", "stat-mod-max-storage": "500"}
+        assert get_game_config_int(metadata, "max-datacron-currency") == 100_000_000
+
+
 # ── _conquest: calc_current_stamina ──────────────────────────────────────
 
 _FROZEN_TIME = 1773793698
