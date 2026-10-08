@@ -1876,14 +1876,6 @@ _TB_CAMPAIGNS = [
             {
                 "id": "TB_MAP",
                 "campaignNodeDifficultyGroup": [
-                    # The same node and mission ids under another difficulty, with a different gate.
-                    {
-                        "campaignNodeDifficulty": 5,
-                        "campaignNode": [
-                            {"id": "NODE_1", "campaignNodeMission": [_tb_campaign_mission("COMBAT_01", _tb_gate(
-                                minimumRelicTier=12))]}
-                        ],
-                    },
                     {
                         "campaignNodeDifficulty": 4,
                         "campaignNode": [
@@ -1909,6 +1901,15 @@ _TB_CAMPAIGNS = [
                                     _tb_campaign_mission("SPECIAL_01", _tb_gate(categoryId=[], minimumRelicTier=1)),
                                 ],
                             }
+                        ],
+                    },
+                    # The same node and mission ids under another difficulty, with a different gate. It comes
+                    # last, so a key without the difficulty would pick it over the difficulty 4 gate.
+                    {
+                        "campaignNodeDifficulty": 5,
+                        "campaignNode": [
+                            {"id": "NODE_1", "campaignNodeMission": [_tb_campaign_mission("COMBAT_01", _tb_gate(
+                                minimumRelicTier=12))]}
                         ],
                     },
                 ],
@@ -2013,6 +2014,16 @@ class TestGetTbMissionRequirements:
         assert strike["mandatory_units"] == [{"base_id": "MACEWINDU", "slot": 0}, {"base_id": "KITFISTO", "slot": 1}]
         assert strike["requirement_text"] == "5x Jedi (Relic 7+)\nMace Windu\nKit Fisto"
         assert strike["is_fleet"] is False
+
+    def test_difficulty_without_a_group_is_unresolved(self):
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        # Node and mission ids match the campaign, but no group has difficulty 3.
+        zone = _tb_mission_zone("tb3_phase01_conflict01_strike01", "tb3_phase01_conflict01", "COMBAT_01", difficulty=3)
+        definition = {"id": "t05D", "strikeZoneDefinition": [zone]}
+        (strike,) = get_tb_mission_requirements([definition], _TB_CAMPAIGNS, _TB_CATEGORIES, _TB_LOC)
+        assert strike["resolved"] is False
+        assert (strike["min_relic"], strike["requirement_text"]) == (0, "")
 
     def test_names_categories_and_skips_placeholder_names(self):
         missions = self._get()
