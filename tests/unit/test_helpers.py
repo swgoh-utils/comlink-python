@@ -1340,6 +1340,21 @@ def test_wire_docstring_examples():
     assert results.attempted >= 20
 
 
+# ── _items ──────────────────────────────────────────────────────────────
+
+
+class TestItemTypeConstants:
+    def test_tables(self):
+        from swgoh_comlink.helpers import CURRENCY_NAMES, CURRENCY_TYPES, ITEM_TYPES
+
+        assert ITEM_TYPES[7] == "MATERIAL"
+        assert ITEM_TYPES[16] == "MYSTERY_STAT_MOD"
+        assert CURRENCY_TYPES[1] == "GRIND"
+        assert CURRENCY_NAMES[CURRENCY_TYPES[41]] == "Micro Attenuators"
+        # Every currency member has a display name.
+        assert set(CURRENCY_NAMES) == set(CURRENCY_TYPES.values())
+
+
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 

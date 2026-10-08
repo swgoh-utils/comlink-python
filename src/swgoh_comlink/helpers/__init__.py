@@ -44,6 +44,9 @@ from ._omicron import (
     is_omicron_skill,
 )
 from ._stat_data import (
+    CURRENCY_NAMES,
+    CURRENCY_TYPES,
+    ITEM_TYPES,
     LANGUAGES,
     MOD_SET_IDS,
     MOD_SLOTS,
@@ -69,6 +72,9 @@ __all__ = [
     "Constants",
     "DataItems",
     # Stat data
+    "CURRENCY_NAMES",
+    "CURRENCY_TYPES",
+    "ITEM_TYPES",
     "LANGUAGES",
     "MOD_SET_IDS",
     "MOD_SLOTS",
