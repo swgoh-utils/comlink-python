@@ -1613,6 +1613,29 @@ class TestGetNamedRewards:
             get_named_rewards([], not_item_names)
 
 
+class TestItemHelpersRobustness:
+    def test_valid_calls_do_not_walk_the_stack(self, monkeypatch: pytest.MonkeyPatch):
+        import inspect
+
+        from swgoh_comlink.helpers import (
+            ItemNames,
+            get_data_disc_names,
+            get_mod_catalog,
+            get_named_rewards,
+            get_player_title_names,
+        )
+
+        def fail() -> None:
+            raise AssertionError("inspect.stack() called on valid input")
+
+        monkeypatch.setattr(inspect, "stack", fail)
+        names = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC)
+        get_named_rewards([{"id": "GRIND", "type": 3}], names)
+        get_data_disc_names(_ITEM_GAME_DATA["artifactDefinition"], _ITEM_LOC)
+        get_player_title_names(_ITEM_GAME_DATA["playerTitle"], _ITEM_LOC)
+        get_mod_catalog([], _ITEM_GAME_DATA["statModSet"], _ITEM_LOC)
+
+
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 

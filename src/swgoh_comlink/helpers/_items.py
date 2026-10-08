@@ -9,7 +9,6 @@ from typing import Any, TypedDict
 from ..exceptions import SwgohComlinkValueError
 from ._localization import _localize
 from ._stat_data import CURRENCY_NAMES, CURRENCY_TYPES, ITEM_TYPES, MOD_SET_IDS, MOD_SLOTS, UNIT_RARITY_NAMES
-from ._utils import get_function_name
 
 _ITEM_TYPE_NUMBERS = {name: number for number, name in ITEM_TYPES.items()}
 _UNIT = 2
@@ -119,6 +118,8 @@ def _item_type_number(item_type: Any) -> int | None:
     return _as_int(item_type, _ITEM_TYPE_NUMBERS)
 
 
+# The validators take the caller's name as a literal rather than from get_function_name(): that walks the
+# stack through inspect.stack(), which would cost more than the work itself on every valid call.
 def _check_list(arg_name: str, arg: Any, function_name: str) -> None:
     if not isinstance(arg, list):
         raise SwgohComlinkValueError(f"{function_name}: '{arg_name}' must be a list, not {type(arg)}")
@@ -168,8 +169,8 @@ def get_data_disc_names(
         >>> game_data = comlink.get_game_data(items=DataItems.CONQUEST)  # doctest: +SKIP
         >>> discs = get_data_disc_names(game_data["artifactDefinition"], get_localization_dictionary(comlink))  # doctest: +SKIP
     """
-    _check_list("artifact_definitions", artifact_definitions, get_function_name())
-    _check_localization(localization, get_function_name())
+    _check_list("artifact_definitions", artifact_definitions, "get_data_disc_names()")
+    _check_localization(localization, "get_data_disc_names()")
     return _names_by_id(artifact_definitions, localization)
 
 
@@ -204,8 +205,8 @@ def get_player_title_names(
         >>> titles["PLAYERTITLE_GRANDARENA_INTRO"]  # doctest: +SKIP
         'Fight Me'
     """
-    _check_list("player_titles", player_titles, get_function_name())
-    _check_localization(localization, get_function_name())
+    _check_list("player_titles", player_titles, "get_player_title_names()")
+    _check_localization(localization, "get_player_title_names()")
     return _names_by_id(player_titles, localization)
 
 
@@ -250,9 +251,9 @@ def get_mod_catalog(
         >>> mod["set_name"], mod["slot_name"], mod["rarity"]  # doctest: +SKIP
         ('Speed', 'Square', 5)
     """
-    _check_list("stat_mods", stat_mods, get_function_name())
-    _check_list("stat_mod_sets", stat_mod_sets, get_function_name())
-    _check_localization(localization, get_function_name())
+    _check_list("stat_mods", stat_mods, "get_mod_catalog()")
+    _check_list("stat_mod_sets", stat_mod_sets, "get_mod_catalog()")
+    _check_localization(localization, "get_mod_catalog()")
 
     set_names = _mod_set_names(stat_mod_sets, localization)
     sets: dict[str, ModSet] = {
@@ -455,10 +456,10 @@ def get_named_rewards(rewards: list[dict[str, Any]], item_names: ItemNames) -> l
         >>> for reward in get_named_rewards(mission["rewardPreview"], names):  # doctest: +SKIP
         ...     print(reward["name"], reward["max_quantity"])
     """
-    _check_list("rewards", rewards, get_function_name())
+    _check_list("rewards", rewards, "get_named_rewards()")
     if not isinstance(item_names, ItemNames):
         raise SwgohComlinkValueError(
-            f"{get_function_name()}: 'item_names' must be an ItemNames instance, not {type(item_names)}"
+            f"get_named_rewards(): 'item_names' must be an ItemNames instance, not {type(item_names)}"
         )
 
     result: list[NamedReward] = []
