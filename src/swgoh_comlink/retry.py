@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import math
+import random
 import threading
 import time
 from collections.abc import Awaitable, Callable
@@ -27,11 +28,12 @@ __all__ = ["RetryPolicy", "DEFAULT_BACKOFF"]
 #: several seconds before the same call is accepted again.
 DEFAULT_BACKOFF: tuple[float, ...] = (5.0, 10.0, 20.0, 40.0)
 
-# Indirections over sleeping and the monotonic clock so tests can record waits
-# instead of sitting them out. The clients look these up at call time.
+# Indirections over sleeping, the monotonic clock and the jitter source so tests
+# can record waits instead of sitting them out. The clients look these up at call time.
 _sleep: Callable[[float], None] = time.sleep
 _async_sleep: Callable[[float], Awaitable[None]] = asyncio.sleep
 _clock: Callable[[], float] = time.monotonic
+_random: Callable[[], float] = random.random
 
 
 @dataclass(frozen=True)
@@ -51,6 +53,12 @@ class RetryPolicy:
     ``Rate exceeded!`` at roughly 15 calls a second to one RPC. A
     ``min_interval`` of 0.4 s keeps a burst to one endpoint well under that.
 
+    A rate refusal also holds back the endpoint it came from: until the retry wait
+    has passed, no call to that endpoint starts on the client, so concurrent
+    callers back off together instead of adding to the refusal. Each retry then
+    waits a random extra of up to ``jitter`` times its wait, so callers refused
+    together do not all retry at the same moment.
+
     Attributes:
         attempts: Total attempts per call, including the first. ``1`` disables
             retrying while keeping pacing. [Default: 5]
@@ -68,7 +76,12 @@ class RetryPolicy:
             endpoint on one client, across threads or tasks. ``0`` disables
             pacing. [Default: 0.0]
         unpaced_endpoints: Endpoint names (such as ``"player"``) exempt from
-            ``min_interval``. [Default: empty]
+            ``min_interval`` and from being held back after a rate refusal.
+            [Default: empty]
+        jitter: Largest random extra added to a retry wait, as a fraction of that
+            wait: ``0.2`` turns a 5 s wait into 5 to 6 s. Extra time only, so a retry
+            never starts before the backoff or ``Retry-After`` wait. ``0``
+            disables it. [Default: 0.2]
 
     Raises:
         SwgohComlinkValueError: If a numeric field is negative, non-finite, or
@@ -93,6 +106,7 @@ class RetryPolicy:
     retry_unavailable: bool = True
     min_interval: float = 0.0
     unpaced_endpoints: frozenset[str] = field(default_factory=frozenset)
+    jitter: float = 0.2
 
     def __post_init__(self) -> None:
         if isinstance(self.attempts, bool) or not isinstance(self.attempts, int):
@@ -118,6 +132,7 @@ class RetryPolicy:
             *(("backoff", wait) for wait in self.backoff),
             ("max_retry_after", self.max_retry_after),
             ("min_interval", self.min_interval),
+            ("jitter", self.jitter),
         ):
             if isinstance(value, bool) or not isinstance(value, (int, float)):
                 raise SwgohComlinkTypeError(f"RetryPolicy.{name} must be an int or float, got {type(value).__name__}.")
@@ -157,6 +172,10 @@ class RetryPolicy:
             return 0.0
         return self.backoff[min(attempt, len(self.backoff)) - 1]
 
+    def jitter_extra(self, delay: float) -> float:
+        """Return a random extra, from 0 up to ``jitter * delay`` seconds, to add to a retry wait."""
+        return delay * self.jitter * _random()
+
 
 class _Pacer:
     """Reserves start times so calls to one endpoint begin ``interval`` seconds apart.
@@ -164,12 +183,17 @@ class _Pacer:
     The slot is reserved under a lock before the caller waits, so concurrent
     callers queue behind one another rather than beside. No await happens while
     the lock is held, which makes the same pacer safe for threads and tasks.
+
+    Each key keeps the start times still spacing out the next call, so a caller
+    that abandons its slot removes exactly that slot, wherever it sits in the
+    queue. A key can also be held back until a given time, after a rate refusal.
     """
 
     def __init__(self, interval: float, unpaced: frozenset[str]) -> None:
         self._interval = interval
         self._unpaced = unpaced
-        self._next: dict[str, float] = {}
+        self._slots: dict[str, list[float]] = {}
+        self._held: dict[str, float] = {}
         self._lock = threading.Lock()
 
     def reserve(self, key: str, endpoint: str) -> float:
@@ -179,26 +203,55 @@ class _Pacer:
     def reserve_slot(self, key: str, endpoint: str) -> tuple[float, Callable[[], None]]:
         """Take the next slot for *key*; return the wait and a callable that gives the slot back.
 
-        Call the returned callable when the caller abandons the slot before using
-        it, such as a task cancelled while it waits. The slot is returned only
-        while it is still the last one taken for *key*; once a later caller has
-        queued behind it, the queue is left as it is.
+        The slot starts after any hold on *key* and ``interval`` after the latest
+        slot still taken. Call the returned callable when the caller abandons the
+        slot before using it, such as a task cancelled while it waits: the slot is
+        removed, and later callers queue after the slots that remain. Callers
+        already waiting keep their start times.
         """
-        if self._interval <= 0 or endpoint in self._unpaced:
+        if endpoint in self._unpaced:
             return 0.0, _no_release
         with self._lock:
             now = _clock()
-            due = max(self._next.get(key, now), now)
-            end = due + self._interval
-            self._next[key] = end
+            due = now
+            held = self._held.get(key)
+            if held is not None:
+                if held > now:
+                    due = held
+                else:
+                    del self._held[key]
+            if self._interval <= 0:
+                return due - now, _no_release
+            # Slots that no longer delay anyone are dropped as the queue is read.
+            slots = [start for start in self._slots.get(key, []) if start + self._interval > now]
+            if slots:
+                due = max(due, max(slots) + self._interval)
+            slots.append(due)
+            self._slots[key] = slots
             wait = due - now
 
         def release() -> None:
             with self._lock:
-                if self._next.get(key) == end:
-                    self._next[key] = due
+                taken = self._slots.get(key)
+                if taken and due in taken:
+                    taken.remove(due)
 
         return wait, release
+
+    def hold(self, key: str, endpoint: str, seconds: float) -> bool:
+        """Hold back calls to *key* for *seconds* from now; return whether a hold applies.
+
+        An existing hold that ends later is kept. Unpaced endpoints are never held,
+        and ``False`` tells the caller to wait out the delay itself.
+        """
+        if endpoint in self._unpaced:
+            return False
+        if seconds > 0:
+            with self._lock:
+                until = _clock() + seconds
+                if until > self._held.get(key, until - 1):
+                    self._held[key] = until
+        return True
 
 
 def _no_release() -> None:

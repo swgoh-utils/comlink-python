@@ -20,7 +20,12 @@ from ._base import (
     _CachedVersions,
     param_alias,
 )
-from .exceptions import SwgohComlinkException, SwgohComlinkHTTPError, SwgohComlinkValueError
+from .exceptions import (
+    SwgohComlinkException,
+    SwgohComlinkHTTPError,
+    SwgohComlinkRateLimitError,
+    SwgohComlinkValueError,
+)
 from .helpers import Constants, DataItems
 
 __all__ = ["SwgohComlink"]
@@ -126,8 +131,10 @@ class SwgohComlink(SwgohComlinkBase):
         """
         policy = self.retry_policy
         attempt = 1
+        extra = 0.0  # retry wait carried into the next pass, on top of its pacing slot
         while True:
-            wait = self._pace_delay(endpoint, stats)
+            wait = self._pace_delay(endpoint, stats) + extra
+            extra = 0.0
             if wait > 0:
                 logger.debug("Pacing %s for %.2fs", endpoint, wait)
                 _retry._sleep(wait)
@@ -147,7 +154,8 @@ class SwgohComlink(SwgohComlinkBase):
                     policy.attempts,
                     delay,
                 )
-                _retry._sleep(delay)
+                held = isinstance(exc, SwgohComlinkRateLimitError) and self._hold_endpoint(endpoint, stats, delay)
+                extra = policy.jitter_extra(delay) + (0.0 if held else delay)
                 attempt += 1
 
     def _send(

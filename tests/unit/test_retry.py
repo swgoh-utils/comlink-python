@@ -34,6 +34,7 @@ def test_defaults() -> None:
     assert policy.respect_retry_after is True
     assert policy.min_interval == 0.0
     assert policy.unpaced_endpoints == frozenset()
+    assert policy.jitter == 0.2
 
 
 def test_sequences_are_normalised() -> None:
@@ -54,6 +55,8 @@ def test_sequences_are_normalised() -> None:
         {"backoff": (math.inf,)},
         {"max_retry_after": -0.1},
         {"min_interval": math.nan},
+        {"jitter": -0.2},
+        {"jitter": math.inf},
     ],
 )
 def test_invalid_values_raise(kwargs: dict[str, Any]) -> None:
@@ -208,3 +211,65 @@ def test_pacer_release_keeps_the_queue_once_someone_is_behind(clock: list[float]
     release()
 
     assert pacer.reserve("comlink:data", "data") == pytest.approx(1.2)
+
+
+def test_pacer_releasing_every_slot_frees_the_queue(clock: list[float]) -> None:
+    pacer = _Pacer(0.4, frozenset())
+    releases = [pacer.reserve_slot("comlink:data", "data")[1] for _ in range(10)]
+
+    for release in releases:  # the order a cancelled gather unwinds in: first reserved, first released
+        release()
+
+    assert pacer.reserve("comlink:data", "data") == 0.0
+
+
+def test_pacer_released_slot_in_the_middle_keeps_later_slots(clock: list[float]) -> None:
+    pacer = _Pacer(0.4, frozenset())
+    slots = [pacer.reserve_slot("comlink:data", "data") for _ in range(4)]
+
+    slots[1][1]()
+    slots[3][1]()
+
+    # 100.0 and 100.8 are still taken, so the next caller follows 100.8.
+    assert pacer.reserve("comlink:data", "data") == pytest.approx(1.2)
+
+
+def test_pacer_hold_delays_every_caller_until_it_ends(clock: list[float]) -> None:
+    pacer = _Pacer(0.4, frozenset())
+
+    assert pacer.hold("comlink:data", "data", 5.0) is True
+    assert [pacer.reserve("comlink:data", "data") for _ in range(2)] == [pytest.approx(5.0), pytest.approx(5.4)]
+    assert pacer.reserve("comlink:guild", "guild") == 0.0
+
+    clock[0] += 10.0
+    assert pacer.reserve("comlink:data", "data") == 0.0
+
+
+def test_pacer_hold_applies_without_min_interval(clock: list[float]) -> None:
+    pacer = _Pacer(0.0, frozenset())
+    pacer.hold("comlink:data", "data", 5.0)
+
+    assert [pacer.reserve("comlink:data", "data") for _ in range(2)] == [5.0, 5.0]
+
+
+def test_pacer_hold_keeps_the_later_end(clock: list[float]) -> None:
+    pacer = _Pacer(0.0, frozenset())
+    pacer.hold("comlink:data", "data", 5.0)
+    pacer.hold("comlink:data", "data", 1.0)
+
+    assert pacer.reserve("comlink:data", "data") == 5.0
+
+
+def test_pacer_never_holds_unpaced_endpoints(clock: list[float]) -> None:
+    pacer = _Pacer(0.4, frozenset({"player"}))
+
+    assert pacer.hold("comlink:player", "player", 5.0) is False
+    assert pacer.reserve("comlink:player", "player") == 0.0
+
+
+@pytest.mark.parametrize(("draw", "expected"), [(0.0, 0.0), (0.5, 0.5), (1.0, 1.0)])
+def test_jitter_extra_scales_with_the_wait(monkeypatch: pytest.MonkeyPatch, draw: float, expected: float) -> None:
+    monkeypatch.setattr(retry_module, "_random", lambda: draw)
+
+    assert RetryPolicy(jitter=0.2).jitter_extra(5.0) == pytest.approx(expected)
+    assert RetryPolicy(jitter=0.0).jitter_extra(5.0) == 0.0

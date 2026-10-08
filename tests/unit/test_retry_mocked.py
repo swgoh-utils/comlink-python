@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections.abc import Awaitable, Callable
 from types import SimpleNamespace
 
 import httpx
@@ -29,7 +30,7 @@ UNAVAILABLE = {"code": "UNAVAILABLE", "message": "server is at capacity"}
 
 @pytest.fixture
 def waits(monkeypatch: pytest.MonkeyPatch) -> list[float]:
-    """Record every sleep the clients ask for instead of sleeping, on a frozen clock."""
+    """Record every sleep the clients ask for instead of sleeping, on a frozen clock and without jitter."""
     recorded: list[float] = []
 
     async def async_sleep(seconds: float) -> None:
@@ -38,6 +39,7 @@ def waits(monkeypatch: pytest.MonkeyPatch) -> list[float]:
     monkeypatch.setattr(retry_module, "_sleep", recorded.append)
     monkeypatch.setattr(retry_module, "_async_sleep", async_sleep)
     monkeypatch.setattr(retry_module, "_clock", lambda: 1000.0)
+    monkeypatch.setattr(retry_module, "_random", lambda: 0.0)
     return recorded
 
 
@@ -387,5 +389,136 @@ def test_sync_pacing_applies_to_retries(httpx_mock: HTTPXMock, waits: list[float
 
     SwgohComlink(url=URL, retry=RetryPolicy(min_interval=0.4)).get_player(allycode=123456789)
 
-    # Retry-After 0, then the retry still waits its pacing slot on the frozen clock.
-    assert waits == [0.0, pytest.approx(0.4)]
+    # Retry-After 0, so the retry's only wait is its pacing slot on the frozen clock.
+    assert waits == [pytest.approx(0.4)]
+
+
+# ── Concurrency: cancelled batches, refusals together, endpoint holds ───
+
+
+async def test_async_cancelled_batch_leaves_no_phantom_slots(
+    httpx_mock: HTTPXMock, waits: list[float], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    httpx_mock.add_response(json={"name": "Test Player"})
+    parked: list[float] = []
+    all_parked = asyncio.Event()
+
+    async def blocking_sleep(seconds: float) -> None:
+        parked.append(seconds)
+        if len(parked) == 10:
+            all_parked.set()
+        await asyncio.Event().wait()
+
+    async with SwgohComlinkAsync(url=URL, retry=RetryPolicy(min_interval=0.4)) as client:
+        await client.get_player(allycode=123456789)
+        monkeypatch.setattr(retry_module, "_async_sleep", blocking_sleep)
+        batch = asyncio.gather(*(client.get_player(allycode=123456789) for _ in range(10)))
+        await all_parked.wait()
+        batch.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await batch
+
+        # Only the call that ran still spaces the queue: one interval, not the 4.0 s the batch had queued.
+        assert client._pace_delay("player", stats=False) == pytest.approx(0.4)
+
+    assert parked == [pytest.approx(0.4 * n) for n in range(1, 11)]
+
+
+def _refuse_first(count: int) -> Callable[[httpx.Request], httpx.Response]:
+    """A callback refusing the first *count* requests with 'Rate exceeded!', then answering every request."""
+    seen = [0]
+
+    def callback(request: httpx.Request) -> httpx.Response:
+        seen[0] += 1
+        if seen[0] <= count:
+            return httpx.Response(502, json=RATE_EXCEEDED)
+        return httpx.Response(200, json={"name": "Test Player"})
+
+    return callback
+
+
+def _refuse_together(count: int) -> Callable[[httpx.Request], Awaitable[httpx.Response]]:
+    """An async callback that holds the first *count* requests until all have arrived, then refuses them all."""
+    arrived = [0]
+    everyone_in = asyncio.Event()
+
+    async def callback(request: httpx.Request) -> httpx.Response:
+        arrived[0] += 1
+        if arrived[0] > count:
+            return httpx.Response(200, json={"name": "Test Player"})
+        if arrived[0] == count:
+            everyone_in.set()
+        await everyone_in.wait()
+        return httpx.Response(502, json=RATE_EXCEEDED)
+
+    return callback
+
+
+@pytest.mark.parametrize(("jitter", "spread"), [(0.0, False), (0.2, True)])
+async def test_async_refusals_together_retry_spread_out(
+    httpx_mock: HTTPXMock, waits: list[float], monkeypatch: pytest.MonkeyPatch, jitter: float, spread: bool
+) -> None:
+    httpx_mock.add_callback(_refuse_together(20), is_reusable=True)
+    draws = iter(n / 20 for n in range(20))
+    monkeypatch.setattr(retry_module, "_random", lambda: next(draws))
+
+    async with SwgohComlinkAsync(url=URL, retry=RetryPolicy(jitter=jitter)) as client:
+        await asyncio.gather(*(client.get_player(allycode=100000000 + n) for n in range(20)))
+
+    # Twenty requests refused at the same moment, then one retry wait each.
+    assert len(httpx_mock.get_requests()) == 40 and len(waits) == 20
+    # Every retry waits at least the backoff; jitter only ever adds time.
+    assert min(waits) == pytest.approx(5.0)
+    if spread:
+        assert len(set(waits)) == 20
+        assert max(waits) - min(waits) == pytest.approx(0.95)
+    else:
+        # Without jitter all twenty retries are due at the same instant.
+        assert set(waits) == {5.0}
+
+
+def test_sync_rate_refusal_holds_back_later_calls_to_the_endpoint(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    httpx_mock.add_callback(_refuse_first(1), is_reusable=True)
+    client = SwgohComlink(url=URL, retry=RetryPolicy())
+
+    client.get_player(allycode=123456789)  # refused once, retried after 5 s
+    client.get_player(allycode=987654321)  # never refused, but the endpoint is still held
+
+    assert waits == [5.0, 5.0]
+    client.close()
+
+
+def test_sync_rate_refusal_does_not_hold_unpaced_endpoints(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    httpx_mock.add_callback(_refuse_first(1), is_reusable=True)
+    client = SwgohComlink(url=URL, retry=RetryPolicy(unpaced_endpoints=frozenset({"player"})))
+
+    client.get_player(allycode=123456789)
+    client.get_player(allycode=987654321)
+
+    # The refused call waits out its own retry; the next call is not held.
+    assert waits == [5.0]
+    client.close()
+
+
+async def test_async_rate_refusal_holds_back_concurrent_callers(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    httpx_mock.add_callback(_refuse_first(1), is_reusable=True)
+
+    async with SwgohComlinkAsync(url=URL, retry=RetryPolicy()) as client:
+        await client.get_player(allycode=123456789)
+        await asyncio.gather(*(client.get_player(allycode=123456789) for _ in range(3)))
+
+    # The refusal's 5 s hold covers the retry and the three calls that followed it on the same endpoint.
+    assert waits == [5.0, 5.0, 5.0, 5.0]
+
+
+def test_unavailable_is_not_held(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    httpx_mock.add_response(status_code=503, json=UNAVAILABLE)
+    httpx_mock.add_response(json={"name": "Test Player"}, is_reusable=True)
+    client = SwgohComlink(url=URL, retry=RetryPolicy())
+
+    client.get_player(allycode=123456789)
+    client.get_player(allycode=123456789)
+
+    # A 503 says the service is busy, not that this endpoint is over its rate: only the retry waits.
+    assert waits == [5.0]
+    client.close()
