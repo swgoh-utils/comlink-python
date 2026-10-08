@@ -28,7 +28,9 @@ def get_guild_members(
         list of guild members objects
 
     Note:
-        A player_id or allycode argument is required
+        A player_id or allycode argument is required. The guild is requested with
+        ``include_recent_guild_activity_info=True``: without it, current game versions return every
+        member with an empty name, zero galactic power and no last activity time.
 
     """
     comlink_type = getattr(comlink, "__comlink_type__", None)
@@ -48,7 +50,7 @@ def get_guild_members(
         player = comlink.get_player(player_id=player_id)
     else:
         player = comlink.get_player(allycode=sanitize_allycode(allycode))
-    guild = comlink.get_guild(guild_id=player["guildId"])
+    guild = comlink.get_guild(guild_id=player["guildId"], include_recent_guild_activity_info=True)
     return guild["member"] or []
 
 
@@ -68,7 +70,9 @@ async def async_get_guild_members(
         list of guild members objects
 
     Note:
-        A player_id or allycode argument is required
+        A player_id or allycode argument is required. The guild is requested with
+        ``include_recent_guild_activity_info=True``: without it, current game versions return every
+        member with an empty name, zero galactic power and no last activity time.
 
     """
     comlink_type = getattr(comlink, "__comlink_type__", None)
@@ -90,5 +94,5 @@ async def async_get_guild_members(
         player = await comlink.get_player(player_id=player_id)
     else:
         player = await comlink.get_player(allycode=sanitize_allycode(allycode))
-    guild = await comlink.get_guild(guild_id=player["guildId"])
+    guild = await comlink.get_guild(guild_id=player["guildId"], include_recent_guild_activity_info=True)
     return guild["member"] or []
