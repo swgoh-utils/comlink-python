@@ -67,6 +67,26 @@ def test_non_int_attempts_raise(attempts: Any) -> None:
         RetryPolicy(attempts=attempts)
 
 
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"unpaced_endpoints": "player"},
+        {"unpaced_endpoints": 5},
+        {"unpaced_endpoints": frozenset({1})},
+        {"backoff": "5"},
+        {"backoff": 5},
+        {"backoff": ("5",)},
+        {"backoff": (True,)},
+        {"max_retry_after": None},
+        {"max_retry_after": "60"},
+        {"min_interval": True},
+    ],
+)
+def test_wrong_types_raise(kwargs: dict[str, Any]) -> None:
+    with pytest.raises(SwgohComlinkTypeError):
+        RetryPolicy(**kwargs)
+
+
 @pytest.mark.parametrize("client_cls", [SwgohComlink, SwgohComlinkAsync])
 def test_client_rejects_non_policy_retry(client_cls: type[SwgohComlink] | type[SwgohComlinkAsync]) -> None:
     with pytest.raises(SwgohComlinkTypeError):

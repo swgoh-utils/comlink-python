@@ -55,7 +55,8 @@ class RetryPolicy:
         attempts: Total attempts per call, including the first. ``1`` disables
             retrying while keeping pacing. [Default: 5]
         backoff: Seconds to wait before each retry when the response has no usable
-            ``Retry-After``; the last value repeats once the schedule runs out.
+            ``Retry-After``; the last value repeats once the schedule runs out. An
+            empty schedule retries at once, without waiting.
             [Default: (5.0, 10.0, 20.0, 40.0)]
         respect_retry_after: Wait for the server's ``Retry-After`` instead of the
             backoff value when the header is present. [Default: True]
@@ -72,7 +73,10 @@ class RetryPolicy:
     Raises:
         SwgohComlinkValueError: If a numeric field is negative, non-finite, or
             ``attempts`` is less than 1.
-        SwgohComlinkTypeError: If ``attempts`` is not an integer.
+        SwgohComlinkTypeError: If ``attempts`` is not an integer, a numeric field is
+            not an int or float (``bool`` included), ``backoff`` or
+            ``unpaced_endpoints`` is a string or not iterable, or an endpoint name
+            is not a string.
 
     Examples:
         Retry rate refusals and 503s, and space calls to one endpoint 0.4 s apart:
@@ -95,14 +99,28 @@ class RetryPolicy:
             raise SwgohComlinkTypeError(f"RetryPolicy.attempts must be an int, got {type(self.attempts).__name__}.")
         if self.attempts < 1:
             raise SwgohComlinkValueError("RetryPolicy.attempts must be at least 1.")
+        # A str is iterable, so it would otherwise turn into a sequence of characters.
+        if isinstance(self.backoff, (str, bytes)):
+            raise SwgohComlinkTypeError("RetryPolicy.backoff must be a sequence of numbers, not a string.")
+        if isinstance(self.unpaced_endpoints, (str, bytes)):
+            raise SwgohComlinkTypeError("RetryPolicy.unpaced_endpoints must be a collection of names, not a string.")
         # Normalise list or set inputs so the frozen policy stays hashable.
-        object.__setattr__(self, "backoff", tuple(self.backoff))
-        object.__setattr__(self, "unpaced_endpoints", frozenset(self.unpaced_endpoints))
+        try:
+            object.__setattr__(self, "backoff", tuple(self.backoff))
+            object.__setattr__(self, "unpaced_endpoints", frozenset(self.unpaced_endpoints))
+        except TypeError as exc:
+            raise SwgohComlinkTypeError(
+                "RetryPolicy.backoff and RetryPolicy.unpaced_endpoints must be iterable."
+            ) from exc
+        if not all(isinstance(name, str) for name in self.unpaced_endpoints):
+            raise SwgohComlinkTypeError("RetryPolicy.unpaced_endpoints must contain only str endpoint names.")
         for name, value in (
             *(("backoff", wait) for wait in self.backoff),
             ("max_retry_after", self.max_retry_after),
             ("min_interval", self.min_interval),
         ):
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise SwgohComlinkTypeError(f"RetryPolicy.{name} must be an int or float, got {type(value).__name__}.")
             if not (math.isfinite(value) and value >= 0):
                 raise SwgohComlinkValueError(f"RetryPolicy.{name} must be a finite, non-negative number of seconds.")
 
