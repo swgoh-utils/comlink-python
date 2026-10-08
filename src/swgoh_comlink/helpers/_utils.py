@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from ..exceptions import SwgohComlinkTypeError, SwgohComlinkValueError
+from ..exceptions import SwgohComlinkValueError
 from ._constants import Constants
 
 logger = logging.getLogger(__name__)
@@ -122,39 +122,46 @@ def human_time(unix_time: int | float) -> str:
     return datetime.fromtimestamp(unix_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def convert_relic_tier(relic_tier: str | int) -> str | None:
-    """Convert character relic tier to offset string in-game value.
+_RELIC_TIER_NAMES = {"RELICTIER_DEFAULT": 0, "RELIC_LOCKED": 1, "RELIC_UNLOCKED": 2}
 
-    Conversion is done based on a zero based table indicating both the relic tier status and achieved level.
+
+def convert_relic_tier(relic_tier: str | int) -> str | None:
+    """Convert a unit's wire relic tier to the relic level shown in game.
+
+    The game's RelicTier enum starts two below the relic level: ``RELIC_LOCKED`` is 1, ``RELIC_UNLOCKED``
+    (relic 0) is 2 and ``RELIC_TIER_01`` is 3, so a roster unit's ``relic.currentTier`` of 9 is relic 7.
 
     Args:
-        relic_tier (str | int): The relic tier from character game data to convert to in-game equivalent.
+        relic_tier (str | int): A roster unit's ``relic.currentTier``, as an integer, a numeric string, or
+            the enum name returned with ``enums=True`` (e.g. ``"RELIC_TIER_07"``).
 
     Returns:
-        String representing the relic status and tier
+        ``"LOCKED"``, ``"UNLOCKED"`` (relic 0), the relic level as a string (``"1"`` to ``"10"``), or
+        ``None`` for an unrecognized value.
 
     Raises:
-        SwgohComlinkValueError: If the provided 'relic_tier' is not of the expected type.
-        TypeError: If the provided 'relic_tier' cannot be converted to a string using the Python
-                    built-in str() method.
+        SwgohComlinkValueError: If the provided 'relic_tier' is not a string or integer.
 
     Examples:
-        Relic tier is '0' indicates the character has not yet achieved a level where access to relics have been
-            unlocked.
-        Relic tier of '1', indicates that the character has achieved the required level to access relics,
-            but has not yet upgraded to the first level.
+        >>> convert_relic_tier(1)
+        'LOCKED'
+        >>> convert_relic_tier(2)
+        'UNLOCKED'
+        >>> convert_relic_tier(9)
+        '7'
+        >>> convert_relic_tier("RELIC_TIER_07")
+        '7'
     """
-    if not isinstance(relic_tier, (str, int)):
+    if not isinstance(relic_tier, (str, int)) or isinstance(relic_tier, bool):
         err_msg = f"{get_function_name()}: 'relic_tier' argument is required for conversion."
         raise SwgohComlinkValueError(err_msg)
-    relic_value = None
-    if isinstance(relic_tier, int):
-        try:
-            relic_tier = str(relic_tier)
-        except TypeError:
-            err_msg = f"{get_function_name()}: Unable to convert 'relic_tier' argument to string."
-            raise SwgohComlinkTypeError(err_msg)
 
-    if relic_tier in Constants.RELIC_TIERS:
-        relic_value = Constants.RELIC_TIERS[relic_tier]
-    return relic_value
+    key = str(relic_tier)
+    if isinstance(relic_tier, str) and not key.isdigit():
+        name = key.upper()
+        level = name.removeprefix("RELIC_TIER_")
+        if name in _RELIC_TIER_NAMES:
+            key = str(_RELIC_TIER_NAMES[name])
+        elif level != name and level.isdigit():
+            key = str(int(level) + Constants.RELIC_OFFSET)
+    return Constants.RELIC_TIERS.get(key)

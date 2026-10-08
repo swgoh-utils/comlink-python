@@ -155,28 +155,60 @@ class TestHumanTime:
 
 
 class TestConvertRelicTier:
+    # The game's RelicTier enum: RelicTier_DEFAULT = 0, RELIC_LOCKED = 1, RELIC_UNLOCKED = 2, RELIC_TIER_01 = 3
     def test_valid_int(self):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
         assert convert_relic_tier(0) == "LOCKED"
-        assert convert_relic_tier(1) == "UNLOCKED"
-        assert convert_relic_tier(2) == "1"
+        assert convert_relic_tier(1) == "LOCKED"
+        assert convert_relic_tier(2) == "UNLOCKED"
+        assert convert_relic_tier(3) == "1"
+        assert convert_relic_tier(12) == "10"
 
     def test_valid_string(self):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
-        assert convert_relic_tier("9") == "8"
+        assert convert_relic_tier("9") == "7"
+
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [
+            ("RelicTier_DEFAULT", "LOCKED"),
+            ("RELIC_LOCKED", "LOCKED"),
+            ("RELIC_UNLOCKED", "UNLOCKED"),
+            ("RELIC_TIER_01", "1"),
+            ("RELIC_TIER_10", "10"),
+            ("RELIC_TIER_11", None),
+            ("RELIC_TIER_", None),
+            ("NOT_A_TIER", None),
+        ],
+    )
+    def test_enum_names(self, name: str, expected: str | None):
+        from swgoh_comlink.helpers._utils import convert_relic_tier
+
+        assert convert_relic_tier(name) == expected
+
+    def test_every_relic_in_example_player_converts(self):
+        import json
+
+        from swgoh_comlink.helpers._utils import convert_relic_tier
+
+        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+        tiers = {unit["relic"]["currentTier"] for unit in player["rosterUnit"] if unit.get("relic")}
+        assert 12 in tiers  # relic 10, the maximum
+        assert all(convert_relic_tier(tier) is not None for tier in tiers)
 
     def test_unknown_tier_returns_none(self):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
         assert convert_relic_tier(99) is None
 
-    def test_invalid_type_raises(self):
+    @pytest.mark.parametrize("value", [None, True, 1.0])
+    def test_invalid_type_raises(self, value: Any):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
         with pytest.raises(SwgohComlinkValueError, match="relic_tier"):
-            convert_relic_tier(None)
+            convert_relic_tier(value)
 
 
 # ── _arena ──────────────────────────────────────────────────────────────

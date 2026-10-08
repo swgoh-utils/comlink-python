@@ -119,19 +119,22 @@ class Constants:
 
     DIVISIONS: dict[str, int] = {"1": 25, "2": 20, "3": 15, "4": 10, "5": 5}
 
+    # Wire RelicTier -> in-game relic. 0 is the unset default, 1 RELIC_LOCKED, 2 RELIC_UNLOCKED (relic 0),
+    # and RELIC_TIER_01 is 3, so relic n is n + RELIC_OFFSET on the wire.
     RELIC_TIERS: dict[str, str] = {
         "0": "LOCKED",
-        "1": "UNLOCKED",
-        "2": "1",
-        "3": "2",
-        "4": "3",
-        "5": "4",
-        "6": "5",
-        "7": "6",
-        "8": "7",
-        "9": "8",
-        "10": "9",
-        "11": "10",
+        "1": "LOCKED",
+        "2": "UNLOCKED",
+        "3": "1",
+        "4": "2",
+        "5": "3",
+        "6": "4",
+        "7": "5",
+        "8": "6",
+        "9": "7",
+        "10": "8",
+        "11": "9",
+        "12": "10",
     }
 
     # Segment convenience values (kept for backward compat with examples)

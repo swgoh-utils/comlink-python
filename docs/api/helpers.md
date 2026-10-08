@@ -77,7 +77,7 @@ from swgoh_comlink.helpers import Constants
 
 Constants.LEAGUES          # {"kyber": 100, "aurodium": 80, ...}
 Constants.DIVISIONS        # {"1": 25, "2": 20, ...}
-Constants.RELIC_TIERS      # {"0": "LOCKED", "1": "UNLOCKED", "2": "1", ...}
+Constants.RELIC_TIERS      # {"1": "LOCKED", "2": "UNLOCKED", "3": "1", ...} (wire relic tier -> relic)
 Constants.MAX_VALUES       # {"GEAR_TIER": 13, "UNIT_LEVEL": 85, ...}
 
 # Resolve a collection name to its integer value
