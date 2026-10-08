@@ -356,6 +356,35 @@ class TestAsyncGetGuildMembers:
         sync_client.close()
 
 
+# ── _events: get_event_schedule over get_events() ───────────────────────
+
+
+class TestGetEventScheduleFromClient:
+    def test_schedule_from_get_events(self, httpx_mock: HTTPXMock, sync_client):
+        from datetime import datetime, timezone
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        now = datetime(2026, 9, 23, 12, tzinfo=timezone.utc)
+        httpx_mock.add_response(
+            json={
+                "gameEvent": [
+                    _GAC_EVENT,
+                    {
+                        "id": "EVENT_JOURNEY_MANDALORIAN",
+                        "nameKey": "EVENT_JOURNEY_MANDALORIAN_NAME",
+                        "type": 3,
+                        "instance": [{"id": "J1", "startTime": "1476532800000", "endTime": "4945772573272"}],
+                    },
+                ]
+            }
+        )
+        loc = {"EVENT_JOURNEY_MANDALORIAN_NAME": "THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]"}
+        (journey,) = get_event_schedule(sync_client.get_events(), loc, now=now)
+        assert journey["name"] == "The Mandalorian — Hero's Journey"
+        assert journey["status"] == "live" and journey["end"] is None
+
+
 # ── _conquest: calc_current_stamina ──────────────────────────────────────
 
 _FROZEN_TIME = 1773793698

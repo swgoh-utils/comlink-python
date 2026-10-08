@@ -13,6 +13,7 @@ from ._conquest import ConquestFeat, calc_current_stamina, calc_stamina_full_tim
 from ._constants import Constants
 from ._data_items import DataItems
 from ._decorators import func_debug_logger, func_timer
+from ._events import ScheduledEvent, get_event_schedule
 from ._gac import (
     async_get_current_gac_event,
     async_get_gac_brackets,
@@ -166,6 +167,9 @@ __all__ = [
     "get_tb_mission_scores",
     "get_tb_platoon_definitions",
     "get_tb_star_thresholds",
+    # Events
+    "ScheduledEvent",
+    "get_event_schedule",
     # Game data
     "async_get_localization_dictionary",
     "create_localized_unit_name_dictionary",

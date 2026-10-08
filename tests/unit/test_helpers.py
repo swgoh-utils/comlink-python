@@ -899,6 +899,192 @@ class TestGetConquestFeats:
             get_conquest_feats(*args, **kwargs)
 
 
+# ── _events ─────────────────────────────────────────────────────────────
+
+_EVENTS_NOW_MS = 1_790_164_800_000  # 2026-09-23 12:00 UTC
+_DAY_MS = 86_400_000
+_PERMANENT_END = "4945772573272"  # 2126-09-24: how the game spells "never ends"
+
+
+def _run(start: int, end: int | str, run_id: str | None = None, **extra: Any) -> dict[str, Any]:
+    run: dict[str, Any] = {"startTime": str(start), "endTime": str(end), **extra}
+    if run_id is not None:
+        run["id"] = run_id
+    return run
+
+
+def _events_now():
+    from datetime import datetime, timezone
+
+    return datetime.fromtimestamp(_EVENTS_NOW_MS / 1000, tz=timezone.utc)
+
+
+_NODE = {"campaignId": "EVENTS", "campaignMapId": "JOURNEY", "campaignNodeDifficulty": 4, "campaignNodeId": "JM"}
+_GAME_EVENTS: dict[str, Any] = {
+    "gameEvent": [
+        {
+            "id": "EVENT_JOURNEY_MANDALORIAN",
+            "nameKey": "EVENT_JOURNEY_MANDALORIAN_NAME",
+            "type": 3,
+            "instance": [_run(1_476_532_800_000, _PERMANENT_END, "J1", campaignElementIdentifier=_NODE)],
+        },
+        {
+            "id": "EVENT_MARQUEE_JAXXON",
+            "nameKey": "EVENT_MARQUEE_JAXXON_NAME_V2",
+            "type": 1,
+            "instance": [
+                _run(_EVENTS_NOW_MS - _DAY_MS, _EVENTS_NOW_MS + 2 * _DAY_MS, "LATER_END"),
+                _run(_EVENTS_NOW_MS - 2 * _DAY_MS, _EVENTS_NOW_MS + _DAY_MS, "EARLIER_END"),
+            ],
+        },
+        {
+            "id": "EVENT_MARQUEE_THERONIN",
+            "nameKey": "EVENT_MARQUEE_THERONIN_NAME",
+            "type": 1,
+            "instance": [
+                _run(_EVENTS_NOW_MS + 20 * _DAY_MS, _EVENTS_NOW_MS + 27 * _DAY_MS, "SECOND"),
+                _run(_EVENTS_NOW_MS + 13 * _DAY_MS, _EVENTS_NOW_MS + 20 * _DAY_MS, "FIRST"),
+            ],
+        },
+        {
+            "id": "challenge_XP",
+            "nameKey": "EVENT_XP_NAME",
+            "type": 1,
+            "instance": [_run(_EVENTS_NOW_MS - 3 * _DAY_MS, _EVENTS_NOW_MS - _DAY_MS)],
+        },
+        {
+            "id": "EVENT_SMUGGLERS_RUN",
+            "nameKey": "EVENT_SMUGGLERS_RUN_NAME",
+            "type": 1,
+            "instance": [_run(_EVENTS_NOW_MS + _DAY_MS, _EVENTS_NOW_MS + 2 * _DAY_MS)],
+        },
+    ]
+}
+_EVENT_LOC = {
+    "EVENT_JOURNEY_MANDALORIAN_NAME": "THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]",
+    "EVENT_MARQUEE_JAXXON_NAME_V2": "ACTION JAXXON\\n[c][FFC891]Special Marquee Event[-][/c]",
+    "EVENT_MARQUEE_THERONIN_NAME": "THE WANDERER'S BLADE\\n[c][FFC891]Special Marquee Event[-][/c]",
+    "EVENT_SMUGGLERS_RUN_NAME": "SMUGGLER'S RUN II\\n[c][FFC891]Resource Event[-][/c]",
+}
+
+
+class TestGetEventSchedule:
+    def test_live_then_upcoming_soonest_first(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())
+        assert [(e["event_id"], e["status"]) for e in schedule] == [
+            ("EVENT_JOURNEY_MANDALORIAN", "live"),
+            ("EVENT_MARQUEE_JAXXON", "live"),
+            ("EVENT_SMUGGLERS_RUN", "upcoming"),
+            ("EVENT_MARQUEE_THERONIN", "upcoming"),
+        ]
+
+    def test_names_join_the_banner_and_recase_capitals(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        names = [e["name"] for e in get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())]
+        assert names == [
+            "The Mandalorian — Hero's Journey",
+            "Action Jaxxon — Special Marquee Event",
+            "Smuggler's Run II — Resource Event",
+            "The Wanderer's Blade — Special Marquee Event",
+        ]
+
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            ("DUEL OF THE FATES\\n[c][FFC891]Assault Battles[-][/c]", "Duel of the Fates — Assault Battles"),
+            ("ANALYSIS/PARALYSIS\\n[c][FFC891]Era Battle[-][/c]", "Analysis/Paralysis — Era Battle"),
+            ("TIER II (VERY HARD)", "Tier II (Very Hard)"),
+            ("Terrible Tings", "Terrible Tings"),
+            ("CLONE FORCE 99", "Clone Force 99"),
+        ],
+    )
+    def test_event_name_formatting(self, text: str, expected: str):
+        from swgoh_comlink.helpers._events import _event_name
+
+        assert _event_name(text) == expected
+
+    def test_without_localization_uses_name_key(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS["gameEvent"], now=_events_now())
+        assert schedule[0]["name"] == "EVENT_JOURNEY_MANDALORIAN_NAME"
+        no_key = get_event_schedule([{"id": "EV", "instance": [_run(0, _PERMANENT_END)]}], now=_events_now())
+        assert no_key[0]["name"] == "EV"
+
+    def test_permanent_event_has_no_end(self):
+        from datetime import datetime, timezone
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        journey = get_event_schedule(_GAME_EVENTS, now=_events_now())[0]
+        assert journey["end"] is None
+        assert journey["start"] == datetime(2016, 10, 15, 12, tzinfo=timezone.utc)
+        assert journey["instance_id"] == "J1"
+        assert journey["type"] == 3
+        assert journey["campaign_element"] == _NODE
+
+    def test_overlapping_runs_pick_the_one_ending_first(self):
+        from datetime import timezone
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        jaxxon = get_event_schedule(_GAME_EVENTS, now=_events_now())[1]
+        assert jaxxon["instance_id"] == "EARLIER_END"
+        assert jaxxon["end"] is not None and jaxxon["end"].tzinfo == timezone.utc
+        assert jaxxon["end"].timestamp() * 1000 == _EVENTS_NOW_MS + _DAY_MS
+
+    def test_upcoming_event_uses_its_next_run(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        ronin = get_event_schedule(_GAME_EVENTS, now=_events_now())[-1]
+        assert ronin["instance_id"] == "FIRST"
+        assert ronin["start"].timestamp() * 1000 == _EVENTS_NOW_MS + 13 * _DAY_MS
+
+    def test_live_only(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS, now=_events_now(), include_upcoming=False)
+        assert {e["status"] for e in schedule} == {"live"}
+        assert len(schedule) == 2
+
+    def test_run_boundaries(self):
+        from datetime import timedelta
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        events = [{"id": "EV", "instance": [_run(_EVENTS_NOW_MS, _EVENTS_NOW_MS + _DAY_MS)]}]
+        assert get_event_schedule(events, now=_events_now())[0]["status"] == "live"
+        assert get_event_schedule(events, now=_events_now() + timedelta(days=1)) == []
+
+    def test_integer_times_and_unusable_runs(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        events: list[Any] = [
+            {"id": "INT", "instance": [{"startTime": _EVENTS_NOW_MS - 1, "endTime": _EVENTS_NOW_MS + 1}]},
+            {"id": "NO_END", "instance": [{"startTime": str(_EVENTS_NOW_MS + _DAY_MS)}]},
+            {"id": "NO_RUNS", "instance": None},
+            "not an event",
+        ]
+        assert [e["event_id"] for e in get_event_schedule(events, now=_events_now())] == ["INT"]
+
+    @pytest.mark.parametrize("events", [None, "events", {"events": []}])
+    def test_invalid_events_raises(self, events: Any):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        with pytest.raises(SwgohComlinkValueError, match="get_event_schedule"):
+            get_event_schedule(events)
+
+    def test_invalid_localization_raises(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        localization: Any = ["not", "a", "dict"]
+        with pytest.raises(SwgohComlinkValueError, match="localization"):
+            get_event_schedule(_GAME_EVENTS, localization)
+
+
 # ── _abilities ─────────────────────────────────────────────────────────
 
 

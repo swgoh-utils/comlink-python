@@ -325,6 +325,48 @@ with `async_` accept a `SwgohComlinkAsync` instance and must be awaited.
 
 ---
 
+## Event Helpers
+
+Functions for reading the game's event schedule from `get_events()`. These do not
+call comlink themselves.
+
+### get_event_schedule
+
+Lists the events that are live now and those scheduled to start later, with start
+and end times as timezone-aware datetimes and readable names.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import get_event_schedule, get_localization_dictionary
+
+comlink = SwgohComlink()
+loc = get_localization_dictionary(comlink)
+
+for event in get_event_schedule(comlink.get_events(), loc):
+    ends = event["end"].strftime("%Y-%m-%d %H:%M UTC") if event["end"] else "never"
+    print(event["status"], event["name"], ends)
+# live The Mandalorian — Hero's Journey never
+# live Action Jaxxon — Special Marquee Event 2026-09-24 12:00 UTC
+# upcoming The Wanderer's Blade — Special Marquee Event 2026-10-13 12:00 UTC
+```
+
+!!! note
+    Permanent events such as journeys have a single run that the game ends in the
+    year 2126; their `end` is `None`. When two runs of an event overlap at a
+    changeover, the one ending first is used.
+
+::: swgoh_comlink.helpers._events.get_event_schedule
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._events.ScheduledEvent
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Guild Helpers
 
 ### Sync
