@@ -345,10 +345,15 @@ loc = get_localization_dictionary(comlink)
 for event in get_event_schedule(comlink.get_events(), loc):
     ends = event["end"].strftime("%Y-%m-%d %H:%M UTC") if event["end"] else "never"
     print(event["status"], event["name"], ends)
-# live The Mandalorian — Hero's Journey never
-# live Action Jaxxon — Special Marquee Event 2026-09-24 12:00 UTC
-# upcoming The Wanderer's Blade — Special Marquee Event 2026-10-13 12:00 UTC
+# live THE MANDALORIAN - Hero's Journey never
+# live ACTION JAXXON - Special Marquee Event 2026-09-24 12:00 UTC
+# upcoming THE WANDERER'S BLADE - Special Marquee Event 2026-10-13 12:00 UTC
 ```
+
+Names keep the game's own capitalisation. Most events have a two-line banner: `title`
+is its first line (`"THE MANDALORIAN"`), `subtitle` the second (`"Hero's Journey"`),
+and `name` joins them with `" - "`, so either the joined string or the two parts can be
+displayed.
 
 !!! note
     Permanent events such as journeys have a single run that the game ends in the

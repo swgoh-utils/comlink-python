@@ -980,28 +980,29 @@ class TestGetEventSchedule:
             ("EVENT_MARQUEE_THERONIN", "upcoming"),
         ]
 
-    def test_names_join_the_banner_and_recase_capitals(self):
+    def test_names_split_the_banner_and_keep_the_game_case(self):
         from swgoh_comlink.helpers import get_event_schedule
 
-        names = [e["name"] for e in get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())]
-        assert names == [
-            "The Mandalorian — Hero's Journey",
-            "Action Jaxxon — Special Marquee Event",
-            "Smuggler's Run II — Resource Event",
-            "The Wanderer's Blade — Special Marquee Event",
+        schedule = get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())
+        assert [(e["title"], e["subtitle"], e["name"]) for e in schedule] == [
+            ("THE MANDALORIAN", "Hero's Journey", "THE MANDALORIAN - Hero's Journey"),
+            ("ACTION JAXXON", "Special Marquee Event", "ACTION JAXXON - Special Marquee Event"),
+            ("SMUGGLER'S RUN II", "Resource Event", "SMUGGLER'S RUN II - Resource Event"),
+            ("THE WANDERER'S BLADE", "Special Marquee Event", "THE WANDERER'S BLADE - Special Marquee Event"),
         ]
 
     @pytest.mark.parametrize(
         ("text", "expected"),
         [
-            ("DUEL OF THE FATES\\n[c][FFC891]Assault Battles[-][/c]", "Duel of the Fates — Assault Battles"),
-            ("ANALYSIS/PARALYSIS\\n[c][FFC891]Era Battle[-][/c]", "Analysis/Paralysis — Era Battle"),
-            ("TIER II (VERY HARD)", "Tier II (Very Hard)"),
-            ("Terrible Tings", "Terrible Tings"),
-            ("CLONE FORCE 99", "Clone Force 99"),
+            ("DUEL OF THE FATES\\n[c][FFC891]Assault Battles[-][/c]", ("DUEL OF THE FATES", "Assault Battles")),
+            ("IMPERIAL TIE BOMBER\\n[c][FFC891]Ship Event[-][/c]", ("IMPERIAL TIE BOMBER", "Ship Event")),
+            ("TIER II (VERY HARD)", ("TIER II (VERY HARD)", None)),
+            ("Terrible Tings", ("Terrible Tings", None)),
+            ("ONE\\nTWO\\nthree", ("ONE", "TWO - three")),
+            ("[c][FFC891][-][/c]", ("", None)),
         ],
     )
-    def test_event_name_formatting(self, text: str, expected: str):
+    def test_event_name_formatting(self, text: str, expected: tuple[str, str | None]):
         from swgoh_comlink.helpers._events import _event_name
 
         assert _event_name(text) == expected
@@ -1011,8 +1012,9 @@ class TestGetEventSchedule:
 
         schedule = get_event_schedule(_GAME_EVENTS["gameEvent"], now=_events_now())
         assert schedule[0]["name"] == "EVENT_JOURNEY_MANDALORIAN_NAME"
+        assert (schedule[0]["title"], schedule[0]["subtitle"]) == ("EVENT_JOURNEY_MANDALORIAN_NAME", None)
         no_key = get_event_schedule([{"id": "EV", "instance": [_run(0, _PERMANENT_END)]}], now=_events_now())
-        assert no_key[0]["name"] == "EV"
+        assert (no_key[0]["name"], no_key[0]["title"], no_key[0]["subtitle"]) == ("EV", "EV", None)
 
     def test_permanent_event_has_no_end(self):
         from datetime import datetime, timezone

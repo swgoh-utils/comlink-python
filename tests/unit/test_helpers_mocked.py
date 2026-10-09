@@ -429,7 +429,8 @@ class TestGetEventScheduleFromClient:
         )
         loc = {"EVENT_JOURNEY_MANDALORIAN_NAME": "THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]"}
         (journey,) = get_event_schedule(sync_client.get_events(), loc, now=now)
-        assert journey["name"] == "The Mandalorian — Hero's Journey"
+        assert journey["name"] == "THE MANDALORIAN - Hero's Journey"
+        assert (journey["title"], journey["subtitle"]) == ("THE MANDALORIAN", "Hero's Journey")
         assert journey["status"] == "live" and journey["end"] is None
 
 

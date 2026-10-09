@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import re
 from datetime import datetime, timezone
 from typing import Any, Literal, TypedDict
 
@@ -14,11 +13,6 @@ from ._utils import _as_int, get_function_name
 # Permanent events (journeys, legendary events) have one instance ending in the year 2126. Anything ending
 # after this (2096-10-02) is treated as having no end.
 _PERMANENT_MS = 4_000_000_000_000
-# Words left lower case when an all-caps banner line is re-cased, unless they open the line.
-_MINOR_WORDS = frozenset({"a", "an", "and", "at", "by", "for", "in", "of", "on", "or", "the", "to"})
-_ROMAN_NUMERAL = frozenset("IVXL")
-# A run of letters, with any apostrophe inside it: each part of 'ANALYSIS/PARALYSIS' or 'SMUGGLER'S'.
-_WORD_PART = re.compile(r"[^\W\d_]+(?:['’][^\W\d_]+)*")
 
 
 class ScheduledEvent(TypedDict):
@@ -28,7 +22,13 @@ class ScheduledEvent(TypedDict):
     instance_id: str | None
     """The ``id`` of the run (instance) this entry describes, when the payload names one."""
     name: str
-    """Localized name, falling back to the event's ``nameKey`` and then its id."""
+    """Localized name on one line: ``title`` and ``subtitle`` joined with ``" - "``, or ``title`` alone.
+    Falls back to the event's ``nameKey`` and then its id."""
+    title: str
+    """The first line of the game's two-line banner, as the game writes it (often in capitals), e.g.
+    ``"THE MANDALORIAN"``. Falls back like ``name``."""
+    subtitle: str | None
+    """The rest of the banner, e.g. ``"Hero's Journey"``, or ``None`` for a one-line name."""
     name_key: str
     type: int | str | None
     """The event's ``type`` (see the ``GameEventType`` enum), e.g. ``10`` for Grand Arena."""
@@ -45,34 +45,16 @@ def _moment(millis: int) -> datetime:
     return datetime.fromtimestamp(millis / 1000, tz=timezone.utc)
 
 
-def _recase_part(match: re.Match[str]) -> str:
-    part = match[0]
-    return part if set(part) <= _ROMAN_NUMERAL else part[0] + part[1:].lower()
+def _event_name(text: str) -> tuple[str, str | None]:
+    """Split an event's banner text into its title and subtitle, markup removed and case kept.
 
-
-def _recase_word(word: str, first: bool) -> str:
-    """``(HARD)`` -> ``(Hard)``, ``SMUGGLER'S`` -> ``Smuggler's``, ``II`` -> ``II``, ``OF`` -> ``of`` mid-line."""
-    if not first and word.lower() in _MINOR_WORDS:
-        return word.lower()
-    return _WORD_PART.sub(_recase_part, word)
-
-
-def _event_name(text: str) -> str:
-    """Turn an event's two-line banner text into one line.
-
-    ``THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]`` -> ``The Mandalorian — Hero's Journey``. A line
-    the game writes in capitals is re-cased word by word, keeping roman numerals; a mixed-case line is
-    left as written.
+    ``THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]`` -> ``("THE MANDALORIAN", "Hero's Journey")``. A
+    one-line name has no subtitle; lines after the second are joined into the subtitle with ``" - "``.
     """
-    lines = [line.strip() for line in parse_swgoh_string(text).splitlines()]
-    recased = [
-        " ".join(_recase_word(word, i == 0) for i, word in enumerate(line.split()))
-        if line == line.upper() and line != line.lower()
-        else line
-        for line in lines
-        if line
-    ]
-    return " — ".join(recased)
+    lines = [line.strip() for line in parse_swgoh_string(text).splitlines() if line.strip()]
+    if not lines:
+        return "", None
+    return lines[0], " - ".join(lines[1:]) or None
 
 
 def get_event_schedule(
@@ -94,8 +76,9 @@ def get_event_schedule(
     ``end`` is ``None``.
 
     The game writes most event names as a two-line banner, ``THE MANDALORIAN\\n[c][FFC891]Hero's
-    Journey[-][/c]``. Markup is removed, the lines are joined with an em dash and a line written in
-    capitals is re-cased, giving ``"The Mandalorian — Hero's Journey"``.
+    Journey[-][/c]``. Markup is removed and the case is kept as written: ``title`` is the first line
+    (``"THE MANDALORIAN"``), ``subtitle`` the second (``"Hero's Journey"``), and ``name`` joins them as
+    ``"THE MANDALORIAN - Hero's Journey"``.
 
     Args:
         events: The response from ``SwgohComlink.get_events()``, or its ``gameEvent`` list.
@@ -117,7 +100,7 @@ def get_event_schedule(
         >>> loc = get_localization_dictionary(comlink)  # doctest: +SKIP
         >>> for event in get_event_schedule(comlink.get_events(), loc):  # doctest: +SKIP
         ...     print(event["status"], event["name"], event["end"])
-        live The Mandalorian — Hero's Journey None
+        live THE MANDALORIAN - Hero's Journey None
     """
     game_events = events.get("gameEvent") if isinstance(events, dict) else events
     if not isinstance(game_events, list):
@@ -155,13 +138,18 @@ def get_event_schedule(
 
         name_key = event.get("nameKey") or ""
         raw_name = localization.get(name_key) if localization is not None and name_key else None
-        name = (_event_name(raw_name) if raw_name else "") or name_key or event.get("id", "")
+        title, subtitle = _event_name(raw_name) if raw_name else ("", None)
+        if not title:
+            title, subtitle = name_key or event.get("id", ""), None
+        name = f"{title} - {subtitle}" if subtitle else title
         element = run.get("campaignElementIdentifier")
         (live if status == "live" else upcoming).append(
             {
                 "event_id": event.get("id", ""),
                 "instance_id": run.get("id"),
                 "name": name,
+                "title": title,
+                "subtitle": subtitle,
                 "name_key": name_key,
                 "type": event.get("type"),
                 "status": status,
