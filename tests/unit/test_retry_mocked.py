@@ -26,6 +26,8 @@ from swgoh_comlink.exceptions import (
 URL = "http://localhost:3000"
 RATE_EXCEEDED = {"code": "GAME_6", "message": "Rate exceeded!"}
 UNAVAILABLE = {"code": "UNAVAILABLE", "message": "server is at capacity"}
+# get_enums() reads the game data version from /metadata before fetching /enums.
+METADATA = {"latestGamedataVersion": "game-v1", "latestLocalizationBundleVersion": "lang-v1"}
 
 
 @pytest.fixture
@@ -104,14 +106,16 @@ async def test_async_raises_typed_error(
 
 
 def test_sync_message_is_unchanged(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(status_code=500, text="Internal Server Error")
+    httpx_mock.add_response(url=f"{URL}/metadata", json=METADATA)
+    httpx_mock.add_response(url=f"{URL}/enums", status_code=500, text="Internal Server Error")
 
     with pytest.raises(SwgohComlinkException, match=r"^HTTP 500: Internal Server Error$"):
         SwgohComlink(url=URL).get_enums()
 
 
 async def test_async_message_is_unchanged(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(status_code=500, text="Internal Server Error")
+    httpx_mock.add_response(url=f"{URL}/metadata", json=METADATA)
+    httpx_mock.add_response(url=f"{URL}/enums", status_code=500, text="Internal Server Error")
 
     async with SwgohComlinkAsync(url=URL) as client:
         with pytest.raises(SwgohComlinkException, match=r"^HTTP 500: Internal Server Error$"):
@@ -241,7 +245,8 @@ async def test_async_no_retry_on_client_or_server_error(
 
 
 def test_sync_no_retry_on_transport_error(httpx_mock: HTTPXMock, waits: list[float]) -> None:
-    httpx_mock.add_exception(httpx.ConnectError("Connection refused"))
+    httpx_mock.add_response(url=f"{URL}/metadata", json=METADATA)
+    httpx_mock.add_exception(httpx.ConnectError("Connection refused"), url=f"{URL}/enums")
 
     with pytest.raises(SwgohComlinkException) as exc_info:
         SwgohComlink(url=URL, retry=RetryPolicy()).get_enums()
@@ -251,7 +256,8 @@ def test_sync_no_retry_on_transport_error(httpx_mock: HTTPXMock, waits: list[flo
 
 
 async def test_async_no_retry_on_transport_error(httpx_mock: HTTPXMock, waits: list[float]) -> None:
-    httpx_mock.add_exception(httpx.ConnectError("Connection refused"))
+    httpx_mock.add_response(url=f"{URL}/metadata", json=METADATA)
+    httpx_mock.add_exception(httpx.ConnectError("Connection refused"), url=f"{URL}/enums")
 
     async with SwgohComlinkAsync(url=URL, retry=RetryPolicy()) as client:
         with pytest.raises(SwgohComlinkException) as exc_info:
