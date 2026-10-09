@@ -364,9 +364,8 @@ class ItemNames:
 
     Examples:
         >>> game_data = comlink.get_game_data(items=DataItems.MATERIAL | DataItems.EQUIPMENT | DataItems.UNITS)  # doctest: +SKIP
-        >>> names = ItemNames(
-        ...     game_data, get_localization_dictionary(comlink), enums=comlink.get_enums()
-        ... )  # doctest: +SKIP
+        >>> comlink.get_enums()  # cached on the client as comlink.enums  # doctest: +SKIP
+        >>> names = ItemNames(game_data, get_localization_dictionary(comlink), enums=comlink.enums)  # doctest: +SKIP
         >>> names.get("MATERIAL", "unitshard_GLLEIA")  # doctest: +SKIP
         'Leia Organa'
         >>> names.get(3, "GRIND")  # doctest: +SKIP

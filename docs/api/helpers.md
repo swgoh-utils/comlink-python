@@ -545,8 +545,10 @@ game_data = comlink.get_game_data(
     | DataItems.PLAYER_PORTRAIT
 )
 # enums is optional; with it, item types and currencies added to the game since
-# this release are recognised.
-names = ItemNames(game_data, get_localization_dictionary(comlink), enums=comlink.get_enums())
+# this release are recognised. get_enums() fetches them once per game data version
+# and caches them on the client as comlink.enums.
+comlink.get_enums()
+names = ItemNames(game_data, get_localization_dictionary(comlink), enums=comlink.enums)
 
 names.get("MATERIAL", "unitshard_GLLEIA")  # 'Leia Organa'
 names.get(3, "GRIND")                      # 'Credits'
