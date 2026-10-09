@@ -325,6 +325,53 @@ with `async_` accept a `SwgohComlinkAsync` instance and must be awaited.
 
 ---
 
+## Event Helpers
+
+Functions for reading the game's event schedule from `get_events()`. These do not
+call comlink themselves.
+
+### get_event_schedule
+
+Lists the events that are live now and those scheduled to start later, with start
+and end times as timezone-aware datetimes and readable names.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import get_event_schedule, get_localization_dictionary
+
+comlink = SwgohComlink()
+loc = get_localization_dictionary(comlink)
+
+for event in get_event_schedule(comlink.get_events(), loc):
+    ends = event["end"].strftime("%Y-%m-%d %H:%M UTC") if event["end"] else "never"
+    print(event["status"], event["name"], ends)
+# live THE MANDALORIAN - Hero's Journey never
+# live ACTION JAXXON - Special Marquee Event 2026-09-24 12:00 UTC
+# upcoming THE WANDERER'S BLADE - Special Marquee Event 2026-10-13 12:00 UTC
+```
+
+Names keep the game's own capitalisation. Most events have a two-line banner: `title`
+is its first line (`"THE MANDALORIAN"`), `subtitle` the second (`"Hero's Journey"`),
+and `name` joins them with `" - "`, so either the joined string or the two parts can be
+displayed.
+
+!!! note
+    Permanent events such as journeys have a single run that the game ends in the
+    year 2126; their `end` is `None`. When two runs of an event overlap at a
+    changeover, the one ending first is used.
+
+::: swgoh_comlink.helpers._events.get_event_schedule
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._events.ScheduledEvent
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Guild Helpers
 
 ### Sync
@@ -345,6 +392,67 @@ with `async_` accept a `SwgohComlinkAsync` instance and must be awaited.
       show_root_heading: true
       show_root_full_path: false
 
+### get_guild_activity
+
+Summarizes a guild's recent Territory Battles, Territory Wars and raid, and lists its
+members with their role, join time, last activity and score in the last raid. Pass it
+the result of `get_guild()` requested with `include_recent_guild_activity_info=True`;
+without that flag the recent results are empty.
+
+```python
+from datetime import datetime, timezone
+
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import get_guild_activity
+
+comlink = SwgohComlink()
+guild = comlink.get_guild(guild_id, include_recent_guild_activity_info=True)
+activity = get_guild_activity(guild)
+
+print(f"TW record: {activity['territory_war_wins']}-{activity['territory_war_losses']}")
+if activity["best_territory_battle"]:
+    print("Best recent TB:", activity["best_territory_battle"]["total_stars"], "stars")
+
+now = datetime.now(timezone.utc)
+for member in activity["members"]:
+    days = (now - member["joined"]).days if member["joined"] else None
+    print(member["name"], member["role"], days, member["raid_score"])
+```
+
+!!! note
+    `guildJoinTime` is in epoch seconds while `lastActivityTime` is in epoch
+    milliseconds; both are returned as timezone-aware UTC datetimes.
+
+::: swgoh_comlink.helpers._guild.get_guild_activity
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.GuildActivity
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.GuildMemberActivity
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.TerritoryBattleResult
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.TerritoryWarResult
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._guild.RaidResult
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
 ---
 
 ## Conquest Helpers
@@ -355,6 +463,27 @@ and data-transformation functions and do not require a comlink instance.
 ### calc_current_stamina
 
 ::: swgoh_comlink.helpers._conquest.calc_current_stamina
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### calc_stamina_full_time
+
+Returns when a unit's Conquest stamina reaches 100, using the same regeneration
+model as `calc_current_stamina`.
+
+```python
+from datetime import datetime, timedelta, timezone
+
+from swgoh_comlink.helpers import calc_stamina_full_time
+
+# One entry of a player's Conquest status 'unitStamina' list
+unit = {"unitId": "...", "remainingStamina": 90, "lastRefreshTime": "1790164800"}
+full_at = calc_stamina_full_time(unit)
+time_left = max(full_at - datetime.now(timezone.utc), timedelta(0))
+```
+
+::: swgoh_comlink.helpers._conquest.calc_stamina_full_time
     options:
       show_root_heading: true
       show_root_full_path: false
@@ -572,6 +701,46 @@ These do not require a comlink instance.
 ### get_datacron_dismantle_total
 
 ::: swgoh_comlink.helpers._game_data.get_datacron_dismantle_total
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
+## Game Configuration Helpers
+
+Functions for reading the game's own configuration values (limits and tuning) from
+`get_game_metadata()`. These do not call comlink themselves.
+
+### get_game_config
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import get_game_config, get_game_config_int
+
+comlink = SwgohComlink()
+metadata = comlink.get_game_metadata()
+
+config = get_game_config(metadata)               # every key, as strings
+config["stat-mod-highlight-stat"]                # 'SPEED'
+get_game_config_int(metadata, "max-conquest-currency")   # 3500
+get_game_config_int(metadata, "stat-mod-max-storage")    # 500
+get_game_config_int(metadata, "max-datacron-currency")   # 100000000
+```
+
+!!! note
+    Every configuration value is a string, including the numeric ones, and some keys
+    hold text such as `"true"` or `"SPEED"`. `get_game_config_int` returns its
+    `default` (`None` unless given) for a missing key or a value that is not an integer.
+
+::: swgoh_comlink.helpers._game_config.get_game_config
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_game_config_int
+
+::: swgoh_comlink.helpers._game_config.get_game_config_int
     options:
       show_root_heading: true
       show_root_full_path: false

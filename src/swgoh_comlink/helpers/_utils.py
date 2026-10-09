@@ -178,3 +178,22 @@ def convert_relic_tier(relic_tier: str | int) -> str | None:
         elif level != name and level.isdigit():
             key = str(int(level) + Constants.RELIC_OFFSET)
     return Constants.RELIC_TIERS.get(key)
+
+
+def _as_int(value: Any, default: int = 0) -> int:
+    """Read a payload number, which arrives as an int or, for int64 fields, as a numeric string.
+
+    Anything else (``None``, a bool, an enum name, junk) reads as ``default``.
+    """
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        try:
+            return int(value.strip())
+        except ValueError:
+            return default
+    return default

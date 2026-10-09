@@ -699,6 +699,90 @@ class TestGetDatacronDismantleTotal:
 # ── _conquest ──────────────────────────────────────────────────────────
 
 
+_REFRESH = 1_790_164_800  # 2026-09-23 12:00:00 UTC, in seconds as lastRefreshTime carries it
+
+
+def _utc(seconds: float):
+    from datetime import datetime, timezone
+
+    return datetime.fromtimestamp(seconds, tz=timezone.utc)
+
+
+class TestCalcStaminaFullTime:
+    def test_one_point_per_thirty_minutes(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"unitId": "u1", "remainingStamina": 90, "lastRefreshTime": str(_REFRESH)}
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 3600)) == _utc(_REFRESH + 10 * 1800)
+
+    def test_returns_aware_utc(self):
+        from datetime import timezone
+
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        result = calc_stamina_full_time({"remainingStamina": 50, "lastRefreshTime": _REFRESH})
+        assert result.tzinfo == timezone.utc
+
+    @pytest.mark.parametrize("pass_plus", [False, True])
+    @pytest.mark.parametrize("remaining", [0, 1, 37, 99])
+    def test_agrees_with_calc_current_stamina(self, remaining: int, pass_plus: bool):
+        from unittest.mock import patch
+
+        from swgoh_comlink.helpers import calc_current_stamina, calc_stamina_full_time
+
+        unit = {"remainingStamina": remaining, "lastRefreshTime": _REFRESH}
+        full = calc_stamina_full_time(unit, pass_plus, now=_utc(_REFRESH)).timestamp()
+        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full):
+            assert calc_current_stamina(unit, pass_plus) == 100
+        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full - 1):
+            assert calc_current_stamina(unit, pass_plus) < 100
+
+    def test_pass_plus_is_faster(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"remainingStamina": 0, "lastRefreshTime": _REFRESH}
+        now = _utc(_REFRESH)
+        assert calc_stamina_full_time(unit, True, now=now) < calc_stamina_full_time(unit, now=now)
+
+    def test_full_unit_returns_the_moment_it_filled(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"remainingStamina": 98, "lastRefreshTime": _REFRESH}
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 86_400)) == _utc(_REFRESH + 3600)
+        assert calc_stamina_full_time({"remainingStamina": 100, "lastRefreshTime": _REFRESH}) == _utc(_REFRESH)
+
+    @pytest.mark.parametrize("refresh", [None, 0, "", "junk"])
+    def test_missing_refresh_time_counts_from_now(self, refresh: Any):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit: dict[str, Any] = {"remainingStamina": 99}
+        if refresh is not None:
+            unit["lastRefreshTime"] = refresh
+        # Whole seconds, as lastRefreshTime carries them
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 0.75)) == _utc(_REFRESH + 1800)
+
+    def test_future_refresh_time_counts_from_now(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"remainingStamina": 99, "lastRefreshTime": _REFRESH + 600}
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH)) == _utc(_REFRESH + 1800)
+
+    def test_naive_now_is_local_time(self):
+        from datetime import datetime
+
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        now = datetime.now()
+        assert calc_stamina_full_time({"remainingStamina": 99}, now=now) == _utc(int(now.timestamp()) + 1800)
+
+    @pytest.mark.parametrize("unit", [None, [], {"lastRefreshTime": _REFRESH}, {"remainingStamina": "full"}])
+    def test_invalid_unit_raises(self, unit: Any):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        with pytest.raises(SwgohComlinkValueError, match="calc_stamina_full_time"):
+            calc_stamina_full_time(unit)
+
+
 def _feat(challenge_id: str, keycards: int = 1, artifact: str | None = None, reward_type: Any = 22) -> dict[str, Any]:
     rewards = [{"id": "", "type": reward_type, "maxQuantity": keycards}]
     if artifact:
@@ -813,6 +897,433 @@ class TestGetConquestFeats:
 
         with pytest.raises(SwgohComlinkValueError):
             get_conquest_feats(*args, **kwargs)
+
+
+# ── _events ─────────────────────────────────────────────────────────────
+
+_EVENTS_NOW_MS = 1_790_164_800_000  # 2026-09-23 12:00 UTC
+_DAY_MS = 86_400_000
+_PERMANENT_END = "4945772573272"  # 2126-09-24: how the game spells "never ends"
+
+
+def _run(start: int, end: int | str, run_id: str | None = None, **extra: Any) -> dict[str, Any]:
+    run: dict[str, Any] = {"startTime": str(start), "endTime": str(end), **extra}
+    if run_id is not None:
+        run["id"] = run_id
+    return run
+
+
+def _events_now():
+    from datetime import datetime, timezone
+
+    return datetime.fromtimestamp(_EVENTS_NOW_MS / 1000, tz=timezone.utc)
+
+
+_NODE = {"campaignId": "EVENTS", "campaignMapId": "JOURNEY", "campaignNodeDifficulty": 4, "campaignNodeId": "JM"}
+_GAME_EVENTS: dict[str, Any] = {
+    "gameEvent": [
+        {
+            "id": "EVENT_JOURNEY_MANDALORIAN",
+            "nameKey": "EVENT_JOURNEY_MANDALORIAN_NAME",
+            "type": 3,
+            "instance": [_run(1_476_532_800_000, _PERMANENT_END, "J1", campaignElementIdentifier=_NODE)],
+        },
+        {
+            "id": "EVENT_MARQUEE_JAXXON",
+            "nameKey": "EVENT_MARQUEE_JAXXON_NAME_V2",
+            "type": 1,
+            "instance": [
+                _run(_EVENTS_NOW_MS - _DAY_MS, _EVENTS_NOW_MS + 2 * _DAY_MS, "LATER_END"),
+                _run(_EVENTS_NOW_MS - 2 * _DAY_MS, _EVENTS_NOW_MS + _DAY_MS, "EARLIER_END"),
+            ],
+        },
+        {
+            "id": "EVENT_MARQUEE_THERONIN",
+            "nameKey": "EVENT_MARQUEE_THERONIN_NAME",
+            "type": 1,
+            "instance": [
+                _run(_EVENTS_NOW_MS + 20 * _DAY_MS, _EVENTS_NOW_MS + 27 * _DAY_MS, "SECOND"),
+                _run(_EVENTS_NOW_MS + 13 * _DAY_MS, _EVENTS_NOW_MS + 20 * _DAY_MS, "FIRST"),
+            ],
+        },
+        {
+            "id": "challenge_XP",
+            "nameKey": "EVENT_XP_NAME",
+            "type": 1,
+            "instance": [_run(_EVENTS_NOW_MS - 3 * _DAY_MS, _EVENTS_NOW_MS - _DAY_MS)],
+        },
+        {
+            "id": "EVENT_SMUGGLERS_RUN",
+            "nameKey": "EVENT_SMUGGLERS_RUN_NAME",
+            "type": 1,
+            "instance": [_run(_EVENTS_NOW_MS + _DAY_MS, _EVENTS_NOW_MS + 2 * _DAY_MS)],
+        },
+    ]
+}
+_EVENT_LOC = {
+    "EVENT_JOURNEY_MANDALORIAN_NAME": "THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]",
+    "EVENT_MARQUEE_JAXXON_NAME_V2": "ACTION JAXXON\\n[c][FFC891]Special Marquee Event[-][/c]",
+    "EVENT_MARQUEE_THERONIN_NAME": "THE WANDERER'S BLADE\\n[c][FFC891]Special Marquee Event[-][/c]",
+    "EVENT_SMUGGLERS_RUN_NAME": "SMUGGLER'S RUN II\\n[c][FFC891]Resource Event[-][/c]",
+}
+
+
+class TestGetEventSchedule:
+    def test_live_then_upcoming_soonest_first(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())
+        assert [(e["event_id"], e["status"]) for e in schedule] == [
+            ("EVENT_JOURNEY_MANDALORIAN", "live"),
+            ("EVENT_MARQUEE_JAXXON", "live"),
+            ("EVENT_SMUGGLERS_RUN", "upcoming"),
+            ("EVENT_MARQUEE_THERONIN", "upcoming"),
+        ]
+
+    def test_names_split_the_banner_and_keep_the_game_case(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())
+        assert [(e["title"], e["subtitle"], e["name"]) for e in schedule] == [
+            ("THE MANDALORIAN", "Hero's Journey", "THE MANDALORIAN - Hero's Journey"),
+            ("ACTION JAXXON", "Special Marquee Event", "ACTION JAXXON - Special Marquee Event"),
+            ("SMUGGLER'S RUN II", "Resource Event", "SMUGGLER'S RUN II - Resource Event"),
+            ("THE WANDERER'S BLADE", "Special Marquee Event", "THE WANDERER'S BLADE - Special Marquee Event"),
+        ]
+
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            ("DUEL OF THE FATES\\n[c][FFC891]Assault Battles[-][/c]", ("DUEL OF THE FATES", "Assault Battles")),
+            ("IMPERIAL TIE BOMBER\\n[c][FFC891]Ship Event[-][/c]", ("IMPERIAL TIE BOMBER", "Ship Event")),
+            ("TIER II (VERY HARD)", ("TIER II (VERY HARD)", None)),
+            ("Terrible Tings", ("Terrible Tings", None)),
+            ("ONE\\nTWO\\nthree", ("ONE", "TWO - three")),
+            ("[c][FFC891][-][/c]", ("", None)),
+        ],
+    )
+    def test_event_name_formatting(self, text: str, expected: tuple[str, str | None]):
+        from swgoh_comlink.helpers._events import _event_name
+
+        assert _event_name(text) == expected
+
+    def test_without_localization_uses_name_key(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS["gameEvent"], now=_events_now())
+        assert schedule[0]["name"] == "EVENT_JOURNEY_MANDALORIAN_NAME"
+        assert (schedule[0]["title"], schedule[0]["subtitle"]) == ("EVENT_JOURNEY_MANDALORIAN_NAME", None)
+        no_key = get_event_schedule([{"id": "EV", "instance": [_run(0, _PERMANENT_END)]}], now=_events_now())
+        assert (no_key[0]["name"], no_key[0]["title"], no_key[0]["subtitle"]) == ("EV", "EV", None)
+
+    def test_permanent_event_has_no_end(self):
+        from datetime import datetime, timezone
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        journey = get_event_schedule(_GAME_EVENTS, now=_events_now())[0]
+        assert journey["end"] is None
+        assert journey["start"] == datetime(2016, 10, 15, 12, tzinfo=timezone.utc)
+        assert journey["instance_id"] == "J1"
+        assert journey["type"] == 3
+        assert journey["campaign_element"] == _NODE
+
+    def test_overlapping_runs_pick_the_one_ending_first(self):
+        from datetime import timezone
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        jaxxon = get_event_schedule(_GAME_EVENTS, now=_events_now())[1]
+        assert jaxxon["instance_id"] == "EARLIER_END"
+        assert jaxxon["end"] is not None and jaxxon["end"].tzinfo == timezone.utc
+        assert jaxxon["end"].timestamp() * 1000 == _EVENTS_NOW_MS + _DAY_MS
+
+    def test_upcoming_event_uses_its_next_run(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        ronin = get_event_schedule(_GAME_EVENTS, now=_events_now())[-1]
+        assert ronin["instance_id"] == "FIRST"
+        assert ronin["start"].timestamp() * 1000 == _EVENTS_NOW_MS + 13 * _DAY_MS
+
+    def test_live_only(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS, now=_events_now(), include_upcoming=False)
+        assert {e["status"] for e in schedule} == {"live"}
+        assert len(schedule) == 2
+
+    def test_run_boundaries(self):
+        from datetime import timedelta
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        events = [{"id": "EV", "instance": [_run(_EVENTS_NOW_MS, _EVENTS_NOW_MS + _DAY_MS)]}]
+        assert get_event_schedule(events, now=_events_now())[0]["status"] == "live"
+        assert get_event_schedule(events, now=_events_now() + timedelta(days=1)) == []
+
+    def test_integer_times_and_unusable_runs(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        events: list[Any] = [
+            {"id": "INT", "instance": [{"startTime": _EVENTS_NOW_MS - 1, "endTime": _EVENTS_NOW_MS + 1}]},
+            {"id": "NO_END", "instance": [{"startTime": str(_EVENTS_NOW_MS + _DAY_MS)}]},
+            {"id": "NO_RUNS", "instance": None},
+            "not an event",
+        ]
+        assert [e["event_id"] for e in get_event_schedule(events, now=_events_now())] == ["INT"]
+
+    @pytest.mark.parametrize("events", [None, "events", {"events": []}])
+    def test_invalid_events_raises(self, events: Any):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        with pytest.raises(SwgohComlinkValueError, match="get_event_schedule"):
+            get_event_schedule(events)
+
+    def test_invalid_localization_raises(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        localization: Any = ["not", "a", "dict"]
+        with pytest.raises(SwgohComlinkValueError, match="localization"):
+            get_event_schedule(_GAME_EVENTS, localization)
+
+
+# ── _guild (pure functions) ─────────────────────────────────────────────
+
+
+def _guild_payload(**overrides: Any) -> dict[str, Any]:
+    guild: dict[str, Any] = {
+        "profile": {
+            "id": "g1",
+            "name": "Test Guild",
+            "memberCount": 48,
+            "memberMax": 50,
+            "guildGalacticPower": "755564483",
+        },
+        "member": [
+            {
+                "playerId": "p1",
+                "playerName": "Leader",
+                "memberLevel": 4,
+                "galacticPower": "11000000",
+                "guildJoinTime": "1655938556",
+                "lastActivityTime": "1790164800000",
+            },
+            {"playerId": "p2", "playerName": "Officer", "memberLevel": "GUILD_OFFICER", "guildJoinTime": 1579804504},
+            {"playerId": "p3", "playerName": "New", "memberLevel": 2, "guildJoinTime": "0", "lastActivityTime": "0"},
+        ],
+        "recentTerritoryBattleResult": [
+            {"definitionId": "t05D", "totalStars": 40},
+            {"definitionId": "t05D", "totalStars": "47"},
+        ],
+        "recentTerritoryWarResult": [
+            {
+                "territoryWarId": "TW1",
+                "score": "27361",
+                "opponentScore": "11916",
+                "opponentGuildProfile": {"name": "A"},
+            },
+            {"territoryWarId": "TW2", "score": "12842", "opponentScore": "26567"},
+            {"territoryWarId": "TW3", "score": 100, "opponentScore": 100},
+        ],
+        "recentRaidResult": [
+            {
+                "raidId": "order66",
+                "guildRewardScore": "33500000",
+                "raidMember": [
+                    {"playerId": "p1", "memberProgress": "13500000"},
+                    {"playerId": "p2", "memberProgress": "20000000"},
+                ],
+            }
+        ],
+    }
+    guild.update(overrides)
+    return guild
+
+
+class TestGetGuildActivity:
+    def test_profile_totals(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload())
+        assert (activity["guild_id"], activity["name"]) == ("g1", "Test Guild")
+        assert (activity["member_count"], activity["member_max"]) == (48, 50)
+        assert activity["galactic_power"] == 755564483
+
+    def test_wrapped_response_is_accepted(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        assert get_guild_activity({"guild": _guild_payload()}) == get_guild_activity(_guild_payload())
+
+    def test_best_territory_battle_is_the_most_stars(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        assert get_guild_activity(_guild_payload())["best_territory_battle"] == {
+            "definition_id": "t05D",
+            "total_stars": 47,
+        }
+
+    def test_territory_war_record(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload())
+        assert [(w["territory_war_id"], w["result"]) for w in activity["territory_wars"]] == [
+            ("TW1", "win"),
+            ("TW2", "loss"),
+            ("TW3", "tie"),
+        ]
+        assert activity["territory_wars"][0]["score"] == 27361
+        assert activity["territory_wars"][0]["opponent_name"] == "A"
+        assert activity["territory_wars"][1]["opponent_name"] is None
+        assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (1, 1)
+
+    def test_last_raid_and_member_scores(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload())
+        raid = activity["last_raid"]
+        assert raid is not None
+        assert raid["raid_id"] == "order66"
+        assert raid["guild_score"] == 33_500_000 == sum(raid["member_scores"].values())
+        assert [m["raid_score"] for m in activity["members"]] == [13_500_000, 20_000_000, None]
+
+    def test_members(self):
+        from datetime import datetime, timezone
+
+        from swgoh_comlink.helpers import get_guild_activity
+
+        leader, officer, new = get_guild_activity(_guild_payload())["members"]
+        assert (leader["player_id"], leader["name"], leader["galactic_power"]) == ("p1", "Leader", 11_000_000)
+        # guildJoinTime is in seconds, lastActivityTime in milliseconds
+        assert leader["joined"] == datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)
+        assert leader["last_activity"] == datetime(2026, 9, 23, 12, tzinfo=timezone.utc)
+        assert officer["joined"] == datetime(2020, 1, 23, 18, 35, 4, tzinfo=timezone.utc)
+        assert officer["last_activity"] is None
+        assert new["joined"] is None and new["last_activity"] is None
+
+    @pytest.mark.parametrize(
+        ("member_level", "expected"),
+        [
+            (1, (1, "Pending")),
+            (2, (2, "Member")),
+            (3, (3, "Officer")),
+            (4, (4, "Leader")),
+            ("4", (4, "Leader")),
+            ("GUILD_PENDING", (1, "Pending")),
+            ("GUILD_MEMBER", (2, "Member")),
+            ("GUILD_OFFICER", (3, "Officer")),
+            ("GUILD_LEADER", (4, "Leader")),
+            (0, (None, None)),
+            (None, (None, None)),
+            ([4], (None, None)),
+        ],
+    )
+    def test_member_roles(self, member_level: Any, expected: tuple[Any, Any]):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        (member,) = get_guild_activity({"member": [{"playerId": "p", "memberLevel": member_level}]})["members"]
+        assert (member["member_level"], member["role"]) == expected
+
+    def test_without_recent_activity(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(
+            _guild_payload(recentTerritoryBattleResult=[], recentTerritoryWarResult=None, recentRaidResult=[])
+        )
+        assert activity["best_territory_battle"] is None
+        assert activity["territory_wars"] == []
+        assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (0, 0)
+        assert activity["last_raid"] is None
+        assert all(m["raid_score"] is None for m in activity["members"])
+
+    def test_member_count_falls_back_to_roster(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload(profile={"id": "g1"}))
+        assert activity["member_count"] == 3
+        assert (activity["name"], activity["member_max"], activity["galactic_power"]) == ("", 0, 0)
+
+    @pytest.mark.parametrize("guild", [None, [], "guild"])
+    def test_invalid_guild_raises(self, guild: Any):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        with pytest.raises(SwgohComlinkValueError, match="get_guild_activity"):
+            get_guild_activity(guild)
+
+
+# ── _game_config ────────────────────────────────────────────────────────
+
+# Shaped like get_game_metadata(): every config value is a string, and a key can be listed twice
+_METADATA: dict[str, Any] = {
+    "config": [
+        {"key": "max-conquest-currency", "value": "3500"},
+        {"key": "stat-mod-max-storage", "value": "500"},
+        {"key": "stat-mod-max-level", "value": "15"},
+        {"key": "squad-preset-tab-total-max-squads-saved", "value": "200"},
+        {"key": "stat-mod-highlight-stat", "value": "SPEED"},
+        {"key": "conquest-energy-refresh-daily-cap", "value": "CONQUEST_ENERGY_REFRESH_DAILY_CAP"},
+        {"key": "stat-mod-max-level", "value": "16"},
+        {"key": "no-value"},
+    ],
+    "latestGamedataVersion": "0.40.6:abc",
+    "latestLocalizationBundleVersion": "xyz",
+}
+
+
+class TestGetGameConfig:
+    def test_all_keys(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        config = get_game_config(_METADATA)
+        assert config["max-conquest-currency"] == "3500"
+        assert config["stat-mod-highlight-stat"] == "SPEED"
+        assert "no-value" not in config
+        assert len(config) == 6
+
+    def test_duplicate_key_keeps_first_value(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        assert get_game_config(_METADATA)["stat-mod-max-level"] == "15"
+        assert get_game_config(_METADATA, "stat-mod-max-level") == "15"
+
+    def test_single_key(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        assert get_game_config(_METADATA, "stat-mod-max-storage") == "500"
+        assert get_game_config(_METADATA, "missing-key") is None
+        assert get_game_config(_METADATA, "no-value") is None
+
+    def test_config_list_is_accepted(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        assert get_game_config(_METADATA["config"], "max-conquest-currency") == "3500"
+
+    @pytest.mark.parametrize("metadata", [None, "config", {"latestGamedataVersion": "x"}, {"config": "x"}])
+    def test_invalid_metadata_raises(self, metadata: Any):
+        from swgoh_comlink.helpers import get_game_config
+
+        with pytest.raises(SwgohComlinkValueError, match="get_game_config"):
+            get_game_config(metadata)
+
+
+class TestGetGameConfigInt:
+    def test_numeric_values(self):
+        from swgoh_comlink.helpers import get_game_config_int
+
+        assert get_game_config_int(_METADATA, "max-conquest-currency") == 3500
+        assert get_game_config_int(_METADATA, "squad-preset-tab-total-max-squads-saved") == 200
+
+    @pytest.mark.parametrize("key", ["missing-key", "stat-mod-highlight-stat", "conquest-energy-refresh-daily-cap"])
+    def test_missing_or_text_value_returns_default(self, key: str):
+        from swgoh_comlink.helpers import get_game_config_int
+
+        assert get_game_config_int(_METADATA, key) is None
+        assert get_game_config_int(_METADATA, key, 0) == 0
+
+    def test_invalid_metadata_raises(self):
+        from swgoh_comlink.helpers import get_game_config_int
+
+        with pytest.raises(SwgohComlinkValueError, match="get_game_config_int"):
+            get_game_config_int({}, "max-conquest-currency")
 
 
 # ── _abilities ─────────────────────────────────────────────────────────

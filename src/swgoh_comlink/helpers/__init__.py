@@ -9,10 +9,11 @@ from __future__ import annotations
 
 from ._abilities import AbilityTier, NamedEffect, UnitAbility, get_named_effects, get_unit_abilities
 from ._arena import get_arena_payout, get_max_rank_jump
-from ._conquest import ConquestFeat, calc_current_stamina, get_conquest_feats
+from ._conquest import ConquestFeat, calc_current_stamina, calc_stamina_full_time, get_conquest_feats
 from ._constants import Constants
 from ._data_items import DataItems
 from ._decorators import func_debug_logger, func_timer
+from ._events import ScheduledEvent, get_event_schedule
 from ._gac import (
     async_get_current_gac_event,
     async_get_gac_brackets,
@@ -22,6 +23,7 @@ from ._gac import (
     get_gac_brackets,
     search_gac_brackets,
 )
+from ._game_config import get_game_config, get_game_config_int
 from ._game_data import (
     async_get_localization_dictionary,
     create_localized_unit_name_dictionary,
@@ -32,7 +34,16 @@ from ._game_data import (
     get_playable_units,
     get_raid_leaderboard_ids,
 )
-from ._guild import async_get_guild_members, get_guild_members
+from ._guild import (
+    GuildActivity,
+    GuildMemberActivity,
+    RaidResult,
+    TerritoryBattleResult,
+    TerritoryWarResult,
+    async_get_guild_members,
+    get_guild_activity,
+    get_guild_members,
+)
 from ._items import (
     ItemNames,
     ModCatalog,
@@ -152,6 +163,7 @@ __all__ = [
     # Conquest
     "ConquestFeat",
     "calc_current_stamina",
+    "calc_stamina_full_time",
     "get_conquest_feats",
     # Territory Battle definitions
     "TBCategory",
@@ -165,6 +177,12 @@ __all__ = [
     "get_tb_mission_scores",
     "get_tb_platoon_definitions",
     "get_tb_star_thresholds",
+    # Events
+    "ScheduledEvent",
+    "get_event_schedule",
+    # Game configuration
+    "get_game_config",
+    "get_game_config_int",
     # Game data
     "async_get_localization_dictionary",
     "create_localized_unit_name_dictionary",
@@ -175,7 +193,13 @@ __all__ = [
     "get_playable_units",
     "get_raid_leaderboard_ids",
     # Guild
+    "GuildActivity",
+    "GuildMemberActivity",
+    "RaidResult",
+    "TerritoryBattleResult",
+    "TerritoryWarResult",
     "async_get_guild_members",
+    "get_guild_activity",
     "get_guild_members",
     # Items, rewards and catalogs
     "ItemNames",

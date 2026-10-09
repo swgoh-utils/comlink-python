@@ -356,6 +356,106 @@ class TestAsyncGetGuildMembers:
         sync_client.close()
 
 
+# ── _guild: get_guild_activity over get_guild() ─────────────────────────
+
+_ACTIVITY_GUILD = {
+    "guild": {
+        "profile": {"id": "guild_abc", "name": "Test Guild", "memberCount": 2, "memberMax": 50},
+        "member": [
+            {"playerId": "p1", "playerName": "One", "memberLevel": 4, "guildJoinTime": "1655938556"},
+            {"playerId": "p2", "playerName": "Two", "memberLevel": 2, "lastActivityTime": "1790164800000"},
+        ],
+        "recentTerritoryBattleResult": [{"definitionId": "t05D", "totalStars": 47}],
+        "recentTerritoryWarResult": [{"score": "27361", "opponentScore": "11916"}],
+        "recentRaidResult": [
+            {
+                "raidId": "order66",
+                "guildRewardScore": "100",
+                "raidMember": [{"playerId": "p2", "memberProgress": "100"}],
+            }
+        ],
+    }
+}
+
+
+class TestGetGuildActivityFromClient:
+    def test_summarizes_unwrapped_guild(self, httpx_mock: HTTPXMock, sync_client):
+        import json
+
+        from swgoh_comlink.helpers import get_guild_activity
+
+        httpx_mock.add_response(json=_ACTIVITY_GUILD)
+        activity = get_guild_activity(sync_client.get_guild("guild_abc", include_recent_guild_activity_info=True))
+        request = json.loads(httpx_mock.get_requests()[-1].content)
+        assert request["payload"]["includeRecentGuildActivityInfo"] is True
+        assert activity["guild_id"] == "guild_abc"
+        assert activity["best_territory_battle"] == {"definition_id": "t05D", "total_stars": 47}
+        assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (1, 0)
+        assert [(m["role"], m["raid_score"]) for m in activity["members"]] == [("Leader", None), ("Member", 100)]
+
+    @pytest.mark.asyncio
+    async def test_async_client(self, httpx_mock: HTTPXMock, async_client):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        httpx_mock.add_response(json=_ACTIVITY_GUILD)
+        guild = await async_client.get_guild("guild_abc", include_recent_guild_activity_info=True)
+        activity = get_guild_activity(guild)
+        assert activity["last_raid"] is not None and activity["last_raid"]["guild_score"] == 100
+        await async_client.aclose()
+
+
+# ── _events: get_event_schedule over get_events() ───────────────────────
+
+
+class TestGetEventScheduleFromClient:
+    def test_schedule_from_get_events(self, httpx_mock: HTTPXMock, sync_client):
+        from datetime import datetime, timezone
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        now = datetime(2026, 9, 23, 12, tzinfo=timezone.utc)
+        httpx_mock.add_response(
+            json={
+                "gameEvent": [
+                    _GAC_EVENT,
+                    {
+                        "id": "EVENT_JOURNEY_MANDALORIAN",
+                        "nameKey": "EVENT_JOURNEY_MANDALORIAN_NAME",
+                        "type": 3,
+                        "instance": [{"id": "J1", "startTime": "1476532800000", "endTime": "4945772573272"}],
+                    },
+                ]
+            }
+        )
+        loc = {"EVENT_JOURNEY_MANDALORIAN_NAME": "THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]"}
+        (journey,) = get_event_schedule(sync_client.get_events(), loc, now=now)
+        assert journey["name"] == "THE MANDALORIAN - Hero's Journey"
+        assert (journey["title"], journey["subtitle"]) == ("THE MANDALORIAN", "Hero's Journey")
+        assert journey["status"] == "live" and journey["end"] is None
+
+
+# ── _game_config: get_game_config over get_game_metadata() ──────────────
+
+
+class TestGetGameConfigFromClient:
+    def test_config_from_get_game_metadata(self, httpx_mock: HTTPXMock, sync_client):
+        from swgoh_comlink.helpers import get_game_config, get_game_config_int
+
+        httpx_mock.add_response(
+            json={
+                "config": [
+                    {"key": "max-datacron-currency", "value": "100000000"},
+                    {"key": "stat-mod-max-storage", "value": "500"},
+                ],
+                "latestGamedataVersion": "0.40.6:abc",
+                "latestLocalizationBundleVersion": "xyz",
+            }
+        )
+        metadata = sync_client.get_game_metadata()
+        assert get_game_config(metadata) == {"max-datacron-currency": "100000000", "stat-mod-max-storage": "500"}
+        assert get_game_config_int(metadata, "max-datacron-currency") == 100_000_000
+
+
 # ── _conquest: calc_current_stamina ──────────────────────────────────────
 
 _FROZEN_TIME = 1773793698

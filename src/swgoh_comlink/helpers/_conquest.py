@@ -5,12 +5,13 @@ from __future__ import annotations
 
 import re
 import time
-from math import floor
+from datetime import datetime, timezone
+from math import ceil, floor
 from typing import Any, TypedDict
 
 from ..exceptions import SwgohComlinkValueError
 from ._localization import _localize
-from ._utils import get_function_name
+from ._utils import _as_int, get_function_name
 
 # Roman numeral in a feat challenge id -> difficulty name (I = Easy, II = Normal, III = Hard)
 _FEAT_TIERS = {"I": "Easy", "II": "Normal", "III": "Hard"}
@@ -79,6 +80,63 @@ def calc_current_stamina(unit: dict[str, Any], pass_plus: bool = False) -> int:
     # Conquest Pass+ holders increase stamina regeneration by 33%
 
     return min(floor(time_diff_minutes / 30 * acceleration_factor) + remaining_stamina, 100)
+
+
+def calc_stamina_full_time(unit: dict[str, Any], pass_plus: bool = False, *, now: datetime | None = None) -> datetime:
+    """Calculate when a unit's Conquest stamina reaches 100.
+
+    Uses the same model as :func:`calc_current_stamina`: stamina regenerates 1 point every 30 minutes
+    (33% faster with Conquest Pass+) from ``remainingStamina`` at ``lastRefreshTime``, an epoch time in
+    seconds. For a unit with a ``lastRefreshTime`` that is not in the future, :func:`calc_current_stamina`
+    returns 100 from the returned moment on.
+
+    A missing ``lastRefreshTime`` (an older payload) or one ahead of ``now`` (a clock running ahead) is
+    not treated as elapsed regeneration in either direction: the unit is counted as last refreshed at
+    ``now``.
+
+    Args:
+        unit: A ``unitStamina`` entry from a player's Conquest status, with ``remainingStamina`` and,
+            usually, ``lastRefreshTime``.
+        pass_plus: Whether Conquest Pass+ is active. [Default: False]
+        now: The current time. A naive value is read as local time. Defaults to the current time.
+
+    Returns:
+        The moment stamina reaches 100, as a timezone-aware UTC datetime with whole seconds. For a unit
+        that was already full this is in the past (or equal to ``now``); compare it with ``now`` to get
+        the time remaining.
+
+    Raises:
+        SwgohComlinkValueError: If ``unit`` is not a dictionary or has no valid ``remainingStamina``.
+
+    Examples:
+        >>> from datetime import datetime, timezone
+        >>> unit = {"remainingStamina": 90, "lastRefreshTime": "1790164800"}
+        >>> calc_stamina_full_time(unit, now=datetime(2026, 9, 23, 13, tzinfo=timezone.utc))
+        datetime.datetime(2026, 9, 23, 17, 0, tzinfo=datetime.timezone.utc)
+    """
+    if not isinstance(unit, dict):
+        raise SwgohComlinkValueError(f"{get_function_name()}: 'unit' must be a dict, not {type(unit)}")
+    remaining = _as_int(unit.get("remainingStamina"), -1)
+    if remaining < 0:
+        raise SwgohComlinkValueError(f"{get_function_name()}: 'unit' has no valid 'remainingStamina'.")
+
+    now = datetime.now(timezone.utc) if now is None else now.astimezone(timezone.utc)
+    # Whole seconds, as lastRefreshTime and calc_current_stamina count them
+    now_seconds = floor(now.timestamp())
+    last_refresh = _as_int(unit.get("lastRefreshTime"))
+    if last_refresh <= 0 or last_refresh > now_seconds:
+        last_refresh = now_seconds
+
+    factor = 1.33 if pass_plus else 1.0
+    missing = max(0, 100 - remaining)
+    # The fewest whole minutes for which calc_current_stamina's floor(minutes / 30 * factor) covers the
+    # missing points, nudged to absorb float rounding in the estimate.
+    minutes = ceil(missing * 30 / factor)
+    while floor(minutes / 30 * factor) < missing:
+        minutes += 1
+    while minutes > 0 and floor((minutes - 1) / 30 * factor) >= missing:
+        minutes -= 1
+    return datetime.fromtimestamp(last_refresh + minutes * 60, tz=timezone.utc)
 
 
 def get_conquest_feats(
