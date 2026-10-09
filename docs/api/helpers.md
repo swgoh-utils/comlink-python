@@ -544,7 +544,9 @@ game_data = comlink.get_game_data(
     | DataItems.PLAYER_TITLE
     | DataItems.PLAYER_PORTRAIT
 )
-names = ItemNames(game_data, get_localization_dictionary(comlink))
+# enums is optional; with it, item types and currencies added to the game since
+# this release are recognised.
+names = ItemNames(game_data, get_localization_dictionary(comlink), enums=comlink.get_enums())
 
 names.get("MATERIAL", "unitshard_GLLEIA")  # 'Leia Organa'
 names.get(3, "GRIND")                      # 'Credits'
@@ -554,7 +556,9 @@ names.get(6, "")                           # None: XP names no particular item
 
 !!! note
     No game data collection names a currency, so currencies are named from
-    `CURRENCY_NAMES`, which is English whatever the localization. A mystery mod has
+    `CURRENCY_NAMES`, which is English whatever the localization. A currency it does
+    not list but `get_enums()` does is spelled out from its member name
+    (`GUILD_RAID_CURRENCY_13` reads "Guild Raid Currency 13"). A mystery mod has
     no name of its own and is described by what it rolls, in English with a
     localized set name.
 
@@ -777,6 +781,6 @@ accessible via `Constants` for backward compatibility.
 | `UNIT_RARITY_NAMES` | Rarity integer to display name mapping |
 | `LANGUAGES` | Supported game language codes |
 | `OMICRON_MODE` | Omicron mode IDs to game mode names |
-| `ITEM_TYPES` | `ItemType` number to enum member name |
-| `CURRENCY_TYPES` | `CurrencyType` number to enum member name |
+| `ITEM_TYPES` | `ItemType` number to enum member name (a snapshot of `get_enums()`) |
+| `CURRENCY_TYPES` | `CurrencyType` number to enum member name (a snapshot of `get_enums()`) |
 | `CURRENCY_NAMES` | `CurrencyType` member name to English display name |
