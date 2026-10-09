@@ -63,6 +63,7 @@ class SwgohComlink(SwgohComlinkBase):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._version_lock = threading.Lock()
+        self._enums_lock = threading.Lock()
         self.client = httpx.Client(
             base_url=self.url_base,
             headers={"Content-Type": "application/json"},
@@ -189,16 +190,35 @@ class SwgohComlink(SwgohComlinkBase):
             request_payload = [request_payload]
         return self._post(endpoint=endpoint_string, payload=request_payload, stats=True)
 
-    def get_enums(self) -> dict[str, Any]:
+    def get_enums(self, refresh: bool = False) -> dict[str, Any]:
         """
         Get an object containing the game data enums.
 
         Unlike most endpoints, ``/enums`` uses a GET request.
 
+        The response is cached on the instance as ``enums``, with the game data version it was fetched
+        under as ``enums_version``. Later calls return the cached response while the game data version is
+        unchanged and fetch it again once it changes. The version is read through the instance version
+        cache (see ``version_cache_ttl``), so a check usually makes no request. When the version cannot be
+        determined, the enums are fetched and returned without being cached.
+
+        Args:
+            refresh: When True, fetch the game data version and the enums again even if they are cached.
+
         Returns:
-            A dictionary containing the game data enums.
+            A dictionary containing the game data enums. A cached response is the same object as ``enums``:
+            copy it before changing it.
         """
-        return cast(dict[str, Any], self._request(method="GET", endpoint="enums"))
+        with self._enums_lock:
+            try:
+                version = self._get_versions(refresh=refresh).require_game()
+            except SwgohComlinkException:
+                return cast(dict[str, Any], self._request(method="GET", endpoint="enums"))
+            if not refresh and self.enums is not None and self.enums_version == version:
+                return self.enums
+            enums = cast(dict[str, Any], self._request(method="GET", endpoint="enums"))
+            self.enums, self.enums_version = enums, version
+            return enums
 
     # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums
