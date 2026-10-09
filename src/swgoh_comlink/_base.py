@@ -158,6 +158,9 @@ class SwgohComlinkBase:
             raise SwgohComlinkValueError("version_cache_ttl must be a non-negative number of seconds.")
         self.version_cache_ttl = version_cache_ttl
         self._version_cache: _CachedVersions | None = None
+        # The last get_enums() response and the game data version it was fetched under.
+        self.enums: dict[str, Any] | None = None
+        self.enums_version: str | None = None
 
         # host and port parameters override defaults
         if host:
