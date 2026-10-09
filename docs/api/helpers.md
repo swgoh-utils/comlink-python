@@ -802,6 +802,124 @@ for equipped in player["rosterUnit"][0]["equippedStatMod"]:
 
 ---
 
+## Upgrade Cost Helpers
+
+Functions for working out what the game charges to take a unit up: the gear for each
+gear tier and the salvage it is crafted from, relic promotions, and ability upgrades
+with their zeta and omicron levels. These do not require a comlink instance.
+
+Every cost is an `UpgradeCost`: credits, Ship Building Materials (`ship_credits`,
+which ship abilities charge instead of credits), materials by `material` id, and gear
+pieces by `equipment` id. `sum_upgrade_costs` adds any mix of them and, given the
+`equipment` and `recipe` collections, crafts gear down to the salvage it is made from.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import (
+    DataItems,
+    get_ability_upgrade_costs,
+    get_relic_promotion_costs,
+    get_unit_gear_tiers,
+    sum_upgrade_costs,
+)
+
+comlink = SwgohComlink()
+# DataItems.TABLE (an alias of XP_TABLE) returns the 'table' collection as well as 'xpTable'
+game_data = comlink.get_game_data(
+    items=DataItems.UNITS | DataItems.EQUIPMENT | DataItems.RECIPE | DataItems.SKILL | DataItems.TABLE
+)
+units, equipment, recipes = game_data["units"], game_data["equipment"], game_data["recipe"]
+
+# G1 to G13: the pieces of tiers 1 to 12, crafted down to salvage
+gear = get_unit_gear_tiers(units, "COMMANDERLUKESKYWALKER")
+g13 = sum_upgrade_costs((tier["cost"] for tier in gear), equipment, recipes)
+
+# R0 to R9: the first nine promotions
+relics = get_relic_promotion_costs(game_data["table"], recipes)
+r9 = sum_upgrade_costs(relic["cost"] for relic in relics[:9])
+
+# Every ability to its maximum level
+abilities = get_ability_upgrade_costs(units, game_data["skill"], recipes, "COMMANDERLUKESKYWALKER")
+maxed = sum_upgrade_costs(tier["cost"] for ability in abilities for tier in ability["tiers"])
+
+total = sum_upgrade_costs([g13, r9, maxed])
+print(f"{total['credits']:,} credits", total["materials"], total["equipment"])
+```
+
+!!! note
+    Costs are exact or not reported: a recipe ingredient with a quantity range
+    (`minQuantity` differing from `maxQuantity`), a currency other than credits or Ship
+    Building Materials, or a missing recipe, piece or skill raises
+    `SwgohComlinkValueError` rather than being guessed at or skipped. Game data fetched
+    with `enums=True` works too.
+
+### get_unit_gear_tiers
+
+::: swgoh_comlink.helpers._upgrades.get_unit_gear_tiers
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._upgrades.GearTier
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_gear_craft_tree
+
+::: swgoh_comlink.helpers._upgrades.get_gear_craft_tree
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._upgrades.GearCraftNode
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_relic_promotion_costs
+
+::: swgoh_comlink.helpers._upgrades.get_relic_promotion_costs
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._upgrades.RelicPromotionCost
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_ability_upgrade_costs
+
+::: swgoh_comlink.helpers._upgrades.get_ability_upgrade_costs
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._upgrades.AbilityUpgradeCosts
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._upgrades.AbilityUpgradeTier
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### sum_upgrade_costs
+
+::: swgoh_comlink.helpers._upgrades.sum_upgrade_costs
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._upgrades.UpgradeCost
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Omicron Helpers
 
 Functions for querying omicron skill data from game data collections.

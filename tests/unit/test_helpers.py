@@ -2232,6 +2232,342 @@ def test_tb_helpers_read_type_prefixed_enum_names():
     assert (recon["is_fleet"], recon["min_rarity"], recon["min_relic"], recon["total_points"]) == (False, 6, 7, 100)
 
 
+# ── _upgrades ──────────────────────────────────────────────────────────
+
+
+def _ingredient(item_id: str, kind: Any, quantity: int, high: int | None = None) -> dict[str, Any]:
+    return {"id": item_id, "type": kind, "minQuantity": quantity, "maxQuantity": quantity if high is None else high}
+
+
+def _recipe(recipe_id: str, *ingredients: dict[str, Any]) -> dict[str, Any]:
+    return {"id": recipe_id, "ingredients": list(ingredients)}
+
+
+def _piece(piece_id: str, recipe_id: str = "", tier: int = 1, mark: str = "Mk I") -> dict[str, Any]:
+    return {"id": piece_id, "nameKey": f"EQUIPMENT_{piece_id.upper()}_NAME", "recipeId": recipe_id, "tier": tier,
+            "mark": mark}  # fmt: skip
+
+
+_UPGRADE_EQUIPMENT = [
+    _piece("001"),
+    _piece("164", "recipe164", tier=12, mark="Mk XII"),
+    _piece("164Prototype", "recipe164Prototype", tier=12),
+    _piece("164PrototypeSalvage", tier=12),
+    _piece("156", "recipe156", tier=7),
+    _piece("156Salvage", tier=7),
+    # The placeholder every character's tier 13 slots: a real equipment row with no recipe.
+    _piece("9999", tier=12),
+]
+_UPGRADE_RECIPES = [
+    _recipe("recipe164", _ingredient("164Prototype", 11, 1), _ingredient("156", 11, 2), _ingredient("GRIND", 3, 20350)),
+    _recipe("recipe164Prototype", _ingredient("164PrototypeSalvage", 11, 30), _ingredient("GRIND", 3, 14000)),
+    # Ingredient types as enum names, as returned with enums=True.
+    _recipe("recipe156", _ingredient("156Salvage", "EQUIPMENT", 20), _ingredient("GRIND", "CURRENCY", 5150)),
+    _recipe("relic_promotion_recipe_01", _ingredient("GRIND", 3, 10000), _ingredient("SCV_001", 7, 40)),
+    _recipe("relic_promotion_recipe_02", _ingredient("GRIND", 3, 15000), _ingredient("SCV_001", 7, 30),
+            _ingredient("RM_001", 7, 15)),
+    _recipe("SKILLRECIPE_T1", _ingredient("GRIND", 3, 1000), _ingredient("ability_mat_A", 7, 2)),
+    _recipe("SKILLRECIPE_ZETA", _ingredient("GRIND", 3, 5000), _ingredient("ability_mat_zeta", "MATERIAL", 1)),
+    _recipe("SHIPSKILLRECIPE_T1", _ingredient("SHIP_GRIND", 3, 100), _ingredient("shipability_mat_A", 7, 3)),
+]  # fmt: skip
+_UPGRADE_TABLES = [
+    {"id": "crew_rating_per_relic_tier", "row": [{"key": "1", "value": "0"}]},
+    # Rows out of order: costs come back R1 first.
+    {"id": "relic_promotion_table", "row": [{"key": "TIER_02", "value": "relic_promotion_recipe_02"},
+                                            {"key": "TIER_01", "value": "relic_promotion_recipe_01"}]},
+]  # fmt: skip
+_HERO_TIERS = (
+    [{"tier": 13, "equipmentSet": ["9999"] * 6}]
+    + [{"tier": 1, "equipmentSet": ["001", "164", "156", "001", "156", "001"]}]
+    + [{"tier": n, "equipmentSet": ["001"] * 6} for n in range(2, 13)]
+)
+_UPGRADE_UNITS = [
+    {"baseId": "HERO", "rarity": 1, "combatType": 1, "unitTier": _HERO_TIERS,
+     "skillReference": [{"skillId": "basicskill_HERO"}, {"skillId": "leaderskill_HERO"}]},
+    {"baseId": "HERO", "rarity": 7, "combatType": 1, "unitTier": _HERO_TIERS, "skillReference": []},
+    {"baseId": "SHIP", "rarity": 7, "combatType": 2, "skillReference": [{"skillId": "basicskill_SHIP"}],
+     "crew": [{"unitId": "PILOT", "skillReference": [{"skillId": "specialskill_SHIP01"}]}]},
+]  # fmt: skip
+_UPGRADE_SKILLS = [
+    {"id": "basicskill_HERO", "tier": [{"recipeId": "SKILLRECIPE_T1"}, {"recipeId": "SKILLRECIPE_T1"}]},
+    {"id": "leaderskill_HERO", "tier": [{"recipeId": "SKILLRECIPE_T1"},
+                                        {"recipeId": "SKILLRECIPE_ZETA", "isZetaTier": True, "isOmicronTier": True}]},
+    {"id": "basicskill_SHIP", "tier": [{"recipeId": "SHIPSKILLRECIPE_T1"}]},
+    {"id": "specialskill_SHIP01", "tier": [{"recipeId": "SHIPSKILLRECIPE_T1"}]},
+]  # fmt: skip
+
+
+def _enum_tiers(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """``rows`` with their UnitTier ``tier`` as the enum names returned with enums=True."""
+    return [{**row, "tier": f"TIER_{row['tier']:02d}"} for row in rows]
+
+
+def _cost(credits: int = 0, ship_credits: int = 0, materials: Any = None, equipment: Any = None) -> dict[str, Any]:
+    return {"credits": credits, "ship_credits": ship_credits, "materials": materials or {},
+            "equipment": equipment or {}}  # fmt: skip
+
+
+class TestGetUnitGearTiers:
+    def test_lists_thirteen_tiers_in_order_without_the_placeholder(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers
+
+        tiers = get_unit_gear_tiers(_UPGRADE_UNITS, "hero")
+        assert [t["tier"] for t in tiers] == list(range(1, 14))
+        assert tiers[0]["equipment"] == ["001", "164", "156", "001", "156", "001"]
+        assert tiers[0]["cost"] == _cost(equipment={"001": 3, "164": 1, "156": 2})
+        assert tiers[-1]["equipment"] == []
+        assert tiers[-1]["cost"] == _cost()
+
+    def test_ship_has_no_gear(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers
+
+        assert get_unit_gear_tiers(_UPGRADE_UNITS, "SHIP") == []
+
+    def test_enum_tier_names_match_integers(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers
+
+        units = [{**_UPGRADE_UNITS[0], "unitTier": _enum_tiers(_HERO_TIERS)}]
+        assert get_unit_gear_tiers(units, "HERO") == get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
+
+    @pytest.mark.parametrize(
+        ("units", "base_id"),
+        [
+            ({}, "HERO"),
+            (_UPGRADE_UNITS, None),
+            (_UPGRADE_UNITS, "NOBODY"),
+            ([{"baseId": "HERO", "unitTier": [{"tier": "GEAR_ONE", "equipmentSet": []}]}], "HERO"),
+        ],
+    )
+    def test_invalid_input_raises(self, units: Any, base_id: Any):
+        from swgoh_comlink.helpers import get_unit_gear_tiers
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_unit_gear_tiers(units, base_id)
+
+
+class TestGetGearCraftTree:
+    def test_expands_down_to_farmed_pieces(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        loc = {"EQUIPMENT_164_NAME": "[c][ffff33]Mk 12 ArmaTek Cybernetics[-][/c]"}
+        tree = get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164", loc)
+        assert (tree["name"], tree["tier"], tree["mark"], tree["quantity"]) == (
+            "Mk 12 ArmaTek Cybernetics",
+            12,
+            "Mk XII",
+            1,
+        )
+        assert tree["recipe_credits"] == 20350
+        prototype, detonator = tree["ingredients"]
+        # Names fall back to the nameKey.
+        assert (prototype["id"], prototype["quantity"], prototype["name"]) == (
+            "164Prototype",
+            1,
+            "EQUIPMENT_164PROTOTYPE_NAME",
+        )
+        # Quantities multiply down the tree: 2 pieces x 20 salvage each.
+        assert (detonator["quantity"], detonator["ingredients"][0]["quantity"]) == (2, 40)
+        assert detonator["cost"] == _cost(credits=2 * 5150, equipment={"156Salvage": 40})
+        assert detonator["ingredients"][0]["ingredients"] == []
+        assert tree["cost"] == _cost(
+            credits=20350 + 14000 + 2 * 5150, equipment={"164PrototypeSalvage": 30, "156Salvage": 40}
+        )
+
+    def test_enum_tier_names_match_integers(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        enum_equipment = _enum_tiers(_UPGRADE_EQUIPMENT)
+        tree = get_gear_craft_tree(enum_equipment, _UPGRADE_RECIPES, "164")
+        assert tree == get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164")
+        assert (tree["tier"], tree["ingredients"][1]["tier"]) == (12, 7)
+
+    def test_unrecognized_tier_raises(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        with pytest.raises(SwgohComlinkValueError, match="unrecognized tier 'TWELVE'"):
+            get_gear_craft_tree([{**_piece("001"), "tier": "TWELVE"}], [], "001")
+
+    def test_farmed_piece_is_a_leaf(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        tree = get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "001")
+        assert (tree["ingredients"], tree["recipe_credits"], tree["cost"]) == ([], 0, _cost(equipment={"001": 1}))
+
+    @pytest.mark.parametrize(
+        ("recipes", "message"),
+        [
+            # A quantity range has no single cost.
+            ([_recipe("recipe156", _ingredient("156Salvage", 11, 10, 20))], "10 to 20"),
+            ([_recipe("recipe156", _ingredient("PREMIUM", 3, 10))], "unsupported currency"),
+            ([_recipe("recipe156", _ingredient("SOMETHING", 2, 1))], "unsupported type"),
+            ([_recipe("recipe156", _ingredient("ability_mat_A", 7, 1))], "more than credits"),
+            ([_recipe("recipe156", _ingredient("NOPE", 11, 1))], "'NOPE' is not in 'equipment'"),
+            ([_recipe("recipe156", _ingredient("156", 11, 1))], "crafted from itself"),
+            ([], "recipe 'recipe156'"),
+        ],
+    )
+    def test_rejects_recipes_it_cannot_cost_exactly(self, recipes: list[dict[str, Any]], message: str):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        with pytest.raises(SwgohComlinkValueError, match=message):
+            get_gear_craft_tree(_UPGRADE_EQUIPMENT, recipes, "156")
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ({}, _UPGRADE_RECIPES, "164"),
+            (_UPGRADE_EQUIPMENT, None, "164"),
+            (_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, 164),
+            (_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164", ["not", "a", "dict"]),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...]):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_gear_craft_tree(*args)
+
+
+class TestGetRelicPromotionCosts:
+    def test_joins_the_promotion_table_to_recipes(self):
+        from swgoh_comlink.helpers import get_relic_promotion_costs
+
+        assert get_relic_promotion_costs(_UPGRADE_TABLES, _UPGRADE_RECIPES) == [
+            {
+                "relic_tier": 1,
+                "recipe_id": "relic_promotion_recipe_01",
+                "cost": _cost(credits=10000, materials={"SCV_001": 40}),
+            },
+            {
+                "relic_tier": 2,
+                "recipe_id": "relic_promotion_recipe_02",
+                "cost": _cost(credits=15000, materials={"SCV_001": 30, "RM_001": 15}),
+            },
+        ]
+
+    @pytest.mark.parametrize(
+        ("tables", "recipes", "message"),
+        [
+            (_UPGRADE_TABLES[:1], _UPGRADE_RECIPES, "is not in 'tables'"),
+            ([{"id": "relic_promotion_table", "row": [{"key": "TIER_02", "value": "x"}]}], _UPGRADE_RECIPES, "1 to n"),
+            ([{"id": "relic_promotion_table", "row": [{"key": "R1", "value": "x"}]}], _UPGRADE_RECIPES, "unexpected"),
+            (_UPGRADE_TABLES, [], "relic tier 1"),
+            ("table", _UPGRADE_RECIPES, "must be a list"),
+        ],
+    )
+    def test_invalid_input_raises(self, tables: Any, recipes: Any, message: str):
+        from swgoh_comlink.helpers import get_relic_promotion_costs
+
+        with pytest.raises(SwgohComlinkValueError, match=message):
+            get_relic_promotion_costs(tables, recipes)
+
+
+class TestGetAbilityUpgradeCosts:
+    def test_costs_each_level_with_zeta_and_omicron_flags(self):
+        from swgoh_comlink.helpers import get_ability_upgrade_costs
+
+        basic, leader = get_ability_upgrade_costs(_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "HERO")
+        assert (basic["base_id"], basic["skill_id"], basic["crew_base_id"]) == ("HERO", "basicskill_HERO", None)
+        assert [t["level"] for t in leader["tiers"]] == [2, 3]
+        assert [(t["is_zeta"], t["is_omicron"]) for t in leader["tiers"]] == [(False, False), (True, True)]
+        assert leader["tiers"][1] == {
+            "level": 3,
+            "recipe_id": "SKILLRECIPE_ZETA",
+            "is_zeta": True,
+            "is_omicron": True,
+            "cost": _cost(credits=5000, materials={"ability_mat_zeta": 1}),
+        }
+
+    def test_ship_includes_crew_abilities_and_ship_credits(self):
+        from swgoh_comlink.helpers import get_ability_upgrade_costs
+
+        own, crew = get_ability_upgrade_costs(_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "ship")
+        assert (own["crew_base_id"], crew["crew_base_id"], crew["skill_id"]) == (None, "PILOT", "specialskill_SHIP01")
+        assert crew["tiers"][0]["cost"] == _cost(ship_credits=100, materials={"shipability_mat_A": 3})
+
+    @pytest.mark.parametrize(
+        ("args", "message"),
+        [
+            ((_UPGRADE_UNITS, _UPGRADE_SKILLS[1:], _UPGRADE_RECIPES, "HERO"), "'basicskill_HERO'"),
+            ((_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES[:-1], "SHIP"), "'SHIPSKILLRECIPE_T1'"),
+            ((_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "NOBODY"), "'NOBODY'"),
+            ((_UPGRADE_UNITS, {}, _UPGRADE_RECIPES, "HERO"), "must be a list"),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], message: str):
+        from swgoh_comlink.helpers import get_ability_upgrade_costs
+
+        with pytest.raises(SwgohComlinkValueError, match=message):
+            get_ability_upgrade_costs(*args)
+
+
+class TestSumUpgradeCosts:
+    def test_adds_costs_of_any_kind(self):
+        from swgoh_comlink.helpers import get_ability_upgrade_costs, get_relic_promotion_costs, sum_upgrade_costs
+
+        relics = get_relic_promotion_costs(_UPGRADE_TABLES, _UPGRADE_RECIPES)
+        ship = get_ability_upgrade_costs(_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "SHIP")
+        costs = [r["cost"] for r in relics] + [t["cost"] for a in ship for t in a["tiers"]]
+        assert sum_upgrade_costs(costs) == _cost(
+            credits=25000, ship_credits=200, materials={"RM_001": 15, "SCV_001": 70, "shipability_mat_A": 6}
+        )
+
+    def test_missing_fields_count_as_zero(self):
+        from swgoh_comlink.helpers import sum_upgrade_costs
+
+        assert sum_upgrade_costs([{"equipment": {"164": 2}}, {"credits": 5}]) == _cost(credits=5, equipment={"164": 2})
+        assert sum_upgrade_costs([]) == _cost()
+
+    def test_crafts_gear_down_to_salvage(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers, sum_upgrade_costs
+
+        tiers = get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
+        assert sum_upgrade_costs(t["cost"] for t in tiers)["equipment"] == {"001": 69, "156": 2, "164": 1}
+
+        crafted = sum_upgrade_costs((t["cost"] for t in tiers), _UPGRADE_EQUIPMENT, _UPGRADE_RECIPES)
+        # 164 crafts from two 156 of its own, so four 156 are crafted in all.
+        assert crafted == _cost(
+            credits=20350 + 14000 + 4 * 5150, equipment={"001": 69, "156Salvage": 80, "164PrototypeSalvage": 30}
+        )
+        assert list(crafted["equipment"]) == sorted(crafted["equipment"])
+
+    def test_crafts_enum_tier_gear_like_integer_tier_gear(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers, sum_upgrade_costs
+
+        units = [{**_UPGRADE_UNITS[0], "unitTier": _enum_tiers(_HERO_TIERS)}]
+        enum_tiers = get_unit_gear_tiers(units, "HERO")
+        int_tiers = get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
+        enum_total = sum_upgrade_costs(
+            (t["cost"] for t in enum_tiers), _enum_tiers(_UPGRADE_EQUIPMENT), _UPGRADE_RECIPES
+        )
+        assert enum_total == sum_upgrade_costs((t["cost"] for t in int_tiers), _UPGRADE_EQUIPMENT, _UPGRADE_RECIPES)
+
+    def test_checks_collections_before_consuming_costs(self):
+        from swgoh_comlink.helpers import sum_upgrade_costs
+
+        costs = iter([_cost(credits=1)])
+        not_a_list: Any = {}
+        with pytest.raises(SwgohComlinkValueError, match="must be a list"):
+            sum_upgrade_costs(costs, not_a_list, [])
+        assert next(costs) == _cost(credits=1)
+
+    @pytest.mark.parametrize(
+        ("args", "message"),
+        [
+            (([], _UPGRADE_EQUIPMENT), "pass both"),
+            (([], None, _UPGRADE_RECIPES), "pass both"),
+            (([], {}, _UPGRADE_RECIPES), "must be a list"),
+            ((["credits"],), "must be a mapping"),
+            (([{"equipment": {"NOPE": 1}}], _UPGRADE_EQUIPMENT, _UPGRADE_RECIPES), "'NOPE'"),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], message: str):
+        from swgoh_comlink.helpers import sum_upgrade_costs
+
+        with pytest.raises(SwgohComlinkValueError, match=message):
+            sum_upgrade_costs(*args)
+
+
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 
