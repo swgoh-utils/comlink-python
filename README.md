@@ -232,6 +232,18 @@ time.
   re-fetch, e.g. right after a game update lands.
 - A successful `get_game_metadata()` call also refreshes the cache opportunistically.
 
+### Enums caching
+
+`get_enums()` caches its response on the instance as `enums`, together with the game data version
+it was fetched under as `enums_version`. Later calls return the cached response while that version
+is unchanged, and fetch the enums again once it changes. The version check goes through the version
+cache above, so it usually makes no request.
+
+- `get_enums(refresh=True)` fetches the version and the enums again.
+- When the version cannot be determined (for example `/metadata` fails), the enums are fetched and
+  returned without being cached.
+- The cached response is shared: copy it before changing it.
+
 ## Available Methods
 
 Methods available on both `SwgohComlink` and `SwgohComlinkAsync` (async methods use `await`):
@@ -246,7 +258,7 @@ Methods available on both `SwgohComlink` and `SwgohComlinkAsync` (async methods 
 | `get_game_data(version, include_pve_units, request_segment, enums, items, device_platform)` | Get game data collections (select them with `items=DataItems...`) |
 | `get_game_metadata(client_specs, enums)` | Get current game and localization versions |
 | `get_localization(localization_id, locale, unzip, enums)` | Get localization bundles |
-| `get_enums()` | Get game data enums |
+| `get_enums(refresh)` | Get game data enums (cached per game data version) |
 | `get_events(enums)` | Get current game events |
 | `get_leaderboard(leaderboard_type, league, division, ...)` | Get GAC leaderboard data |
 | `get_guild_leaderboard(leaderboard_id, count, enums)` | Get guild leaderboard data |
