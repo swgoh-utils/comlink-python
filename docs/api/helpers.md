@@ -400,6 +400,135 @@ for feat in feats:
 
 ---
 
+## Territory Battle Helpers
+
+Functions for reading what a Territory Battle asks for and pays from its definition
+in the game data: the points each planet's stars need, each mission's squad
+requirement and points, and each platoon's points. They read only game data
+collections and a localization dictionary, so they do not require a comlink instance
+and say nothing about a battle in progress.
+
+Each function covers every Territory Battle in the collection unless `tb_id` names
+one: `"t01D"` Hoth Rebel Assault, `"t02D"` Hoth Imperial Retaliation, `"t03D"`
+Geonosis Separatist Might, `"t04D"` Geonosis Republic Offensive or `"t05D"` Rise of
+the Empire.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import (
+    DataItems,
+    get_localization_dictionary,
+    get_tb_mission_requirements,
+    get_tb_mission_scores,
+    get_tb_platoon_definitions,
+    get_tb_star_thresholds,
+)
+
+comlink = SwgohComlink()
+# TERRITORY_BATTLE_DEFINITION is the GUILD bit, CAMPAIGN carries 'campaign',
+# CATEGORY 'category', and TABLE (the XP_TABLE bit) carries 'table'.
+game_data = comlink.get_game_data(
+    items=DataItems.TERRITORY_BATTLE_DEFINITION | DataItems.CAMPAIGN | DataItems.CATEGORY | DataItems.TABLE
+)
+loc = get_localization_dictionary(comlink)
+definitions = game_data["territoryBattleDefinition"]
+
+for zone in get_tb_star_thresholds(definitions, loc, tb_id="t05D"):
+    print(zone["name"], zone["stars"])
+
+for mission in get_tb_mission_requirements(
+    definitions, game_data["campaign"], game_data["category"], loc, tb_id="t05D"
+):
+    if mission["hidden_reason"] is None:
+        print(mission["zone_id"], mission["requirement_text"].replace("\n", " / "))
+
+for score in get_tb_mission_scores(definitions, game_data["table"], tb_id="t05D"):
+    if score["hidden_reason"] is None:
+        print(score["zone_id"], score["wave_points"])
+
+for zone in get_tb_platoon_definitions(definitions, loc, tb_id="t05D"):
+    print(zone["name"], f"R{zone['min_relic']}", zone["total_points"])
+```
+
+!!! note "`hidden_reason` is a heuristic"
+    A few strike zones are fully defined in game data but never shown in game: a second
+    zone on a planet that reuses an earlier zone's mission (`"duplicate"`), and special
+    missions left among the strike zones of a version 3 map (`"special"`). The game data
+    does not mark them; `hidden_reason` infers them from how the definition is wired. On
+    game data 0.40.6 it flags three Rise of the Empire zones and nothing on the other maps.
+    Treat it as a filter that may need revisiting when a new map is added.
+
+!!! note
+    A mission's requirement is not in the battle definition. Each mission zone names
+    a campaign mission, and `get_tb_mission_requirements` reads that mission's
+    entry gate from the `campaign` collection. Relic floors are returned as the relic
+    level shown in game, not the wire `RelicTier` value.
+
+### get_tb_star_thresholds
+
+::: swgoh_comlink.helpers._territory_battle.get_tb_star_thresholds
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBZoneStars
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_tb_mission_requirements
+
+::: swgoh_comlink.helpers._territory_battle.get_tb_mission_requirements
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBMissionRequirement
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBCategory
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBMandatoryUnit
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_tb_mission_scores
+
+::: swgoh_comlink.helpers._territory_battle.get_tb_mission_scores
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBMissionScore
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_tb_platoon_definitions
+
+::: swgoh_comlink.helpers._territory_battle.get_tb_platoon_definitions
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBReconZone
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._territory_battle.TBPlatoon
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Game Data Helpers
 
 Pure data-transformation functions for working with game data collections.

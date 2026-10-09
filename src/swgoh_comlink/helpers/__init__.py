@@ -68,6 +68,19 @@ from ._stat_data import (
     UNIT_RARITY_NAMES,
     UNIT_STAT_ENUMS_MAP,
 )
+from ._territory_battle import (
+    TBCategory,
+    TBMandatoryUnit,
+    TBMissionRequirement,
+    TBMissionScore,
+    TBPlatoon,
+    TBReconZone,
+    TBZoneStars,
+    get_tb_mission_requirements,
+    get_tb_mission_scores,
+    get_tb_platoon_definitions,
+    get_tb_star_thresholds,
+)
 from ._utils import (
     convert_relic_tier,
     get_enum_key_by_value,
@@ -127,6 +140,18 @@ __all__ = [
     "ConquestFeat",
     "calc_current_stamina",
     "get_conquest_feats",
+    # Territory Battle definitions
+    "TBCategory",
+    "TBMandatoryUnit",
+    "TBMissionRequirement",
+    "TBMissionScore",
+    "TBPlatoon",
+    "TBReconZone",
+    "TBZoneStars",
+    "get_tb_mission_requirements",
+    "get_tb_mission_scores",
+    "get_tb_platoon_definitions",
+    "get_tb_star_thresholds",
     # Game data
     "async_get_localization_dictionary",
     "create_localized_unit_name_dictionary",
