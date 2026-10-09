@@ -125,7 +125,12 @@ class TBMissionRequirement(TypedDict):
     hidden_reason: str | None
     """Why the game is not expected to show this combat mission, or ``None``. ``"duplicate"``: an earlier zone
     on the same planet already uses its campaign mission. ``"special"``: a special-mission campaign mission
-    left in the strike array of a version 3 map, where special missions are covert zones."""
+    left in the strike array of a version 3 map, where special missions are covert zones.
+
+    This is a heuristic. The game data does not mark a zone as hidden; the reason is inferred from how the
+    definition is wired. Checked against the five Territory Battle maps in game data 0.40.6, it flags three
+    Rise of the Empire zones and nothing else. A map wired differently in future may need the rule revisited.
+    """
 
 
 class TBMissionScore(TypedDict):

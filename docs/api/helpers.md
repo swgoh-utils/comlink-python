@@ -450,6 +450,14 @@ for zone in get_tb_platoon_definitions(definitions, loc, tb_id="t05D"):
     print(zone["name"], f"R{zone['min_relic']}", zone["total_points"])
 ```
 
+!!! note "`hidden_reason` is a heuristic"
+    A few strike zones are fully defined in game data but never shown in game: a second
+    zone on a planet that reuses an earlier zone's mission (`"duplicate"`), and special
+    missions left among the strike zones of a version 3 map (`"special"`). The game data
+    does not mark them; `hidden_reason` infers them from how the definition is wired. On
+    game data 0.40.6 it flags three Rise of the Empire zones and nothing on the other maps.
+    Treat it as a filter that may need revisiting when a new map is added.
+
 !!! note
     A mission's requirement is not in the battle definition. Each mission zone names
     a campaign mission, and `get_tb_mission_requirements` reads that mission's
