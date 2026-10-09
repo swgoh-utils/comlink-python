@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -1037,6 +1038,306 @@ class TestGetNamedEffects:
         not_a_dict: Any = []
         with pytest.raises(SwgohComlinkValueError):
             get_named_effects(not_a_dict)
+
+
+# ── _wire ──────────────────────────────────────────────────────────────
+
+# An excerpt of get_enums()["CurrencyType"], plus one enum without a <Type>_DEFAULT member.
+_CURRENCY = {
+    "CurrencyType_DEFAULT": 0,
+    "GRIND": 1,
+    "PVP_CURRENCY": 10,
+    "SHARD_CURRENCY": 16,
+    "GUILD_RAID_CURRENCY_01": 20,
+}
+_DIFFICULTY = {"NOT_SET": 0, "NORMAL_DIFF": 4, "HARD_DIFF": 5}
+
+
+class TestAsInt:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (42, 42),
+            ("1655938556", 1655938556),
+            ("-3", -3),
+            (" 7 ", 7),
+            (1.9, 1),
+            ("9223372036854775807", 9223372036854775807),
+            (0, 0),
+            ("0", 0),
+        ],
+    )
+    def test_reads_numbers(self, value: Any, expected: int):
+        from swgoh_comlink.helpers import as_int
+
+        assert as_int(value) == expected
+
+    @pytest.mark.parametrize("value", [None, "", "abc", "1.5", True, False, [], {}, float("inf"), float("nan")])
+    def test_unreadable_returns_default(self, value: Any):
+        from swgoh_comlink.helpers import as_int
+
+        assert as_int(value) == 0
+        assert as_int(value, default=-1) == -1
+
+
+class TestAsStr:
+    @pytest.mark.parametrize(("value", "expected"), [("Rebels", "Rebels"), ("", ""), (42, ""), (None, ""), ([], "")])
+    def test_only_strings_pass(self, value: Any, expected: str):
+        from swgoh_comlink.helpers import as_str
+
+        assert as_str(value) == expected
+
+    def test_custom_default(self):
+        from swgoh_comlink.helpers import as_str
+
+        assert as_str(None, default="?") == "?"
+
+
+class TestAsId:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [("O1700000000000:1", "O1700000000000:1"), (2, "2"), (0, "0"), ("", ""), (None, ""), (True, ""), (1.5, "")],
+    )
+    def test_reads_string_or_int(self, value: Any, expected: str):
+        from swgoh_comlink.helpers import as_id
+
+        assert as_id(value) == expected
+
+    def test_custom_default(self):
+        from swgoh_comlink.helpers import as_id
+
+        assert as_id(None, default="none") == "none"
+
+
+class TestAsScalar:
+    @pytest.mark.parametrize(
+        ("value", "expected"), [(3, 3), (0, 0), ("CHARACTER", "CHARACTER"), (True, None), (None, None), (1.5, None)]
+    )
+    def test_keeps_int_or_str(self, value: Any, expected: int | str | None):
+        from swgoh_comlink.helpers import as_scalar
+
+        assert as_scalar(value) == expected
+
+
+class TestAsEpoch:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            # guildJoinTime / Conquest lastRefreshTime: seconds
+            (1655938556, datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)),
+            ("1655938556", datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)),
+            # lastActivityTime: milliseconds, kept to the millisecond
+            ("1770515437123", datetime(2026, 2, 8, 1, 50, 37, 123000, tzinfo=timezone.utc)),
+            (1700000000000, datetime(2023, 11, 14, 22, 13, 20, tzinfo=timezone.utc)),
+            # Either side of the 1e11 boundary
+            (99_999_999_999, datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=99_999_999_999)),
+            (100_000_000_000, datetime(1973, 3, 3, 9, 46, 40, tzinfo=timezone.utc)),
+        ],
+    )
+    def test_seconds_and_milliseconds(self, value: Any, expected: datetime):
+        from swgoh_comlink.helpers import as_epoch
+
+        assert as_epoch(value) == expected
+
+    @pytest.mark.parametrize("value", [None, 0, "0", "", "-5", -1, "abc", True, "99999999999999999999"])
+    def test_no_time_returns_none(self, value: Any):
+        from swgoh_comlink.helpers import as_epoch
+
+        assert as_epoch(value) is None
+
+    def test_result_is_aware_utc(self):
+        from swgoh_comlink.helpers import as_epoch
+
+        moment = as_epoch("1770515437000")
+        assert moment is not None
+        assert moment.tzinfo == timezone.utc
+
+    def test_example_player_times(self):
+        import json
+
+        from swgoh_comlink.helpers import as_epoch
+
+        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+        assert as_epoch(player["lastActivityTime"]) == datetime(2026, 2, 8, 1, 50, 37, tzinfo=timezone.utc)
+        assert all(as_epoch(season["joinTime"]) for season in player["seasonStatus"])
+
+
+class TestAsList:
+    def test_list_is_returned_as_is(self):
+        from swgoh_comlink.helpers import as_list
+
+        rows = [{"id": "a"}, {"id": "b"}]
+        assert as_list(rows) is rows
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ({"id": "a"}, [{"id": "a"}]),
+            (None, []),
+            ((1, 2), [1, 2]),
+            ("abc", ["abc"]),
+            (0, [0]),
+            ([], []),
+        ],
+    )
+    def test_wraps_other_values(self, value: Any, expected: list[Any]):
+        from swgoh_comlink.helpers import as_list
+
+        assert as_list(value) == expected
+
+
+class TestBaseId:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("GENERALSKYWALKER:SEVEN_STAR", "GENERALSKYWALKER"),
+            ("BOUSHH", "BOUSHH"),
+            ("A:B:C", "A"),
+            ("", ""),
+            (None, ""),
+            (42, ""),
+        ],
+    )
+    def test_strips_rarity(self, value: Any, expected: str):
+        from swgoh_comlink.helpers import base_id
+
+        assert base_id(value) == expected
+
+    def test_example_player_roster(self):
+        import json
+
+        from swgoh_comlink.helpers import base_id
+
+        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+        ids = {base_id(unit["definitionId"]) for unit in player["rosterUnit"]}
+        assert "MAGMATROOPER" in ids
+        assert not any(":" in unit_id for unit_id in ids)
+
+
+class TestParseEnum:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (16, "SHARD_CURRENCY"),
+            ("16", "SHARD_CURRENCY"),
+            (" 16 ", "SHARD_CURRENCY"),
+            (0, "CurrencyType_DEFAULT"),
+            ("SHARD_CURRENCY", "SHARD_CURRENCY"),
+            ("shard_currency", "SHARD_CURRENCY"),
+            ("SHARDCURRENCY", "SHARD_CURRENCY"),
+            ("CURRENCYTYPE_SHARDCURRENCY", "SHARD_CURRENCY"),
+            ("CURRENCYTYPE_GUILDRAIDCURRENCY01", "GUILD_RAID_CURRENCY_01"),
+            ("CURRENCYTYPE_CURRENCYTYPEDEFAULT", "CurrencyType_DEFAULT"),
+            ("CurrencyType_DEFAULT", "CurrencyType_DEFAULT"),
+        ],
+    )
+    def test_every_spelling(self, value: Any, expected: str):
+        from swgoh_comlink.helpers import parse_enum
+
+        assert parse_enum(value, _CURRENCY) == expected
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            99,
+            "99",
+            "UNKNOWN",
+            "",
+            None,
+            True,
+            False,
+            16.0,
+            [],
+            # An unknown member from a newer game version is not read as "GRIND"
+            "NEW_GRIND",
+            # Wrong type name in a decoder-style spelling
+            "ITEMTYPE_SHARDCURRENCY",
+            # Decoder-style names have no underscore in the member half
+            "CURRENCYTYPE_SHARD_CURRENCY_X",
+            # Not plain ASCII whole numbers
+            "--16",
+            "¹⁶",
+            # Past the interpreter's limit on digits in an int string
+            "1" * 5000,
+        ],
+    )
+    def test_unknown_returns_none(self, value: Any):
+        from swgoh_comlink.helpers import parse_enum
+
+        assert parse_enum(value, _CURRENCY) is None
+
+    def test_decoder_name_without_known_type(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        # No <Type>_DEFAULT member, so any type half is accepted unless enum_name is given.
+        assert parse_enum("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY) == "NORMAL_DIFF"
+        assert parse_enum("OTHER_NORMALDIFF", _DIFFICULTY) == "NORMAL_DIFF"
+        assert (
+            parse_enum("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY, enum_name="CampaignNodeDifficulty")
+            == "NORMAL_DIFF"
+        )
+        assert parse_enum("OTHER_NORMALDIFF", _DIFFICULTY, enum_name="CampaignNodeDifficulty") is None
+
+    def test_ambiguous_spelling_returns_none(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        members = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
+        assert parse_enum("METADATAREQUESTTYPE_DEFAULT", members) is None
+        assert parse_enum("DEFAULT", members) == "DEFAULT"
+        assert parse_enum("METADATAREQUESTTYPE_CLIENTPARAMS", members) == "CLIENT_PARAMS"
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("server_error", "SERVER_ERROR"),
+            ("Server_Error", "SERVER_ERROR"),
+            ("SERVER_ERROR", "SERVER_ERROR"),
+            ("error", "ERROR"),
+            ("feature_suspended", "FEATURE_SUSPENDED"),
+            # Upper-case with one underscore is still read as a decoder-style name
+            ("RESPONSECODE_SUSPENDED", "SUSPENDED"),
+        ],
+    )
+    def test_case_variant_without_known_type(self, value: str, expected: str):
+        from swgoh_comlink.helpers import parse_enum
+
+        # No <Type>_DEFAULT member, and one member is another's last word: a lower-case member
+        # name must not also be read as a decoder-style name for that last word.
+        members = {"OK": 0, "SERVER_ERROR": 1, "ERROR": 2, "FEATURE_SUSPENDED": 3, "SUSPENDED": 4}
+        assert parse_enum(value, members) == expected
+
+    def test_lower_case_type_default_member(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        members = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
+        assert parse_enum("metadatarequesttype_default", members) == "MetadataRequestType_DEFAULT"
+
+    def test_alias_value_returns_first_name(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        assert parse_enum(1, {"OLD_NAME": 1, "NEW_NAME": 1}) == "OLD_NAME"
+
+    def test_negative_numbers(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        assert parse_enum("-1", {"ALL": -1, "NONE": 0}) == "ALL"
+
+    @pytest.mark.parametrize("members", [None, [], "CurrencyType"])
+    def test_invalid_members_raises(self, members: Any):
+        from swgoh_comlink.helpers import parse_enum
+
+        with pytest.raises(SwgohComlinkValueError, match=r"parse_enum\(\)"):
+            parse_enum(16, members)
+
+
+def test_wire_docstring_examples():
+    import doctest
+
+    from swgoh_comlink.helpers import _wire
+
+    results = doctest.testmod(_wire)
+    assert results.failed == 0
+    assert results.attempted >= 20
 
 
 # ── _gac (pure functions) ──────────────────────────────────────────────
