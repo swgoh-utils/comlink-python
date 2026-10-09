@@ -1340,6 +1340,405 @@ def test_wire_docstring_examples():
     assert results.attempted >= 20
 
 
+# ── _items ──────────────────────────────────────────────────────────────
+
+_ITEM_LOC = {
+    "ARTIFACT_GURAD_AND_PENTRATE_3_COST_RARE_NAME": "Guard and Penetrate",
+    "PLAYERTITLE_GRANDARENA_INTRO_NAME": "[c][FFFF00]Fight Me[-][/c]",
+    "STATMODSETBONUS_SPEED_NAME": "Speed",
+    "STATMODSETBONUS_DEFENSE_NAME": "Defense",
+    "UNIT_GLLEIA_NAME": "Leia Organa",
+    "UNIT_VADER_NAME": "Darth Vader",
+    "UNIT_ANAKINKNIGHT_NAME": "Jedi Knight Anakin",
+    "MATERIAL_ABILITYMATULTIMATE_NAME": "Ability Material Ultimate",
+    "EQUIPMENT_016_NAME": "Mk 2 TaggeCo Holo Lens",
+    "MYSTERYBOX_ERA_T1_TITLE": "Era Battle Prize Box",
+    "PLAYERPORTRAIT_MISSION_NAME": "Mission Vao",
+    "LIGHTSPEEDTOKEN_TIER05_NAME": "KYBER LIGHTSPEED TOKEN",
+}
+_ITEM_GAME_DATA: dict[str, Any] = {
+    "material": [
+        # An id shared with an equipment piece: ids are only unique within an ItemType.
+        {"id": "016", "nameKey": "MATERIAL_ABILITYMATULTIMATE_NAME"},
+        {"id": "unitshard_GLLEIA", "nameKey": "UNIT_GLLEIA_NAME"},
+        # Event shard variant: no unit has this baseId, but the material names the unit.
+        {"id": "unitshard_VADER_JKL_EVENT", "nameKey": "UNIT_VADER_NAME"},
+        # A shard whose own key is not localized falls back to the unit.
+        {"id": "unitshard_ANAKINKNIGHT", "nameKey": "UNIT_ANAKINKNIGHT_SHARD_MISSING"},
+    ],
+    "equipment": [{"id": "016", "nameKey": "EQUIPMENT_016_NAME"}],
+    "mysteryBox": [{"id": "mysterybox_era_T1", "titleKey": "MYSTERYBOX_ERA_T1_TITLE", "descKey": "X"}],
+    "playerTitle": [{"id": "PLAYERTITLE_GRANDARENA_INTRO", "nameKey": "PLAYERTITLE_GRANDARENA_INTRO_NAME"}],
+    "playerPortrait": [{"id": "PLAYERPORTRAIT_MISSION", "nameKey": "PLAYERPORTRAIT_MISSION_NAME"}],
+    "artifactDefinition": [
+        {"id": "artifact_guard_and_pentrate_3_cost_rare", "nameKey": "ARTIFACT_GURAD_AND_PENTRATE_3_COST_RARE_NAME"}
+    ],
+    "lightspeedToken": [{"id": "LST_TIER05", "nameKey": "LIGHTSPEEDTOKEN_TIER05_NAME"}],
+    "units": [
+        {"baseId": "ANAKINKNIGHT", "nameKey": "UNIT_ANAKINKNIGHT_NAME", "rarity": 1},
+        {"baseId": "ANAKINKNIGHT", "nameKey": "UNIT_ANAKINKNIGHT_NAME", "rarity": 2},
+    ],
+    "statModSet": [
+        {"id": "4", "name": "STATMODSETBONUS_SPEED_NAME", "setCount": 4},
+        {"id": "3", "name": "STATMODSETBONUS_DEFENSE_NAME", "setCount": 2},
+    ],
+    "mysteryStatMod": [
+        {"id": "35155", "slot": [2], "setId": "3", "minRarity": 5, "maxRarity": 5, "minTier": 5, "maxTier": 5},
+        {"id": "11112", "slot": [2, 3, 4, 5, 6, 7], "setId": "4", "minRarity": 1, "maxRarity": 2, "minTier": 1,
+         "maxTier": 2},
+        {"id": "two", "slot": [2, 3], "setId": "4", "minRarity": 5, "maxRarity": 5, "minTier": 1, "maxTier": 1},
+        # Game data fetched with enums=True carries enum names in place of the numbers.
+        {"id": "enum", "slot": ["STATMOD_SLOT_02"], "setId": "4", "minRarity": "SIX_STAR", "maxRarity": "SIX_STAR",
+         "minTier": "STATMOD_TIER_05", "maxTier": "STATMOD_TIER_05"},
+    ],
+}  # fmt: skip
+
+
+class TestItemTypeConstants:
+    def test_tables(self):
+        from swgoh_comlink.helpers import CURRENCY_NAMES, CURRENCY_TYPES, ITEM_TYPES
+
+        assert ITEM_TYPES[7] == "MATERIAL"
+        assert ITEM_TYPES[16] == "MYSTERY_STAT_MOD"
+        assert CURRENCY_TYPES[1] == "GRIND"
+        assert CURRENCY_NAMES[CURRENCY_TYPES[41]] == "Micro Attenuators"
+        # Every currency member has a display name.
+        assert set(CURRENCY_NAMES) == set(CURRENCY_TYPES.values())
+
+
+class TestGetDataDiscNames:
+    def test_joins_through_the_records_own_name_key(self):
+        from swgoh_comlink.helpers import get_data_disc_names
+
+        discs = get_data_disc_names(_ITEM_GAME_DATA["artifactDefinition"], _ITEM_LOC)
+        assert discs == {"artifact_guard_and_pentrate_3_cost_rare": "Guard and Penetrate"}
+
+    def test_without_localization_returns_name_keys(self):
+        from swgoh_comlink.helpers import get_data_disc_names
+
+        discs = get_data_disc_names(_ITEM_GAME_DATA["artifactDefinition"])
+        assert discs["artifact_guard_and_pentrate_3_cost_rare"] == "ARTIFACT_GURAD_AND_PENTRATE_3_COST_RARE_NAME"
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_data_disc_names
+
+        not_a_list: Any = {}
+        with pytest.raises(SwgohComlinkValueError, match="get_data_disc_names"):
+            get_data_disc_names(not_a_list)
+        not_a_dict: Any = []
+        with pytest.raises(SwgohComlinkValueError):
+            get_data_disc_names([], not_a_dict)
+
+
+class TestGetPlayerTitleNames:
+    def test_names_are_localized_and_markup_free(self):
+        from swgoh_comlink.helpers import get_player_title_names
+
+        titles = [*_ITEM_GAME_DATA["playerTitle"], {"id": "PLAYERTITLE_NEW", "nameKey": "PLAYERTITLE_NEW_NAME"}, {}]
+        result = get_player_title_names(titles, _ITEM_LOC)
+        assert result == {"PLAYERTITLE_GRANDARENA_INTRO": "Fight Me", "PLAYERTITLE_NEW": "PLAYERTITLE_NEW_NAME"}
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_player_title_names
+
+        not_a_list: Any = "titles"
+        with pytest.raises(SwgohComlinkValueError, match="get_player_title_names"):
+            get_player_title_names(not_a_list)
+
+
+class TestGetModCatalog:
+    _STAT_MODS: list[dict[str, Any]] = [
+        {"id": "451", "setId": "4", "slot": 2, "rarity": 5},
+        {"id": "137", "setId": "3", "slot": "STATMOD_SLOT_06", "rarity": "SEVEN_STAR"},
+        {"id": "999", "setId": "9", "slot": 4, "rarity": 1},
+    ]
+
+    def test_sets_and_definitions(self):
+        from swgoh_comlink.helpers import get_mod_catalog
+
+        catalog = get_mod_catalog(self._STAT_MODS, _ITEM_GAME_DATA["statModSet"], _ITEM_LOC)
+        assert catalog["sets"]["4"] == {"set_id": "4", "name": "Speed", "set_count": 4}
+        assert catalog["sets"]["3"]["set_count"] == 2
+        assert catalog["definitions"]["451"] == {
+            "definition_id": "451",
+            "set_id": "4",
+            "set_name": "Speed",
+            "slot": 2,
+            "slot_name": "Square",
+            "rarity": 5,
+        }
+        # Enum names (enums=True) are read as their numbers.
+        assert catalog["definitions"]["137"]["slot"] == 7
+        assert catalog["definitions"]["137"]["rarity"] == 7
+        # A set statModSet does not list keeps its id as its name.
+        assert catalog["definitions"]["999"]["set_name"] == "9"
+
+    def test_without_localization_uses_mod_set_ids(self):
+        from swgoh_comlink.helpers import MOD_SET_IDS, get_mod_catalog
+
+        catalog = get_mod_catalog(self._STAT_MODS, _ITEM_GAME_DATA["statModSet"])
+        assert catalog["sets"]["3"]["name"] == MOD_SET_IDS["3"]
+        assert catalog["definitions"]["451"]["set_name"] == MOD_SET_IDS["4"]
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_mod_catalog
+
+        not_a_list: Any = None
+        with pytest.raises(SwgohComlinkValueError, match="get_mod_catalog"):
+            get_mod_catalog(not_a_list, [])
+        with pytest.raises(SwgohComlinkValueError, match="stat_mod_sets"):
+            get_mod_catalog([], not_a_list)
+
+
+class TestItemNames:
+    @pytest.mark.parametrize(
+        ("item_type", "item_id", "expected"),
+        [
+            (7, "016", "Ability Material Ultimate"),
+            (11, "016", "Mk 2 TaggeCo Holo Lens"),
+            ("EQUIPMENT", "016", "Mk 2 TaggeCo Holo Lens"),
+            ("7", "unitshard_GLLEIA", "Leia Organa"),
+            ("MATERIAL", "unitshard_VADER_JKL_EVENT", "Darth Vader"),
+            (7, "unitshard_ANAKINKNIGHT", "Jedi Knight Anakin"),
+            (2, "ANAKINKNIGHT:ONE_STAR", "Jedi Knight Anakin"),
+            ("UNIT", "ANAKINKNIGHT", "Jedi Knight Anakin"),
+            (3, "GRIND", "Credits"),
+            ("CURRENCY", 41, "Micro Attenuators"),
+            (3, "41", "Micro Attenuators"),
+            (14, "mysterybox_era_T1", "Era Battle Prize Box"),
+            (17, "PLAYERTITLE_GRANDARENA_INTRO", "Fight Me"),
+            (19, "PLAYERPORTRAIT_MISSION", "Mission Vao"),
+            (23, "artifact_guard_and_pentrate_3_cost_rare", "Guard and Penetrate"),
+            (34, "LST_TIER05", "KYBER LIGHTSPEED TOKEN"),
+            (16, "35155", "5-dot Defense Square mod (A)"),
+            ("MYSTERY_STAT_MOD", "11112", "1-2-dot Speed any-slot mod (E-D)"),
+            (16, "two", "5-dot Speed Square or Arrow mod (E)"),
+            (16, "enum", "6-dot Speed Arrow mod (A)"),
+        ],
+    )
+    def test_names_each_item_type(self, item_type: Any, item_id: Any, expected: str):
+        from swgoh_comlink.helpers import ItemNames
+
+        assert ItemNames(_ITEM_GAME_DATA, _ITEM_LOC).get(item_type, item_id) == expected
+
+    @pytest.mark.parametrize(
+        ("item_type", "item_id"),
+        [
+            (6, ""),  # XP names no particular item
+            (7, "missing"),
+            (7, "unitshard_NOBODY"),
+            (3, "NOT_A_CURRENCY"),
+            (3, "99"),
+            (16, "missing"),
+            ("NOT_AN_ITEM_TYPE", "016"),
+            (None, "016"),
+        ],
+    )
+    def test_unresolved_returns_default(self, item_type: Any, item_id: str):
+        from swgoh_comlink.helpers import ItemNames
+
+        names = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC)
+        assert names.get(item_type, item_id) is None
+        assert names.get(item_type, item_id, "fallback") == "fallback"
+
+    def test_missing_collections_resolve_to_nothing(self):
+        from swgoh_comlink.helpers import ItemNames
+
+        names = ItemNames({}, _ITEM_LOC)
+        assert names.get(7, "016") is None
+        assert names.get(3, "GRIND") == "Credits"
+
+    def test_without_localization_returns_keys(self):
+        from swgoh_comlink.helpers import ItemNames
+
+        names = ItemNames(_ITEM_GAME_DATA)
+        assert names.get(17, "PLAYERTITLE_GRANDARENA_INTRO") == "PLAYERTITLE_GRANDARENA_INTRO_NAME"
+        # Mystery mods fall back to the English set names.
+        assert names.get(16, "35155") == "5-dot Defense Square mod (A)"
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import ItemNames
+
+        not_a_dict: Any = []
+        with pytest.raises(SwgohComlinkValueError, match="game_data"):
+            ItemNames(not_a_dict)
+        with pytest.raises(SwgohComlinkValueError, match="material"):
+            ItemNames({"material": {}})
+        with pytest.raises(SwgohComlinkValueError, match="localization"):
+            ItemNames({}, not_a_dict)
+
+
+def _recorded_enums() -> dict[str, Any]:
+    """The ItemType and CurrencyType groups of a real get_enums() response (game data 0.40.6)."""
+    import json
+
+    return json.loads((Path(__file__).parent.parent / "resources" / "enums-item-currency.json").read_text())
+
+
+class TestItemNamesLiveEnums:
+    def test_snapshots_match_recorded_get_enums(self):
+        from swgoh_comlink.helpers import CURRENCY_TYPES, ITEM_TYPES
+
+        enums = _recorded_enums()
+        for snapshot, group in ((ITEM_TYPES, "ItemType"), (CURRENCY_TYPES, "CurrencyType")):
+            live = {number: name for name, number in enums[group].items() if name != f"{group}_DEFAULT"}
+            assert snapshot == live, f"{group} snapshot is out of date with get_enums()"
+
+    def test_live_enums_name_a_new_currency(self):
+        from swgoh_comlink.helpers import ItemNames
+
+        enums = _recorded_enums()
+        enums["CurrencyType"]["GUILD_RAID_CURRENCY_13"] = 99
+        live = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC, enums=enums)
+        snapshot = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC)
+
+        assert live.get(3, "99") == "Guild Raid Currency 13"
+        assert live.get("CURRENCY", "GUILD_RAID_CURRENCY_13") == "Guild Raid Currency 13"
+        # Curated names still win, and names that are not CurrencyType members stay unresolved.
+        assert live.get(3, "GRIND") == "Credits"
+        assert live.get(3, "NOT_A_CURRENCY") is None
+        # Without the live table the new currency is unknown.
+        assert snapshot.get(3, "99") is None
+        assert snapshot.get(3, "GUILD_RAID_CURRENCY_13") is None
+
+    def test_live_enums_recognise_a_new_item_type(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        live = ItemNames(_ITEM_GAME_DATA, enums={"ItemType": {"FUTURE_ITEM": 40}})
+        snapshot = ItemNames(_ITEM_GAME_DATA)
+        rewards = [{"type": 40, "id": "", "maxQuantity": 1}, {"type": "FUTURE_ITEM", "id": "", "maxQuantity": 1}]
+
+        assert live.item_type_number("FUTURE_ITEM") == 40
+        assert live.item_type_name(40) == "FUTURE_ITEM"
+        assert [(r["item_type"], r["name"]) for r in get_named_rewards(rewards, live)] == [
+            (40, "FUTURE_ITEM"),
+            (40, "FUTURE_ITEM"),
+        ]
+        assert snapshot.item_type_number("FUTURE_ITEM") is None
+        assert [(r["item_type"], r["name"]) for r in get_named_rewards(rewards, snapshot)] == [
+            (40, "40"),
+            ("FUTURE_ITEM", "FUTURE_ITEM"),
+        ]
+
+    def test_default_members_are_not_names(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        names = ItemNames(_ITEM_GAME_DATA, enums=_recorded_enums())
+
+        assert names.item_type_name(0) is None
+        assert names.item_type_number("ItemType_DEFAULT") is None
+        assert names.get(3, "0") is None
+        (reward,) = get_named_rewards([{"type": 0, "id": "", "maxQuantity": 1}], names)
+        assert (reward["item_type"], reward["name"]) == (0, "0")
+
+    @pytest.mark.parametrize("enums", [["ItemType"], {"ItemType": ["MATERIAL"]}, {"CurrencyType": "GRIND"}])
+    def test_invalid_enums_raise(self, enums: Any):
+        from swgoh_comlink.helpers import ItemNames
+
+        with pytest.raises(SwgohComlinkValueError, match="enums"):
+            ItemNames(_ITEM_GAME_DATA, enums=enums)
+
+
+class TestGetNamedRewards:
+    def test_flat_and_conditional_items(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        rewards: list[Any] = [
+            {"id": "GRIND", "type": 3, "minQuantity": 20000, "maxQuantity": 20000},
+            {"id": "unitshard_GLLEIA", "type": "MATERIAL", "minQuantity": 5, "maxQuantity": 10},
+            {"id": "ANAKINKNIGHT:ONE_STAR", "type": 2, "minQuantity": 1, "maxQuantity": 1},
+            {
+                "bucketItem": [{"id": "016", "type": 11, "minQuantity": 1, "maxQuantity": 1}],
+                "requirementId": "glleia_tier06_rewards_not_exhausted",
+            },
+            {"id": "", "type": 6, "minQuantity": 6, "maxQuantity": 6},
+            {"id": "unknown", "type": "SOMETHING_NEW", "minQuantity": 1, "maxQuantity": 1},
+            {"primaryReward": [], "rankStart": 1},
+            "not an entry",
+        ]
+        result = get_named_rewards(rewards, ItemNames(_ITEM_GAME_DATA, _ITEM_LOC))
+        assert [(r["item_type"], r["name"]) for r in result] == [
+            (3, "Credits"),
+            (7, "Leia Organa"),
+            (2, "Jedi Knight Anakin"),
+            (11, "Mk 2 TaggeCo Holo Lens"),
+            (6, "XP"),
+            ("SOMETHING_NEW", "unknown"),
+        ]
+        credits, shards, unit, gear, xp, _ = result
+        assert (credits["min_quantity"], credits["max_quantity"]) == (20000, 20000)
+        assert (shards["min_quantity"], shards["max_quantity"]) == (5, 10)
+        assert shards["base_id"] == "GLLEIA" and unit["base_id"] == "ANAKINKNIGHT" and credits["base_id"] is None
+        assert gear["requirement_id"] == "glleia_tier06_rewards_not_exhausted"
+        assert credits["requirement_id"] is None
+        assert xp["id"] == ""
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        not_a_list: Any = {}
+        with pytest.raises(SwgohComlinkValueError, match="get_named_rewards"):
+            get_named_rewards(not_a_list, ItemNames({}))
+        not_item_names: Any = {}
+        with pytest.raises(SwgohComlinkValueError, match="item_names"):
+            get_named_rewards([], not_item_names)
+
+    def test_item_without_type_and_non_dict_bucket_items(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        rewards: list[Any] = [
+            {"bucketItem": ["not an item", None, {"id": "x"}, {"type": 6}], "requirementId": "req"},
+        ]
+        result = get_named_rewards(rewards, ItemNames(_ITEM_GAME_DATA, _ITEM_LOC))
+        assert [(r["item_type"], r["id"], r["name"]) for r in result] == [(None, "x", "x"), (6, "", "XP")]
+
+
+class TestItemHelpersRobustness:
+    def test_non_dict_records_are_skipped(self):
+        from swgoh_comlink.helpers import ItemNames, get_data_disc_names, get_mod_catalog
+
+        junk: list[Any] = ["x", None]
+        assert get_data_disc_names([*junk, *_ITEM_GAME_DATA["artifactDefinition"]], _ITEM_LOC) == {
+            "artifact_guard_and_pentrate_3_cost_rare": "Guard and Penetrate"
+        }
+        catalog = get_mod_catalog([*junk, {"id": "1", "setId": "4", "slot": 2, "rarity": 5}], junk)
+        assert catalog["sets"] == {} and list(catalog["definitions"]) == ["1"]
+        game_data = {key: [*junk, *records] for key, records in _ITEM_GAME_DATA.items()}
+        names = ItemNames(game_data, _ITEM_LOC)
+        assert names.get(7, "unitshard_GLLEIA") == "Leia Organa"
+        assert names.get(2, "ANAKINKNIGHT") == "Jedi Knight Anakin"
+        assert names.get(16, "35155") == "5-dot Defense Square mod (A)"
+
+    def test_no_star_rarity_enum(self):
+        from swgoh_comlink.helpers import ItemNames, get_mod_catalog
+
+        catalog = get_mod_catalog([{"id": "1", "rarity": "NO_STAR"}, {"id": "2", "rarity": 8}], [])
+        assert catalog["definitions"]["1"]["rarity"] == catalog["definitions"]["2"]["rarity"] == 8
+        mod = {"id": "m", "slot": [2], "setId": "4", "minRarity": "NO_STAR", "maxRarity": 8, "minTier": 1, "maxTier": 1}
+        assert ItemNames({"mysteryStatMod": [mod]}).get(16, "m") == "8-dot Speed Square mod (E)"
+
+    def test_valid_calls_do_not_walk_the_stack(self, monkeypatch: pytest.MonkeyPatch):
+        import inspect
+
+        from swgoh_comlink.helpers import (
+            ItemNames,
+            get_data_disc_names,
+            get_mod_catalog,
+            get_named_rewards,
+            get_player_title_names,
+        )
+
+        def fail() -> None:
+            raise AssertionError("inspect.stack() called on valid input")
+
+        monkeypatch.setattr(inspect, "stack", fail)
+        names = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC)
+        get_named_rewards([{"id": "GRIND", "type": 3}], names)
+        get_data_disc_names(_ITEM_GAME_DATA["artifactDefinition"], _ITEM_LOC)
+        get_player_title_names(_ITEM_GAME_DATA["playerTitle"], _ITEM_LOC)
+        get_mod_catalog([], _ITEM_GAME_DATA["statModSet"], _ITEM_LOC)
+
+
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 
