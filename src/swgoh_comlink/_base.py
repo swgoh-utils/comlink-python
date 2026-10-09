@@ -18,8 +18,9 @@ from urllib.parse import urlparse, urlunparse
 
 from typing_extensions import Self
 
-from .exceptions import SwgohComlinkException, SwgohComlinkValueError
+from .exceptions import SwgohComlinkException, SwgohComlinkTypeError, SwgohComlinkValueError
 from .helpers import Constants, DataItems
+from .retry import RetryPolicy, _no_release, _Pacer
 
 __all__ = [
     "SwgohComlinkBase",
@@ -145,6 +146,8 @@ class SwgohComlinkBase:
         stats_port: int = 3223,
         verify_ssl: bool = True,
         version_cache_ttl: float = DEFAULT_VERSION_CACHE_TTL,
+        *,
+        retry: RetryPolicy | None = None,
     ):
         from swgoh_comlink import version
 
@@ -158,6 +161,13 @@ class SwgohComlinkBase:
             raise SwgohComlinkValueError("version_cache_ttl must be a non-negative number of seconds.")
         self.version_cache_ttl = version_cache_ttl
         self._version_cache: _CachedVersions | None = None
+        # The last get_enums() response and the game data version it was fetched under.
+        self.enums: dict[str, Any] | None = None
+        self.enums_version: str | None = None
+        if retry is not None and not isinstance(retry, RetryPolicy):
+            raise SwgohComlinkTypeError(f"retry must be a RetryPolicy or None, got {type(retry).__name__}.")
+        self.retry_policy = retry
+        self._pacer = _Pacer(retry.min_interval, retry.unpaced_endpoints) if retry is not None else None
 
         # host and port parameters override defaults
         if host:
@@ -169,6 +179,27 @@ class SwgohComlinkBase:
         self.secret_key = secret_key or os.environ.get("SECRET_KEY")
         if self.access_key and self.secret_key:
             self.hmac = True
+
+    def _pace_delay(self, endpoint: str, stats: bool) -> float:
+        """Reserve the next call slot for *endpoint* and return the seconds to wait for it.
+
+        Always ``0.0`` unless the client's retry policy sets ``min_interval``.
+        """
+        return self._pace_slot(endpoint, stats)[0]
+
+    def _pace_slot(self, endpoint: str, stats: bool) -> tuple[float, Callable[[], None]]:
+        """Like :meth:`_pace_delay`, also returning a callable that gives the slot back if it goes unused."""
+        if self._pacer is None:
+            return 0.0, _no_release
+        name = endpoint.split("?", 1)[0]
+        return self._pacer.reserve_slot(f"{'stats' if stats else 'comlink'}:{name}", name)
+
+    def _hold_endpoint(self, endpoint: str, stats: bool, seconds: float) -> bool:
+        """Hold back calls to *endpoint* for *seconds*; return ``False`` when the caller must wait it out itself."""
+        if self._pacer is None:
+            return False
+        name = endpoint.split("?", 1)[0]
+        return self._pacer.hold(f"{'stats' if stats else 'comlink'}:{name}", name, seconds)
 
     def _construct_request_headers(
         self, method: str, endpoint: str, payload: dict[str, Any] | list[Any] | None = None

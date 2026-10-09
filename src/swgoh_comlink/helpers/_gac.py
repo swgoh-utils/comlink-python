@@ -5,12 +5,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable
-from typing import Any
+from collections.abc import Callable, Coroutine
+from typing import TYPE_CHECKING, Any, overload
 
 from ..exceptions import SwgohComlinkValueError
 from ._constants import Constants
-from ._utils import get_function_name
+from ._utils import _client_kind, get_function_name
+
+if TYPE_CHECKING:
+    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 
 logger = logging.getLogger(__name__)
 
@@ -128,21 +131,28 @@ def convert_divisions_to_int(division: int | str) -> int | None:
 # ── Event helpers ─────────────────────────────────────────────────────
 
 
-def get_current_gac_event(comlink: Any) -> dict[str, Any]:
+@overload
+def get_current_gac_event(comlink: SwgohComlink) -> dict[str, Any]: ...
+@overload
+def get_current_gac_event(comlink: SwgohComlinkAsync) -> Coroutine[Any, Any, dict[str, Any]]: ...
+def get_current_gac_event(comlink: Any) -> dict[str, Any] | Coroutine[Any, Any, dict[str, Any]]:
     """Return the event object for the current gac season
 
     Args:
-        comlink: Instance of SwgohComlink
+        comlink: Instance of SwgohComlink. An instance of SwgohComlinkAsync is also accepted, in which case
+            the result of :func:`async_get_current_gac_event` is returned for the caller to await.
 
     Returns:
-        Current GAC event object
+        Current GAC event object, or an awaitable of it when ``comlink`` is a SwgohComlinkAsync
 
     Raises:
         SwgohComlinkValueError: If no active GAC event is found
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", None)
-    if comlink_type != "SwgohComlink":
+    kind = _client_kind(comlink)
+    if kind == "async":
+        return async_get_current_gac_event(comlink)
+    if kind != "sync":
         err_str = f"{get_function_name()}: comlink instance must be provided."
         raise SwgohComlinkValueError(err_str)
 
@@ -167,8 +177,7 @@ async def async_get_current_gac_event(comlink: Any) -> dict[str, Any]:
         SwgohComlinkValueError: If no active GAC event is found
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", None)
-    if comlink_type != "SwgohComlinkAsync":
+    if _client_kind(comlink) != "async":
         err_str = f"{get_function_name()}: async comlink instance must be provided."
         raise SwgohComlinkValueError(err_str)
 
@@ -183,23 +192,35 @@ async def async_get_current_gac_event(comlink: Any) -> dict[str, Any]:
 # ── Bracket scanning ─────────────────────────────────────────────────
 
 
-def get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> dict[int, Any] | None:
+@overload
+def get_gac_brackets(comlink: SwgohComlink, league: str, limit: int = 0) -> dict[int, Any] | None: ...
+@overload
+def get_gac_brackets(
+    comlink: SwgohComlinkAsync, league: str, limit: int = 0
+) -> Coroutine[Any, Any, dict[int, Any] | None]: ...
+def get_gac_brackets(
+    comlink: Any, league: str, limit: int = 0
+) -> dict[int, Any] | None | Coroutine[Any, Any, dict[int, Any] | None]:
     """Scan currently running GAC brackets for the requested league.
 
     Uses exponential probing with binary search to find the last non-empty
     bracket before fetching all bracket data.
 
     Args:
-        comlink: Instance of SwgohComlink
+        comlink: Instance of SwgohComlink. An instance of SwgohComlinkAsync is also accepted, in which case
+            the result of :func:`async_get_gac_brackets` is returned for the caller to await.
         league: League to scan
         limit: Maximum number of brackets to return. 0 means no limit.
 
     Returns:
-        Dictionary mapping bracket index to player list, or None if no GAC event is running.
+        Dictionary mapping bracket index to player list, or None if no GAC event is running. When
+        ``comlink`` is a SwgohComlinkAsync, an awaitable of that result.
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", None)
-    if comlink_type != "SwgohComlink":
+    kind = _client_kind(comlink)
+    if kind == "async":
+        return async_get_gac_brackets(comlink, league=league, limit=limit)
+    if kind != "sync":
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         raise SwgohComlinkValueError(err_msg)
 
@@ -249,8 +270,7 @@ async def async_get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> d
         Dictionary mapping bracket index to player list, or None if no GAC event is running.
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", None)
-    if comlink_type != "SwgohComlinkAsync":
+    if _client_kind(comlink) != "async":
         err_msg = f"{get_function_name()}: Invalid comlink instance."
         raise SwgohComlinkValueError(err_msg)
 

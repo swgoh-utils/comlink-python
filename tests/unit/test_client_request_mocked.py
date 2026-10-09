@@ -11,6 +11,11 @@ from pytest_httpx import HTTPXMock
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink.exceptions import SwgohComlinkException
 
+# get_enums() first reads the game data version through /metadata, then fetches /enums.
+ENUMS_URL = "http://localhost:3000/enums"
+METADATA_URL = "http://localhost:3000/metadata"
+METADATA = {"latestGamedataVersion": "game-v1", "latestLocalizationBundleVersion": "lang-v1"}
+
 # ── Core request tests ───────────────────────────────────────────────────
 
 
@@ -125,19 +130,20 @@ def test_get_guild_with_alias(httpx_mock: HTTPXMock):
 
 
 def test_get_enums_uses_get_method(httpx_mock: HTTPXMock):
-    httpx_mock.add_response(json={"CombatType": 1})
+    httpx_mock.add_response(url=METADATA_URL, json=METADATA)
+    httpx_mock.add_response(url=ENUMS_URL, json={"CombatType": 1})
 
     client = SwgohComlink(url="http://localhost:3000")
     out = client.get_enums()
 
     assert "CombatType" in out
-    request = httpx_mock.get_request()
+    request = httpx_mock.get_request(url=ENUMS_URL)
     assert request.method == "GET"
     assert str(request.url) == "http://localhost:3000/enums"
 
 
 def test_request_error_raises_comlink_exception(httpx_mock: HTTPXMock):
-    httpx_mock.add_exception(httpx.ConnectError("Connection refused"))
+    httpx_mock.add_exception(httpx.ConnectError("Connection refused"), is_reusable=True)
 
     client = SwgohComlink(url="http://localhost:3000")
     with pytest.raises(SwgohComlinkException):
@@ -145,7 +151,8 @@ def test_request_error_raises_comlink_exception(httpx_mock: HTTPXMock):
 
 
 def test_context_manager(httpx_mock: HTTPXMock):
-    httpx_mock.add_response(json={"CombatType": 1})
+    httpx_mock.add_response(url=METADATA_URL, json=METADATA)
+    httpx_mock.add_response(url=ENUMS_URL, json={"CombatType": 1})
 
     with SwgohComlink(url="http://localhost:3000") as client:
         out = client.get_enums()
@@ -427,12 +434,13 @@ def test_get_latest_game_data_version(httpx_mock: HTTPXMock):
 
 
 def test_hmac_headers_sent_on_request(httpx_mock: HTTPXMock):
-    httpx_mock.add_response(json={"CombatType": 1})
+    httpx_mock.add_response(url=METADATA_URL, json=METADATA)
+    httpx_mock.add_response(url=ENUMS_URL, json={"CombatType": 1})
 
     client = SwgohComlink(url="http://localhost:3000", access_key="pub", secret_key="priv")
     client.get_enums()
 
-    request = httpx_mock.get_request()
+    request = httpx_mock.get_request(url=ENUMS_URL)
     assert "Authorization" in request.headers
     assert request.headers["Authorization"].startswith("HMAC-SHA256 Credential=pub,Signature=")
     assert "X-Date" in request.headers

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import base64
+import inspect
 import io
 import zipfile
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -58,14 +60,14 @@ class TestGetCurrentGacEvent:
         from swgoh_comlink.helpers._gac import get_current_gac_event
 
         with pytest.raises(SwgohComlinkValueError, match="comlink"):
-            get_current_gac_event(None)
+            get_current_gac_event(cast(Any, None))
 
     def test_no_comlink_type_raises(self):
         from swgoh_comlink.helpers._gac import get_current_gac_event
 
         # Object without __comlink_type__
         with pytest.raises(SwgohComlinkValueError, match="comlink"):
-            get_current_gac_event(object())
+            get_current_gac_event(cast(Any, object()))
 
 
 # ── _gac: async_get_current_gac_event ────────────────────────────────────
@@ -106,26 +108,30 @@ class TestGetGacBrackets:
         from swgoh_comlink.helpers._gac import get_gac_brackets
 
         with pytest.raises(SwgohComlinkValueError, match="Invalid comlink"):
-            get_gac_brackets(None, league="kyber")
+            get_gac_brackets(cast(Any, None), league="kyber")
 
     def test_missing_league_raises(self, sync_client):
         from swgoh_comlink.helpers._gac import get_gac_brackets
 
         with pytest.raises(SwgohComlinkValueError, match="league"):
-            get_gac_brackets(sync_client, league=None)
+            get_gac_brackets(sync_client, league=cast(Any, None))
 
     def test_non_string_league_raises(self, sync_client):
         from swgoh_comlink.helpers._gac import get_gac_brackets
 
         with pytest.raises(SwgohComlinkValueError, match="league"):
-            get_gac_brackets(sync_client, league=123)
+            get_gac_brackets(sync_client, league=cast(Any, 123))
 
-    def test_async_comlink_rejected(self, httpx_mock: HTTPXMock):
+    @pytest.mark.asyncio
+    async def test_async_comlink_returns_awaitable(self, httpx_mock: HTTPXMock, async_client):
         from swgoh_comlink.helpers._gac import get_gac_brackets
 
-        async_client = SwgohComlinkAsync(url="http://localhost:3000")
-        with pytest.raises(SwgohComlinkValueError, match="Invalid comlink"):
-            get_gac_brackets(async_client, league="kyber")
+        httpx_mock.add_response(json={"gameEvent": [_GAC_EVENT]})
+        httpx_mock.add_response(json={"player": []})  # probe(0) -> empty
+        result = get_gac_brackets(async_client, league="kyber")
+        assert inspect.isawaitable(result)
+        assert await result == {}
+        await async_client.aclose()
 
     def test_scans_brackets(self, httpx_mock: HTTPXMock, sync_client):
         from swgoh_comlink.helpers._gac import get_gac_brackets
@@ -230,6 +236,17 @@ class TestGetGuildMembers:
         result = get_guild_members(sync_client, allycode=123456789)
         assert len(result) == 1
 
+    def test_requests_recent_activity_info(self, httpx_mock: HTTPXMock, sync_client):
+        import json
+
+        from swgoh_comlink.helpers._guild import get_guild_members
+
+        httpx_mock.add_response(json={"guildId": "guild_abc"})
+        httpx_mock.add_response(json={"member": []})
+        get_guild_members(sync_client, player_id="pid_123")
+        guild_request = json.loads(httpx_mock.get_requests()[-1].content)
+        assert guild_request["payload"] == {"guildId": "guild_abc", "includeRecentGuildActivityInfo": True}
+
     def test_both_provided_raises(self, sync_client):
         from swgoh_comlink.helpers._guild import get_guild_members
 
@@ -246,20 +263,46 @@ class TestGetGuildMembers:
         from swgoh_comlink.helpers._guild import get_guild_members
 
         with pytest.raises(SwgohComlinkValueError, match="SwgohComlink"):
-            get_guild_members(None, player_id="pid")
+            get_guild_members(cast(Any, None), player_id="pid")
 
-    def test_async_comlink_rejected(self, httpx_mock: HTTPXMock):
+    @pytest.mark.asyncio
+    async def test_async_comlink_returns_awaitable(self, httpx_mock: HTTPXMock, async_client):
         from swgoh_comlink.helpers._guild import get_guild_members
 
-        async_client = SwgohComlinkAsync(url="http://localhost:3000")
-        with pytest.raises(SwgohComlinkValueError, match="SwgohComlink"):
-            get_guild_members(async_client, player_id="pid")
+        httpx_mock.add_response(json={"guildId": "guild_abc"})
+        httpx_mock.add_response(json={"member": [{"id": "m1"}]})
+        result = get_guild_members(async_client, player_id="pid_123")
+        assert inspect.isawaitable(result)
+        assert await result == [{"id": "m1"}]
+        await async_client.aclose()
+
+    @pytest.mark.asyncio
+    async def test_async_comlink_argument_errors_raise_on_await(self, async_client):
+        from swgoh_comlink.helpers._guild import get_guild_members
+
+        pending = get_guild_members(async_client)
+        with pytest.raises(SwgohComlinkValueError, match="required"):
+            await pending
+        await async_client.aclose()
 
 
 # ── _guild: async_get_guild_members ─────────────────────────────────────
 
 
 class TestAsyncGetGuildMembers:
+    @pytest.mark.asyncio
+    async def test_requests_recent_activity_info(self, httpx_mock: HTTPXMock, async_client):
+        import json
+
+        from swgoh_comlink.helpers._guild import async_get_guild_members
+
+        httpx_mock.add_response(json={"guildId": "guild_abc"})
+        httpx_mock.add_response(json={"member": []})
+        await async_get_guild_members(async_client, player_id="pid_123")
+        guild_request = json.loads(httpx_mock.get_requests()[-1].content)
+        assert guild_request["payload"] == {"guildId": "guild_abc", "includeRecentGuildActivityInfo": True}
+        await async_client.aclose()
+
     @pytest.mark.asyncio
     async def test_via_player_id(self, httpx_mock: HTTPXMock, async_client):
         from swgoh_comlink.helpers._guild import async_get_guild_members
@@ -311,6 +354,106 @@ class TestAsyncGetGuildMembers:
         with pytest.raises(SwgohComlinkValueError, match="SwgohComlinkAsync"):
             await async_get_guild_members(sync_client, player_id="pid")
         sync_client.close()
+
+
+# ── _guild: get_guild_activity over get_guild() ─────────────────────────
+
+_ACTIVITY_GUILD = {
+    "guild": {
+        "profile": {"id": "guild_abc", "name": "Test Guild", "memberCount": 2, "memberMax": 50},
+        "member": [
+            {"playerId": "p1", "playerName": "One", "memberLevel": 4, "guildJoinTime": "1655938556"},
+            {"playerId": "p2", "playerName": "Two", "memberLevel": 2, "lastActivityTime": "1790164800000"},
+        ],
+        "recentTerritoryBattleResult": [{"definitionId": "t05D", "totalStars": 47}],
+        "recentTerritoryWarResult": [{"score": "27361", "opponentScore": "11916"}],
+        "recentRaidResult": [
+            {
+                "raidId": "order66",
+                "guildRewardScore": "100",
+                "raidMember": [{"playerId": "p2", "memberProgress": "100"}],
+            }
+        ],
+    }
+}
+
+
+class TestGetGuildActivityFromClient:
+    def test_summarizes_unwrapped_guild(self, httpx_mock: HTTPXMock, sync_client):
+        import json
+
+        from swgoh_comlink.helpers import get_guild_activity
+
+        httpx_mock.add_response(json=_ACTIVITY_GUILD)
+        activity = get_guild_activity(sync_client.get_guild("guild_abc", include_recent_guild_activity_info=True))
+        request = json.loads(httpx_mock.get_requests()[-1].content)
+        assert request["payload"]["includeRecentGuildActivityInfo"] is True
+        assert activity["guild_id"] == "guild_abc"
+        assert activity["best_territory_battle"] == {"definition_id": "t05D", "total_stars": 47}
+        assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (1, 0)
+        assert [(m["role"], m["raid_score"]) for m in activity["members"]] == [("Leader", None), ("Member", 100)]
+
+    @pytest.mark.asyncio
+    async def test_async_client(self, httpx_mock: HTTPXMock, async_client):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        httpx_mock.add_response(json=_ACTIVITY_GUILD)
+        guild = await async_client.get_guild("guild_abc", include_recent_guild_activity_info=True)
+        activity = get_guild_activity(guild)
+        assert activity["last_raid"] is not None and activity["last_raid"]["guild_score"] == 100
+        await async_client.aclose()
+
+
+# ── _events: get_event_schedule over get_events() ───────────────────────
+
+
+class TestGetEventScheduleFromClient:
+    def test_schedule_from_get_events(self, httpx_mock: HTTPXMock, sync_client):
+        from datetime import datetime, timezone
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        now = datetime(2026, 9, 23, 12, tzinfo=timezone.utc)
+        httpx_mock.add_response(
+            json={
+                "gameEvent": [
+                    _GAC_EVENT,
+                    {
+                        "id": "EVENT_JOURNEY_MANDALORIAN",
+                        "nameKey": "EVENT_JOURNEY_MANDALORIAN_NAME",
+                        "type": 3,
+                        "instance": [{"id": "J1", "startTime": "1476532800000", "endTime": "4945772573272"}],
+                    },
+                ]
+            }
+        )
+        loc = {"EVENT_JOURNEY_MANDALORIAN_NAME": "THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]"}
+        (journey,) = get_event_schedule(sync_client.get_events(), loc, now=now)
+        assert journey["name"] == "THE MANDALORIAN - Hero's Journey"
+        assert (journey["title"], journey["subtitle"]) == ("THE MANDALORIAN", "Hero's Journey")
+        assert journey["status"] == "live" and journey["end"] is None
+
+
+# ── _game_config: get_game_config over get_game_metadata() ──────────────
+
+
+class TestGetGameConfigFromClient:
+    def test_config_from_get_game_metadata(self, httpx_mock: HTTPXMock, sync_client):
+        from swgoh_comlink.helpers import get_game_config, get_game_config_int
+
+        httpx_mock.add_response(
+            json={
+                "config": [
+                    {"key": "max-datacron-currency", "value": "100000000"},
+                    {"key": "stat-mod-max-storage", "value": "500"},
+                ],
+                "latestGamedataVersion": "0.40.6:abc",
+                "latestLocalizationBundleVersion": "xyz",
+            }
+        )
+        metadata = sync_client.get_game_metadata()
+        assert get_game_config(metadata) == {"max-datacron-currency": "100000000", "stat-mod-max-storage": "500"}
+        assert get_game_config_int(metadata, "max-datacron-currency") == 100_000_000
 
 
 # ── _conquest: calc_current_stamina ──────────────────────────────────────
@@ -431,13 +574,13 @@ class TestGetLocalizationDictionary:
         from swgoh_comlink.helpers._game_data import get_localization_dictionary
 
         with pytest.raises(SwgohComlinkValueError, match="comlink"):
-            get_localization_dictionary(None)
+            get_localization_dictionary(cast(Any, None))
 
     def test_wrong_comlink_type_raises(self):
         from swgoh_comlink.helpers._game_data import get_localization_dictionary
 
         with pytest.raises(SwgohComlinkValueError, match="comlink"):
-            get_localization_dictionary(object())
+            get_localization_dictionary(cast(Any, object()))
 
     @pytest.mark.parametrize("bad_language", ["", None, 123])
     def test_invalid_language_raises(self, sync_client, bad_language):
@@ -481,3 +624,59 @@ class TestAsyncGetLocalizationDictionary:
 
         with pytest.raises(SwgohComlinkValueError, match="non-empty string"):
             await async_get_localization_dictionary(async_client, language=bad_language)
+
+
+# ── Client detection: async clients and client subclasses ────────────────
+
+
+class _ExtendedComlink(SwgohComlink):
+    __comlink_type__ = "ExtendedComlink"
+
+
+class _ExtendedComlinkAsync(SwgohComlinkAsync):
+    __comlink_type__ = "ExtendedComlinkAsync"
+
+
+class TestClientDetection:
+    @pytest.mark.asyncio
+    async def test_get_current_gac_event_with_async_client(self, httpx_mock: HTTPXMock, async_client):
+        from swgoh_comlink.helpers import get_current_gac_event
+
+        httpx_mock.add_response(json={"gameEvent": [_GAC_EVENT]})
+        assert await get_current_gac_event(async_client) == _GAC_EVENT
+        await async_client.aclose()
+
+    @pytest.mark.asyncio
+    async def test_get_localization_dictionary_with_async_client(self, httpx_mock: HTTPXMock, async_client):
+        from swgoh_comlink.helpers import get_localization_dictionary
+
+        httpx_mock.add_response(json=_METADATA)
+        httpx_mock.add_response(json=_make_loc_bundle(("Loc_ENG_US.txt", _ENG_CONTENT)))
+        assert await get_localization_dictionary(async_client) == {"UNIT_A": "Vader", "UNIT_B": "Yoda"}
+        await async_client.aclose()
+
+    def test_subclass_of_sync_client_is_accepted(self, httpx_mock: HTTPXMock):
+        from swgoh_comlink.helpers import get_current_gac_event
+
+        client = _ExtendedComlink(url="http://localhost:3000")
+        httpx_mock.add_response(json={"gameEvent": [_GAC_EVENT]})
+        assert get_current_gac_event(client) == _GAC_EVENT
+        client.close()
+
+    @pytest.mark.asyncio
+    async def test_subclass_of_async_client_is_accepted(self, httpx_mock: HTTPXMock):
+        from swgoh_comlink.helpers import async_get_current_gac_event, get_current_gac_event
+
+        client = _ExtendedComlinkAsync(url="http://localhost:3000")
+        httpx_mock.add_response(json={"gameEvent": [_GAC_EVENT]})
+        httpx_mock.add_response(json={"gameEvent": [_GAC_EVENT]})
+        assert await async_get_current_gac_event(client) == _GAC_EVENT
+        assert await get_current_gac_event(client) == _GAC_EVENT
+        await client.aclose()
+
+    @pytest.mark.asyncio
+    async def test_async_twin_still_rejects_sync_client(self, sync_client):
+        from swgoh_comlink.helpers import async_get_localization_dictionary
+
+        with pytest.raises(SwgohComlinkValueError, match="SwgohComlinkAsync"):
+            await async_get_localization_dictionary(sync_client)

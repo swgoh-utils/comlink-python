@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -155,28 +156,60 @@ class TestHumanTime:
 
 
 class TestConvertRelicTier:
+    # The game's RelicTier enum: RelicTier_DEFAULT = 0, RELIC_LOCKED = 1, RELIC_UNLOCKED = 2, RELIC_TIER_01 = 3
     def test_valid_int(self):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
         assert convert_relic_tier(0) == "LOCKED"
-        assert convert_relic_tier(1) == "UNLOCKED"
-        assert convert_relic_tier(2) == "1"
+        assert convert_relic_tier(1) == "LOCKED"
+        assert convert_relic_tier(2) == "UNLOCKED"
+        assert convert_relic_tier(3) == "1"
+        assert convert_relic_tier(12) == "10"
 
     def test_valid_string(self):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
-        assert convert_relic_tier("9") == "8"
+        assert convert_relic_tier("9") == "7"
+
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [
+            ("RelicTier_DEFAULT", "LOCKED"),
+            ("RELIC_LOCKED", "LOCKED"),
+            ("RELIC_UNLOCKED", "UNLOCKED"),
+            ("RELIC_TIER_01", "1"),
+            ("RELIC_TIER_10", "10"),
+            ("RELIC_TIER_11", None),
+            ("RELIC_TIER_", None),
+            ("NOT_A_TIER", None),
+        ],
+    )
+    def test_enum_names(self, name: str, expected: str | None):
+        from swgoh_comlink.helpers._utils import convert_relic_tier
+
+        assert convert_relic_tier(name) == expected
+
+    def test_every_relic_in_example_player_converts(self):
+        import json
+
+        from swgoh_comlink.helpers._utils import convert_relic_tier
+
+        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+        tiers = {unit["relic"]["currentTier"] for unit in player["rosterUnit"] if unit.get("relic")}
+        assert 12 in tiers  # relic 10, the maximum
+        assert all(convert_relic_tier(tier) is not None for tier in tiers)
 
     def test_unknown_tier_returns_none(self):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
         assert convert_relic_tier(99) is None
 
-    def test_invalid_type_raises(self):
+    @pytest.mark.parametrize("value", [None, True, 1.0])
+    def test_invalid_type_raises(self, value: Any):
         from swgoh_comlink.helpers._utils import convert_relic_tier
 
         with pytest.raises(SwgohComlinkValueError, match="relic_tier"):
-            convert_relic_tier(None)
+            convert_relic_tier(value)
 
 
 # ── _arena ──────────────────────────────────────────────────────────────
@@ -217,27 +250,53 @@ class TestGetMaxRankJump:
 
 
 class TestGetArenaPayout:
-    def test_squad_uses_hour_18(self):
+    # localTimeZoneOffsetMinutes: payout is 18:00 (squad) / 19:00 (fleet) UTC moved back by the offset
+    @staticmethod
+    def _at(hour: int, minute: int = 0, day: int = 8):
+        from datetime import datetime, timezone
+
+        return datetime(2026, 10, day, hour, minute, tzinfo=timezone.utc)
+
+    def test_squad_and_fleet_anchor_hours(self):
         from swgoh_comlink.helpers._arena import get_arena_payout
 
-        result = get_arena_payout(offset=0, fleet=False)
-        # The payout should be at 18:00 local adjusted for UTC offset
-        assert result is not None
+        assert get_arena_payout(0, now=self._at(12)) == self._at(18)
+        assert get_arena_payout(0, fleet=True, now=self._at(12)) == self._at(19)
 
-    def test_fleet_uses_hour_19(self):
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        result = get_arena_payout(offset=0, fleet=True)
-        assert result is not None
-
-    def test_returns_future_datetime(self):
-        from datetime import datetime
+    def test_returns_aware_utc(self):
+        from datetime import timezone
 
         from swgoh_comlink.helpers._arena import get_arena_payout
 
-        # Using a large negative offset to push payout into the future
-        result = get_arena_payout(offset=-1440)
-        assert result > datetime.now()
+        assert get_arena_payout(0).tzinfo == timezone.utc
+
+    def test_offset_moves_payout(self):
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        # UTC+10: 19:00 local is 09:00 UTC
+        assert get_arena_payout(600, fleet=True, now=self._at(8)) == self._at(9)
+
+    def test_passed_payout_rolls_to_next_day(self):
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        assert get_arena_payout(0, now=self._at(18)) == self._at(18, day=9)
+        assert get_arena_payout(0, now=self._at(20)) == self._at(18, day=9)
+
+    def test_payout_on_the_next_utc_day_is_not_skipped(self):
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        # US Pacific (UTC-7) fleet pays at 02:00 UTC. At 01:00 UTC the next payout is an hour away,
+        # not the one 25 hours later.
+        assert get_arena_payout(-420, fleet=True, now=self._at(1)) == self._at(2)
+
+    def test_naive_now_is_local_time(self):
+        from datetime import datetime, timedelta
+
+        from swgoh_comlink.helpers._arena import get_arena_payout
+
+        now = datetime.now()
+        payout = get_arena_payout(0, now=now)
+        assert timedelta(0) < payout - now.astimezone() <= timedelta(days=1)
 
 
 # ── _omicron ────────────────────────────────────────────────────────────
@@ -520,6 +579,19 @@ class TestGetPlayableUnits:
         assert len(result) == 1
         assert result[0]["rarity"] == 7
 
+    def test_tolerates_missing_fields_and_enum_rarity(self):
+        from swgoh_comlink.helpers._game_data import get_playable_units
+
+        units = [
+            {"baseId": "OLD_DUMP", "rarity": 7, "obtainable": True},  # predates obtainableTime
+            {"baseId": "ENUMS", "rarity": "SEVEN_STAR", "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "INT_TIME", "rarity": 7, "obtainable": True, "obtainableTime": 0},
+            {"baseId": "NO_RARITY", "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "NO_OBTAINABLE", "rarity": 7, "obtainableTime": "0"},
+            {"baseId": "GL_TEMPLATE", "rarity": 7, "obtainable": True, "obtainableTime": "4102444800000"},
+        ]
+        assert [u["baseId"] for u in get_playable_units(units)] == ["OLD_DUMP", "ENUMS", "INT_TIME"]
+
     def test_invalid_type_raises(self):
         from swgoh_comlink.helpers._game_data import get_playable_units
 
@@ -622,6 +694,2389 @@ class TestGetDatacronDismantleTotal:
         from swgoh_comlink.helpers._game_data import get_datacron_dismantle_total
 
         assert get_datacron_dismantle_total([], [], []) == {}
+
+
+# ── _conquest ──────────────────────────────────────────────────────────
+
+
+_REFRESH = 1_790_164_800  # 2026-09-23 12:00:00 UTC, in seconds as lastRefreshTime carries it
+
+
+def _utc(seconds: float):
+    from datetime import datetime, timezone
+
+    return datetime.fromtimestamp(seconds, tz=timezone.utc)
+
+
+class TestCalcStaminaFullTime:
+    def test_one_point_per_thirty_minutes(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"unitId": "u1", "remainingStamina": 90, "lastRefreshTime": str(_REFRESH)}
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 3600)) == _utc(_REFRESH + 10 * 1800)
+
+    def test_returns_aware_utc(self):
+        from datetime import timezone
+
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        result = calc_stamina_full_time({"remainingStamina": 50, "lastRefreshTime": _REFRESH})
+        assert result.tzinfo == timezone.utc
+
+    @pytest.mark.parametrize("pass_plus", [False, True])
+    @pytest.mark.parametrize("remaining", [0, 1, 37, 99])
+    def test_agrees_with_calc_current_stamina(self, remaining: int, pass_plus: bool):
+        from unittest.mock import patch
+
+        from swgoh_comlink.helpers import calc_current_stamina, calc_stamina_full_time
+
+        unit = {"remainingStamina": remaining, "lastRefreshTime": _REFRESH}
+        full = calc_stamina_full_time(unit, pass_plus, now=_utc(_REFRESH)).timestamp()
+        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full):
+            assert calc_current_stamina(unit, pass_plus) == 100
+        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full - 1):
+            assert calc_current_stamina(unit, pass_plus) < 100
+
+    def test_pass_plus_is_faster(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"remainingStamina": 0, "lastRefreshTime": _REFRESH}
+        now = _utc(_REFRESH)
+        assert calc_stamina_full_time(unit, True, now=now) < calc_stamina_full_time(unit, now=now)
+
+    def test_full_unit_returns_the_moment_it_filled(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"remainingStamina": 98, "lastRefreshTime": _REFRESH}
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 86_400)) == _utc(_REFRESH + 3600)
+        assert calc_stamina_full_time({"remainingStamina": 100, "lastRefreshTime": _REFRESH}) == _utc(_REFRESH)
+
+    @pytest.mark.parametrize("refresh", [None, 0, "", "junk"])
+    def test_missing_refresh_time_counts_from_now(self, refresh: Any):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit: dict[str, Any] = {"remainingStamina": 99}
+        if refresh is not None:
+            unit["lastRefreshTime"] = refresh
+        # Whole seconds, as lastRefreshTime carries them
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 0.75)) == _utc(_REFRESH + 1800)
+
+    def test_future_refresh_time_counts_from_now(self):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        unit = {"remainingStamina": 99, "lastRefreshTime": _REFRESH + 600}
+        assert calc_stamina_full_time(unit, now=_utc(_REFRESH)) == _utc(_REFRESH + 1800)
+
+    def test_naive_now_is_local_time(self):
+        from datetime import datetime
+
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        now = datetime.now()
+        assert calc_stamina_full_time({"remainingStamina": 99}, now=now) == _utc(int(now.timestamp()) + 1800)
+
+    @pytest.mark.parametrize("unit", [None, [], {"lastRefreshTime": _REFRESH}, {"remainingStamina": "full"}])
+    def test_invalid_unit_raises(self, unit: Any):
+        from swgoh_comlink.helpers import calc_stamina_full_time
+
+        with pytest.raises(SwgohComlinkValueError, match="calc_stamina_full_time"):
+            calc_stamina_full_time(unit)
+
+
+def _feat(challenge_id: str, keycards: int = 1, artifact: str | None = None, reward_type: Any = 22) -> dict[str, Any]:
+    rewards = [{"id": "", "type": reward_type, "maxQuantity": keycards}]
+    if artifact:
+        rewards.append({"id": artifact, "type": 23, "maxQuantity": 1})
+    return {"id": challenge_id, "nameKey": f"{challenge_id}_NAME", "descKey": f"{challenge_id}_DESC", "reward": rewards}
+
+
+_CONQUEST_DEFS = [
+    {"id": "CONQUEST_VOL1", "conquestDifficulty": []},
+    {
+        "id": "CONQUEST_VOL2",
+        "conquestDifficulty": [
+            {"sector": [{"id": "S0", "titleKey": "SECTOR_1"}, {"id": "S1", "titleKey": "SECTOR_2"}]}
+        ],
+    },
+]
+_CHALLENGES = [
+    _feat("CONQUEST_VOL2_BOSS_KILL_III_DIFF_S1", keycards=5),
+    _feat("CONQUEST_VOL2_SECTOR_WIN_III_DIFF_S0", keycards=3),
+    _feat("CONQUEST_VOL2_EVENT_BOMBS_III_DIFF", keycards=15, artifact="artifact_x"),
+    _feat("CONQUEST_VOL2_EVENT_BOMBS_I_DIFF", keycards=10),
+    _feat("CONQUEST_VOL2_MINIBOSS_HIT_II_DIFF_S0", reward_type="CONQUEST_POINT"),
+    _feat("CONQUEST_VOL1_EVENT_OLD_III_DIFF"),
+    _feat("CONQUEST_VOL2_NOT_A_FEAT"),
+]
+_LOC = {
+    "SECTOR_1": "[c][FFFF00]SECTOR 1[-][/c]",
+    "SECTOR_2": "SECTOR 2",
+    "CONQUEST_VOL2_EVENT_BOMBS_III_DIFF_NAME": "[b]Bombs Away[/b]",
+    "ARTIFACT_X_NAME": "Thermal Kit",
+}
+_ARTIFACTS = [{"id": "artifact_x", "nameKey": "ARTIFACT_X_NAME"}]
+
+
+class TestGetConquestFeats:
+    def test_defaults_to_newest_conquest_and_orders_feats(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES)
+        assert [f["challenge_id"] for f in feats] == [
+            "CONQUEST_VOL2_EVENT_BOMBS_I_DIFF",
+            "CONQUEST_VOL2_MINIBOSS_HIT_II_DIFF_S0",
+            "CONQUEST_VOL2_EVENT_BOMBS_III_DIFF",
+            "CONQUEST_VOL2_SECTOR_WIN_III_DIFF_S0",
+            "CONQUEST_VOL2_BOSS_KILL_III_DIFF_S1",
+        ]
+        assert [f["difficulty"] for f in feats] == ["Easy", "Normal", "Hard", "Hard", "Hard"]
+        assert [f["kind"] for f in feats] == ["Global", "Mini-Boss", "Global", "Sector", "Boss"]
+
+    def test_localizes_names_sectors_and_artifacts(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, _LOC, _ARTIFACTS, difficulty="hard")
+        bombs, sector, boss = feats
+        assert bombs["name"] == "Bombs Away"
+        assert bombs["scope"] == "Global" and bombs["sector_id"] is None
+        assert bombs["keycards"] == 15
+        assert bombs["reward_artifact_id"] == "artifact_x"
+        assert bombs["reward_artifact"] == "Thermal Kit"
+        assert sector["scope"] == "Sector 1" and sector["sector_id"] == "S0"
+        assert boss["scope"] == "Sector 2"
+        # Unresolved keys fall back to the localization key
+        assert sector["name"] == "CONQUEST_VOL2_SECTOR_WIN_III_DIFF_S0_NAME"
+
+    def test_without_localization_uses_ids(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, difficulty="Hard")
+        assert feats[0]["reward_artifact"] == "artifact_x"
+        assert feats[1]["scope"] == "S0"
+
+    def test_enum_name_reward_types(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        (feat,) = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, difficulty="normal")
+        assert feat["keycards"] == 1
+
+    def test_feats_without_a_kind_token(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        challenges = [
+            _feat("CONQUEST_VOL2_SILVO_VANE_III_DIFF_S0", keycards=5),
+            _feat("CONQUEST_VOL2_NO_TANKS_I_DIFF"),
+            # A longer volume id must not be read as this volume's feat
+            _feat("CONQUEST_VOL24_SECTOR_WIN_III_DIFF_S0"),
+        ]
+        feats = get_conquest_feats(_CONQUEST_DEFS, challenges)
+        assert [(f["challenge_id"], f["kind"], f["scope"]) for f in feats] == [
+            ("CONQUEST_VOL2_NO_TANKS_I_DIFF", "Global", "Global"),
+            ("CONQUEST_VOL2_SILVO_VANE_III_DIFF_S0", "Sector", "S0"),
+        ]
+        assert feats[1]["keycards"] == 5
+
+    def test_explicit_conquest_id_is_case_insensitive(self):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, conquest_id="conquest_vol1")
+        assert [f["challenge_id"] for f in feats] == ["CONQUEST_VOL1_EVENT_OLD_III_DIFF"]
+
+    @pytest.mark.parametrize(
+        ("args", "kwargs"),
+        [
+            ((_CONQUEST_DEFS, _CHALLENGES), {"conquest_id": "CONQUEST_VOL99"}),
+            ((_CONQUEST_DEFS, _CHALLENGES), {"difficulty": "nightmare"}),
+            (({"id": "x"}, _CHALLENGES), {}),
+            ((_CONQUEST_DEFS, None), {}),
+            (([], _CHALLENGES), {}),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
+        from swgoh_comlink.helpers import get_conquest_feats
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_conquest_feats(*args, **kwargs)
+
+
+# ── _events ─────────────────────────────────────────────────────────────
+
+_EVENTS_NOW_MS = 1_790_164_800_000  # 2026-09-23 12:00 UTC
+_DAY_MS = 86_400_000
+_PERMANENT_END = "4945772573272"  # 2126-09-24: how the game spells "never ends"
+
+
+def _run(start: int, end: int | str, run_id: str | None = None, **extra: Any) -> dict[str, Any]:
+    run: dict[str, Any] = {"startTime": str(start), "endTime": str(end), **extra}
+    if run_id is not None:
+        run["id"] = run_id
+    return run
+
+
+def _events_now():
+    from datetime import datetime, timezone
+
+    return datetime.fromtimestamp(_EVENTS_NOW_MS / 1000, tz=timezone.utc)
+
+
+_NODE = {"campaignId": "EVENTS", "campaignMapId": "JOURNEY", "campaignNodeDifficulty": 4, "campaignNodeId": "JM"}
+_GAME_EVENTS: dict[str, Any] = {
+    "gameEvent": [
+        {
+            "id": "EVENT_JOURNEY_MANDALORIAN",
+            "nameKey": "EVENT_JOURNEY_MANDALORIAN_NAME",
+            "type": 3,
+            "instance": [_run(1_476_532_800_000, _PERMANENT_END, "J1", campaignElementIdentifier=_NODE)],
+        },
+        {
+            "id": "EVENT_MARQUEE_JAXXON",
+            "nameKey": "EVENT_MARQUEE_JAXXON_NAME_V2",
+            "type": 1,
+            "instance": [
+                _run(_EVENTS_NOW_MS - _DAY_MS, _EVENTS_NOW_MS + 2 * _DAY_MS, "LATER_END"),
+                _run(_EVENTS_NOW_MS - 2 * _DAY_MS, _EVENTS_NOW_MS + _DAY_MS, "EARLIER_END"),
+            ],
+        },
+        {
+            "id": "EVENT_MARQUEE_THERONIN",
+            "nameKey": "EVENT_MARQUEE_THERONIN_NAME",
+            "type": 1,
+            "instance": [
+                _run(_EVENTS_NOW_MS + 20 * _DAY_MS, _EVENTS_NOW_MS + 27 * _DAY_MS, "SECOND"),
+                _run(_EVENTS_NOW_MS + 13 * _DAY_MS, _EVENTS_NOW_MS + 20 * _DAY_MS, "FIRST"),
+            ],
+        },
+        {
+            "id": "challenge_XP",
+            "nameKey": "EVENT_XP_NAME",
+            "type": 1,
+            "instance": [_run(_EVENTS_NOW_MS - 3 * _DAY_MS, _EVENTS_NOW_MS - _DAY_MS)],
+        },
+        {
+            "id": "EVENT_SMUGGLERS_RUN",
+            "nameKey": "EVENT_SMUGGLERS_RUN_NAME",
+            "type": 1,
+            "instance": [_run(_EVENTS_NOW_MS + _DAY_MS, _EVENTS_NOW_MS + 2 * _DAY_MS)],
+        },
+    ]
+}
+_EVENT_LOC = {
+    "EVENT_JOURNEY_MANDALORIAN_NAME": "THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]",
+    "EVENT_MARQUEE_JAXXON_NAME_V2": "ACTION JAXXON\\n[c][FFC891]Special Marquee Event[-][/c]",
+    "EVENT_MARQUEE_THERONIN_NAME": "THE WANDERER'S BLADE\\n[c][FFC891]Special Marquee Event[-][/c]",
+    "EVENT_SMUGGLERS_RUN_NAME": "SMUGGLER'S RUN II\\n[c][FFC891]Resource Event[-][/c]",
+}
+
+
+class TestGetEventSchedule:
+    def test_live_then_upcoming_soonest_first(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())
+        assert [(e["event_id"], e["status"]) for e in schedule] == [
+            ("EVENT_JOURNEY_MANDALORIAN", "live"),
+            ("EVENT_MARQUEE_JAXXON", "live"),
+            ("EVENT_SMUGGLERS_RUN", "upcoming"),
+            ("EVENT_MARQUEE_THERONIN", "upcoming"),
+        ]
+
+    def test_names_split_the_banner_and_keep_the_game_case(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())
+        assert [(e["title"], e["subtitle"], e["name"]) for e in schedule] == [
+            ("THE MANDALORIAN", "Hero's Journey", "THE MANDALORIAN - Hero's Journey"),
+            ("ACTION JAXXON", "Special Marquee Event", "ACTION JAXXON - Special Marquee Event"),
+            ("SMUGGLER'S RUN II", "Resource Event", "SMUGGLER'S RUN II - Resource Event"),
+            ("THE WANDERER'S BLADE", "Special Marquee Event", "THE WANDERER'S BLADE - Special Marquee Event"),
+        ]
+
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            ("DUEL OF THE FATES\\n[c][FFC891]Assault Battles[-][/c]", ("DUEL OF THE FATES", "Assault Battles")),
+            ("IMPERIAL TIE BOMBER\\n[c][FFC891]Ship Event[-][/c]", ("IMPERIAL TIE BOMBER", "Ship Event")),
+            ("TIER II (VERY HARD)", ("TIER II (VERY HARD)", None)),
+            ("Terrible Tings", ("Terrible Tings", None)),
+            ("ONE\\nTWO\\nthree", ("ONE", "TWO - three")),
+            ("[c][FFC891][-][/c]", ("", None)),
+        ],
+    )
+    def test_event_name_formatting(self, text: str, expected: tuple[str, str | None]):
+        from swgoh_comlink.helpers._events import _event_name
+
+        assert _event_name(text) == expected
+
+    def test_without_localization_uses_name_key(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS["gameEvent"], now=_events_now())
+        assert schedule[0]["name"] == "EVENT_JOURNEY_MANDALORIAN_NAME"
+        assert (schedule[0]["title"], schedule[0]["subtitle"]) == ("EVENT_JOURNEY_MANDALORIAN_NAME", None)
+        no_key = get_event_schedule([{"id": "EV", "instance": [_run(0, _PERMANENT_END)]}], now=_events_now())
+        assert (no_key[0]["name"], no_key[0]["title"], no_key[0]["subtitle"]) == ("EV", "EV", None)
+
+    def test_permanent_event_has_no_end(self):
+        from datetime import datetime, timezone
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        journey = get_event_schedule(_GAME_EVENTS, now=_events_now())[0]
+        assert journey["end"] is None
+        assert journey["start"] == datetime(2016, 10, 15, 12, tzinfo=timezone.utc)
+        assert journey["instance_id"] == "J1"
+        assert journey["type"] == 3
+        assert journey["campaign_element"] == _NODE
+
+    def test_overlapping_runs_pick_the_one_ending_first(self):
+        from datetime import timezone
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        jaxxon = get_event_schedule(_GAME_EVENTS, now=_events_now())[1]
+        assert jaxxon["instance_id"] == "EARLIER_END"
+        assert jaxxon["end"] is not None and jaxxon["end"].tzinfo == timezone.utc
+        assert jaxxon["end"].timestamp() * 1000 == _EVENTS_NOW_MS + _DAY_MS
+
+    def test_upcoming_event_uses_its_next_run(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        ronin = get_event_schedule(_GAME_EVENTS, now=_events_now())[-1]
+        assert ronin["instance_id"] == "FIRST"
+        assert ronin["start"].timestamp() * 1000 == _EVENTS_NOW_MS + 13 * _DAY_MS
+
+    def test_live_only(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        schedule = get_event_schedule(_GAME_EVENTS, now=_events_now(), include_upcoming=False)
+        assert {e["status"] for e in schedule} == {"live"}
+        assert len(schedule) == 2
+
+    def test_run_boundaries(self):
+        from datetime import timedelta
+
+        from swgoh_comlink.helpers import get_event_schedule
+
+        events = [{"id": "EV", "instance": [_run(_EVENTS_NOW_MS, _EVENTS_NOW_MS + _DAY_MS)]}]
+        assert get_event_schedule(events, now=_events_now())[0]["status"] == "live"
+        assert get_event_schedule(events, now=_events_now() + timedelta(days=1)) == []
+
+    def test_integer_times_and_unusable_runs(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        events: list[Any] = [
+            {"id": "INT", "instance": [{"startTime": _EVENTS_NOW_MS - 1, "endTime": _EVENTS_NOW_MS + 1}]},
+            {"id": "NO_END", "instance": [{"startTime": str(_EVENTS_NOW_MS + _DAY_MS)}]},
+            {"id": "NO_RUNS", "instance": None},
+            "not an event",
+        ]
+        assert [e["event_id"] for e in get_event_schedule(events, now=_events_now())] == ["INT"]
+
+    @pytest.mark.parametrize("events", [None, "events", {"events": []}])
+    def test_invalid_events_raises(self, events: Any):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        with pytest.raises(SwgohComlinkValueError, match="get_event_schedule"):
+            get_event_schedule(events)
+
+    def test_invalid_localization_raises(self):
+        from swgoh_comlink.helpers import get_event_schedule
+
+        localization: Any = ["not", "a", "dict"]
+        with pytest.raises(SwgohComlinkValueError, match="localization"):
+            get_event_schedule(_GAME_EVENTS, localization)
+
+
+# ── _guild (pure functions) ─────────────────────────────────────────────
+
+
+def _guild_payload(**overrides: Any) -> dict[str, Any]:
+    guild: dict[str, Any] = {
+        "profile": {
+            "id": "g1",
+            "name": "Test Guild",
+            "memberCount": 48,
+            "memberMax": 50,
+            "guildGalacticPower": "755564483",
+        },
+        "member": [
+            {
+                "playerId": "p1",
+                "playerName": "Leader",
+                "memberLevel": 4,
+                "galacticPower": "11000000",
+                "guildJoinTime": "1655938556",
+                "lastActivityTime": "1790164800000",
+            },
+            {"playerId": "p2", "playerName": "Officer", "memberLevel": "GUILD_OFFICER", "guildJoinTime": 1579804504},
+            {"playerId": "p3", "playerName": "New", "memberLevel": 2, "guildJoinTime": "0", "lastActivityTime": "0"},
+        ],
+        "recentTerritoryBattleResult": [
+            {"definitionId": "t05D", "totalStars": 40},
+            {"definitionId": "t05D", "totalStars": "47"},
+        ],
+        "recentTerritoryWarResult": [
+            {
+                "territoryWarId": "TW1",
+                "score": "27361",
+                "opponentScore": "11916",
+                "opponentGuildProfile": {"name": "A"},
+            },
+            {"territoryWarId": "TW2", "score": "12842", "opponentScore": "26567"},
+            {"territoryWarId": "TW3", "score": 100, "opponentScore": 100},
+        ],
+        "recentRaidResult": [
+            {
+                "raidId": "order66",
+                "guildRewardScore": "33500000",
+                "raidMember": [
+                    {"playerId": "p1", "memberProgress": "13500000"},
+                    {"playerId": "p2", "memberProgress": "20000000"},
+                ],
+            }
+        ],
+    }
+    guild.update(overrides)
+    return guild
+
+
+class TestGetGuildActivity:
+    def test_profile_totals(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload())
+        assert (activity["guild_id"], activity["name"]) == ("g1", "Test Guild")
+        assert (activity["member_count"], activity["member_max"]) == (48, 50)
+        assert activity["galactic_power"] == 755564483
+
+    def test_wrapped_response_is_accepted(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        assert get_guild_activity({"guild": _guild_payload()}) == get_guild_activity(_guild_payload())
+
+    def test_best_territory_battle_is_the_most_stars(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        assert get_guild_activity(_guild_payload())["best_territory_battle"] == {
+            "definition_id": "t05D",
+            "total_stars": 47,
+        }
+
+    def test_territory_war_record(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload())
+        assert [(w["territory_war_id"], w["result"]) for w in activity["territory_wars"]] == [
+            ("TW1", "win"),
+            ("TW2", "loss"),
+            ("TW3", "tie"),
+        ]
+        assert activity["territory_wars"][0]["score"] == 27361
+        assert activity["territory_wars"][0]["opponent_name"] == "A"
+        assert activity["territory_wars"][1]["opponent_name"] is None
+        assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (1, 1)
+
+    def test_last_raid_and_member_scores(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload())
+        raid = activity["last_raid"]
+        assert raid is not None
+        assert raid["raid_id"] == "order66"
+        assert raid["guild_score"] == 33_500_000 == sum(raid["member_scores"].values())
+        assert [m["raid_score"] for m in activity["members"]] == [13_500_000, 20_000_000, None]
+
+    def test_members(self):
+        from datetime import datetime, timezone
+
+        from swgoh_comlink.helpers import get_guild_activity
+
+        leader, officer, new = get_guild_activity(_guild_payload())["members"]
+        assert (leader["player_id"], leader["name"], leader["galactic_power"]) == ("p1", "Leader", 11_000_000)
+        # guildJoinTime is in seconds, lastActivityTime in milliseconds
+        assert leader["joined"] == datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)
+        assert leader["last_activity"] == datetime(2026, 9, 23, 12, tzinfo=timezone.utc)
+        assert officer["joined"] == datetime(2020, 1, 23, 18, 35, 4, tzinfo=timezone.utc)
+        assert officer["last_activity"] is None
+        assert new["joined"] is None and new["last_activity"] is None
+
+    @pytest.mark.parametrize(
+        ("member_level", "expected"),
+        [
+            (1, (1, "Pending")),
+            (2, (2, "Member")),
+            (3, (3, "Officer")),
+            (4, (4, "Leader")),
+            ("4", (4, "Leader")),
+            ("GUILD_PENDING", (1, "Pending")),
+            ("GUILD_MEMBER", (2, "Member")),
+            ("GUILD_OFFICER", (3, "Officer")),
+            ("GUILD_LEADER", (4, "Leader")),
+            (0, (None, None)),
+            (None, (None, None)),
+            ([4], (None, None)),
+        ],
+    )
+    def test_member_roles(self, member_level: Any, expected: tuple[Any, Any]):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        (member,) = get_guild_activity({"member": [{"playerId": "p", "memberLevel": member_level}]})["members"]
+        assert (member["member_level"], member["role"]) == expected
+
+    def test_without_recent_activity(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(
+            _guild_payload(recentTerritoryBattleResult=[], recentTerritoryWarResult=None, recentRaidResult=[])
+        )
+        assert activity["best_territory_battle"] is None
+        assert activity["territory_wars"] == []
+        assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (0, 0)
+        assert activity["last_raid"] is None
+        assert all(m["raid_score"] is None for m in activity["members"])
+
+    def test_member_count_falls_back_to_roster(self):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        activity = get_guild_activity(_guild_payload(profile={"id": "g1"}))
+        assert activity["member_count"] == 3
+        assert (activity["name"], activity["member_max"], activity["galactic_power"]) == ("", 0, 0)
+
+    @pytest.mark.parametrize("guild", [None, [], "guild"])
+    def test_invalid_guild_raises(self, guild: Any):
+        from swgoh_comlink.helpers import get_guild_activity
+
+        with pytest.raises(SwgohComlinkValueError, match="get_guild_activity"):
+            get_guild_activity(guild)
+
+
+# ── _game_config ────────────────────────────────────────────────────────
+
+# Shaped like get_game_metadata(): every config value is a string, and a key can be listed twice
+_METADATA: dict[str, Any] = {
+    "config": [
+        {"key": "max-conquest-currency", "value": "3500"},
+        {"key": "stat-mod-max-storage", "value": "500"},
+        {"key": "stat-mod-max-level", "value": "15"},
+        {"key": "squad-preset-tab-total-max-squads-saved", "value": "200"},
+        {"key": "stat-mod-highlight-stat", "value": "SPEED"},
+        {"key": "conquest-energy-refresh-daily-cap", "value": "CONQUEST_ENERGY_REFRESH_DAILY_CAP"},
+        {"key": "stat-mod-max-level", "value": "16"},
+        {"key": "no-value"},
+    ],
+    "latestGamedataVersion": "0.40.6:abc",
+    "latestLocalizationBundleVersion": "xyz",
+}
+
+
+class TestGetGameConfig:
+    def test_all_keys(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        config = get_game_config(_METADATA)
+        assert config["max-conquest-currency"] == "3500"
+        assert config["stat-mod-highlight-stat"] == "SPEED"
+        assert "no-value" not in config
+        assert len(config) == 6
+
+    def test_duplicate_key_keeps_first_value(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        assert get_game_config(_METADATA)["stat-mod-max-level"] == "15"
+        assert get_game_config(_METADATA, "stat-mod-max-level") == "15"
+
+    def test_single_key(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        assert get_game_config(_METADATA, "stat-mod-max-storage") == "500"
+        assert get_game_config(_METADATA, "missing-key") is None
+        assert get_game_config(_METADATA, "no-value") is None
+
+    def test_config_list_is_accepted(self):
+        from swgoh_comlink.helpers import get_game_config
+
+        assert get_game_config(_METADATA["config"], "max-conquest-currency") == "3500"
+
+    @pytest.mark.parametrize("metadata", [None, "config", {"latestGamedataVersion": "x"}, {"config": "x"}])
+    def test_invalid_metadata_raises(self, metadata: Any):
+        from swgoh_comlink.helpers import get_game_config
+
+        with pytest.raises(SwgohComlinkValueError, match="get_game_config"):
+            get_game_config(metadata)
+
+
+class TestGetGameConfigInt:
+    def test_numeric_values(self):
+        from swgoh_comlink.helpers import get_game_config_int
+
+        assert get_game_config_int(_METADATA, "max-conquest-currency") == 3500
+        assert get_game_config_int(_METADATA, "squad-preset-tab-total-max-squads-saved") == 200
+
+    @pytest.mark.parametrize("key", ["missing-key", "stat-mod-highlight-stat", "conquest-energy-refresh-daily-cap"])
+    def test_missing_or_text_value_returns_default(self, key: str):
+        from swgoh_comlink.helpers import get_game_config_int
+
+        assert get_game_config_int(_METADATA, key) is None
+        assert get_game_config_int(_METADATA, key, 0) == 0
+
+    def test_invalid_metadata_raises(self):
+        from swgoh_comlink.helpers import get_game_config_int
+
+        with pytest.raises(SwgohComlinkValueError, match="get_game_config_int"):
+            get_game_config_int({}, "max-conquest-currency")
+
+
+# ── _abilities ─────────────────────────────────────────────────────────
+
+
+def _skill(skill_id: str, ability_id: str, zeta: int | None = None, omicron: int | None = None, mode: Any = 1):
+    """A 'skill' record with seven upgrade tiers; zeta/omicron are tier indexes."""
+    tiers = [{"isZetaTier": i == zeta, "isOmicronTier": i == omicron} for i in range(7)]
+    return {
+        "id": skill_id,
+        "abilityReference": ability_id,
+        "nameKey": "DEFENSE_UP_NAME_KEY",
+        "omicronMode": mode,
+        "tier": tiers,
+    }
+
+
+def _ability(ability_id: str, tier_desc_keys: list[str], upgrade_keys: list[str] | None = None) -> dict[str, Any]:
+    upgrades = upgrade_keys or [""] * len(tier_desc_keys)
+    stem = ability_id.upper()
+    return {
+        "id": ability_id,
+        "nameKey": f"{stem}_NAME",
+        "descKey": f"{stem}_DESC",
+        "tier": [{"descKey": d, "upgradeDescKey": u} for d, u in zip(tier_desc_keys, upgrades, strict=True)],
+    }
+
+
+_ABILITY_SKILLS = [
+    # Trench's basic: a TW omicron at the last tier, text keyed under _OBTAINABLE_TIER_<nn>_DESC.
+    _skill("basicskill_TRENCH", "basicability_trench", omicron=6, mode=8),
+    # Ackbar's special: reworked, so every key the record names carries _V2.
+    _skill("specialskill_ADMIRALACKBAR02", "specialability_admiralackbar02", zeta=6),
+    # The game data spells one prefix with a capital letter.
+    _skill("Contractskill_TRENCH", "contractability_trench"),
+    # A ship's own ability, and a crew member's ability attached to the ship.
+    _skill("basicskill_CAPITALEXECUTOR", "basicability_capitalexecutor"),
+    _skill("uniqueskill_CAPITALEXECUTOR01", "uniqueability_capitalexecutor01", omicron=6, mode=9),
+]
+_ABILITIES = [
+    _ability(
+        "basicability_trench",
+        ["BASICABILITY_TRENCH_OBTAINABLE_DESC"] * 3
+        + [f"BASICABILITY_TRENCH_OBTAINABLE_TIER_0{i}_DESC" for i in range(4, 8)],
+        ["ABILITYUPGRADE_STAT_DAMAGE05PCT_DESC"] * 6 + ["ABILITYUPGRADE_BASICABILITY_TRENCH_TIER_07_DESC"],
+    ),
+    {
+        **_ability(
+            "specialability_admiralackbar02",
+            [f"SPECIALABILITY_ADMIRALACKBAR02_TIER0{i}_DESC_V2" for i in range(1, 8)],
+        ),
+        "descKey": "SPECIALABILITY_ADMIRALACKBAR02_DESC_V2",
+    },
+    # Fewer text tiers than the skill has upgrades: the last known text carries forward.
+    _ability("contractability_trench", ["CONTRACT_TIER01_DESC"]),
+    _ability("basicability_capitalexecutor", ["X_DESC"] * 7),
+    _ability("uniqueability_capitalexecutor01", ["Y_DESC"] * 7),
+]
+_ABILITY_UNITS = [
+    {"baseId": "TRENCH", "nameKey": "UNIT_TRENCH_NAME", "rarity": 1,
+     "skillReference": [{"skillId": "basicskill_TRENCH"}, {"skillId": "Contractskill_TRENCH"}, {"skillId": "missing"}]},
+    # A second rarity row for the same unit is not listed again.
+    {"baseId": "TRENCH", "nameKey": "UNIT_TRENCH_NAME", "rarity": 7, "skillReference": [{"skillId": "basicskill_TRENCH"}]},
+    {"baseId": "ADMIRALACKBAR", "nameKey": "UNIT_ACKBAR_NAME", "skillReference": [{"skillId": "specialskill_ADMIRALACKBAR02"}]},
+    {"baseId": "CAPITALEXECUTOR", "nameKey": "UNIT_EXECUTOR_NAME",
+     "skillReference": [{"skillId": "basicskill_CAPITALEXECUTOR"}],
+     "crew": [{"unitId": "ADMIRALPIETT", "skillReference": [{"skillId": "uniqueskill_CAPITALEXECUTOR01"}]}]},
+]  # fmt: skip
+_ABILITY_LOC = {
+    "UNIT_TRENCH_NAME": "Admiral Trench",
+    "BASICABILITY_TRENCH_NAME": "Unfinished Business ",
+    "BASICABILITY_TRENCH_DESC": "base text",
+    "BASICABILITY_TRENCH_OBTAINABLE_DESC": "early text",
+    "BASICABILITY_TRENCH_OBTAINABLE_TIER_07_DESC": "[c][ffff33]final[-][/c] text",
+    "ABILITYUPGRADE_STAT_DAMAGE05PCT_DESC": "+5% Damage",
+    "ABILITYUPGRADE_BASICABILITY_TRENCH_TIER_07_DESC": "[c][e7e7e7]While in Territory Wars:[-][/c] Ability Block",
+    "SPECIALABILITY_ADMIRALACKBAR02_NAME": "Tactical Genius",
+    "SPECIALABILITY_ADMIRALACKBAR02_DESC": "pre-rework text",
+    "SPECIALABILITY_ADMIRALACKBAR02_DESC_V2": "current text",
+    "SPECIALABILITY_ADMIRALACKBAR02_TIER07_DESC": "pre-rework L8",
+    "SPECIALABILITY_ADMIRALACKBAR02_TIER07_DESC_V2": "current L8",
+    "DEFENSE_UP_NAME_KEY": "DEFENSE UP",
+}
+
+
+class TestGetUnitAbilities:
+    def _get(self, **kwargs: Any) -> list[Any]:
+        from swgoh_comlink.helpers import get_unit_abilities
+
+        return get_unit_abilities(_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES, _ABILITY_LOC, **kwargs)
+
+    def test_lists_each_unit_once_with_crew_abilities_last(self):
+        abilities = self._get()
+        assert [(a["base_id"], a["skill_id"], a["crew_base_id"]) for a in abilities] == [
+            ("TRENCH", "basicskill_TRENCH", None),
+            ("TRENCH", "Contractskill_TRENCH", None),
+            ("ADMIRALACKBAR", "specialskill_ADMIRALACKBAR02", None),
+            ("CAPITALEXECUTOR", "basicskill_CAPITALEXECUTOR", None),
+            ("CAPITALEXECUTOR", "uniqueskill_CAPITALEXECUTOR01", "ADMIRALPIETT"),
+        ]
+        assert [a["kind"] for a in abilities] == ["basic", "contract", "special", "basic", "unique"]
+
+    def test_reads_text_through_the_ability_records_keys(self):
+        trench = self._get(base_id="trench")[0]
+        assert trench["unit_name"] == "Admiral Trench"
+        # ability.nameKey, not the skill's placeholder, and trimmed
+        assert trench["name"] == "Unfinished Business"
+        assert trench["description"] == "base text"
+        assert [t["level"] for t in trench["tiers"]] == [2, 3, 4, 5, 6, 7, 8]
+        assert trench["tiers"][0]["description"] == "early text"
+        assert trench["tiers"][0]["upgrade"] == "+5% Damage"
+        assert trench["tiers"][-1]["description"] == "final text"
+        assert trench["tiers"][-1]["upgrade"] == "While in Territory Wars: Ability Block"
+
+        (ackbar,) = self._get(base_id="ADMIRALACKBAR")
+        assert ackbar["description"] == "current text"
+        assert ackbar["tiers"][-1]["description"] == "current L8"
+
+        # Keys missing from the dictionary fall back to the key itself
+        executor = self._get(base_id="CAPITALEXECUTOR")[0]
+        assert executor["unit_name"] == "UNIT_EXECUTOR_NAME"
+        assert executor["tiers"][0]["description"] == "X_DESC"
+
+    def test_zeta_and_omicron_levels(self):
+        trench, contract = self._get(base_id=["TRENCH"])
+        assert trench["max_level"] == 8
+        assert (trench["zeta_level"], trench["omicron_level"], trench["omicron_mode"]) == (None, 8, 8)
+        assert [t["is_omicron"] for t in trench["tiers"]] == [False] * 6 + [True]
+        # A skill without an omicron tier reports mode 1, the unset default; that is not surfaced.
+        assert (contract["omicron_level"], contract["omicron_mode"]) == (None, None)
+        (ackbar,) = self._get(base_id="ADMIRALACKBAR")
+        assert (ackbar["zeta_level"], ackbar["omicron_mode"]) == (8, None)
+
+    def test_missing_ability_tiers_carry_text_forward(self):
+        contract = self._get(base_id="TRENCH")[1]
+        assert {t["description"] for t in contract["tiers"]} == {"CONTRACT_TIER01_DESC"}
+        assert contract["max_level"] == 8
+
+    def test_omicron_mode_filter(self):
+        assert [a["skill_id"] for a in self._get(omicron_mode=8)] == ["basicskill_TRENCH"]
+        assert len(self._get(omicron_mode=[8, 9])) == 2
+        # Mode 1 is the default on every skill without an omicron, so it matches nothing here.
+        assert self._get(omicron_mode=1) == []
+
+    def test_without_localization_returns_keys(self):
+        from swgoh_comlink.helpers import get_unit_abilities
+
+        (ackbar,) = get_unit_abilities(_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES, base_id="ADMIRALACKBAR")
+        assert ackbar["unit_name"] == "UNIT_ACKBAR_NAME"
+        assert ackbar["name"] == "SPECIALABILITY_ADMIRALACKBAR02_NAME"
+
+    @pytest.mark.parametrize(
+        ("args", "kwargs"),
+        [
+            (({}, _ABILITY_SKILLS, _ABILITIES), {}),
+            ((_ABILITY_UNITS, None, _ABILITIES), {}),
+            ((_ABILITY_UNITS, _ABILITY_SKILLS, "ability"), {}),
+            ((_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES, ["not", "a", "dict"]), {}),
+            ((_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES), {"base_id": 5}),
+            ((_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES), {"omicron_mode": [8, None]}),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
+        from swgoh_comlink.helpers import get_unit_abilities
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_unit_abilities(*args, **kwargs)
+
+
+_EFFECT_LOC = {
+    "BattleEffect_PotencyUp": "[c][ffff33]Potency Up:[-][/c] Increased chance to apply detrimental effects",
+    # Colon after the closing tags
+    "BattleEffect_Overcharge": "[c][F0FF23]Overcharge[-][/c]: Protection Temporarily Increased",
+    # Whitespace before the closing tags
+    "BattleEffect_Provoked": "[c][ffff33]Provoked: [-][/c]old wording",
+    "BattleEffect_Provoked_V2": "[c][ffff33]Provoked: [-][/c]+100% counter chance\\nnext line",
+    # 'Vulnerable' starts with V; only a trailing _V<n> is a version
+    "BattleEffect_Vulnerable": "[c][ffff33]Vulnerable:[-][/c] old",
+    "BattleEffect_Vulnerable_V2": "[c][ffff33]Vulnerable:[-][/c] current",
+    "Battleeffect_ConcussionMine": "[c][ffff33]Concussion Mine:[-][/c] Deals damage",
+    "FEAR_DEBUFF_DESC": "[c][ffff33]Fear:[-][/c] Miss the next turn",
+    "DEMORALIZED_DEBUFF_TIER1": "[c][ffff33]Demoralized:[-][/c] tier 1",
+    "DEMORALIZED_DEBUFF_TIER0": "[c][ffff33]Demoralized:[-][/c] tier 0",
+    "MOFFGIDEON_INSIGHT_V2": "[c][ffff33]Insight:[-][/c] additional effects",
+    "50RT_VIP_ALLY": "[c][ffff33]VIP:[-][/c] gain bonuses",
+    # Generic key, but BattleEffect_ wins for the same name
+    "OVERCHARGE_BUFF_DESC": "[c][ffff33]Overcharge:[-][/c] generic wording",
+    # Not named effects
+    "BattleEffect_AccuracyUp_Stat": "[c][ffff33]+15% Accuracy:[-][/c] stat line",
+    "BattleEffect_Mission": "Inflict 10 stacks of Distract to obtain victory!",
+    "SPECIALABILITY_X_DESC": "[c][ffff33]Expose:[-][/c] ability text is not an effect key",
+}
+
+
+class TestGetNamedEffects:
+    def test_reads_every_key_family(self):
+        from swgoh_comlink.helpers import get_named_effects
+
+        effects = get_named_effects(_EFFECT_LOC)
+        assert list(effects) == sorted(
+            ["Concussion Mine", "Demoralized", "Fear", "Insight", "Overcharge", "Potency Up", "Provoked", "VIP",
+             "Vulnerable"]
+        )  # fmt: skip
+        assert effects["Potency Up"] == {
+            "name": "Potency Up",
+            "description": "Increased chance to apply detrimental effects",
+            "key": "BattleEffect_PotencyUp",
+        }
+
+    def test_picks_the_authoritative_definition(self):
+        from swgoh_comlink.helpers import get_named_effects
+
+        effects = get_named_effects(_EFFECT_LOC)
+        assert effects["Overcharge"]["key"] == "BattleEffect_Overcharge"
+        assert effects["Overcharge"]["description"] == "Protection Temporarily Increased"
+        assert effects["Provoked"]["description"] == "+100% counter chance\nnext line"
+        assert effects["Vulnerable"]["description"] == "current"
+        assert effects["Demoralized"]["key"] == "DEMORALIZED_DEBUFF_TIER0"
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_named_effects
+
+        not_a_dict: Any = []
+        with pytest.raises(SwgohComlinkValueError):
+            get_named_effects(not_a_dict)
+
+
+# ── _wire ──────────────────────────────────────────────────────────────
+
+# An excerpt of get_enums()["CurrencyType"], plus one enum without a <Type>_DEFAULT member.
+_CURRENCY = {
+    "CurrencyType_DEFAULT": 0,
+    "GRIND": 1,
+    "PVP_CURRENCY": 10,
+    "SHARD_CURRENCY": 16,
+    "GUILD_RAID_CURRENCY_01": 20,
+}
+_DIFFICULTY = {"NOT_SET": 0, "NORMAL_DIFF": 4, "HARD_DIFF": 5}
+
+
+class TestAsInt:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (42, 42),
+            ("1655938556", 1655938556),
+            ("-3", -3),
+            (" 7 ", 7),
+            (1.9, 1),
+            ("9223372036854775807", 9223372036854775807),
+            (0, 0),
+            ("0", 0),
+        ],
+    )
+    def test_reads_numbers(self, value: Any, expected: int):
+        from swgoh_comlink.helpers import as_int
+
+        assert as_int(value) == expected
+
+    @pytest.mark.parametrize("value", [None, "", "abc", "1.5", True, False, [], {}, float("inf"), float("nan")])
+    def test_unreadable_returns_default(self, value: Any):
+        from swgoh_comlink.helpers import as_int
+
+        assert as_int(value) == 0
+        assert as_int(value, default=-1) == -1
+
+
+class TestAsStr:
+    @pytest.mark.parametrize(("value", "expected"), [("Rebels", "Rebels"), ("", ""), (42, ""), (None, ""), ([], "")])
+    def test_only_strings_pass(self, value: Any, expected: str):
+        from swgoh_comlink.helpers import as_str
+
+        assert as_str(value) == expected
+
+    def test_custom_default(self):
+        from swgoh_comlink.helpers import as_str
+
+        assert as_str(None, default="?") == "?"
+
+
+class TestAsId:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [("O1700000000000:1", "O1700000000000:1"), (2, "2"), (0, "0"), ("", ""), (None, ""), (True, ""), (1.5, "")],
+    )
+    def test_reads_string_or_int(self, value: Any, expected: str):
+        from swgoh_comlink.helpers import as_id
+
+        assert as_id(value) == expected
+
+    def test_custom_default(self):
+        from swgoh_comlink.helpers import as_id
+
+        assert as_id(None, default="none") == "none"
+
+
+class TestAsScalar:
+    @pytest.mark.parametrize(
+        ("value", "expected"), [(3, 3), (0, 0), ("CHARACTER", "CHARACTER"), (True, None), (None, None), (1.5, None)]
+    )
+    def test_keeps_int_or_str(self, value: Any, expected: int | str | None):
+        from swgoh_comlink.helpers import as_scalar
+
+        assert as_scalar(value) == expected
+
+
+class TestAsEpoch:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            # guildJoinTime / Conquest lastRefreshTime: seconds
+            (1655938556, datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)),
+            ("1655938556", datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)),
+            # lastActivityTime: milliseconds, kept to the millisecond
+            ("1770515437123", datetime(2026, 2, 8, 1, 50, 37, 123000, tzinfo=timezone.utc)),
+            (1700000000000, datetime(2023, 11, 14, 22, 13, 20, tzinfo=timezone.utc)),
+            # Either side of the 1e11 boundary
+            (99_999_999_999, datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=99_999_999_999)),
+            (100_000_000_000, datetime(1973, 3, 3, 9, 46, 40, tzinfo=timezone.utc)),
+        ],
+    )
+    def test_seconds_and_milliseconds(self, value: Any, expected: datetime):
+        from swgoh_comlink.helpers import as_epoch
+
+        assert as_epoch(value) == expected
+
+    @pytest.mark.parametrize("value", [None, 0, "0", "", "-5", -1, "abc", True, "99999999999999999999"])
+    def test_no_time_returns_none(self, value: Any):
+        from swgoh_comlink.helpers import as_epoch
+
+        assert as_epoch(value) is None
+
+    def test_result_is_aware_utc(self):
+        from swgoh_comlink.helpers import as_epoch
+
+        moment = as_epoch("1770515437000")
+        assert moment is not None
+        assert moment.tzinfo == timezone.utc
+
+    def test_example_player_times(self):
+        import json
+
+        from swgoh_comlink.helpers import as_epoch
+
+        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+        assert as_epoch(player["lastActivityTime"]) == datetime(2026, 2, 8, 1, 50, 37, tzinfo=timezone.utc)
+        assert all(as_epoch(season["joinTime"]) for season in player["seasonStatus"])
+
+
+class TestAsList:
+    def test_list_is_returned_as_is(self):
+        from swgoh_comlink.helpers import as_list
+
+        rows = [{"id": "a"}, {"id": "b"}]
+        assert as_list(rows) is rows
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ({"id": "a"}, [{"id": "a"}]),
+            (None, []),
+            ((1, 2), [1, 2]),
+            ("abc", ["abc"]),
+            (0, [0]),
+            ([], []),
+        ],
+    )
+    def test_wraps_other_values(self, value: Any, expected: list[Any]):
+        from swgoh_comlink.helpers import as_list
+
+        assert as_list(value) == expected
+
+
+class TestBaseId:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("GENERALSKYWALKER:SEVEN_STAR", "GENERALSKYWALKER"),
+            ("BOUSHH", "BOUSHH"),
+            ("A:B:C", "A"),
+            ("", ""),
+            (None, ""),
+            (42, ""),
+        ],
+    )
+    def test_strips_rarity(self, value: Any, expected: str):
+        from swgoh_comlink.helpers import base_id
+
+        assert base_id(value) == expected
+
+    def test_example_player_roster(self):
+        import json
+
+        from swgoh_comlink.helpers import base_id
+
+        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+        ids = {base_id(unit["definitionId"]) for unit in player["rosterUnit"]}
+        assert "MAGMATROOPER" in ids
+        assert not any(":" in unit_id for unit_id in ids)
+
+
+class TestParseEnum:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (16, "SHARD_CURRENCY"),
+            ("16", "SHARD_CURRENCY"),
+            (" 16 ", "SHARD_CURRENCY"),
+            (0, "CurrencyType_DEFAULT"),
+            ("SHARD_CURRENCY", "SHARD_CURRENCY"),
+            ("shard_currency", "SHARD_CURRENCY"),
+            ("SHARDCURRENCY", "SHARD_CURRENCY"),
+            ("CURRENCYTYPE_SHARDCURRENCY", "SHARD_CURRENCY"),
+            ("CURRENCYTYPE_GUILDRAIDCURRENCY01", "GUILD_RAID_CURRENCY_01"),
+            ("CURRENCYTYPE_CURRENCYTYPEDEFAULT", "CurrencyType_DEFAULT"),
+            ("CurrencyType_DEFAULT", "CurrencyType_DEFAULT"),
+        ],
+    )
+    def test_every_spelling(self, value: Any, expected: str):
+        from swgoh_comlink.helpers import parse_enum
+
+        assert parse_enum(value, _CURRENCY) == expected
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            99,
+            "99",
+            "UNKNOWN",
+            "",
+            None,
+            True,
+            False,
+            16.0,
+            [],
+            # An unknown member from a newer game version is not read as "GRIND"
+            "NEW_GRIND",
+            # Wrong type name in a decoder-style spelling
+            "ITEMTYPE_SHARDCURRENCY",
+            # Decoder-style names have no underscore in the member half
+            "CURRENCYTYPE_SHARD_CURRENCY_X",
+            # Not plain ASCII whole numbers
+            "--16",
+            "¹⁶",
+            # Past the interpreter's limit on digits in an int string
+            "1" * 5000,
+        ],
+    )
+    def test_unknown_returns_none(self, value: Any):
+        from swgoh_comlink.helpers import parse_enum
+
+        assert parse_enum(value, _CURRENCY) is None
+
+    def test_decoder_name_without_known_type(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        # No <Type>_DEFAULT member, so any type half is accepted unless enum_name is given.
+        assert parse_enum("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY) == "NORMAL_DIFF"
+        assert parse_enum("OTHER_NORMALDIFF", _DIFFICULTY) == "NORMAL_DIFF"
+        assert (
+            parse_enum("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY, enum_name="CampaignNodeDifficulty")
+            == "NORMAL_DIFF"
+        )
+        assert parse_enum("OTHER_NORMALDIFF", _DIFFICULTY, enum_name="CampaignNodeDifficulty") is None
+
+    def test_ambiguous_spelling_returns_none(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        members = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
+        assert parse_enum("METADATAREQUESTTYPE_DEFAULT", members) is None
+        assert parse_enum("DEFAULT", members) == "DEFAULT"
+        assert parse_enum("METADATAREQUESTTYPE_CLIENTPARAMS", members) == "CLIENT_PARAMS"
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("server_error", "SERVER_ERROR"),
+            ("Server_Error", "SERVER_ERROR"),
+            ("SERVER_ERROR", "SERVER_ERROR"),
+            ("error", "ERROR"),
+            ("feature_suspended", "FEATURE_SUSPENDED"),
+            # Upper-case with one underscore is still read as a decoder-style name
+            ("RESPONSECODE_SUSPENDED", "SUSPENDED"),
+        ],
+    )
+    def test_case_variant_without_known_type(self, value: str, expected: str):
+        from swgoh_comlink.helpers import parse_enum
+
+        # No <Type>_DEFAULT member, and one member is another's last word: a lower-case member
+        # name must not also be read as a decoder-style name for that last word.
+        members = {"OK": 0, "SERVER_ERROR": 1, "ERROR": 2, "FEATURE_SUSPENDED": 3, "SUSPENDED": 4}
+        assert parse_enum(value, members) == expected
+
+    def test_lower_case_type_default_member(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        members = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
+        assert parse_enum("metadatarequesttype_default", members) == "MetadataRequestType_DEFAULT"
+
+    def test_alias_value_returns_first_name(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        assert parse_enum(1, {"OLD_NAME": 1, "NEW_NAME": 1}) == "OLD_NAME"
+
+    def test_negative_numbers(self):
+        from swgoh_comlink.helpers import parse_enum
+
+        assert parse_enum("-1", {"ALL": -1, "NONE": 0}) == "ALL"
+
+    @pytest.mark.parametrize("members", [None, [], "CurrencyType"])
+    def test_invalid_members_raises(self, members: Any):
+        from swgoh_comlink.helpers import parse_enum
+
+        with pytest.raises(SwgohComlinkValueError, match=r"parse_enum\(\)"):
+            parse_enum(16, members)
+
+
+def test_wire_docstring_examples():
+    import doctest
+
+    from swgoh_comlink.helpers import _wire
+
+    results = doctest.testmod(_wire)
+    assert results.failed == 0
+    assert results.attempted >= 20
+
+
+# ── _items ──────────────────────────────────────────────────────────────
+
+_ITEM_LOC = {
+    "ARTIFACT_GURAD_AND_PENTRATE_3_COST_RARE_NAME": "Guard and Penetrate",
+    "PLAYERTITLE_GRANDARENA_INTRO_NAME": "[c][FFFF00]Fight Me[-][/c]",
+    "STATMODSETBONUS_SPEED_NAME": "Speed",
+    "STATMODSETBONUS_DEFENSE_NAME": "Defense",
+    "UNIT_GLLEIA_NAME": "Leia Organa",
+    "UNIT_VADER_NAME": "Darth Vader",
+    "UNIT_ANAKINKNIGHT_NAME": "Jedi Knight Anakin",
+    "MATERIAL_ABILITYMATULTIMATE_NAME": "Ability Material Ultimate",
+    "EQUIPMENT_016_NAME": "Mk 2 TaggeCo Holo Lens",
+    "MYSTERYBOX_ERA_T1_TITLE": "Era Battle Prize Box",
+    "PLAYERPORTRAIT_MISSION_NAME": "Mission Vao",
+    "LIGHTSPEEDTOKEN_TIER05_NAME": "KYBER LIGHTSPEED TOKEN",
+}
+_ITEM_GAME_DATA: dict[str, Any] = {
+    "material": [
+        # An id shared with an equipment piece: ids are only unique within an ItemType.
+        {"id": "016", "nameKey": "MATERIAL_ABILITYMATULTIMATE_NAME"},
+        {"id": "unitshard_GLLEIA", "nameKey": "UNIT_GLLEIA_NAME"},
+        # Event shard variant: no unit has this baseId, but the material names the unit.
+        {"id": "unitshard_VADER_JKL_EVENT", "nameKey": "UNIT_VADER_NAME"},
+        # A shard whose own key is not localized falls back to the unit.
+        {"id": "unitshard_ANAKINKNIGHT", "nameKey": "UNIT_ANAKINKNIGHT_SHARD_MISSING"},
+    ],
+    "equipment": [{"id": "016", "nameKey": "EQUIPMENT_016_NAME"}],
+    "mysteryBox": [{"id": "mysterybox_era_T1", "titleKey": "MYSTERYBOX_ERA_T1_TITLE", "descKey": "X"}],
+    "playerTitle": [{"id": "PLAYERTITLE_GRANDARENA_INTRO", "nameKey": "PLAYERTITLE_GRANDARENA_INTRO_NAME"}],
+    "playerPortrait": [{"id": "PLAYERPORTRAIT_MISSION", "nameKey": "PLAYERPORTRAIT_MISSION_NAME"}],
+    "artifactDefinition": [
+        {"id": "artifact_guard_and_pentrate_3_cost_rare", "nameKey": "ARTIFACT_GURAD_AND_PENTRATE_3_COST_RARE_NAME"}
+    ],
+    "lightspeedToken": [{"id": "LST_TIER05", "nameKey": "LIGHTSPEEDTOKEN_TIER05_NAME"}],
+    "units": [
+        {"baseId": "ANAKINKNIGHT", "nameKey": "UNIT_ANAKINKNIGHT_NAME", "rarity": 1},
+        {"baseId": "ANAKINKNIGHT", "nameKey": "UNIT_ANAKINKNIGHT_NAME", "rarity": 2},
+    ],
+    "statModSet": [
+        {"id": "4", "name": "STATMODSETBONUS_SPEED_NAME", "setCount": 4},
+        {"id": "3", "name": "STATMODSETBONUS_DEFENSE_NAME", "setCount": 2},
+    ],
+    "mysteryStatMod": [
+        {"id": "35155", "slot": [2], "setId": "3", "minRarity": 5, "maxRarity": 5, "minTier": 5, "maxTier": 5},
+        {"id": "11112", "slot": [2, 3, 4, 5, 6, 7], "setId": "4", "minRarity": 1, "maxRarity": 2, "minTier": 1,
+         "maxTier": 2},
+        {"id": "two", "slot": [2, 3], "setId": "4", "minRarity": 5, "maxRarity": 5, "minTier": 1, "maxTier": 1},
+        # Game data fetched with enums=True carries enum names in place of the numbers.
+        {"id": "enum", "slot": ["STATMOD_SLOT_02"], "setId": "4", "minRarity": "SIX_STAR", "maxRarity": "SIX_STAR",
+         "minTier": "STATMOD_TIER_05", "maxTier": "STATMOD_TIER_05"},
+    ],
+}  # fmt: skip
+
+
+class TestItemTypeConstants:
+    def test_tables(self):
+        from swgoh_comlink.helpers import CURRENCY_NAMES, CURRENCY_TYPES, ITEM_TYPES
+
+        assert ITEM_TYPES[7] == "MATERIAL"
+        assert ITEM_TYPES[16] == "MYSTERY_STAT_MOD"
+        assert CURRENCY_TYPES[1] == "GRIND"
+        assert CURRENCY_NAMES[CURRENCY_TYPES[41]] == "Micro Attenuators"
+        # Every currency member has a display name.
+        assert set(CURRENCY_NAMES) == set(CURRENCY_TYPES.values())
+
+
+class TestGetDataDiscNames:
+    def test_joins_through_the_records_own_name_key(self):
+        from swgoh_comlink.helpers import get_data_disc_names
+
+        discs = get_data_disc_names(_ITEM_GAME_DATA["artifactDefinition"], _ITEM_LOC)
+        assert discs == {"artifact_guard_and_pentrate_3_cost_rare": "Guard and Penetrate"}
+
+    def test_without_localization_returns_name_keys(self):
+        from swgoh_comlink.helpers import get_data_disc_names
+
+        discs = get_data_disc_names(_ITEM_GAME_DATA["artifactDefinition"])
+        assert discs["artifact_guard_and_pentrate_3_cost_rare"] == "ARTIFACT_GURAD_AND_PENTRATE_3_COST_RARE_NAME"
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_data_disc_names
+
+        not_a_list: Any = {}
+        with pytest.raises(SwgohComlinkValueError, match="get_data_disc_names"):
+            get_data_disc_names(not_a_list)
+        not_a_dict: Any = []
+        with pytest.raises(SwgohComlinkValueError):
+            get_data_disc_names([], not_a_dict)
+
+
+class TestGetPlayerTitleNames:
+    def test_names_are_localized_and_markup_free(self):
+        from swgoh_comlink.helpers import get_player_title_names
+
+        titles = [*_ITEM_GAME_DATA["playerTitle"], {"id": "PLAYERTITLE_NEW", "nameKey": "PLAYERTITLE_NEW_NAME"}, {}]
+        result = get_player_title_names(titles, _ITEM_LOC)
+        assert result == {"PLAYERTITLE_GRANDARENA_INTRO": "Fight Me", "PLAYERTITLE_NEW": "PLAYERTITLE_NEW_NAME"}
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_player_title_names
+
+        not_a_list: Any = "titles"
+        with pytest.raises(SwgohComlinkValueError, match="get_player_title_names"):
+            get_player_title_names(not_a_list)
+
+
+class TestGetModCatalog:
+    _STAT_MODS: list[dict[str, Any]] = [
+        {"id": "451", "setId": "4", "slot": 2, "rarity": 5},
+        {"id": "137", "setId": "3", "slot": "STATMOD_SLOT_06", "rarity": "SEVEN_STAR"},
+        {"id": "999", "setId": "9", "slot": 4, "rarity": 1},
+    ]
+
+    def test_sets_and_definitions(self):
+        from swgoh_comlink.helpers import get_mod_catalog
+
+        catalog = get_mod_catalog(self._STAT_MODS, _ITEM_GAME_DATA["statModSet"], _ITEM_LOC)
+        assert catalog["sets"]["4"] == {"set_id": "4", "name": "Speed", "set_count": 4}
+        assert catalog["sets"]["3"]["set_count"] == 2
+        assert catalog["definitions"]["451"] == {
+            "definition_id": "451",
+            "set_id": "4",
+            "set_name": "Speed",
+            "slot": 2,
+            "slot_name": "Square",
+            "rarity": 5,
+        }
+        # Enum names (enums=True) are read as their numbers.
+        assert catalog["definitions"]["137"]["slot"] == 7
+        assert catalog["definitions"]["137"]["rarity"] == 7
+        # A set statModSet does not list keeps its id as its name.
+        assert catalog["definitions"]["999"]["set_name"] == "9"
+
+    def test_without_localization_uses_mod_set_ids(self):
+        from swgoh_comlink.helpers import MOD_SET_IDS, get_mod_catalog
+
+        catalog = get_mod_catalog(self._STAT_MODS, _ITEM_GAME_DATA["statModSet"])
+        assert catalog["sets"]["3"]["name"] == MOD_SET_IDS["3"]
+        assert catalog["definitions"]["451"]["set_name"] == MOD_SET_IDS["4"]
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_mod_catalog
+
+        not_a_list: Any = None
+        with pytest.raises(SwgohComlinkValueError, match="get_mod_catalog"):
+            get_mod_catalog(not_a_list, [])
+        with pytest.raises(SwgohComlinkValueError, match="stat_mod_sets"):
+            get_mod_catalog([], not_a_list)
+
+
+class TestItemNames:
+    @pytest.mark.parametrize(
+        ("item_type", "item_id", "expected"),
+        [
+            (7, "016", "Ability Material Ultimate"),
+            (11, "016", "Mk 2 TaggeCo Holo Lens"),
+            ("EQUIPMENT", "016", "Mk 2 TaggeCo Holo Lens"),
+            ("7", "unitshard_GLLEIA", "Leia Organa"),
+            ("MATERIAL", "unitshard_VADER_JKL_EVENT", "Darth Vader"),
+            (7, "unitshard_ANAKINKNIGHT", "Jedi Knight Anakin"),
+            (2, "ANAKINKNIGHT:ONE_STAR", "Jedi Knight Anakin"),
+            ("UNIT", "ANAKINKNIGHT", "Jedi Knight Anakin"),
+            (3, "GRIND", "Credits"),
+            ("CURRENCY", 41, "Micro Attenuators"),
+            (3, "41", "Micro Attenuators"),
+            (14, "mysterybox_era_T1", "Era Battle Prize Box"),
+            (17, "PLAYERTITLE_GRANDARENA_INTRO", "Fight Me"),
+            (19, "PLAYERPORTRAIT_MISSION", "Mission Vao"),
+            (23, "artifact_guard_and_pentrate_3_cost_rare", "Guard and Penetrate"),
+            (34, "LST_TIER05", "KYBER LIGHTSPEED TOKEN"),
+            (16, "35155", "5-dot Defense Square mod (A)"),
+            ("MYSTERY_STAT_MOD", "11112", "1-2-dot Speed any-slot mod (E-D)"),
+            (16, "two", "5-dot Speed Square or Arrow mod (E)"),
+            (16, "enum", "6-dot Speed Arrow mod (A)"),
+        ],
+    )
+    def test_names_each_item_type(self, item_type: Any, item_id: Any, expected: str):
+        from swgoh_comlink.helpers import ItemNames
+
+        assert ItemNames(_ITEM_GAME_DATA, _ITEM_LOC).get(item_type, item_id) == expected
+
+    @pytest.mark.parametrize(
+        ("item_type", "item_id"),
+        [
+            (6, ""),  # XP names no particular item
+            (7, "missing"),
+            (7, "unitshard_NOBODY"),
+            (3, "NOT_A_CURRENCY"),
+            (3, "99"),
+            (16, "missing"),
+            ("NOT_AN_ITEM_TYPE", "016"),
+            (None, "016"),
+        ],
+    )
+    def test_unresolved_returns_default(self, item_type: Any, item_id: str):
+        from swgoh_comlink.helpers import ItemNames
+
+        names = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC)
+        assert names.get(item_type, item_id) is None
+        assert names.get(item_type, item_id, "fallback") == "fallback"
+
+    def test_missing_collections_resolve_to_nothing(self):
+        from swgoh_comlink.helpers import ItemNames
+
+        names = ItemNames({}, _ITEM_LOC)
+        assert names.get(7, "016") is None
+        assert names.get(3, "GRIND") == "Credits"
+
+    def test_without_localization_returns_keys(self):
+        from swgoh_comlink.helpers import ItemNames
+
+        names = ItemNames(_ITEM_GAME_DATA)
+        assert names.get(17, "PLAYERTITLE_GRANDARENA_INTRO") == "PLAYERTITLE_GRANDARENA_INTRO_NAME"
+        # Mystery mods fall back to the English set names.
+        assert names.get(16, "35155") == "5-dot Defense Square mod (A)"
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import ItemNames
+
+        not_a_dict: Any = []
+        with pytest.raises(SwgohComlinkValueError, match="game_data"):
+            ItemNames(not_a_dict)
+        with pytest.raises(SwgohComlinkValueError, match="material"):
+            ItemNames({"material": {}})
+        with pytest.raises(SwgohComlinkValueError, match="localization"):
+            ItemNames({}, not_a_dict)
+
+
+def _recorded_enums() -> dict[str, Any]:
+    """The ItemType and CurrencyType groups of a real get_enums() response (game data 0.40.6)."""
+    import json
+
+    return json.loads((Path(__file__).parent.parent / "resources" / "enums-item-currency.json").read_text())
+
+
+class TestItemNamesLiveEnums:
+    def test_snapshots_match_recorded_get_enums(self):
+        from swgoh_comlink.helpers import CURRENCY_TYPES, ITEM_TYPES
+
+        enums = _recorded_enums()
+        for snapshot, group in ((ITEM_TYPES, "ItemType"), (CURRENCY_TYPES, "CurrencyType")):
+            live = {number: name for name, number in enums[group].items() if name != f"{group}_DEFAULT"}
+            assert snapshot == live, f"{group} snapshot is out of date with get_enums()"
+
+    def test_live_enums_name_a_new_currency(self):
+        from swgoh_comlink.helpers import ItemNames
+
+        enums = _recorded_enums()
+        enums["CurrencyType"]["GUILD_RAID_CURRENCY_13"] = 99
+        live = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC, enums=enums)
+        snapshot = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC)
+
+        assert live.get(3, "99") == "Guild Raid Currency 13"
+        assert live.get("CURRENCY", "GUILD_RAID_CURRENCY_13") == "Guild Raid Currency 13"
+        # Curated names still win, and names that are not CurrencyType members stay unresolved.
+        assert live.get(3, "GRIND") == "Credits"
+        assert live.get(3, "NOT_A_CURRENCY") is None
+        # Without the live table the new currency is unknown.
+        assert snapshot.get(3, "99") is None
+        assert snapshot.get(3, "GUILD_RAID_CURRENCY_13") is None
+
+    def test_live_enums_recognise_a_new_item_type(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        live = ItemNames(_ITEM_GAME_DATA, enums={"ItemType": {"FUTURE_ITEM": 40}})
+        snapshot = ItemNames(_ITEM_GAME_DATA)
+        rewards = [{"type": 40, "id": "", "maxQuantity": 1}, {"type": "FUTURE_ITEM", "id": "", "maxQuantity": 1}]
+
+        assert live.item_type_number("FUTURE_ITEM") == 40
+        assert live.item_type_name(40) == "FUTURE_ITEM"
+        assert [(r["item_type"], r["name"]) for r in get_named_rewards(rewards, live)] == [
+            (40, "FUTURE_ITEM"),
+            (40, "FUTURE_ITEM"),
+        ]
+        assert snapshot.item_type_number("FUTURE_ITEM") is None
+        assert [(r["item_type"], r["name"]) for r in get_named_rewards(rewards, snapshot)] == [
+            (40, "40"),
+            ("FUTURE_ITEM", "FUTURE_ITEM"),
+        ]
+
+    def test_default_members_are_not_names(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        names = ItemNames(_ITEM_GAME_DATA, enums=_recorded_enums())
+
+        assert names.item_type_name(0) is None
+        assert names.item_type_number("ItemType_DEFAULT") is None
+        assert names.get(3, "0") is None
+        (reward,) = get_named_rewards([{"type": 0, "id": "", "maxQuantity": 1}], names)
+        assert (reward["item_type"], reward["name"]) == (0, "0")
+
+    @pytest.mark.parametrize("enums", [["ItemType"], {"ItemType": ["MATERIAL"]}, {"CurrencyType": "GRIND"}])
+    def test_invalid_enums_raise(self, enums: Any):
+        from swgoh_comlink.helpers import ItemNames
+
+        with pytest.raises(SwgohComlinkValueError, match="enums"):
+            ItemNames(_ITEM_GAME_DATA, enums=enums)
+
+
+class TestGetNamedRewards:
+    def test_flat_and_conditional_items(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        rewards: list[Any] = [
+            {"id": "GRIND", "type": 3, "minQuantity": 20000, "maxQuantity": 20000},
+            {"id": "unitshard_GLLEIA", "type": "MATERIAL", "minQuantity": 5, "maxQuantity": 10},
+            {"id": "ANAKINKNIGHT:ONE_STAR", "type": 2, "minQuantity": 1, "maxQuantity": 1},
+            {
+                "bucketItem": [{"id": "016", "type": 11, "minQuantity": 1, "maxQuantity": 1}],
+                "requirementId": "glleia_tier06_rewards_not_exhausted",
+            },
+            {"id": "", "type": 6, "minQuantity": 6, "maxQuantity": 6},
+            {"id": "unknown", "type": "SOMETHING_NEW", "minQuantity": 1, "maxQuantity": 1},
+            {"primaryReward": [], "rankStart": 1},
+            "not an entry",
+        ]
+        result = get_named_rewards(rewards, ItemNames(_ITEM_GAME_DATA, _ITEM_LOC))
+        assert [(r["item_type"], r["name"]) for r in result] == [
+            (3, "Credits"),
+            (7, "Leia Organa"),
+            (2, "Jedi Knight Anakin"),
+            (11, "Mk 2 TaggeCo Holo Lens"),
+            (6, "XP"),
+            ("SOMETHING_NEW", "unknown"),
+        ]
+        credits, shards, unit, gear, xp, _ = result
+        assert (credits["min_quantity"], credits["max_quantity"]) == (20000, 20000)
+        assert (shards["min_quantity"], shards["max_quantity"]) == (5, 10)
+        assert shards["base_id"] == "GLLEIA" and unit["base_id"] == "ANAKINKNIGHT" and credits["base_id"] is None
+        assert gear["requirement_id"] == "glleia_tier06_rewards_not_exhausted"
+        assert credits["requirement_id"] is None
+        assert xp["id"] == ""
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        not_a_list: Any = {}
+        with pytest.raises(SwgohComlinkValueError, match="get_named_rewards"):
+            get_named_rewards(not_a_list, ItemNames({}))
+        not_item_names: Any = {}
+        with pytest.raises(SwgohComlinkValueError, match="item_names"):
+            get_named_rewards([], not_item_names)
+
+    def test_item_without_type_and_non_dict_bucket_items(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        rewards: list[Any] = [
+            {"bucketItem": ["not an item", None, {"id": "x"}, {"type": 6}], "requirementId": "req"},
+        ]
+        result = get_named_rewards(rewards, ItemNames(_ITEM_GAME_DATA, _ITEM_LOC))
+        assert [(r["item_type"], r["id"], r["name"]) for r in result] == [(None, "x", "x"), (6, "", "XP")]
+
+
+class TestItemHelpersRobustness:
+    def test_non_dict_records_are_skipped(self):
+        from swgoh_comlink.helpers import ItemNames, get_data_disc_names, get_mod_catalog
+
+        junk: list[Any] = ["x", None]
+        assert get_data_disc_names([*junk, *_ITEM_GAME_DATA["artifactDefinition"]], _ITEM_LOC) == {
+            "artifact_guard_and_pentrate_3_cost_rare": "Guard and Penetrate"
+        }
+        catalog = get_mod_catalog([*junk, {"id": "1", "setId": "4", "slot": 2, "rarity": 5}], junk)
+        assert catalog["sets"] == {} and list(catalog["definitions"]) == ["1"]
+        game_data = {key: [*junk, *records] for key, records in _ITEM_GAME_DATA.items()}
+        names = ItemNames(game_data, _ITEM_LOC)
+        assert names.get(7, "unitshard_GLLEIA") == "Leia Organa"
+        assert names.get(2, "ANAKINKNIGHT") == "Jedi Knight Anakin"
+        assert names.get(16, "35155") == "5-dot Defense Square mod (A)"
+
+    def test_no_star_rarity_enum(self):
+        from swgoh_comlink.helpers import ItemNames, get_mod_catalog
+
+        catalog = get_mod_catalog([{"id": "1", "rarity": "NO_STAR"}, {"id": "2", "rarity": 8}], [])
+        assert catalog["definitions"]["1"]["rarity"] == catalog["definitions"]["2"]["rarity"] == 8
+        mod = {"id": "m", "slot": [2], "setId": "4", "minRarity": "NO_STAR", "maxRarity": 8, "minTier": 1, "maxTier": 1}
+        assert ItemNames({"mysteryStatMod": [mod]}).get(16, "m") == "8-dot Speed Square mod (E)"
+
+    def test_valid_calls_do_not_walk_the_stack(self, monkeypatch: pytest.MonkeyPatch):
+        import inspect
+
+        from swgoh_comlink.helpers import (
+            ItemNames,
+            get_data_disc_names,
+            get_mod_catalog,
+            get_named_rewards,
+            get_player_title_names,
+        )
+
+        def fail() -> None:
+            raise AssertionError("inspect.stack() called on valid input")
+
+        monkeypatch.setattr(inspect, "stack", fail)
+        names = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC)
+        get_named_rewards([{"id": "GRIND", "type": 3}], names)
+        get_data_disc_names(_ITEM_GAME_DATA["artifactDefinition"], _ITEM_LOC)
+        get_player_title_names(_ITEM_GAME_DATA["playerTitle"], _ITEM_LOC)
+        get_mod_catalog([], _ITEM_GAME_DATA["statModSet"], _ITEM_LOC)
+
+
+# ── _territory_battle ──────────────────────────────────────────────────
+
+
+def _tb_zone(zone_id: str, planet: str = "", name_key: str = "") -> dict[str, Any]:
+    return {"zoneId": zone_id, "linkedConflictId": planet, "nameKey": name_key, "maxUnitCountPerPlayer": 2147483647}
+
+
+def _tb_mission_zone(zone_id: str, planet: str, mission_id: str, table: str | None = None, difficulty: Any = 4):
+    zone: dict[str, Any] = {
+        "zoneDefinition": _tb_zone(zone_id, planet, "COMBAT_MISSION_NAME"),
+        "campaignElementIdentifier": {
+            "campaignId": "t05D",
+            "campaignMapId": "TB_MAP",
+            "campaignNodeDifficulty": difficulty,
+            "campaignNodeId": "NODE_1",
+            "campaignMissionId": mission_id,
+        },
+        "combatType": 1,
+    }
+    if table:
+        zone["encounterRewardTableId"] = table
+    return zone
+
+
+def _tb_bracket(score: Any, reward_type: Any = 2) -> dict[str, Any]:
+    return {"galacticScoreRequirement": score, "reward": {"type": reward_type, "value": "1"}}
+
+
+def _tb_platoon(platoon_id: str, points: str, reward_type: Any = 1) -> dict[str, Any]:
+    return {
+        "id": platoon_id,
+        "squad": [{"id": "squad-01"}, {"id": "squad-02"}],
+        "reward": {"type": reward_type, "value": points},
+    }
+
+
+_TB_DEFS = [
+    {
+        "id": "t04D",
+        "territoryBattleVersion_3": False,
+        "conflictZoneDefinition": [
+            {"zoneDefinition": _tb_zone("geo_phase01_conflict01"), "victoryPointRewards": [_tb_bracket("10")]}
+        ],
+        # Before version 3, special missions in the strike array are real, playable missions.
+        "strikeZoneDefinition": [_tb_mission_zone("geo_phase01_conflict01_strike01", "p", "X_SPECIALMISSION", "t1")],
+    },
+    {
+        "id": "t05D",
+        # Comlink's spelling; the on-disk dump of the game data spells it territoryBattleVersion_3.
+        "territoryBattleVersion3": True,
+        "conflictZoneDefinition": [
+            {
+                "zoneDefinition": _tb_zone("tb3_phase01_conflict01", name_key="PLANET_CORUSCANT"),
+                "forceAlignment": 2,
+                "victoryPointRewards": [_tb_bracket("300"), _tb_bracket(100), _tb_bracket("200", "VICTORY_POINT")],
+            },
+            {
+                "zoneDefinition": _tb_zone("tb3_phase03_conflict01_bonus"),
+                "isBonus": True,
+                # The first two brackets pay a mystery box, not a star.
+                "victoryPointRewards": [_tb_bracket("50", 3), _tb_bracket("80", 3), _tb_bracket("90")],
+            },
+        ],
+        "strikeZoneDefinition": [
+            _tb_mission_zone("tb3_phase01_conflict01_strike01", "tb3_phase01_conflict01", "COMBAT_01", "tb3_p1"),
+            _tb_mission_zone("tb3_phase01_conflict01_strike02", "tb3_phase01_conflict01", "COMBAT_02", "tb3_p1"),
+            # Shares its campaign mission with strike02 on the same planet.
+            _tb_mission_zone("tb3_phase01_conflict01_dup", "tb3_phase01_conflict01", "COMBAT_02", "tb3_p1"),
+            # A special mission left in the strike array of a version 3 map.
+            _tb_mission_zone(
+                "tb3_phase01_conflict02_specialmission", "tb3_phase01_conflict02", "P1_SPECIALMISSION", "tb3_p1"
+            ),
+            # Names a mission the campaign does not have.
+            _tb_mission_zone("tb3_phase01_conflict02_strike01", "tb3_phase01_conflict02", "MISSING", "tb3_gap"),
+        ],  # fmt: skip
+        "covertZoneDefinition": [
+            {
+                **_tb_mission_zone("tb3_phase01_conflict01_covert01", "tb3_phase01_conflict01", "SPECIAL_01"),
+                "combatType": "SHIP",
+            }
+        ],
+        "reconZoneDefinition": [
+            {
+                "zoneDefinition": {
+                    **_tb_zone("tb3_phase01_conflict01_recon01", "tb3_phase01_conflict01"),
+                    "nameKey": "RECON_NAME",
+                    "maxUnitCountPerPlayer": 10,
+                },
+                "unitRarity": 7,
+                "unitRelicTier": 7,
+                "combatType": 1,
+                "platoonDefinition": [
+                    _tb_platoon("platoon-1", "100"),
+                    _tb_platoon("platoon-2", "250"),
+                    _tb_platoon("platoon-3", "999", reward_type=3),
+                ],
+            },
+            {
+                "zoneDefinition": _tb_zone("tb3_phase01_conflict02_recon01", "tb3_phase01_conflict02"),
+                "unitRarity": "SIX_STAR",
+                "unitRelicTier": "RELIC_LOCKED",
+                "combatType": 2,
+                "platoonDefinition": [],
+            },
+        ],  # fmt: skip
+    },
+]
+
+
+def _tb_gate(**overrides: Any) -> dict[str, Any]:
+    gate = {
+        "categoryId": ["profession_jedi", "hidden_tag"],
+        "commanderCategoryId": [],
+        "excludeCategoryId": [],
+        "mandatoryRosterUnit": [],
+        "matchType": 2,
+        "minimumRequiredUnitQuantity": 5,
+        "maximumAllowedUnitQuantity": 5,
+        "minimumUnitRarity": 7,
+        "minimumUnitLevel": 85,
+        "minimumUnitTier": 13,
+        "minimumRelicTier": 9,
+    }
+    return gate | overrides
+
+
+def _tb_campaign_mission(mission_id: str, gate: dict[str, Any], desc_key: str = "") -> dict[str, Any]:
+    return {"id": mission_id, "descKey": desc_key, "entryCategoryAllowed": gate}
+
+
+_TB_CAMPAIGNS = [
+    {
+        "id": "t05D",
+        "campaignMap": [
+            {
+                "id": "TB_MAP",
+                "campaignNodeDifficultyGroup": [
+                    {
+                        "campaignNodeDifficulty": 4,
+                        "campaignNode": [
+                            {
+                                "id": "NODE_1",
+                                "campaignNodeMission": [
+                                    _tb_campaign_mission(
+                                        "COMBAT_01",
+                                        _tb_gate(
+                                            mandatoryRosterUnit=[{"id": "KITFISTO", "slot": 1},
+                                                                 {"id": "MACEWINDU", "slot": 0}],
+                                        ),
+                                        "COMBAT_01_REQUIREMENTS",
+                                    ),
+                                    _tb_campaign_mission(
+                                        "COMBAT_02",
+                                        _tb_gate(categoryId=["role_leader"], commanderCategoryId=["profession_jedi"],
+                                                 excludeCategoryId=["unknown_tag"], minimumRelicTier="RELIC_TIER_05",
+                                                 minimumUnitRarity="SEVEN_STAR", minimumUnitTier="TIER_12"),
+                                    ),
+                                    _tb_campaign_mission("P1_SPECIALMISSION", _tb_gate()),
+                                    # Ships cannot hold relics: RELIC_LOCKED is no relic floor.
+                                    _tb_campaign_mission("SPECIAL_01", _tb_gate(categoryId=[], minimumRelicTier=1)),
+                                ],
+                            }
+                        ],
+                    },
+                    # The same node and mission ids under another difficulty, with a different gate. It comes
+                    # last, so a key without the difficulty would pick it over the difficulty 4 gate.
+                    {
+                        "campaignNodeDifficulty": 5,
+                        "campaignNode": [
+                            {"id": "NODE_1", "campaignNodeMission": [_tb_campaign_mission("COMBAT_01", _tb_gate(
+                                minimumRelicTier=12))]}
+                        ],
+                    },
+                ],
+            }
+        ],
+    },
+    {"id": "OTHER_CAMPAIGN", "campaignMap": []},
+]  # fmt: skip
+_TB_CATEGORIES = [
+    {"id": "profession_jedi", "descKey": "CATEGORY_JEDI_DESC"},
+    {"id": "role_leader", "descKey": "CATEGORY_LEADER_DESC"},
+    {"id": "hidden_tag", "descKey": "PLACEHOLDER"},
+]
+_TB_LOC = {
+    "PLANET_CORUSCANT": "[c][ffff33]Coruscant[-][/c]",
+    "COMBAT_MISSION_NAME": "Combat Mission",
+    "RECON_NAME": "Coruscant Operation",
+    "CATEGORY_JEDI_DESC": "Jedi",
+    "PLACEHOLDER": "Placeholder",
+    "COMBAT_01_REQUIREMENTS": "5x Jedi (Relic 7+)\\n[c][f0ff23]Mace Windu[-][/c]\\n[c][f0ff23]Kit Fisto[-][/c]",
+}
+_TB_TABLES = [
+    # Rows keyed by wave count as strings, out of order, with a non-score row.
+    {"id": "tb3_p1", "row": [{"key": "2", "value": "GALACTIC_SCORE:200"}, {"key": "0", "value": "GALACTIC_SCORE:0"},
+                             {"key": "1", "value": "GALACTIC_SCORE:100"}, {"key": "3", "value": "ITEM:abc"}]},
+    # Wave 1 is missing; it repeats wave 0's total.
+    {"id": "tb3_gap", "row": [{"key": "0", "value": "GALACTIC_SCORE:0"}, {"key": "2", "value": "GALACTIC_SCORE:50"}]},
+    {"id": "t1", "row": [{"key": "0", "value": "GALACTIC_SCORE:0"}, {"key": "1", "value": "GALACTIC_SCORE:7"}]},
+    {"id": "unrelated", "row": [{"key": "x", "value": "SPRITE:y"}]},
+]  # fmt: skip
+
+
+class TestGetTbStarThresholds:
+    def test_reads_only_victory_point_brackets_sorted(self):
+        from swgoh_comlink.helpers import get_tb_star_thresholds
+
+        zones = get_tb_star_thresholds(_TB_DEFS, _TB_LOC)
+        assert [(z["tb_id"], z["zone_id"], z["stars"]) for z in zones] == [
+            ("t04D", "geo_phase01_conflict01", [10]),
+            ("t05D", "tb3_phase01_conflict01", [100, 200, 300]),
+            ("t05D", "tb3_phase03_conflict01_bonus", [90]),
+        ]
+        coruscant, bonus = zones[1:]
+        assert coruscant["name"] == "Coruscant"
+        assert (coruscant["phase"], coruscant["is_bonus"], coruscant["force_alignment"]) == (1, False, 2)
+        assert (bonus["phase"], bonus["is_bonus"]) == (3, True)
+        # Without a localization entry the name is its key, or the zone id when there is no key.
+        assert zones[0]["name"] == "geo_phase01_conflict01"
+
+    def test_tb_id_is_case_insensitive(self):
+        from swgoh_comlink.helpers import get_tb_star_thresholds
+
+        assert {z["tb_id"] for z in get_tb_star_thresholds(_TB_DEFS, tb_id="T04d")} == {"t04D"}
+
+    @pytest.mark.parametrize(
+        ("args", "kwargs"),
+        [
+            (({"id": "t05D"},), {}),
+            ((_TB_DEFS, ["not", "a", "dict"]), {}),
+            ((_TB_DEFS,), {"tb_id": "t99D"}),
+            ((_TB_DEFS,), {"tb_id": 5}),
+            (([None],), {}),
+            ((["t05D"],), {"tb_id": "t05D"}),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
+        from swgoh_comlink.helpers import get_tb_star_thresholds
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_tb_star_thresholds(*args, **kwargs)
+
+
+class TestGetTbMissionRequirements:
+    def _get(self, **kwargs: Any) -> dict[str, Any]:
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        missions = get_tb_mission_requirements(_TB_DEFS, _TB_CAMPAIGNS, _TB_CATEGORIES, _TB_LOC, **kwargs)
+        return {m["zone_id"]: m for m in missions}
+
+    def test_lists_combat_then_special_missions(self):
+        missions = self._get(tb_id="t05D")
+        assert [(zone_id, m["mission_type"]) for zone_id, m in missions.items()] == [
+            ("tb3_phase01_conflict01_strike01", "combat"),
+            ("tb3_phase01_conflict01_strike02", "combat"),
+            ("tb3_phase01_conflict01_dup", "combat"),
+            ("tb3_phase01_conflict02_specialmission", "combat"),
+            ("tb3_phase01_conflict02_strike01", "combat"),
+            ("tb3_phase01_conflict01_covert01", "special"),
+        ]
+
+    def test_resolves_the_gate_at_the_zones_difficulty(self):
+        strike = self._get()["tb3_phase01_conflict01_strike01"]
+        assert strike["resolved"] is True
+        assert strike["campaign_mission_id"] == "COMBAT_01"
+        assert (strike["conflict_zone_id"], strike["phase"], strike["name"]) == (
+            "tb3_phase01_conflict01",
+            1,
+            "Combat Mission",
+        )
+        # Wire relic tier 9 is relic 7; the difficulty 5 copy of this mission (wire 12) is not used.
+        assert strike["min_relic"] == 7
+        assert (strike["min_rarity"], strike["min_gear"], strike["min_level"]) == (7, 13, 85)
+        assert (strike["min_squad_size"], strike["max_squad_size"], strike["category_match_type"]) == (5, 5, 2)
+        assert strike["mandatory_units"] == [{"base_id": "MACEWINDU", "slot": 0}, {"base_id": "KITFISTO", "slot": 1}]
+        assert strike["requirement_text"] == "5x Jedi (Relic 7+)\nMace Windu\nKit Fisto"
+        assert strike["is_fleet"] is False
+
+    def test_difficulty_without_a_group_is_unresolved(self):
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        # Node and mission ids match the campaign, but no group has difficulty 3.
+        zone = _tb_mission_zone("tb3_phase01_conflict01_strike01", "tb3_phase01_conflict01", "COMBAT_01", difficulty=3)
+        definition = {"id": "t05D", "strikeZoneDefinition": [zone]}
+        (strike,) = get_tb_mission_requirements([definition], _TB_CAMPAIGNS, _TB_CATEGORIES, _TB_LOC)
+        assert strike["resolved"] is False
+        assert (strike["min_relic"], strike["requirement_text"]) == (0, "")
+
+    def test_names_categories_and_skips_placeholder_names(self):
+        missions = self._get()
+        assert missions["tb3_phase01_conflict01_strike01"]["allowed_categories"] == [
+            {"id": "profession_jedi", "name": "Jedi"},
+            {"id": "hidden_tag", "name": "hidden_tag"},
+        ]
+        strike = missions["tb3_phase01_conflict01_strike02"]
+        # A category with no localization entry keeps its key; one missing from 'categories' its id.
+        assert strike["allowed_categories"] == [{"id": "role_leader", "name": "CATEGORY_LEADER_DESC"}]
+        assert strike["commander_categories"] == [{"id": "profession_jedi", "name": "Jedi"}]
+        assert strike["excluded_categories"] == [{"id": "unknown_tag", "name": "unknown_tag"}]
+
+    def test_enum_names_and_relic_locked(self):
+        missions = self._get()
+        strike = missions["tb3_phase01_conflict01_strike02"]
+        assert (strike["min_relic"], strike["min_rarity"], strike["min_gear"]) == (5, 7, 12)
+        fleet = missions["tb3_phase01_conflict01_covert01"]
+        assert fleet["is_fleet"] is True
+        assert fleet["min_relic"] == 0
+
+    def test_unresolved_mission_is_kept_without_a_gate(self):
+        strike = self._get()["tb3_phase01_conflict02_strike01"]
+        assert strike["resolved"] is False
+        assert strike["requirement_text"] == ""
+        assert strike["allowed_categories"] == [] and strike["min_squad_size"] == 0
+
+    def test_hidden_reasons(self):
+        missions = self._get()
+        assert {zone_id: m["hidden_reason"] for zone_id, m in missions.items() if m["hidden_reason"]} == {
+            "tb3_phase01_conflict01_dup": "duplicate",
+            "tb3_phase01_conflict02_specialmission": "special",
+        }
+        # Not a version 3 map, so a special mission in the strike array is a normal mission.
+        assert missions["geo_phase01_conflict01_strike01"]["hidden_reason"] is None
+
+    def test_dump_spelling_of_the_version_3_flag(self):
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        definition = {k: v for k, v in _TB_DEFS[1].items() if k != "territoryBattleVersion3"}
+        missions = get_tb_mission_requirements([definition], _TB_CAMPAIGNS, _TB_CATEGORIES)
+        assert sum(m["hidden_reason"] == "special" for m in missions) == 0
+        definition["territoryBattleVersion_3"] = True
+        missions = get_tb_mission_requirements([definition], _TB_CAMPAIGNS, _TB_CATEGORIES)
+        assert sum(m["hidden_reason"] == "special" for m in missions) == 1
+
+    def test_without_localization_returns_keys(self):
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        missions = get_tb_mission_requirements(_TB_DEFS, _TB_CAMPAIGNS, _TB_CATEGORIES, tb_id="t05D")
+        assert missions[0]["requirement_text"] == "COMBAT_01_REQUIREMENTS"
+        assert missions[0]["allowed_categories"][0]["name"] == "CATEGORY_JEDI_DESC"
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ({"id": "t05D"}, _TB_CAMPAIGNS, _TB_CATEGORIES),
+            (_TB_DEFS, None, _TB_CATEGORIES),
+            (_TB_DEFS, _TB_CAMPAIGNS, "category"),
+            (_TB_DEFS, _TB_CAMPAIGNS, _TB_CATEGORIES, "loc"),
+            (_TB_DEFS, [None], _TB_CATEGORIES),
+            (_TB_DEFS, _TB_CAMPAIGNS, ["profession_jedi"]),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...]):
+        from swgoh_comlink.helpers import get_tb_mission_requirements
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_tb_mission_requirements(*args)
+
+
+class TestGetTbMissionScores:
+    def test_cumulative_points_by_waves(self):
+        from swgoh_comlink.helpers import get_tb_mission_scores
+
+        scores = {s["zone_id"]: s for s in get_tb_mission_scores(_TB_DEFS, _TB_TABLES)}
+        # The covert zone has no points table and is not listed.
+        assert list(scores) == [
+            "geo_phase01_conflict01_strike01",
+            "tb3_phase01_conflict01_strike01",
+            "tb3_phase01_conflict01_strike02",
+            "tb3_phase01_conflict01_dup",
+            "tb3_phase01_conflict02_specialmission",
+            "tb3_phase01_conflict02_strike01",
+        ]
+        strike = scores["tb3_phase01_conflict01_strike01"]
+        assert strike["wave_points"] == [0, 100, 200]
+        assert (strike["max_points"], strike["reward_table_id"], strike["mission_type"]) == (200, "tb3_p1", "combat")
+        assert scores["tb3_phase01_conflict02_strike01"]["wave_points"] == [0, 0, 50]
+        assert scores["tb3_phase01_conflict01_dup"]["hidden_reason"] == "duplicate"
+        assert scores["geo_phase01_conflict01_strike01"]["max_points"] == 7
+
+    def test_tb_id_filter(self):
+        from swgoh_comlink.helpers import get_tb_mission_scores
+
+        assert {s["tb_id"] for s in get_tb_mission_scores(_TB_DEFS, _TB_TABLES, tb_id="t04d")} == {"t04D"}
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ({"id": "t05D"}, _TB_TABLES),
+            (_TB_DEFS, None),
+            (_TB_DEFS, [*_TB_TABLES, "tb3_p1"]),
+            # The mission's table is not in the collection.
+            (_TB_DEFS, _TB_TABLES[1:]),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...]):
+        from swgoh_comlink.helpers import get_tb_mission_scores
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_tb_mission_scores(*args)
+
+
+class TestGetTbPlatoonDefinitions:
+    def test_reads_floors_and_points_per_platoon(self):
+        from swgoh_comlink.helpers import get_tb_platoon_definitions
+
+        zone, fleet = get_tb_platoon_definitions(_TB_DEFS, _TB_LOC)
+        assert (zone["tb_id"], zone["zone_id"], zone["conflict_zone_id"], zone["phase"]) == (
+            "t05D",
+            "tb3_phase01_conflict01_recon01",
+            "tb3_phase01_conflict01",
+            1,
+        )
+        assert zone["name"] == "Coruscant Operation"
+        assert (zone["min_rarity"], zone["min_relic"], zone["max_units_per_player"]) == (7, 5, 10)
+        assert zone["platoons"] == [
+            {"platoon_id": "platoon-1", "squad_ids": ["squad-01", "squad-02"], "points": 100},
+            {"platoon_id": "platoon-2", "squad_ids": ["squad-01", "squad-02"], "points": 250},
+            # Not a territory points reward.
+            {"platoon_id": "platoon-3", "squad_ids": ["squad-01", "squad-02"], "points": 0},
+        ]
+        assert zone["total_points"] == 350
+        assert (fleet["is_fleet"], fleet["min_rarity"], fleet["min_relic"]) == (True, 6, 0)
+        assert fleet["max_units_per_player"] is None
+        assert (fleet["platoons"], fleet["total_points"]) == ([], 0)
+
+    def test_invalid_input_raises(self):
+        from swgoh_comlink.helpers import get_tb_platoon_definitions
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_tb_platoon_definitions(_TB_DEFS, tb_id="t99D")
+
+
+def test_tb_helpers_read_type_prefixed_enum_names():
+    from swgoh_comlink.helpers import get_tb_mission_requirements, get_tb_platoon_definitions, get_tb_star_thresholds
+
+    # Some servers send enums=True names prefixed with their type and without inner underscores.
+    definition = {
+        "id": "t05D",
+        "conflictZoneDefinition": [
+            {
+                "zoneDefinition": _tb_zone("tb3_phase03_conflict01_bonus"),
+                "victoryPointRewards": [
+                    _tb_bracket("50", "TERRITORYREWARDTYPE_MYSTERYBOXCONFLICT"),
+                    _tb_bracket("90", "TERRITORYREWARDTYPE_VICTORYPOINT"),
+                ],
+            }
+        ],
+        "strikeZoneDefinition": [
+            {**_tb_mission_zone("tb3_phase01_conflict01_strike02", "p", "COMBAT_02"), "combatType": "COMBATTYPE_SHIP"}
+        ],
+        "reconZoneDefinition": [
+            {
+                "zoneDefinition": _tb_zone("tb3_phase01_conflict01_recon01", "p"),
+                "unitRarity": "RARITY_SIXSTAR",
+                "unitRelicTier": "RELICTIER_RELICTIER07",
+                "combatType": "COMBATTYPE_CHARACTER",
+                "platoonDefinition": [
+                    _tb_platoon("platoon-1", "100", "TERRITORYREWARDTYPE_GALACTICSCORE"),
+                    _tb_platoon("platoon-2", "999", "TERRITORYREWARDTYPE_MYSTERYBOXCONFLICT"),
+                ],
+            }
+        ],
+    }
+    gate = _tb_gate(minimumRelicTier="RELICTIER_RELICTIER05", minimumUnitRarity="RARITY_SEVENSTAR",
+                    minimumUnitTier="UNITTIER_TIER12")  # fmt: skip
+    campaigns = [
+        {
+            "id": "t05D",
+            "campaignMap": [
+                {
+                    "id": "TB_MAP",
+                    "campaignNodeDifficultyGroup": [
+                        {
+                            "campaignNodeDifficulty": 4,
+                            "campaignNode": [
+                                {"id": "NODE_1", "campaignNodeMission": [_tb_campaign_mission("COMBAT_02", gate)]}
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+
+    (zone,) = get_tb_star_thresholds([definition])
+    assert zone["stars"] == [90]
+    (mission,) = get_tb_mission_requirements([definition], campaigns, _TB_CATEGORIES)
+    assert mission["is_fleet"] is True
+    assert (mission["min_relic"], mission["min_rarity"], mission["min_gear"]) == (5, 7, 12)
+    (recon,) = get_tb_platoon_definitions([definition])
+    assert (recon["is_fleet"], recon["min_rarity"], recon["min_relic"], recon["total_points"]) == (False, 6, 7, 100)
+
+
+# ── _upgrades ──────────────────────────────────────────────────────────
+
+
+def _ingredient(item_id: str, kind: Any, quantity: int, high: int | None = None) -> dict[str, Any]:
+    return {"id": item_id, "type": kind, "minQuantity": quantity, "maxQuantity": quantity if high is None else high}
+
+
+def _recipe(recipe_id: str, *ingredients: dict[str, Any]) -> dict[str, Any]:
+    return {"id": recipe_id, "ingredients": list(ingredients)}
+
+
+def _piece(piece_id: str, recipe_id: str = "", tier: int = 1, mark: str = "Mk I") -> dict[str, Any]:
+    return {"id": piece_id, "nameKey": f"EQUIPMENT_{piece_id.upper()}_NAME", "recipeId": recipe_id, "tier": tier,
+            "mark": mark}  # fmt: skip
+
+
+_UPGRADE_EQUIPMENT = [
+    _piece("001"),
+    _piece("164", "recipe164", tier=12, mark="Mk XII"),
+    _piece("164Prototype", "recipe164Prototype", tier=12),
+    _piece("164PrototypeSalvage", tier=12),
+    _piece("156", "recipe156", tier=7),
+    _piece("156Salvage", tier=7),
+    # The placeholder every character's tier 13 slots: a real equipment row with no recipe.
+    _piece("9999", tier=12),
+]
+_UPGRADE_RECIPES = [
+    _recipe("recipe164", _ingredient("164Prototype", 11, 1), _ingredient("156", 11, 2), _ingredient("GRIND", 3, 20350)),
+    _recipe("recipe164Prototype", _ingredient("164PrototypeSalvage", 11, 30), _ingredient("GRIND", 3, 14000)),
+    # Ingredient types as enum names, as returned with enums=True.
+    _recipe("recipe156", _ingredient("156Salvage", "EQUIPMENT", 20), _ingredient("GRIND", "CURRENCY", 5150)),
+    _recipe("relic_promotion_recipe_01", _ingredient("GRIND", 3, 10000), _ingredient("SCV_001", 7, 40)),
+    _recipe("relic_promotion_recipe_02", _ingredient("GRIND", 3, 15000), _ingredient("SCV_001", 7, 30),
+            _ingredient("RM_001", 7, 15)),
+    _recipe("SKILLRECIPE_T1", _ingredient("GRIND", 3, 1000), _ingredient("ability_mat_A", 7, 2)),
+    _recipe("SKILLRECIPE_ZETA", _ingredient("GRIND", 3, 5000), _ingredient("ability_mat_zeta", "MATERIAL", 1)),
+    _recipe("SHIPSKILLRECIPE_T1", _ingredient("SHIP_GRIND", 3, 100), _ingredient("shipability_mat_A", 7, 3)),
+]  # fmt: skip
+_UPGRADE_TABLES = [
+    {"id": "crew_rating_per_relic_tier", "row": [{"key": "1", "value": "0"}]},
+    # Rows out of order: costs come back R1 first.
+    {"id": "relic_promotion_table", "row": [{"key": "TIER_02", "value": "relic_promotion_recipe_02"},
+                                            {"key": "TIER_01", "value": "relic_promotion_recipe_01"}]},
+]  # fmt: skip
+_HERO_TIERS = (
+    [{"tier": 13, "equipmentSet": ["9999"] * 6}]
+    + [{"tier": 1, "equipmentSet": ["001", "164", "156", "001", "156", "001"]}]
+    + [{"tier": n, "equipmentSet": ["001"] * 6} for n in range(2, 13)]
+)
+_UPGRADE_UNITS = [
+    {"baseId": "HERO", "rarity": 1, "combatType": 1, "unitTier": _HERO_TIERS,
+     "skillReference": [{"skillId": "basicskill_HERO"}, {"skillId": "leaderskill_HERO"}]},
+    {"baseId": "HERO", "rarity": 7, "combatType": 1, "unitTier": _HERO_TIERS, "skillReference": []},
+    {"baseId": "SHIP", "rarity": 7, "combatType": 2, "skillReference": [{"skillId": "basicskill_SHIP"}],
+     "crew": [{"unitId": "PILOT", "skillReference": [{"skillId": "specialskill_SHIP01"}]}]},
+]  # fmt: skip
+_UPGRADE_SKILLS = [
+    {"id": "basicskill_HERO", "tier": [{"recipeId": "SKILLRECIPE_T1"}, {"recipeId": "SKILLRECIPE_T1"}]},
+    {"id": "leaderskill_HERO", "tier": [{"recipeId": "SKILLRECIPE_T1"},
+                                        {"recipeId": "SKILLRECIPE_ZETA", "isZetaTier": True, "isOmicronTier": True}]},
+    {"id": "basicskill_SHIP", "tier": [{"recipeId": "SHIPSKILLRECIPE_T1"}]},
+    {"id": "specialskill_SHIP01", "tier": [{"recipeId": "SHIPSKILLRECIPE_T1"}]},
+]  # fmt: skip
+
+
+def _enum_tiers(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """``rows`` with their UnitTier ``tier`` as the enum names returned with enums=True."""
+    return [{**row, "tier": f"TIER_{row['tier']:02d}"} for row in rows]
+
+
+def _cost(credits: int = 0, ship_credits: int = 0, materials: Any = None, equipment: Any = None) -> dict[str, Any]:
+    return {"credits": credits, "ship_credits": ship_credits, "materials": materials or {},
+            "equipment": equipment or {}}  # fmt: skip
+
+
+class TestGetUnitGearTiers:
+    def test_lists_thirteen_tiers_in_order_without_the_placeholder(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers
+
+        tiers = get_unit_gear_tiers(_UPGRADE_UNITS, "hero")
+        assert [t["tier"] for t in tiers] == list(range(1, 14))
+        assert tiers[0]["equipment"] == ["001", "164", "156", "001", "156", "001"]
+        assert tiers[0]["cost"] == _cost(equipment={"001": 3, "164": 1, "156": 2})
+        assert tiers[-1]["equipment"] == []
+        assert tiers[-1]["cost"] == _cost()
+
+    def test_ship_has_no_gear(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers
+
+        assert get_unit_gear_tiers(_UPGRADE_UNITS, "SHIP") == []
+
+    def test_enum_tier_names_match_integers(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers
+
+        units = [{**_UPGRADE_UNITS[0], "unitTier": _enum_tiers(_HERO_TIERS)}]
+        assert get_unit_gear_tiers(units, "HERO") == get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
+
+    @pytest.mark.parametrize(
+        ("units", "base_id"),
+        [
+            ({}, "HERO"),
+            (_UPGRADE_UNITS, None),
+            (_UPGRADE_UNITS, "NOBODY"),
+            ([{"baseId": "HERO", "unitTier": [{"tier": "GEAR_ONE", "equipmentSet": []}]}], "HERO"),
+        ],
+    )
+    def test_invalid_input_raises(self, units: Any, base_id: Any):
+        from swgoh_comlink.helpers import get_unit_gear_tiers
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_unit_gear_tiers(units, base_id)
+
+
+class TestGetGearCraftTree:
+    def test_expands_down_to_farmed_pieces(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        loc = {"EQUIPMENT_164_NAME": "[c][ffff33]Mk 12 ArmaTek Cybernetics[-][/c]"}
+        tree = get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164", loc)
+        assert (tree["name"], tree["tier"], tree["mark"], tree["quantity"]) == (
+            "Mk 12 ArmaTek Cybernetics",
+            12,
+            "Mk XII",
+            1,
+        )
+        assert tree["recipe_credits"] == 20350
+        prototype, detonator = tree["ingredients"]
+        # Names fall back to the nameKey.
+        assert (prototype["id"], prototype["quantity"], prototype["name"]) == (
+            "164Prototype",
+            1,
+            "EQUIPMENT_164PROTOTYPE_NAME",
+        )
+        # Quantities multiply down the tree: 2 pieces x 20 salvage each.
+        assert (detonator["quantity"], detonator["ingredients"][0]["quantity"]) == (2, 40)
+        assert detonator["cost"] == _cost(credits=2 * 5150, equipment={"156Salvage": 40})
+        assert detonator["ingredients"][0]["ingredients"] == []
+        assert tree["cost"] == _cost(
+            credits=20350 + 14000 + 2 * 5150, equipment={"164PrototypeSalvage": 30, "156Salvage": 40}
+        )
+
+    def test_enum_tier_names_match_integers(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        enum_equipment = _enum_tiers(_UPGRADE_EQUIPMENT)
+        tree = get_gear_craft_tree(enum_equipment, _UPGRADE_RECIPES, "164")
+        assert tree == get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164")
+        assert (tree["tier"], tree["ingredients"][1]["tier"]) == (12, 7)
+
+    def test_unrecognized_tier_raises(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        with pytest.raises(SwgohComlinkValueError, match="unrecognized tier 'TWELVE'"):
+            get_gear_craft_tree([{**_piece("001"), "tier": "TWELVE"}], [], "001")
+
+    def test_farmed_piece_is_a_leaf(self):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        tree = get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "001")
+        assert (tree["ingredients"], tree["recipe_credits"], tree["cost"]) == ([], 0, _cost(equipment={"001": 1}))
+
+    @pytest.mark.parametrize(
+        ("recipes", "message"),
+        [
+            # A quantity range has no single cost.
+            ([_recipe("recipe156", _ingredient("156Salvage", 11, 10, 20))], "10 to 20"),
+            ([_recipe("recipe156", _ingredient("PREMIUM", 3, 10))], "unsupported currency"),
+            ([_recipe("recipe156", _ingredient("SOMETHING", 2, 1))], "unsupported type"),
+            ([_recipe("recipe156", _ingredient("ability_mat_A", 7, 1))], "more than credits"),
+            ([_recipe("recipe156", _ingredient("NOPE", 11, 1))], "'NOPE' is not in 'equipment'"),
+            ([_recipe("recipe156", _ingredient("156", 11, 1))], "crafted from itself"),
+            ([], "recipe 'recipe156'"),
+        ],
+    )
+    def test_rejects_recipes_it_cannot_cost_exactly(self, recipes: list[dict[str, Any]], message: str):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        with pytest.raises(SwgohComlinkValueError, match=message):
+            get_gear_craft_tree(_UPGRADE_EQUIPMENT, recipes, "156")
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ({}, _UPGRADE_RECIPES, "164"),
+            (_UPGRADE_EQUIPMENT, None, "164"),
+            (_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, 164),
+            (_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164", ["not", "a", "dict"]),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...]):
+        from swgoh_comlink.helpers import get_gear_craft_tree
+
+        with pytest.raises(SwgohComlinkValueError):
+            get_gear_craft_tree(*args)
+
+
+class TestGetRelicPromotionCosts:
+    def test_joins_the_promotion_table_to_recipes(self):
+        from swgoh_comlink.helpers import get_relic_promotion_costs
+
+        assert get_relic_promotion_costs(_UPGRADE_TABLES, _UPGRADE_RECIPES) == [
+            {
+                "relic_tier": 1,
+                "recipe_id": "relic_promotion_recipe_01",
+                "cost": _cost(credits=10000, materials={"SCV_001": 40}),
+            },
+            {
+                "relic_tier": 2,
+                "recipe_id": "relic_promotion_recipe_02",
+                "cost": _cost(credits=15000, materials={"SCV_001": 30, "RM_001": 15}),
+            },
+        ]
+
+    @pytest.mark.parametrize(
+        ("tables", "recipes", "message"),
+        [
+            (_UPGRADE_TABLES[:1], _UPGRADE_RECIPES, "is not in 'tables'"),
+            ([{"id": "relic_promotion_table", "row": [{"key": "TIER_02", "value": "x"}]}], _UPGRADE_RECIPES, "1 to n"),
+            ([{"id": "relic_promotion_table", "row": [{"key": "R1", "value": "x"}]}], _UPGRADE_RECIPES, "unexpected"),
+            (_UPGRADE_TABLES, [], "relic tier 1"),
+            ("table", _UPGRADE_RECIPES, "must be a list"),
+        ],
+    )
+    def test_invalid_input_raises(self, tables: Any, recipes: Any, message: str):
+        from swgoh_comlink.helpers import get_relic_promotion_costs
+
+        with pytest.raises(SwgohComlinkValueError, match=message):
+            get_relic_promotion_costs(tables, recipes)
+
+
+class TestGetAbilityUpgradeCosts:
+    def test_costs_each_level_with_zeta_and_omicron_flags(self):
+        from swgoh_comlink.helpers import get_ability_upgrade_costs
+
+        basic, leader = get_ability_upgrade_costs(_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "HERO")
+        assert (basic["base_id"], basic["skill_id"], basic["crew_base_id"]) == ("HERO", "basicskill_HERO", None)
+        assert [t["level"] for t in leader["tiers"]] == [2, 3]
+        assert [(t["is_zeta"], t["is_omicron"]) for t in leader["tiers"]] == [(False, False), (True, True)]
+        assert leader["tiers"][1] == {
+            "level": 3,
+            "recipe_id": "SKILLRECIPE_ZETA",
+            "is_zeta": True,
+            "is_omicron": True,
+            "cost": _cost(credits=5000, materials={"ability_mat_zeta": 1}),
+        }
+
+    def test_ship_includes_crew_abilities_and_ship_credits(self):
+        from swgoh_comlink.helpers import get_ability_upgrade_costs
+
+        own, crew = get_ability_upgrade_costs(_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "ship")
+        assert (own["crew_base_id"], crew["crew_base_id"], crew["skill_id"]) == (None, "PILOT", "specialskill_SHIP01")
+        assert crew["tiers"][0]["cost"] == _cost(ship_credits=100, materials={"shipability_mat_A": 3})
+
+    @pytest.mark.parametrize(
+        ("args", "message"),
+        [
+            ((_UPGRADE_UNITS, _UPGRADE_SKILLS[1:], _UPGRADE_RECIPES, "HERO"), "'basicskill_HERO'"),
+            ((_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES[:-1], "SHIP"), "'SHIPSKILLRECIPE_T1'"),
+            ((_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "NOBODY"), "'NOBODY'"),
+            ((_UPGRADE_UNITS, {}, _UPGRADE_RECIPES, "HERO"), "must be a list"),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], message: str):
+        from swgoh_comlink.helpers import get_ability_upgrade_costs
+
+        with pytest.raises(SwgohComlinkValueError, match=message):
+            get_ability_upgrade_costs(*args)
+
+
+class TestSumUpgradeCosts:
+    def test_adds_costs_of_any_kind(self):
+        from swgoh_comlink.helpers import get_ability_upgrade_costs, get_relic_promotion_costs, sum_upgrade_costs
+
+        relics = get_relic_promotion_costs(_UPGRADE_TABLES, _UPGRADE_RECIPES)
+        ship = get_ability_upgrade_costs(_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "SHIP")
+        costs = [r["cost"] for r in relics] + [t["cost"] for a in ship for t in a["tiers"]]
+        assert sum_upgrade_costs(costs) == _cost(
+            credits=25000, ship_credits=200, materials={"RM_001": 15, "SCV_001": 70, "shipability_mat_A": 6}
+        )
+
+    def test_missing_fields_count_as_zero(self):
+        from swgoh_comlink.helpers import sum_upgrade_costs
+
+        assert sum_upgrade_costs([{"equipment": {"164": 2}}, {"credits": 5}]) == _cost(credits=5, equipment={"164": 2})
+        assert sum_upgrade_costs([]) == _cost()
+
+    def test_crafts_gear_down_to_salvage(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers, sum_upgrade_costs
+
+        tiers = get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
+        assert sum_upgrade_costs(t["cost"] for t in tiers)["equipment"] == {"001": 69, "156": 2, "164": 1}
+
+        crafted = sum_upgrade_costs((t["cost"] for t in tiers), _UPGRADE_EQUIPMENT, _UPGRADE_RECIPES)
+        # 164 crafts from two 156 of its own, so four 156 are crafted in all.
+        assert crafted == _cost(
+            credits=20350 + 14000 + 4 * 5150, equipment={"001": 69, "156Salvage": 80, "164PrototypeSalvage": 30}
+        )
+        assert list(crafted["equipment"]) == sorted(crafted["equipment"])
+
+    def test_crafts_enum_tier_gear_like_integer_tier_gear(self):
+        from swgoh_comlink.helpers import get_unit_gear_tiers, sum_upgrade_costs
+
+        units = [{**_UPGRADE_UNITS[0], "unitTier": _enum_tiers(_HERO_TIERS)}]
+        enum_tiers = get_unit_gear_tiers(units, "HERO")
+        int_tiers = get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
+        enum_total = sum_upgrade_costs(
+            (t["cost"] for t in enum_tiers), _enum_tiers(_UPGRADE_EQUIPMENT), _UPGRADE_RECIPES
+        )
+        assert enum_total == sum_upgrade_costs((t["cost"] for t in int_tiers), _UPGRADE_EQUIPMENT, _UPGRADE_RECIPES)
+
+    def test_checks_collections_before_consuming_costs(self):
+        from swgoh_comlink.helpers import sum_upgrade_costs
+
+        costs = iter([_cost(credits=1)])
+        not_a_list: Any = {}
+        with pytest.raises(SwgohComlinkValueError, match="must be a list"):
+            sum_upgrade_costs(costs, not_a_list, [])
+        assert next(costs) == _cost(credits=1)
+
+    @pytest.mark.parametrize(
+        ("args", "message"),
+        [
+            (([], _UPGRADE_EQUIPMENT), "pass both"),
+            (([], None, _UPGRADE_RECIPES), "pass both"),
+            (([], {}, _UPGRADE_RECIPES), "must be a list"),
+            ((["credits"],), "must be a mapping"),
+            (([{"equipment": {"NOPE": 1}}], _UPGRADE_EQUIPMENT, _UPGRADE_RECIPES), "'NOPE'"),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], message: str):
+        from swgoh_comlink.helpers import sum_upgrade_costs
+
+        with pytest.raises(SwgohComlinkValueError, match=message):
+            sum_upgrade_costs(*args)
 
 
 # ── _gac (pure functions) ──────────────────────────────────────────────
@@ -1638,15 +4093,3 @@ class TestGetDatacronDismantleValueNoDustRecipe:
         sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": None}]}]
         result = get_datacron_dismantle_value(datacron, sets, [])
         assert result == {}
-
-
-class TestGetArenaPayoutEdge:
-    def test_payout_already_passed_adds_day(self):
-        from datetime import datetime
-
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        # Use a large positive offset to push payout well into the past
-        # This forces the payout < datetime.now() branch
-        result = get_arena_payout(offset=1440)
-        assert result > datetime.now()

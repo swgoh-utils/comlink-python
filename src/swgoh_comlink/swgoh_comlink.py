@@ -5,12 +5,14 @@ Synchronous Python 3 interface for swgoh-comlink.
 
 from __future__ import annotations
 
+import logging
 import threading
 from json import loads
 from typing import Any, cast
 
 import httpx
 
+from . import retry as _retry
 from ._base import (
     DEFAULT_TIMEOUT,
     GAME_DATA_TIMEOUT,
@@ -18,10 +20,17 @@ from ._base import (
     _CachedVersions,
     param_alias,
 )
-from .exceptions import SwgohComlinkException, SwgohComlinkValueError
+from .exceptions import (
+    SwgohComlinkException,
+    SwgohComlinkHTTPError,
+    SwgohComlinkRateLimitError,
+    SwgohComlinkValueError,
+)
 from .helpers import Constants, DataItems
 
 __all__ = ["SwgohComlink"]
+
+logger = logging.getLogger(__name__)
 
 
 class SwgohComlink(SwgohComlinkBase):
@@ -42,6 +51,9 @@ class SwgohComlink(SwgohComlinkBase):
         verify_ssl (bool): Whether to verify TLS certificates. [Default: True]
         version_cache_ttl (float): Seconds to cache the game/localization versions fetched from
             /metadata. 0 disables caching; ``math.inf`` caches for the client lifetime. [Default: 3600]
+        retry (RetryPolicy | None): Keyword-only. Retry rate refusals and HTTP 503 responses, and optionally
+            space calls to the same endpoint, as described by a
+            :class:`~swgoh_comlink.retry.RetryPolicy`. [Default: None, one attempt per call and no waiting]
 
     Notes:
         If the 'host' and 'port' parameters are provided, the 'url' and 'stats_url' parameters are ignored.
@@ -63,6 +75,7 @@ class SwgohComlink(SwgohComlinkBase):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._version_lock = threading.Lock()
+        self._enums_lock = threading.Lock()
         self.client = httpx.Client(
             base_url=self.url_base,
             headers={"Content-Type": "application/json"},
@@ -112,8 +125,48 @@ class SwgohComlink(SwgohComlinkBase):
             Decoded JSON response (dict or list).
 
         Raises:
+            SwgohComlinkHTTPError: When the service answers with an HTTP error status, after any retries
+                allowed by the client's retry policy. Subclasses identify rate refusals, HTTP 503 and 4xx.
             SwgohComlinkException: On any network or decoding error.
         """
+        policy = self.retry_policy
+        attempt = 1
+        extra = 0.0  # retry wait carried into the next pass, on top of its pacing slot
+        while True:
+            wait = self._pace_delay(endpoint, stats) + extra
+            extra = 0.0
+            if wait > 0:
+                logger.debug("Pacing %s for %.2fs", endpoint, wait)
+                _retry._sleep(wait)
+            try:
+                return self._send(method, endpoint, payload, stats, timeout)
+            except SwgohComlinkHTTPError as exc:
+                delay = None if policy is None else policy.retry_delay(exc, attempt)
+                if policy is None or delay is None:
+                    if policy is not None and attempt > 1:
+                        logger.info("%s on %s; giving up after %d attempts", type(exc).__name__, endpoint, attempt)
+                    raise
+                logger.info(
+                    "%s on %s (attempt %d of %d); retrying in %.1fs",
+                    type(exc).__name__,
+                    endpoint,
+                    attempt,
+                    policy.attempts,
+                    delay,
+                )
+                held = isinstance(exc, SwgohComlinkRateLimitError) and self._hold_endpoint(endpoint, stats, delay)
+                extra = policy.jitter_extra(delay) + (0.0 if held else delay)
+                attempt += 1
+
+    def _send(
+        self,
+        method: str,
+        endpoint: str,
+        payload: dict[str, Any] | list[Any] | None,
+        stats: bool,
+        timeout: float | None,
+    ) -> dict[str, Any] | list[Any]:
+        """Make one attempt at a request. Headers, including the HMAC signature, are rebuilt per attempt."""
         req_headers = self._construct_request_headers(method, endpoint, payload)
         client = self.stats_client if stats else self.client
 
@@ -128,7 +181,7 @@ class SwgohComlink(SwgohComlinkBase):
             r.raise_for_status()
             return cast(dict[str, Any] | list[Any], loads(r.content.decode("utf-8")))
         except httpx.HTTPStatusError as e:
-            raise SwgohComlinkException(f"HTTP {e.response.status_code}: {e.response.text}") from e
+            raise SwgohComlinkHTTPError.from_response(e.response) from e
         except httpx.RequestError as e:
             raise SwgohComlinkException(e) from e
 
@@ -189,16 +242,35 @@ class SwgohComlink(SwgohComlinkBase):
             request_payload = [request_payload]
         return self._post(endpoint=endpoint_string, payload=request_payload, stats=True)
 
-    def get_enums(self) -> dict[str, Any]:
+    def get_enums(self, refresh: bool = False) -> dict[str, Any]:
         """
         Get an object containing the game data enums.
 
         Unlike most endpoints, ``/enums`` uses a GET request.
 
+        The response is cached on the instance as ``enums``, with the game data version it was fetched
+        under as ``enums_version``. Later calls return the cached response while the game data version is
+        unchanged and fetch it again once it changes. The version is read through the instance version
+        cache (see ``version_cache_ttl``), so a check usually makes no request. When the version cannot be
+        determined, the enums are fetched and returned without being cached.
+
+        Args:
+            refresh: When True, fetch the game data version and the enums again even if they are cached.
+
         Returns:
-            A dictionary containing the game data enums.
+            A dictionary containing the game data enums. A cached response is the same object as ``enums``:
+            copy it before changing it.
         """
-        return cast(dict[str, Any], self._request(method="GET", endpoint="enums"))
+        with self._enums_lock:
+            try:
+                version = self._get_versions(refresh=refresh).require_game()
+            except SwgohComlinkException:
+                return cast(dict[str, Any], self._request(method="GET", endpoint="enums"))
+            if not refresh and self.enums is not None and self.enums_version == version:
+                return self.enums
+            enums = cast(dict[str, Any], self._request(method="GET", endpoint="enums"))
+            self.enums, self.enums_version = enums, version
+            return enums
 
     # alias for non PEP usage of direct endpoint calls
     getEnums = get_enums

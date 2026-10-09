@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from swgoh_comlink.retry import RetryPolicy
 from swgoh_comlink.StatCalc import GameDataBuilder, GameDataBuilderAsync, StatCalc, StatCalcAsync
 from swgoh_comlink.swgoh_comlink import SwgohComlink
 from swgoh_comlink.swgoh_comlink_async import SwgohComlinkAsync
@@ -11,6 +12,7 @@ from swgoh_comlink.version import __version__ as version
 __all__ = [
     "GameDataBuilder",
     "GameDataBuilderAsync",
+    "RetryPolicy",
     "StatCalc",
     "StatCalcAsync",
     "SwgohComlink",

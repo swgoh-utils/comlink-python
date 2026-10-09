@@ -221,6 +221,13 @@ def _emit_text_segment(tokens: list[dict[str, Any]], segment: str) -> None:
             tokens.append({"type": "newline"})
 
 
+def _localize(localization: dict[str, str] | None, key: str | None, default: str) -> str:
+    """Return the markup-free localized string for ``key``, or ``default`` when it cannot be resolved."""
+    if not key or localization is None or (raw := localization.get(key)) is None:
+        return default
+    return parse_swgoh_string(raw).strip() or default
+
+
 def parse_swgoh_string(text: str, output: OutputFormat = "bare") -> str:
     """
     Parse a SWGOH BBCode-style rich text string and convert it to the
