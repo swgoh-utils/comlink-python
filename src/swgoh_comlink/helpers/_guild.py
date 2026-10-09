@@ -3,29 +3,39 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from collections.abc import Coroutine
+from typing import TYPE_CHECKING, Any, overload
 
 from ..exceptions import SwgohComlinkValueError
-from ._utils import get_function_name, sanitize_allycode
+from ._utils import _client_kind, get_function_name, sanitize_allycode
 
 if TYPE_CHECKING:
-    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync  # noqa: F401
+    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 
 
+@overload
+def get_guild_members(
+    comlink: SwgohComlink, player_id: str | None = None, allycode: str | int | None = None
+) -> list[Any]: ...
+@overload
+def get_guild_members(
+    comlink: SwgohComlinkAsync, player_id: str | None = None, allycode: str | int | None = None
+) -> Coroutine[Any, Any, list[Any]]: ...
 def get_guild_members(
     comlink: Any,
     player_id: str | None = None,
     allycode: str | int | None = None,
-) -> list[Any]:
+) -> list[Any] | Coroutine[Any, Any, list[Any]]:
     """Return list of guild member player allycodes based upon provided player ID or allycode
 
     Args:
-        comlink: Instance of SwgohComlink
+        comlink: Instance of SwgohComlink. An instance of SwgohComlinkAsync is also accepted, in which case
+            the result of :func:`async_get_guild_members` is returned for the caller to await.
         player_id: Player's ID
         allycode: Player's allycode
 
     Returns:
-        list of guild members objects
+        list of guild members objects, or an awaitable of it when ``comlink`` is a SwgohComlinkAsync
 
     Note:
         A player_id or allycode argument is required. The guild is requested with
@@ -33,8 +43,10 @@ def get_guild_members(
         member with an empty name, zero galactic power and no last activity time.
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", None)
-    if comlink_type != "SwgohComlink":
+    kind = _client_kind(comlink)
+    if kind == "async":
+        return async_get_guild_members(comlink, player_id=player_id, allycode=allycode)
+    if kind != "sync":
         err_msg = f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlink."
         raise SwgohComlinkValueError(err_msg)
 
@@ -75,8 +87,7 @@ async def async_get_guild_members(
         member with an empty name, zero galactic power and no last activity time.
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", None)
-    if comlink_type != "SwgohComlinkAsync":
+    if _client_kind(comlink) != "async":
         err_msg = (
             f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlinkAsync."
         )

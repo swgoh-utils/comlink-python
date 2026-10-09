@@ -8,11 +8,15 @@ import io
 import logging
 import time
 import zipfile
+from collections.abc import Coroutine
 from math import floor
-from typing import Any
+from typing import TYPE_CHECKING, Any, overload
 
 from ..exceptions import SwgohComlinkValueError
-from ._utils import get_function_name
+from ._utils import _client_kind, get_function_name
+
+if TYPE_CHECKING:
+    from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 
 logger = logging.getLogger(__name__)
 
@@ -149,23 +153,35 @@ def _parse_localization_bundle(bundle: dict[str, Any], language: str) -> dict[st
     return result
 
 
-def get_localization_dictionary(comlink: Any, language: str = "eng_us") -> dict[str, str]:
+@overload
+def get_localization_dictionary(comlink: SwgohComlink, language: str = "eng_us") -> dict[str, str]: ...
+@overload
+def get_localization_dictionary(
+    comlink: SwgohComlinkAsync, language: str = "eng_us"
+) -> Coroutine[Any, Any, dict[str, str]]: ...
+def get_localization_dictionary(
+    comlink: Any, language: str = "eng_us"
+) -> dict[str, str] | Coroutine[Any, Any, dict[str, str]]:
     """Fetch a localization bundle and parse it into a key/value dictionary.
 
     Args:
-        comlink: Instance of SwgohComlink.
+        comlink: Instance of SwgohComlink. An instance of SwgohComlinkAsync is also accepted, in which case
+            the result of :func:`async_get_localization_dictionary` is returned for the caller to await.
         language: Locale identifier to retrieve. [Default: ``"eng_us"``]
 
     Returns:
-        A dictionary mapping localization keys to their localized string values.
+        A dictionary mapping localization keys to their localized string values, or an awaitable of it
+        when ``comlink`` is a SwgohComlinkAsync.
 
     Raises:
-        SwgohComlinkValueError: If ``comlink`` is not a SwgohComlink instance, or the response
-            cannot be parsed for the requested language.
+        SwgohComlinkValueError: If ``comlink`` is not a SwgohComlink or SwgohComlinkAsync instance, or
+            the response cannot be parsed for the requested language.
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", None)
-    if comlink_type != "SwgohComlink":
+    kind = _client_kind(comlink)
+    if kind == "async":
+        return async_get_localization_dictionary(comlink, language=language)
+    if kind != "sync":
         err_msg = f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlink."
         raise SwgohComlinkValueError(err_msg)
 
@@ -192,8 +208,7 @@ async def async_get_localization_dictionary(comlink: Any, language: str = "eng_u
             cannot be parsed for the requested language.
 
     """
-    comlink_type = getattr(comlink, "__comlink_type__", None)
-    if comlink_type != "SwgohComlinkAsync":
+    if _client_kind(comlink) != "async":
         err_msg = (
             f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlinkAsync."
         )

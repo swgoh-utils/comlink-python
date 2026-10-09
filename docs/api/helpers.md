@@ -9,6 +9,21 @@ All public names are importable directly from `swgoh_comlink.helpers`:
 from swgoh_comlink.helpers import DataItems, Constants, sanitize_allycode
 ```
 
+### Sync and async clients
+
+Helpers that make requests take a client as their first argument. Each one has an `async_` twin,
+and the sync-named helper also accepts a `SwgohComlinkAsync`: it hands the call to the twin and
+returns an awaitable. Subclasses of either client are accepted too.
+
+```python
+members = get_guild_members(comlink, allycode=123456789)                # SwgohComlink
+members = await get_guild_members(async_comlink, allycode=123456789)    # SwgohComlinkAsync
+members = await async_get_guild_members(async_comlink, allycode=123456789)
+```
+
+Given an async client, argument errors are raised when the result is awaited rather than when the
+helper is called. The `async_` twins accept only async clients.
+
 ---
 
 ## DataItems
