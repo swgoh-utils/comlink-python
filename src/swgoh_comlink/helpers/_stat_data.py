@@ -757,7 +757,11 @@ ITEM_TYPES: dict[int, str] = {
     34: "LIGHTSPEED_TOKEN",
     35: "LOANED_UNIT_ERA_LEVEL_INCREASE",
 }
-"""``ItemType`` number to enum member name: the ``type`` of a reward, preview or inventory item."""
+"""``ItemType`` number to enum member name: the ``type`` of a reward, preview or inventory item.
+
+A snapshot of ``get_enums()["ItemType"]`` at game data 0.40.6, without ``ItemType_DEFAULT``. The game adds
+members over time: pass the live ``get_enums()`` response to :class:`ItemNames` to read the current table.
+"""
 
 CURRENCY_TYPES: dict[int, str] = {
     1: "GRIND",
@@ -812,6 +816,10 @@ CURRENCY_TYPES: dict[int, str] = {
 
 An inventory's ``currencyItem[].currency`` carries the number; a reward of ``ItemType`` ``CURRENCY``
 carries the member name as its ``id``.
+
+A snapshot of ``get_enums()["CurrencyType"]`` at game data 0.40.6, without ``CurrencyType_DEFAULT``. The
+game adds currencies over time: pass the live ``get_enums()`` response to :class:`ItemNames` to read the
+current table.
 """
 
 # No game data collection names a currency. These are the in-game English names, taken from the
@@ -868,4 +876,9 @@ CURRENCY_NAMES: dict[str, str] = {
     "ERA_CURRENCY": "Era Currency",
     "ERA_UPGRADE_CURRENCY": "Era Level Currency",
 }
-"""``CurrencyType`` member name to its English display name (see ``CURRENCY_TYPES``)."""
+"""``CurrencyType`` member name to its English display name (see ``CURRENCY_TYPES``).
+
+Curated by hand: ``get_enums()`` names the members but not the currencies. :class:`ItemNames` spells out a
+``CurrencyType`` member missing from this table from its name, so a ``GUILD_RAID_CURRENCY_13`` listed by the
+live ``get_enums()`` reads "Guild Raid Currency 13".
+"""

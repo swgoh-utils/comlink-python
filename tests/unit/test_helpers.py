@@ -1568,6 +1568,77 @@ class TestItemNames:
             ItemNames({}, not_a_dict)
 
 
+def _recorded_enums() -> dict[str, Any]:
+    """The ItemType and CurrencyType groups of a real get_enums() response (game data 0.40.6)."""
+    import json
+
+    return json.loads((Path(__file__).parent.parent / "resources" / "enums-item-currency.json").read_text())
+
+
+class TestItemNamesLiveEnums:
+    def test_snapshots_match_recorded_get_enums(self):
+        from swgoh_comlink.helpers import CURRENCY_TYPES, ITEM_TYPES
+
+        enums = _recorded_enums()
+        for snapshot, group in ((ITEM_TYPES, "ItemType"), (CURRENCY_TYPES, "CurrencyType")):
+            live = {number: name for name, number in enums[group].items() if name != f"{group}_DEFAULT"}
+            assert snapshot == live, f"{group} snapshot is out of date with get_enums()"
+
+    def test_live_enums_name_a_new_currency(self):
+        from swgoh_comlink.helpers import ItemNames
+
+        enums = _recorded_enums()
+        enums["CurrencyType"]["GUILD_RAID_CURRENCY_13"] = 99
+        live = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC, enums=enums)
+        snapshot = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC)
+
+        assert live.get(3, "99") == "Guild Raid Currency 13"
+        assert live.get("CURRENCY", "GUILD_RAID_CURRENCY_13") == "Guild Raid Currency 13"
+        # Curated names still win, and names that are not CurrencyType members stay unresolved.
+        assert live.get(3, "GRIND") == "Credits"
+        assert live.get(3, "NOT_A_CURRENCY") is None
+        # Without the live table the new currency is unknown.
+        assert snapshot.get(3, "99") is None
+        assert snapshot.get(3, "GUILD_RAID_CURRENCY_13") is None
+
+    def test_live_enums_recognise_a_new_item_type(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        live = ItemNames(_ITEM_GAME_DATA, enums={"ItemType": {"FUTURE_ITEM": 40}})
+        snapshot = ItemNames(_ITEM_GAME_DATA)
+        rewards = [{"type": 40, "id": "", "maxQuantity": 1}, {"type": "FUTURE_ITEM", "id": "", "maxQuantity": 1}]
+
+        assert live.item_type_number("FUTURE_ITEM") == 40
+        assert live.item_type_name(40) == "FUTURE_ITEM"
+        assert [(r["item_type"], r["name"]) for r in get_named_rewards(rewards, live)] == [
+            (40, "FUTURE_ITEM"),
+            (40, "FUTURE_ITEM"),
+        ]
+        assert snapshot.item_type_number("FUTURE_ITEM") is None
+        assert [(r["item_type"], r["name"]) for r in get_named_rewards(rewards, snapshot)] == [
+            (40, "40"),
+            ("FUTURE_ITEM", "FUTURE_ITEM"),
+        ]
+
+    def test_default_members_are_not_names(self):
+        from swgoh_comlink.helpers import ItemNames, get_named_rewards
+
+        names = ItemNames(_ITEM_GAME_DATA, enums=_recorded_enums())
+
+        assert names.item_type_name(0) is None
+        assert names.item_type_number("ItemType_DEFAULT") is None
+        assert names.get(3, "0") is None
+        (reward,) = get_named_rewards([{"type": 0, "id": "", "maxQuantity": 1}], names)
+        assert (reward["item_type"], reward["name"]) == (0, "0")
+
+    @pytest.mark.parametrize("enums", [["ItemType"], {"ItemType": ["MATERIAL"]}, {"CurrencyType": "GRIND"}])
+    def test_invalid_enums_raise(self, enums: Any):
+        from swgoh_comlink.helpers import ItemNames
+
+        with pytest.raises(SwgohComlinkValueError, match="enums"):
+            ItemNames(_ITEM_GAME_DATA, enums=enums)
+
+
 class TestGetNamedRewards:
     def test_flat_and_conditional_items(self):
         from swgoh_comlink.helpers import ItemNames, get_named_rewards

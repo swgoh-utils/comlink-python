@@ -85,7 +85,8 @@ class NamedReward(TypedDict):
     """A single reward item as returned by :func:`get_named_rewards`."""
 
     item_type: int | str | None
-    """The ``ItemType`` number (see ``ITEM_TYPES``). An enum name the table does not list is kept as given;
+    """The ``ItemType`` number (see ``ITEM_TYPES``, or the ``enums`` given to :class:`ItemNames`). An enum
+    name the table does not list is kept as given;
     an item with no ``type`` has ``None``."""
     id: str
     name: str
@@ -115,9 +116,28 @@ def _as_int(value: Any, enum_names: Mapping[str, int] | None = None) -> int | No
     return None
 
 
-def _item_type_number(item_type: Any) -> int | None:
-    """An ``ItemType`` given as a number, a numeric string or an enum name, as its number."""
-    return _as_int(item_type, _ITEM_TYPE_NUMBERS)
+def _enum_members(enums: Mapping[str, Any] | None, group: str) -> dict[str, int]:
+    """The members of one ``get_enums()`` group, without its ``<group>_DEFAULT`` placeholder."""
+    if enums is None:
+        return {}
+    members = enums.get(group)
+    if members is None:
+        return {}
+    if not isinstance(members, Mapping):
+        raise SwgohComlinkValueError(f"ItemNames: enums[{group!r}] must be a dictionary, not {type(members)}")
+    return {
+        name: number
+        for name, number in members.items()
+        if isinstance(name, str)
+        and isinstance(number, int)
+        and not isinstance(number, bool)
+        and name != f"{group}_DEFAULT"
+    }
+
+
+def _spell_out(member: str) -> str:
+    """A readable name from an enum member name: ``GUILD_RAID_CURRENCY_13`` reads "Guild Raid Currency 13"."""
+    return " ".join(word.capitalize() for word in member.split("_") if word)
 
 
 # The validators take the caller's name as a literal rather than from get_function_name(): that walks the
@@ -309,7 +329,9 @@ class ItemNames:
 
     - ``UNIT``: ``units``. The id may carry a rarity, as in ``ANAKINKNIGHT:ONE_STAR``.
     - ``CURRENCY``: no collection. The id is the ``CurrencyType`` name (or number), named from
-      ``CURRENCY_NAMES``, which is English whatever the localization.
+      ``CURRENCY_NAMES``, which is English whatever the localization. A ``CurrencyType`` member missing
+      from that table, such as a currency the game added since that ``enums`` lists, is spelled out from
+      its member name.
     - ``MATERIAL``: ``material``. A unit shard (``unitshard_<baseId>``) is named by the unit: through the
       material's own ``nameKey``, which also covers event shard ids no unit has (such as
       ``unitshard_VADER_JKL_EVENT``), then through ``units``.
@@ -331,23 +353,46 @@ class ItemNames:
             ``get_game_data`` returns.
         localization: Optional localization dictionary, e.g. from :func:`get_localization_dictionary`.
             When omitted, names are returned as their localization keys.
+        enums: Optional ``get_enums()`` response. Its ``ItemType`` and ``CurrencyType`` tables are used in
+            place of the ``ITEM_TYPES`` and ``CURRENCY_TYPES`` snapshots, so item types and currencies the
+            game has added since are recognised. [Default: the bundled snapshots]
 
     Raises:
         SwgohComlinkValueError: If ``game_data`` is not a dictionary, one of the collections it reads is
-            not a list, or ``localization`` is not a dictionary.
+            not a list, ``localization`` is not a dictionary, or ``enums`` (or one of the two groups it
+            reads) is not a dictionary.
 
     Examples:
         >>> game_data = comlink.get_game_data(items=DataItems.MATERIAL | DataItems.EQUIPMENT | DataItems.UNITS)  # doctest: +SKIP
-        >>> names = ItemNames(game_data, get_localization_dictionary(comlink))  # doctest: +SKIP
+        >>> names = ItemNames(
+        ...     game_data, get_localization_dictionary(comlink), enums=comlink.get_enums()
+        ... )  # doctest: +SKIP
         >>> names.get("MATERIAL", "unitshard_GLLEIA")  # doctest: +SKIP
         'Leia Organa'
         >>> names.get(3, "GRIND")  # doctest: +SKIP
         'Credits'
     """
 
-    def __init__(self, game_data: Mapping[str, Any], localization: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        game_data: Mapping[str, Any],
+        localization: dict[str, str] | None = None,
+        *,
+        enums: Mapping[str, Any] | None = None,
+    ) -> None:
         if not isinstance(game_data, Mapping):
             raise SwgohComlinkValueError(f"ItemNames: 'game_data' must be a dictionary, not {type(game_data)}")
+        if enums is not None and not isinstance(enums, Mapping):
+            raise SwgohComlinkValueError(f"ItemNames: 'enums' must be a dictionary, not {type(enums)}")
+        # The live tables win over the snapshots, which still cover a member the live response leaves out.
+        self._item_type_numbers = {**_ITEM_TYPE_NUMBERS, **_enum_members(enums, "ItemType")}
+        self._item_type_names = {number: name for name, number in self._item_type_numbers.items()}
+        currency_numbers = {
+            **{name: number for number, name in CURRENCY_TYPES.items()},
+            **_enum_members(enums, "CurrencyType"),
+        }
+        self._currency_members = {number: name for name, number in currency_numbers.items()}
+        self._currency_names = set(currency_numbers)
         for collection in _ITEM_COLLECTIONS:
             if collection in game_data and not isinstance(game_data[collection], list):
                 raise SwgohComlinkValueError(
@@ -404,8 +449,10 @@ class ItemNames:
 
     def _resolve(self, item_type: int, item_id: str) -> str | None:
         if item_type == _CURRENCY:
-            member = CURRENCY_TYPES.get(int(item_id)) if item_id.isdigit() else item_id
-            return CURRENCY_NAMES.get(member) if member else None
+            member = self._currency_members.get(int(item_id)) if item_id.isdigit() else item_id
+            if member is None or member not in self._currency_names:
+                return None
+            return CURRENCY_NAMES.get(member) or _spell_out(member)
         if item_type == _UNIT:
             return self._unit_name(item_id.split(":", 1)[0])
         if item_type == _MYSTERY_STAT_MOD:
@@ -418,6 +465,17 @@ class ItemNames:
             name = self._unit_name(item_id.removeprefix(_SHARD_PREFIX))
         return name
 
+    def item_type_number(self, item_type: Any) -> int | None:
+        """Return the ``ItemType`` number of a type given as a number, a numeric string or a member name.
+
+        Returns ``None`` for a member name this instance's table does not list.
+        """
+        return _as_int(item_type, self._item_type_numbers)
+
+    def item_type_name(self, number: int) -> str | None:
+        """Return the ``ItemType`` member name for a number, or ``None`` when the table does not list it."""
+        return self._item_type_names.get(number)
+
     def get(self, item_type: int | str, item_id: str | int, default: str | None = None) -> str | None:
         """Return the display name of an item, or ``default`` when it cannot be resolved.
 
@@ -429,7 +487,7 @@ class ItemNames:
         Returns:
             The item's display name, or ``default``.
         """
-        number = _item_type_number(item_type)
+        number = self.item_type_number(item_type)
         if number is None:
             return default
         key = (number, str(item_id))
@@ -495,7 +553,7 @@ def get_named_rewards(rewards: list[dict[str, Any]], item_names: ItemNames) -> l
             continue
         for item, requirement_id in items:
             raw_type = item.get("type")
-            number = _item_type_number(raw_type)
+            number = item_names.item_type_number(raw_type)
             item_type: int | str | None = (
                 number if number is not None else (None if raw_type is None else str(raw_type))
             )
@@ -505,7 +563,8 @@ def get_named_rewards(rewards: list[dict[str, Any]], item_names: ItemNames) -> l
                 base_id = item_id.split(":", 1)[0]
             elif number == _MATERIAL and item_id.startswith(_SHARD_PREFIX):
                 base_id = item_id.removeprefix(_SHARD_PREFIX)
-            fallback = item_id or ITEM_TYPES.get(number or 0) or ("" if item_type is None else str(item_type))
+            type_name = None if number is None else item_names.item_type_name(number)
+            fallback = item_id or type_name or ("" if item_type is None else str(item_type))
             name = fallback if item_type is None else item_names.get(item_type, item_id, fallback) or fallback
             result.append(
                 {
