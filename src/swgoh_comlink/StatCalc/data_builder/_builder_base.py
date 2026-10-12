@@ -16,6 +16,7 @@ The output dict has six top-level keys:
 from __future__ import annotations
 
 import logging
+import math
 import re
 from typing import Any
 
@@ -648,21 +649,27 @@ def _xp_rows(rows: list[dict[str, Any]]) -> dict[str, float]:
 def _num(value: Any) -> int | float:
     """Coerce *value* to ``int`` or ``float``, defaulting to ``0``.
 
-    Whole-number floats (e.g. ``10.0``) are normalised to ``int`` so that
-    the output matches the JS reference (which has no int/float distinction).
+    Game data carries ints, floats and decimal strings. Whole-number floats (e.g. ``10.0``) are
+    normalised to ``int`` so that the output matches the JS reference (which has no int/float
+    distinction). Anything else, including a bool or a non-finite float, reads as ``0``.
     """
-    if isinstance(value, float):
-        return int(value) if value == int(value) else value
+    if isinstance(value, bool):
+        return 0
     if isinstance(value, int):
         return value
-    try:
-        s = str(value)
-        f = float(s) if "." in s else int(s)
-        if isinstance(f, float) and f == int(f):
-            return int(f)
-        return f
-    except (ValueError, TypeError):
+    if isinstance(value, float):
+        number = value
+    else:
+        try:
+            s = str(value)
+            number = float(s) if "." in s else int(s)
+        except ValueError:
+            return 0
+        if isinstance(number, int):
+            return number
+    if not math.isfinite(number):
         return 0
+    return int(number) if number.is_integer() else number
 
 
 def _resolve_skills(refs: list[dict[str, Any]], skills_map: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
