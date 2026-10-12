@@ -329,9 +329,54 @@ class _FormattingState:
         self.italic_depth = 0
         self.underline_depth = 0
         self.strike_depth = 0
+        # Style depths when the active web color span opened; deeper styles were opened inside it.
+        self.span_styles: tuple[int, int, int, int] = (0, 0, 0, 0)
 
     def any_style_active(self) -> bool:
         return bool(self.bold_depth or self.italic_depth or self.underline_depth or self.strike_depth)
+
+    def style_depths(self) -> tuple[int, int, int, int]:
+        return (self.bold_depth, self.italic_depth, self.underline_depth, self.strike_depth)
+
+
+# Web style tags, outermost first, in the order ``style_depths`` reports them.
+_WEB_STYLE_TAGS = ("b", "em", "u", "s")
+
+
+def _web_open_tags(depths: tuple[int, ...]) -> list[str]:
+    """Opening tags for the given style depths, outermost first."""
+    return [f"<{tag}>" for tag, depth in zip(_WEB_STYLE_TAGS, depths, strict=True) for _ in range(depth)]
+
+
+def _web_close_tags(depths: tuple[int, ...]) -> list[str]:
+    """Closing tags for the given style depths, innermost first."""
+    return [
+        f"</{tag}>" for tag, depth in reversed(list(zip(_WEB_STYLE_TAGS, depths, strict=True))) for _ in range(depth)
+    ]
+
+
+def _web_span_inner_styles(state: _FormattingState) -> tuple[int, ...]:
+    """Style depths opened inside the active color span."""
+    return tuple(max(0, now - then) for now, then in zip(state.style_depths(), state.span_styles, strict=True))
+
+
+def _set_web_color(color: tuple[int, int, int, int] | None, state: _FormattingState, result: list[str]) -> None:
+    """Close the active color span, if any, and open one for ``color``, if given.
+
+    Styles opened inside the old span are closed before its ``</span>`` and reopened afterwards, inside
+    the new span when there is one, so the HTML stays well nested.
+    """
+    if state.active_color is None:
+        if color is not None:
+            state.span_styles = state.style_depths()
+            result.append(f'<span style="{_web_color_style(color)}">')
+        return
+    inner = _web_span_inner_styles(state)
+    result.extend(_web_close_tags(inner))
+    result.append("</span>")
+    if color is not None:
+        result.append(f'<span style="{_web_color_style(color)}">')
+    result.extend(_web_open_tags(inner))
 
 
 def _web_color_style(color: tuple[int, int, int, int]) -> str:
@@ -351,14 +396,11 @@ def _handle_color(token: dict[str, Any], output: OutputFormat, state: _Formattin
         int(token["b"]),
         int(token["a"]),
     )
-    if output == "web" and state.active_color is not None:
-        # Close the previous span before opening a new one.
-        result.append("</span>")
+    if output == "web":
+        _set_web_color(new_color, state, result)
     state.active_color = new_color
     if output == "terminal":
         result.append(_hex_to_ansi_truecolor(f"{new_color[0]:02X}{new_color[1]:02X}{new_color[2]:02X}"))
-    elif output == "web":
-        result.append(f'<span style="{_web_color_style(new_color)}">')
 
 
 def _handle_alpha(token: dict[str, Any], output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
@@ -369,15 +411,13 @@ def _handle_alpha(token: dict[str, Any], output: OutputFormat, state: _Formattin
     else:
         r, g, b, _ = state.active_color
         new_color = (r, g, b, alpha)
-    if output == "web" and state.active_color is not None:
-        result.append("</span>")
+    if output == "web":
+        _set_web_color(new_color, state, result)
     state.active_color = new_color
     if output == "terminal":
         # ANSI truecolor foreground has no alpha channel; the RGB stays the same,
         # so only re-emit the sequence if the RGB actually changed.
         result.append(_hex_to_ansi_truecolor(f"{new_color[0]:02X}{new_color[1]:02X}{new_color[2]:02X}"))
-    elif output == "web":
-        result.append(f'<span style="{_web_color_style(new_color)}">')
 
 
 def _handle_color_reset(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
@@ -387,7 +427,7 @@ def _handle_color_reset(output: OutputFormat, state: _FormattingState, result: l
         result.append(ANSI_RESET)
         _reapply_terminal_styles(state, result)
     elif output == "web" and state.active_color is not None:
-        result.append("</span>")
+        _set_web_color(None, state, result)
     state.active_color = None
 
 
@@ -398,7 +438,7 @@ def _handle_color_end(output: OutputFormat, state: _FormattingState, result: lis
         result.append(ANSI_RESET)
         _reapply_terminal_styles(state, result)
     elif output == "web" and state.active_color is not None:
-        result.append("</span>")
+        _set_web_color(None, state, result)
     state.active_color = None
 
 
@@ -574,19 +614,24 @@ def _finalize_output(output: OutputFormat, state: _FormattingState, result: list
     """Finalize and return the formatted output, balancing any unclosed markup."""
     if output == "terminal" and (state.active_color or state.any_style_active()):
         result.append(ANSI_RESET)
+    elif output == "discord":
+        # Close any styles the source string left open, inner-most first.
+        result.append(
+            "~~" * state.strike_depth
+            + "__" * state.underline_depth
+            + "*" * state.italic_depth
+            + "**" * state.bold_depth
+        )
     elif output == "web":
-        # Close any tags the source string left dangling so the HTML stays well-formed.
-        # Inner-most first: styles, then color span.
-        for _ in range(state.strike_depth):
-            result.append("</s>")
-        for _ in range(state.underline_depth):
-            result.append("</u>")
-        for _ in range(state.italic_depth):
-            result.append("</em>")
-        for _ in range(state.bold_depth):
-            result.append("</b>")
+        # Close any tags the source string left dangling so the HTML stays well-formed, inner-most
+        # first: styles opened inside the color span, the span, then the styles around it.
+        outer = state.style_depths()
         if state.active_color is not None:
+            inner = _web_span_inner_styles(state)
+            result.extend(_web_close_tags(inner))
             result.append("</span>")
+            outer = tuple(now - extra for now, extra in zip(outer, inner, strict=True))
+        result.extend(_web_close_tags(outer))
 
     formatted = "".join(result)
 

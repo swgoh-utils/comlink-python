@@ -3561,6 +3561,20 @@ class TestParseSwgohStringDiscord:
         result = parse_swgoh_string("[c][FF0000]red[/c]", output="discord")
         assert result == "red"
 
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            ("[b]no close", "**no close**"),
+            ("[b][i][u][s]x", "***__~~x~~__***"),
+            ("[c][FF0000][i][u][s]x[/c]y", "*__~~xy~~__*"),
+        ],
+        ids=["unclosed-bold", "unclosed-four-styles", "color-end-with-open-styles"],
+    )
+    def test_unclosed_styles_are_closed(self, text: str, expected: str):
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string(text, output="discord") == expected
+
 
 class TestParseSwgohStringWeb:
     def test_color_span(self):
@@ -3597,6 +3611,36 @@ class TestParseSwgohStringWeb:
 
         result = parse_swgoh_string("simple", output="web")
         assert result == "<p>simple</p>"
+
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            (
+                "[c][FF0000][i][u][s]x[/c]y",
+                '<p><span style="color:#FF0000"><em><u><s>x</s></u></em></span><em><u><s>y</s></u></em></p>',
+            ),
+            (
+                "[b][FF0000][i]x[-]y[/i][/b]",
+                '<p><b><span style="color:#FF0000"><em>x</em></span><em>y</em></b></p>',
+            ),
+            (
+                "[FF0000][i]x[00FF00]y[/i]",
+                '<p><span style="color:#FF0000"><em>x</em></span><span style="color:#00FF00"><em>y</em></span></p>',
+            ),
+            (
+                "[FF0000][b]x[8]y[/b]",
+                '<p><span style="color:#FF0000"><b>x</b></span><span style="color:rgba(255,0,0,0.533)"><b>y</b></span></p>',
+            ),
+            ("[b][FF0000]x", '<p><b><span style="color:#FF0000">x</span></b></p>'),
+            ("[FF0000][b]x", '<p><span style="color:#FF0000"><b>x</b></span></p>'),
+        ],
+        ids=["color-end", "color-reset", "color-change", "alpha-change", "unclosed-outer", "unclosed-inner"],
+    )
+    def test_styles_opened_inside_a_span_stay_nested(self, text: str, expected: str):
+        """Closing a color span closes the styles opened inside it first, then reopens them after."""
+        from swgoh_comlink.helpers._localization import parse_swgoh_string
+
+        assert parse_swgoh_string(text, output="web") == expected
 
 
 class TestParseSwgohStringComplex:
