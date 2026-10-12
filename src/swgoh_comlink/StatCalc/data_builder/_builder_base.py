@@ -569,10 +569,8 @@ def _mod_cr_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
         key = r.get("key", "")
         if not key.endswith("1:0"):
             continue
-        parts = key.split(":")
-        if len(parts) < 2:
-            continue
-        pips, level = parts[0], parts[1]
+        # endswith("1:0") guarantees at least two parts
+        pips, level = key.split(":")[:2]
         out.setdefault(pips, {})[level] = _num(r.get("value", 0))
     return out
 

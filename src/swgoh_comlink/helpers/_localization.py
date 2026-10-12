@@ -211,8 +211,6 @@ def _parse_tokens(text: str) -> list[dict[str, Any]]:
 
 def _emit_text_segment(tokens: list[dict[str, Any]], segment: str) -> None:
     """Emit text segment(s), splitting on literal '\\n' escapes into newline tokens."""
-    if not segment:
-        return
     parts = segment.split("\\n")
     for idx, part in enumerate(parts):
         if part:
@@ -546,10 +544,6 @@ def _reset_and_reapply_terminal(
     drop_strike: bool = False,
 ) -> None:
     """Emit ANSI_RESET and reapply remaining active color/styles (minus any dropped ones)."""
-    if not (
-        state.active_color or state.any_style_active() or drop_bold or drop_italic or drop_underline or drop_strike
-    ):
-        return
     result.append(ANSI_RESET)
     if state.active_color is not None:
         r, g, b, _ = state.active_color

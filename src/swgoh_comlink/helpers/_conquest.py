@@ -130,12 +130,8 @@ def calc_stamina_full_time(unit: dict[str, Any], pass_plus: bool = False, *, now
     factor = 1.33 if pass_plus else 1.0
     missing = max(0, 100 - remaining)
     # The fewest whole minutes for which calc_current_stamina's floor(minutes / 30 * factor) covers the
-    # missing points, nudged to absorb float rounding in the estimate.
+    # missing points. Exact for both factors and every missing count from 0 to 100, float rounding included.
     minutes = ceil(missing * 30 / factor)
-    while floor(minutes / 30 * factor) < missing:
-        minutes += 1
-    while minutes > 0 and floor((minutes - 1) / 30 * factor) >= missing:
-        minutes -= 1
     return datetime.fromtimestamp(last_refresh + minutes * 60, tz=timezone.utc)
 
 
