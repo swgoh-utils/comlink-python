@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 from pathlib import Path
+from types import ModuleType
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
+from swgoh_comlink.StatCalc.data_builder import builder, builder_async
 
 _GAME_DATA_PATH = Path(__file__).parent.parent / "resources" / "gameData.json"
 
@@ -59,77 +63,47 @@ class TestStatCalcAsyncCreate:
         assert calc._unit_data is not None
 
 
-# ── GameDataBuilder (sync) ─────────────────────────────────────────────
+# ── GameDataBuilder / GameDataBuilderAsync ─────────────────────────────
+#
+# The builders only fetch raw Comlink data and hand it to the shared transform, which
+# test_builder_base.py covers in depth. These tests pin that wiring: the exact fetch
+# arguments, and that the transform's output is returned for a raw payload that
+# actually produces data (gameData.json is already-built StatCalc data, not a raw
+# Comlink response, so feeding it in yields six empty sections).
+
+_RAW_GAME_DATA = {
+    "equipment": [
+        {"id": "gear001", "equipmentStat": {"stat": [{"unitStatId": 1, "unscaledDecimalValue": 100}]}},
+    ],
+}
 
 
-class TestGameDataBuilder:
-    def test_build_calls_get_game_data(self):
-        from swgoh_comlink.StatCalc.data_builder.builder import GameDataBuilder
+@pytest.mark.parametrize(
+    ("module", "builder_class", "client_mock"),
+    [
+        pytest.param(builder, builder.GameDataBuilder, MagicMock, id="sync"),
+        pytest.param(builder_async, builder_async.GameDataBuilderAsync, AsyncMock, id="async"),
+    ],
+)
+async def test_builder_fetches_required_items_and_transforms_them(
+    module: ModuleType, builder_class: type, client_mock: type
+) -> None:
+    client = client_mock()
+    client.get_game_data.return_value = _RAW_GAME_DATA
 
-        raw_data = json.loads(_GAME_DATA_PATH.read_text())
-        mock_client = MagicMock()
-        mock_client.get_game_data.return_value = raw_data
+    result = builder_class(client).build()
+    if inspect.isawaitable(result):
+        result = await result
 
-        builder = GameDataBuilder(mock_client)
-        result = builder.build()
-
-        mock_client.get_game_data.assert_called_once()
-        assert "unitData" in result
-        assert "gearData" in result
-        assert "modSetData" in result
-        assert "crTables" in result
-        assert "gpTables" in result
-        assert "relicData" in result
-
-    def test_build_output_has_expected_keys(self):
-        from swgoh_comlink.StatCalc.data_builder.builder import GameDataBuilder
-
-        raw_data = json.loads(_GAME_DATA_PATH.read_text())
-        mock_client = MagicMock()
-        mock_client.get_game_data.return_value = raw_data
-
-        result = GameDataBuilder(mock_client).build()
-        assert isinstance(result["unitData"], dict)
-        assert isinstance(result["gearData"], dict)
-        assert isinstance(result["modSetData"], dict)
-
-
-# ── GameDataBuilderAsync ───────────────────────────────────────────────
-
-
-class TestGameDataBuilderAsync:
-    @pytest.mark.asyncio
-    async def test_build_calls_get_game_data(self):
-        from swgoh_comlink.StatCalc.data_builder.builder_async import GameDataBuilderAsync
-
-        raw_data = json.loads(_GAME_DATA_PATH.read_text())
-        mock_client = AsyncMock()
-        mock_client.get_game_data.return_value = raw_data
-
-        builder = GameDataBuilderAsync(mock_client)
-        result = await builder.build()
-
-        mock_client.get_game_data.assert_called_once()
-        assert "unitData" in result
-        assert "gearData" in result
-
-    @pytest.mark.asyncio
-    async def test_build_output_matches_sync(self):
-        from swgoh_comlink.StatCalc.data_builder.builder import GameDataBuilder
-        from swgoh_comlink.StatCalc.data_builder.builder_async import GameDataBuilderAsync
-
-        raw_data = json.loads(_GAME_DATA_PATH.read_text())
-
-        sync_client = MagicMock()
-        sync_client.get_game_data.return_value = raw_data
-        sync_result = GameDataBuilder(sync_client).build()
-
-        async_client = AsyncMock()
-        async_client.get_game_data.return_value = raw_data
-        async_result = await GameDataBuilderAsync(async_client).build()
-
-        assert sync_result.keys() == async_result.keys()
-        assert len(sync_result["unitData"]) == len(async_result["unitData"])
+    client.get_game_data.assert_called_once_with(items=str(int(module._REQUIRED_ITEMS)), include_pve_units=False)
+    assert result == {
+        "unitData": {},
+        "gearData": {"gear001": {"stats": {"1": 100}}},
+        "modSetData": {},
+        "crTables": {},
+        "gpTables": {},
+        "relicData": {},
+    }
 
 
 # ── StatCalcAsync GitHub fetch error handling ──────────────────────────

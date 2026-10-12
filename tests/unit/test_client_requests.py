@@ -7,6 +7,8 @@ through :func:`call` so one test body covers both implementations.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import inspect
 import json
 from collections.abc import AsyncIterator, Callable
@@ -365,16 +367,67 @@ async def test_invalid_arguments_raise_before_any_request(
 # ── Authentication ───────────────────────────────────────────────────────
 
 
-async def test_hmac_headers_sent_on_request(make_comlink: Callable[..., Client], httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=METADATA_URL, json=METADATA)
-    httpx_mock.add_response(url=ENUMS_URL, json={"CombatType": 1})
+def _comlink_signature(request: httpx.Request, secret_key: str) -> str:
+    """Recompute an HMAC signature the way Comlink verifies it: from the request as it arrived.
 
-    await call(make_comlink(access_key="pub", secret_key="priv"), "get_enums")
+    Comlink re-serializes the parsed JSON body compactly, and a bodiless request hashes ``""``.
+    Deriving the expected value from the wire (not from the client's own inputs) catches any
+    drift between the bytes that were signed and the bytes that were sent (see #51).
+    """
+    body = json.loads(request.content) if request.content else ""
+    signature = hmac.new(secret_key.encode(), digestmod=hashlib.sha256)
+    signature.update(request.headers["X-Date"].encode())
+    signature.update(request.method.encode())
+    signature.update(request.url.path.encode())
+    signature.update(hashlib.md5(json.dumps(body, separators=(",", ":")).encode()).hexdigest().encode())  # noqa: S324
+    return signature.hexdigest()
 
-    request = httpx_mock.get_request(url=ENUMS_URL)
-    assert request is not None
-    assert request.headers["Authorization"].startswith("HMAC-SHA256 Credential=pub,Signature=")
-    assert "X-Date" in request.headers
+
+@pytest.mark.parametrize(
+    ("method", "kwargs"),
+    [
+        pytest.param("get_enums", {}, id="get-without-body"),
+        pytest.param("get_player", {"allycode": 123456789}, id="post-with-body"),
+        pytest.param("get_game_metadata", {}, id="post-with-empty-body"),
+    ],
+)
+async def test_hmac_signature_matches_the_request_sent(
+    make_comlink: Callable[..., Client], httpx_mock: HTTPXMock, method: str, kwargs: dict[str, Any]
+) -> None:
+    httpx_mock.add_response(json=METADATA, is_reusable=True)
+
+    await call(make_comlink(access_key="pub", secret_key="priv"), method, **kwargs)
+
+    requests = httpx_mock.get_requests()
+    assert requests
+    for request in requests:
+        expected = f"HMAC-SHA256 Credential=pub,Signature={_comlink_signature(request, 'priv')}"
+        assert request.headers["Authorization"] == expected, request.url
+
+
+# ── Client construction ──────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("verify_ssl", [True, False])
+async def test_verify_ssl_reaches_both_http_clients(
+    make_comlink: Callable[..., Client], monkeypatch: pytest.MonkeyPatch, verify_ssl: bool
+) -> None:
+    seen: list[Any] = []
+
+    def recording(constructor: Callable[..., Any]) -> Callable[..., Any]:
+        def construct(*args: Any, **kwargs: Any) -> Any:
+            seen.append(kwargs.get("verify"))
+            return constructor(*args, **kwargs)
+
+        return construct
+
+    monkeypatch.setattr(httpx, "Client", recording(httpx.Client))
+    monkeypatch.setattr(httpx, "AsyncClient", recording(httpx.AsyncClient))
+
+    make_comlink(verify_ssl=verify_ssl)
+
+    # One HTTP client for Comlink, one for the stats service.
+    assert seen == [verify_ssl, verify_ssl]
 
 
 # ── Context managers ─────────────────────────────────────────────────────

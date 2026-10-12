@@ -457,32 +457,35 @@ class TestCalcShipStats:
 
     def test_wrong_crew_member_raises(self, calc, game_data, player):
         ship, crew = _find_ship(player["rosterUnit"], game_data["unitData"], with_crew=True)
-        # Swap in a wrong crew member
-        fake_crew = [_find_char(player["rosterUnit"])] * len(crew)
-        # Only raises if fake_crew defIds are not in meta["crew"]
-        defid = ship["definitionId"].split(":")[0]
-        expected_crew = game_data["unitData"][defid]["crew"]
-        fake_defid = fake_crew[0]["definitionId"].split(":")[0]
-        if fake_defid not in expected_crew:
-            with pytest.raises(ValueError, match="not in"):
-                calc.calc_ship_stats(ship, fake_crew)
+        expected_crew = game_data["unitData"][ship["definitionId"].split(":")[0]]["crew"]
+        # A character that is in game data but not in this ship's crew.
+        outsider = next(
+            copy.deepcopy(u)
+            for u in player["rosterUnit"]
+            if (defid := u["definitionId"].split(":")[0]) not in expected_crew
+            and game_data["unitData"].get(defid, {}).get("combatType") == 1
+        )
+        with pytest.raises(ValueError, match="not in"):
+            calc.calc_ship_stats(ship, [outsider, *crew[1:]])
 
 
 # ── GP calculations ──────────────────────────────────────────────────────
 
 
 class TestCalcGP:
-    def test_char_gp_positive(self, calc, player):
+    def test_char_gp_matches_stats_pipeline(self, calc, player):
         char = _find_char(player["rosterUnit"], relic_min=3)
-        gp = calc.calc_char_gp(char)
+        gp = calc.calc_char_gp(copy.deepcopy(char))
         assert isinstance(gp, int)
         assert gp > 0
+        assert gp == calc.calc_char_stats(char)["gp"]
 
-    def test_ship_gp_with_crew(self, calc, game_data, processed_player):
+    def test_ship_gp_matches_stats_pipeline(self, calc, game_data, processed_player):
         ship, crew = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=True)
-        gp = calc.calc_ship_gp(ship, crew)
+        gp = calc.calc_ship_gp(copy.deepcopy(ship), copy.deepcopy(crew))
         assert isinstance(gp, int)
         assert gp > 0
+        assert gp == calc.calc_ship_stats(ship, crew)["gp"]
 
     def test_char_gp_with_purchased_ability(self, calc, player):
         """Cover purchasedAbilityId GP contribution (lines 1018-1021)."""
@@ -549,17 +552,22 @@ class TestCrewRating:
         rating = calc._get_crewless_crew_rating(norm_ship)
         assert rating > 0
 
-    def test_crewless_skills_hardware_multiplier(self, calc, game_data, processed_player):
-        """Ensure hardware skills use the 0.696 multiplier."""
-        ship, _ = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=False)
-        norm_ship, _ = calc._normalize_ship_and_crew(ship, [])
-        cr = calc._get_crewless_skills_crew_rating(norm_ship.get("skills", []))
-        assert cr > 0
+    @pytest.mark.parametrize(
+        ("skill_ids", "multiplier"),
+        [
+            pytest.param(["hardwareskill_TEST"], 0.696, id="hardware"),
+            pytest.param(["basicskill_TEST"], 2.46, id="other"),
+            pytest.param(["hardwareskill_TEST", "basicskill_TEST"], 0.696 + 2.46, id="mixed"),
+        ],
+    )
+    def test_crewless_skills_crew_rating_multipliers(self, calc, skill_ids, multiplier):
+        """Hardware skills weigh 0.696x the tier's ability-level CR; every other skill 2.46x."""
+        skills = [{"id": skill_id, "tier": 8} for skill_id in skill_ids]
+        # abilityLevelCR at tier 8 is 523 in tests/resources/gameData.json.
+        assert calc._get_crewless_skills_crew_rating(skills) == pytest.approx(multiplier * 523)
 
     def test_skill_crew_rating(self, calc):
-        skill = {"id": "basicskill_TEST", "tier": 8}
-        cr = calc._get_skill_crew_rating(skill)
-        assert cr >= 0
+        assert calc._get_skill_crew_rating({"id": "basicskill_TEST", "tier": 8}) == 523
 
 
 # ── calc_roster_stats ────────────────────────────────────────────────────
@@ -646,12 +654,14 @@ class TestGetSkillGP:
         pytest.skip("No skill with powerOverrideTags found")
 
     def test_skill_without_override(self, calc, game_data):
-        for defid, meta in game_data["unitData"].items():
-            for skill in meta.get("skills", []):
-                if not skill.get("powerOverrideTags"):
-                    gp = calc._get_skill_gp(defid, {"id": skill["id"], "tier": 8})
-                    assert gp >= 0
-                    return
+        defid, skill_id = next(
+            (defid, skill["id"])
+            for defid, meta in game_data["unitData"].items()
+            for skill in meta.get("skills", [])
+            if not skill.get("powerOverrideTags")
+        )
+        # abilityLevelGP at tier 8 is 523 in tests/resources/gameData.json.
+        assert calc._get_skill_gp(defid, {"id": skill_id, "tier": 8}) == 523
 
     def test_missing_skill_returns_zero(self, calc, game_data):
         defid = next(iter(game_data["unitData"]))
@@ -717,42 +727,12 @@ class TestCalcPlayerStatsEdgeCases:
         assert len(result) == 1
 
 
-class TestCalcRosterStatsDict:
-    def test_roster_as_dict(self, calc, game_data, processed_player):
-        """Covers the dict branch in calc_roster_stats (lines 169-190)."""
-        roster = processed_player["rosterUnit"]
-        # Build a dict keyed by unit ID with list-of-unit-dicts format
-        unit_dict: dict[str, list[dict[str, Any]]] = {}
-        for u in roster[:5]:
-            defid = u.get("definitionId", "").split(":")[0]
-            if not defid:
-                continue
-            meta = game_data["unitData"].get(defid, {})
-            if meta.get("combatType") != 1:
-                continue
-            unit_dict[defid] = [
-                {
-                    "currentRarity": u.get("currentRarity", u.get("rarity")),
-                    "currentLevel": u.get("currentLevel", u.get("level")),
-                    "currentTier": u.get("currentTier", u.get("gear")),
-                    "gear": [],
-                    "skill": u.get("skill", []),
-                }
-            ]
-            if len(unit_dict) >= 3:
-                break
-        if unit_dict:
-            result = calc.calc_roster_stats(unit_dict)
-            assert isinstance(result, dict)
-
-
 class TestCalcRosterStatsSkipsUnknown:
-    def test_unknown_unit_skipped(self, calc):
-        """Units not in game data are skipped (lines 148-152)."""
-        fake_unit = {"defId": "NONEXISTENT_UNIT_XYZ", "rarity": 7, "level": 85}
-        result = calc.calc_roster_stats([fake_unit])
-        assert isinstance(result, list)
-        # Should not crash, just skip
+    def test_unknown_and_unidentified_units_are_left_untouched(self, calc):
+        """Units without an id, or whose id is not in game data, are skipped (lines 148-152)."""
+        roster = [{"defId": "NONEXISTENT_UNIT_XYZ", "rarity": 7, "level": 85}, {"rarity": 7, "level": 85}]
+        result = calc.calc_roster_stats(copy.deepcopy(roster))
+        assert result == roster
 
 
 class TestShipNotInGameData:
@@ -777,11 +757,11 @@ class TestShipGPCrewValidation:
         ship, crew = _find_ship(processed_player["rosterUnit"], game_data["unitData"], with_crew=True)
         norm_ship, norm_crew = calc._normalize_ship_and_crew(ship, crew)
         # Replace a crew member with a fake one
-        if norm_crew:
-            fake_crew = copy.deepcopy(norm_crew)
-            fake_crew[0]["defId"] = "FAKE_CREW_MEMBER"
-            with pytest.raises(ValueError, match="not in"):
-                calc._calc_ship_gp(norm_ship, fake_crew)
+        assert norm_crew
+        fake_crew = copy.deepcopy(norm_crew)
+        fake_crew[0]["defId"] = "FAKE_CREW_MEMBER"
+        with pytest.raises(ValueError, match="not in"):
+            calc._calc_ship_gp(norm_ship, fake_crew)
 
 
 # ── Raw-format ultimate ability GP ───────────────────────────────────────

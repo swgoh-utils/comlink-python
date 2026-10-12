@@ -216,37 +216,14 @@ class TestConvertRelicTier:
 
 
 class TestGetMaxRankJump:
-    def test_rank_below_6_returns_1(self):
+    @pytest.mark.parametrize(
+        ("rank", "expected"),
+        [(1, 1), (5, 1), (6, 2), (10, 6), (54, 43), (55, 46), (100, 84)],
+    )
+    def test_max_rank_jump(self, rank, expected):
         from swgoh_comlink.helpers._arena import get_max_rank_jump
 
-        assert get_max_rank_jump(1) == 1
-        assert get_max_rank_jump(5) == 1
-
-    def test_rank_6(self):
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
-
-        result = get_max_rank_jump(6)
-        assert result == 6 - (3 + max(5 // 6, 1))
-
-    def test_rank_54(self):
-        from math import floor
-
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
-
-        result = get_max_rank_jump(54)
-        assert result == 54 - (3 + max(floor(53 / 6), 1))
-
-    def test_rank_55(self):
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
-
-        result = get_max_rank_jump(55)
-        assert result == int(round(55 * 0.85 - 1))
-
-    def test_rank_100(self):
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
-
-        result = get_max_rank_jump(100)
-        assert result == int(round(100 * 0.85 - 1))
+        assert get_max_rank_jump(rank) == expected
 
 
 class TestGetArenaPayout:
@@ -3476,6 +3453,9 @@ class TestParseSwgohStringBare:
         assert parse_swgoh_string("[b]text[/b]") == "text"
 
 
+_RED = "\033[38;2;255;0;0m"  # [FF0000] as a 24-bit ANSI foreground color
+
+
 class TestParseSwgohStringTerminal:
     def test_color_block(self):
         from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
@@ -3503,25 +3483,20 @@ class TestParseSwgohStringTerminal:
     def test_color_reset_within_block(self):
         from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
 
+        # [-] ends the color immediately; text after it is uncolored.
         result = parse_swgoh_string("[c][FF0000]red[-]plain[/c]", output="terminal")
-        assert "red" in result
-        assert "plain" in result
-        # Color reset [-] should produce ANSI_RESET
-        assert result.count(ANSI_RESET) >= 2
+        assert result == f"{_RED}red{ANSI_RESET}plain{ANSI_RESET}"
 
-    def test_bold_with_active_color_reapplies(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
+    @pytest.mark.parametrize(
+        ("tag", "style"),
+        [pytest.param("b", "\033[1m", id="bold"), pytest.param("i", "\033[3m", id="italic")],
+    )
+    def test_style_close_reapplies_active_color(self, tag, style):
+        from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
 
-        # Bold close should reapply active color
-        result = parse_swgoh_string("[c][FF0000][b]bold[/b]text[/c]", output="terminal")
-        assert "bold" in result
-        assert "text" in result
-
-    def test_italic_with_active_color_reapplies(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[c][FF0000][i]ital[/i]text[/c]", output="terminal")
-        assert "ital" in result
+        # Closing the style resets the terminal, so the still-open color must be re-emitted.
+        result = parse_swgoh_string(f"[c][FF0000][{tag}]styled[/{tag}]text[/c]", output="terminal")
+        assert result == f"{_RED}{style}styled{ANSI_RESET}{_RED}text{ANSI_RESET}"
 
     def test_bold_close_preserves_italic(self):
         from swgoh_comlink.helpers._localization import ANSI_ITALIC, parse_swgoh_string
@@ -3539,11 +3514,11 @@ class TestParseSwgohStringTerminal:
         assert ANSI_BOLD in parts[1]
 
     def test_color_end_reapplies_styles(self):
-        from swgoh_comlink.helpers._localization import ANSI_BOLD, parse_swgoh_string
+        from swgoh_comlink.helpers._localization import ANSI_BOLD, ANSI_RESET, parse_swgoh_string
 
+        # Ending the color resets the terminal, so the still-open bold must be re-emitted.
         result = parse_swgoh_string("[b][c][FF0000]red[/c]still_bold[/b]", output="terminal")
-        # After color end, bold should be reapplied
-        assert ANSI_BOLD in result
+        assert result == f"{ANSI_BOLD}{_RED}red{ANSI_RESET}{ANSI_BOLD}still_bold{ANSI_RESET}"
 
     def test_finalize_resets_active_styles(self):
         from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
