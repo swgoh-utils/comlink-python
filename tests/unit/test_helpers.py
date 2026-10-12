@@ -566,6 +566,33 @@ def _utc(seconds: float):
     return datetime.fromtimestamp(seconds, tz=timezone.utc)
 
 
+class TestCalcCurrentStamina:
+    @pytest.mark.parametrize(
+        ("minutes_ago", "remaining", "pass_plus", "expected"),
+        [
+            pytest.param(120, 87, False, 91, id="one-point-per-30-minutes"),  # floor(120 / 30 * 1.0) + 87
+            pytest.param(120, 87, True, 92, id="pass-plus"),  # floor(120 / 30 * 1.33) + 87
+            pytest.param(6000, 50, False, 100, id="capped-at-100"),
+        ],
+    )
+    def test_current_stamina(self, monkeypatch, minutes_ago, remaining, pass_plus, expected):
+        monkeypatch.setattr("swgoh_comlink.helpers._conquest.time.time", lambda: _REFRESH)
+        unit = {"lastRefreshTime": str(_REFRESH - minutes_ago * 60), "remainingStamina": remaining}
+        assert calc_current_stamina(unit, pass_plus=pass_plus) == expected
+
+    @pytest.mark.parametrize(
+        ("unit", "match"),
+        [
+            pytest.param("not a dict", "dict", id="not-dict"),
+            pytest.param({"lastRefreshTime": "123"}, "Invalid unit data", id="no-remaining-stamina"),
+            pytest.param({"remainingStamina": 87}, "Invalid unit data", id="no-last-refresh-time"),
+        ],
+    )
+    def test_invalid_unit_raises(self, unit, match):
+        with pytest.raises(SwgohComlinkValueError, match=match):
+            calc_current_stamina(unit)
+
+
 class TestCalcStaminaFullTime:
     def test_one_point_per_thirty_minutes(self):
 
@@ -578,15 +605,15 @@ class TestCalcStaminaFullTime:
         assert result.tzinfo == timezone.utc
 
     @pytest.mark.parametrize("pass_plus", [False, True])
-    @pytest.mark.parametrize("remaining", [0, 1, 37, 99])
-    def test_agrees_with_calc_current_stamina(self, remaining: int, pass_plus: bool):
-
-        unit = {"remainingStamina": remaining, "lastRefreshTime": _REFRESH}
-        full = calc_stamina_full_time(unit, pass_plus, now=_utc(_REFRESH)).timestamp()
-        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full):
-            assert calc_current_stamina(unit, pass_plus) == 100
-        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full - 1):
-            assert calc_current_stamina(unit, pass_plus) < 100
+    def test_agrees_with_calc_current_stamina(self, pass_plus: bool):
+        """For every starting stamina, the unit is full at the returned time and not one second before."""
+        for remaining in range(100):
+            unit = {"remainingStamina": remaining, "lastRefreshTime": _REFRESH}
+            full = calc_stamina_full_time(unit, pass_plus, now=_utc(_REFRESH)).timestamp()
+            with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full):
+                assert calc_current_stamina(unit, pass_plus) == 100, remaining
+            with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full - 1):
+                assert calc_current_stamina(unit, pass_plus) < 100, remaining
 
     def test_pass_plus_is_faster(self):
 
