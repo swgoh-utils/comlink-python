@@ -775,7 +775,18 @@ class TestCalcStaminaFullTime:
         now = datetime.now()
         assert calc_stamina_full_time({"remainingStamina": 99}, now=now) == _utc(int(now.timestamp()) + 1800)
 
-    @pytest.mark.parametrize("unit", [None, [], {"lastRefreshTime": _REFRESH}, {"remainingStamina": "full"}])
+    @pytest.mark.parametrize(
+        "unit",
+        [
+            None,
+            [],
+            {"lastRefreshTime": _REFRESH},
+            {"remainingStamina": "full"},
+            {"remainingStamina": float("inf"), "lastRefreshTime": _REFRESH},
+            {"remainingStamina": float("nan"), "lastRefreshTime": _REFRESH},
+        ],
+        ids=["none", "list", "no-stamina", "junk-stamina", "inf", "nan"],
+    )
     def test_invalid_unit_raises(self, unit: Any):
         from swgoh_comlink.helpers import calc_stamina_full_time
 

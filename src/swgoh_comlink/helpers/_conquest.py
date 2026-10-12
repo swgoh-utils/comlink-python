@@ -11,7 +11,8 @@ from typing import Any, TypedDict
 
 from ..exceptions import SwgohComlinkValueError
 from ._localization import _localize
-from ._utils import _as_int, get_function_name
+from ._utils import get_function_name
+from ._wire import as_int
 
 # Roman numeral in a feat challenge id -> difficulty name (I = Easy, II = Normal, III = Hard)
 _FEAT_TIERS = {"I": "Easy", "II": "Normal", "III": "Hard"}
@@ -116,14 +117,14 @@ def calc_stamina_full_time(unit: dict[str, Any], pass_plus: bool = False, *, now
     """
     if not isinstance(unit, dict):
         raise SwgohComlinkValueError(f"{get_function_name()}: 'unit' must be a dict, not {type(unit)}")
-    remaining = _as_int(unit.get("remainingStamina"), -1)
+    remaining = as_int(unit.get("remainingStamina"), -1)
     if remaining < 0:
         raise SwgohComlinkValueError(f"{get_function_name()}: 'unit' has no valid 'remainingStamina'.")
 
     now = datetime.now(timezone.utc) if now is None else now.astimezone(timezone.utc)
     # Whole seconds, as lastRefreshTime and calc_current_stamina count them
     now_seconds = floor(now.timestamp())
-    last_refresh = _as_int(unit.get("lastRefreshTime"))
+    last_refresh = as_int(unit.get("lastRefreshTime"))
     if last_refresh <= 0 or last_refresh > now_seconds:
         last_refresh = now_seconds
 

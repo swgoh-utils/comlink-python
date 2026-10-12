@@ -8,7 +8,8 @@ from typing import Any, Literal, TypedDict
 
 from ..exceptions import SwgohComlinkValueError
 from ._localization import parse_swgoh_string
-from ._utils import _as_int, get_function_name
+from ._utils import get_function_name
+from ._wire import as_int
 
 # Permanent events (journeys, legendary events) have one instance ending in the year 2126. Anything ending
 # after this (2096-10-02) is treated as having no end.
@@ -124,7 +125,7 @@ def get_event_schedule(
         runs = [
             (start, end, run)
             for run in event.get("instance") or []
-            if isinstance(run, dict) and (end := _as_int(run.get("endTime"))) > (start := _as_int(run.get("startTime")))
+            if isinstance(run, dict) and (end := as_int(run.get("endTime"))) > (start := as_int(run.get("startTime")))
         ]
         # The live run ending first (two can overlap at a changeover), else the next run to open
         status: Literal["live", "upcoming"] = "live"
