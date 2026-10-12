@@ -591,19 +591,18 @@ class StatCalc:
 
         if char.get("mods"):
             for mod in char["mods"]:
-                if not mod.get("set"):
-                    continue
-
-                set_id = int(mod["set"])
-                if set_id in set_bonuses:
-                    set_bonuses[set_id]["count"] += 1
-                    if mod.get("level") == 15:
-                        set_bonuses[set_id]["maxLevel"] += 1
-                else:
-                    set_bonuses[set_id] = {
-                        "count": 1,
-                        "maxLevel": 1 if mod.get("level") == 15 else 0,
-                    }
+                # A mod without a set still adds its stats; it only counts toward no set bonus.
+                if mod.get("set"):
+                    set_id = int(mod["set"])
+                    if set_id in set_bonuses:
+                        set_bonuses[set_id]["count"] += 1
+                        if mod.get("level") == 15:
+                            set_bonuses[set_id]["maxLevel"] += 1
+                    else:
+                        set_bonuses[set_id] = {
+                            "count": 1,
+                            "maxLevel": 1 if mod.get("level") == 15 else 0,
+                        }
 
                 if mod.get("stat"):
                     for stat in mod["stat"]:
