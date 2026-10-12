@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import logging
 from json import dumps
 from typing import TYPE_CHECKING, get_type_hints
 
@@ -408,21 +407,6 @@ class TestSensitiveKeyMasking:
     def test_sensitive_keys_set_contains_expected(self):
         assert "secret_key" in _SENSITIVE_KEYS
         assert "access_key" in _SENSITIVE_KEYS
-
-    def test_func_debug_logger_masks_sensitive_kwargs(self, caplog):
-        from swgoh_comlink.helpers import func_debug_logger
-
-        @func_debug_logger
-        def dummy(**kwargs):
-            return "ok"
-
-        with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers"):
-            dummy(secret_key="top_secret", access_key="pub_key", normal="visible")
-
-        log_output = caplog.text
-        assert "top_secret" not in log_output
-        assert "pub_key" not in log_output
-        assert "visible" in log_output
 
 
 # ── Version property (read-only) ────────────────────────────────────────

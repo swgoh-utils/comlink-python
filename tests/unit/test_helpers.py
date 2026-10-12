@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
+from swgoh_comlink._base import _SENSITIVE_KEYS
 from swgoh_comlink.exceptions import SwgohComlinkValueError
 from swgoh_comlink.globals import LoggingFormatter, get_logger
 from swgoh_comlink.helpers import (
@@ -103,6 +104,14 @@ from swgoh_comlink.helpers._utils import (
 # ── _utils ──────────────────────────────────────────────────────────────
 
 
+_RESOURCES = Path(__file__).parent.parent / "resources"
+
+
+@pytest.fixture(scope="module")
+def example_player() -> dict[str, Any]:
+    return json.loads((_RESOURCES / "example-player.json").read_text())
+
+
 class TestGetFunctionName:
     def test_returns_calling_function_name(self):
 
@@ -112,26 +121,19 @@ class TestGetFunctionName:
         assert my_custom_func() == "my_custom_func()"
 
 
-class TestGetEnumKeyByValue:
-    def test_match_found(self):
-
-        enum_dict = {"colors": {"red": 1, "blue": 2}}
-        assert get_enum_key_by_value(enum_dict, "colors", 2) == "blue"
-
-    def test_no_match(self):
-
-        enum_dict = {"colors": {"red": 1}}
-        assert get_enum_key_by_value(enum_dict, "colors", 99) is None
-
-    def test_missing_category(self):
-
-        enum_dict = {"colors": {"red": 1}}
-        assert get_enum_key_by_value(enum_dict, "shapes", 1) is None
-
-    def test_custom_default_return(self):
-
-        enum_dict = {"colors": {"red": 1}}
-        assert get_enum_key_by_value(enum_dict, "shapes", 1, "fallback") == "fallback"
+@pytest.mark.parametrize(
+    ("category", "value", "default", "expected"),
+    [
+        pytest.param("colors", 2, None, "blue", id="match"),
+        pytest.param("colors", 99, None, None, id="no-match"),
+        pytest.param("shapes", 1, None, None, id="missing-category"),
+        pytest.param("shapes", 1, "fallback", "fallback", id="custom-default"),
+    ],
+)
+def test_get_enum_key_by_value(category, value, default, expected):
+    enum_dict = {"colors": {"red": 1, "blue": 2}}
+    args = (enum_dict, category, value) if default is None else (enum_dict, category, value, default)
+    assert get_enum_key_by_value(*args) == expected
 
 
 class TestValidateFilePath:
@@ -156,89 +158,64 @@ class TestValidateFilePath:
 
 
 class TestSanitizeAllycode:
-    def test_valid_string(self):
+    @pytest.mark.parametrize("allycode", ["123456789", 123456789, "123-456-789"], ids=["str", "int", "dashes-removed"])
+    def test_valid(self, allycode):
+        assert sanitize_allycode(allycode) == "123456789"
 
-        assert sanitize_allycode("123456789") == "123456789"
-
-    def test_valid_int(self):
-
-        assert sanitize_allycode(123456789) == "123456789"
-
-    def test_dashes_removed(self):
-
-        assert sanitize_allycode("123-456-789") == "123456789"
-
-    def test_wrong_length_raises(self):
-
+    @pytest.mark.parametrize(
+        "allycode",
+        [
+            pytest.param("12345", id="wrong-length"),
+            pytest.param("12345abcd", id="non-digits"),
+            # 0 is falsy but is not the REQUIRED sentinel, so it is validated and rejected.
+            pytest.param(0, id="zero"),
+            pytest.param(3.14, id="float"),
+            pytest.param([1, 2, 3], id="list"),
+        ],
+    )
+    def test_invalid_raises(self, allycode):
         with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode("12345")
-
-    def test_non_digits_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode("12345abcd")
-
-    def test_zero_raises(self):
-
-        # 0 is falsy but is not the REQUIRED sentinel, so it falls
-        # through to validation and raises (not a valid 9-digit allycode).
-        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode(0)
+            sanitize_allycode(allycode)
 
     def test_default_none_returns_empty(self):
-
-        # Calling with no argument uses the None default,
-        # which triggers the early "" return.
         assert sanitize_allycode() == ""
 
 
 class TestHumanTime:
-    def test_seconds(self):
+    @pytest.mark.parametrize(
+        ("timestamp", "expected"),
+        [
+            pytest.param(0, "1970-01-01 00:00:00", id="seconds"),
+            pytest.param("0", "1970-01-01 00:00:00", id="string"),
+            pytest.param(1700000000.5, "2023-11-14 22:13:20", id="float"),
+            # 13+ digit timestamps are milliseconds.
+            pytest.param(1700000000000, "2023-11-14 22:13:20", id="milliseconds"),
+        ],
+    )
+    def test_formats_utc(self, timestamp, expected):
+        assert human_time(timestamp) == expected
 
-        assert human_time(0) == "1970-01-01 00:00:00"
-
-    def test_milliseconds_converted(self):
-
-        # 13+ digit timestamp treated as milliseconds
-        assert human_time(1700000000000) == human_time(1700000000)
-
-    def test_float_input(self):
-
-        result = human_time(1700000000.5)
-        assert result == "2023-11-14 22:13:20"
-
-    def test_string_input(self):
-
-        assert human_time("0") == "1970-01-01 00:00:00"
-
-    def test_invalid_string_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="Unable to convert"):
-            human_time("not_a_number")
-
-    def test_non_numeric_type_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            human_time([])
+    @pytest.mark.parametrize(
+        ("value", "match"),
+        [pytest.param("not_a_number", "Unable to convert", id="bad-string"), pytest.param([], "required", id="list")],
+    )
+    def test_invalid_raises(self, value, match):
+        with pytest.raises(SwgohComlinkValueError, match=match):
+            human_time(value)
 
 
 class TestConvertRelicTier:
     # The game's RelicTier enum: RelicTier_DEFAULT = 0, RELIC_LOCKED = 1, RELIC_UNLOCKED = 2, RELIC_TIER_01 = 3
-    def test_valid_int(self):
-
-        assert convert_relic_tier(0) == "LOCKED"
-        assert convert_relic_tier(1) == "LOCKED"
-        assert convert_relic_tier(2) == "UNLOCKED"
-        assert convert_relic_tier(3) == "1"
-        assert convert_relic_tier(12) == "10"
-
-    def test_valid_string(self):
-
-        assert convert_relic_tier("9") == "7"
-
     @pytest.mark.parametrize(
-        ("name", "expected"),
+        ("tier", "expected"),
         [
+            (0, "LOCKED"),
+            (1, "LOCKED"),
+            (2, "UNLOCKED"),
+            (3, "1"),
+            (12, "10"),
+            ("9", "7"),
+            (99, None),
             ("RelicTier_DEFAULT", "LOCKED"),
             ("RELIC_LOCKED", "LOCKED"),
             ("RELIC_UNLOCKED", "UNLOCKED"),
@@ -249,24 +226,16 @@ class TestConvertRelicTier:
             ("NOT_A_TIER", None),
         ],
     )
-    def test_enum_names(self, name: str, expected: str | None):
+    def test_converts(self, tier, expected):
+        assert convert_relic_tier(tier) == expected
 
-        assert convert_relic_tier(name) == expected
-
-    def test_every_relic_in_example_player_converts(self):
-
-        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
-        tiers = {unit["relic"]["currentTier"] for unit in player["rosterUnit"] if unit.get("relic")}
+    def test_every_relic_in_example_player_converts(self, example_player):
+        tiers = {unit["relic"]["currentTier"] for unit in example_player["rosterUnit"] if unit.get("relic")}
         assert 12 in tiers  # relic 10, the maximum
         assert all(convert_relic_tier(tier) is not None for tier in tiers)
 
-    def test_unknown_tier_returns_none(self):
-
-        assert convert_relic_tier(99) is None
-
     @pytest.mark.parametrize("value", [None, True, 1.0])
     def test_invalid_type_raises(self, value: Any):
-
         with pytest.raises(SwgohComlinkValueError, match="relic_tier"):
             convert_relic_tier(value)
 
@@ -284,40 +253,32 @@ class TestGetMaxRankJump:
         assert get_max_rank_jump(rank) == expected
 
 
+def _at(hour: int, minute: int = 0, day: int = 8) -> datetime:
+    return datetime(2026, 10, day, hour, minute, tzinfo=timezone.utc)
+
+
 class TestGetArenaPayout:
     # localTimeZoneOffsetMinutes: payout is 18:00 (squad) / 19:00 (fleet) UTC moved back by the offset
-    @staticmethod
-    def _at(hour: int, minute: int = 0, day: int = 8):
-
-        return datetime(2026, 10, day, hour, minute, tzinfo=timezone.utc)
-
-    def test_squad_and_fleet_anchor_hours(self):
-
-        assert get_arena_payout(0, now=self._at(12)) == self._at(18)
-        assert get_arena_payout(0, fleet=True, now=self._at(12)) == self._at(19)
+    @pytest.mark.parametrize(
+        ("offset", "fleet", "now", "expected"),
+        [
+            pytest.param(0, False, _at(12), _at(18), id="squad-anchor"),
+            pytest.param(0, True, _at(12), _at(19), id="fleet-anchor"),
+            # UTC+10: 19:00 local is 09:00 UTC
+            pytest.param(600, True, _at(8), _at(9), id="offset-moves-payout"),
+            pytest.param(0, False, _at(18), _at(18, day=9), id="at-payout-rolls-over"),
+            pytest.param(0, False, _at(20), _at(18, day=9), id="passed-payout-rolls-over"),
+            # US Pacific (UTC-7) fleet pays at 02:00 UTC: at 01:00 UTC the next payout is an hour away.
+            pytest.param(-420, True, _at(1), _at(2), id="next-utc-day-not-skipped"),
+        ],
+    )
+    def test_next_payout(self, offset, fleet, now, expected):
+        assert get_arena_payout(offset, fleet=fleet, now=now) == expected
 
     def test_returns_aware_utc(self):
-
         assert get_arena_payout(0).tzinfo == timezone.utc
 
-    def test_offset_moves_payout(self):
-
-        # UTC+10: 19:00 local is 09:00 UTC
-        assert get_arena_payout(600, fleet=True, now=self._at(8)) == self._at(9)
-
-    def test_passed_payout_rolls_to_next_day(self):
-
-        assert get_arena_payout(0, now=self._at(18)) == self._at(18, day=9)
-        assert get_arena_payout(0, now=self._at(20)) == self._at(18, day=9)
-
-    def test_payout_on_the_next_utc_day_is_not_skipped(self):
-
-        # US Pacific (UTC-7) fleet pays at 02:00 UTC. At 01:00 UTC the next payout is an hour away,
-        # not the one 25 hours later.
-        assert get_arena_payout(-420, fleet=True, now=self._at(1)) == self._at(2)
-
     def test_naive_now_is_local_time(self):
-
         now = datetime.now()
         payout = get_arena_payout(0, now=now)
         assert timedelta(0) < payout - now.astimezone() <= timedelta(days=1)
@@ -332,111 +293,65 @@ _SKILL_LIST: list[dict[str, Any]] = [
 ]
 
 
-class TestGetTwOmicrons:
-    def test_filters_mode_8(self):
-
-        result = get_tw_omicrons(_SKILL_LIST)
-        assert len(result) == 2
-        assert all(s["omicronMode"] == 8 for s in result)
-
-    def test_empty_list(self):
-
-        assert get_tw_omicrons([]) == []
-
-    def test_invalid_type_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="list"):
-            get_tw_omicrons("not a list")
+@pytest.mark.parametrize(
+    ("select", "expected_ids"),
+    [
+        pytest.param(lambda: get_tw_omicrons(_SKILL_LIST), ["skill_A", "skill_C"], id="tw-mode-8"),
+        pytest.param(lambda: get_tw_omicrons([]), [], id="tw-empty"),
+        pytest.param(lambda: get_omicron_skills(_SKILL_LIST, 3), ["skill_B"], id="single-mode"),
+        pytest.param(lambda: get_omicron_skills(_SKILL_LIST, [3, 8]), ["skill_A", "skill_B", "skill_C"], id="modes"),
+        pytest.param(lambda: get_omicron_skills(_SKILL_LIST, 99), [], id="no-match"),
+    ],
+)
+def test_omicron_skill_selection(select, expected_ids):
+    assert [skill["id"] for skill in select()] == expected_ids
 
 
-class TestGetOmicronSkills:
-    def test_single_int(self):
-
-        result = get_omicron_skills(_SKILL_LIST, 3)
-        assert len(result) == 1
-        assert result[0]["id"] == "skill_B"
-
-    def test_list_of_ints(self):
-
-        result = get_omicron_skills(_SKILL_LIST, [3, 8])
-        assert len(result) == 3
-
-    def test_no_match(self):
-
-        assert get_omicron_skills(_SKILL_LIST, 99) == []
-
-    def test_invalid_skill_list_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="list"):
-            get_omicron_skills("bad", 8)
-
-    def test_invalid_omicron_type_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="omicron_type"):
-            get_omicron_skills([], "bad")
+@pytest.mark.parametrize(
+    ("skill", "expected"),
+    [
+        pytest.param({"tier": [{"isOmicronTier": False}, {"isOmicronTier": True}]}, 1, id="found"),
+        pytest.param({"tier": [{"isOmicronTier": False}]}, None, id="none"),
+    ],
+)
+def test_get_omicron_skill_tier(skill, expected):
+    assert get_omicron_skill_tier(skill) == expected
 
 
-class TestGetOmicronSkillTier:
-    def test_tier_found(self):
-
-        skill = {"tier": [{"isOmicronTier": False}, {"isOmicronTier": True}]}
-        assert get_omicron_skill_tier(skill) == 1
-
-    def test_no_omicron_tier(self):
-
-        skill = {"tier": [{"isOmicronTier": False}]}
-        assert get_omicron_skill_tier(skill) is None
-
-    def test_invalid_type_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="dictionary"):
-            get_omicron_skill_tier("not a dict")
-
-    def test_missing_tier_key_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="tier"):
-            get_omicron_skill_tier({"id": "skill_A"})
+@pytest.mark.parametrize(
+    ("skills", "kwargs", "expected"),
+    [
+        pytest.param(_SKILL_LIST, {"skill_id": "skill_A", "skill_tier": 1}, True, id="omicron-tier"),
+        # skill_A has its omicron at tier index 1, so tier 99 does not match.
+        pytest.param(_SKILL_LIST, {"skill_id": "skill_A", "skill_tier": 99}, False, id="wrong-tier"),
+        pytest.param(_SKILL_LIST, {"roster_unit_skill": {"id": "skill_A", "tier": 1}}, True, id="roster-unit-skill"),
+        pytest.param(_SKILL_LIST, {"skill_id": "nonexistent", "skill_tier": 1}, False, id="not-in-list"),
+        pytest.param([_SKILL_LIST[1]], {"skill_id": "skill_B", "skill_tier": 1}, False, id="skill-without-omicron"),
+    ],
+)
+def test_is_omicron_skill(skills, kwargs, expected):
+    assert is_omicron_skill(skills, **kwargs) is expected
 
 
-class TestIsOmicronSkill:
-    def test_via_skill_id_and_tier_true(self):
-
-        assert is_omicron_skill(_SKILL_LIST, skill_id="skill_A", skill_tier=1) is True
-
-    def test_via_skill_id_and_tier_wrong_tier(self):
-
-        # skill_A has omicron at tier index 1, so tier 99 should not match
-        assert is_omicron_skill(_SKILL_LIST, skill_id="skill_A", skill_tier=99) is False
-
-    def test_via_roster_unit_skill(self):
-
-        # skill_C has omicron at tier index 0, and tier must be truthy
-        roster_skill = {"id": "skill_A", "tier": 1}
-        assert is_omicron_skill(_SKILL_LIST, roster_unit_skill=roster_skill) is True
-
-    def test_not_in_list(self):
-
-        assert is_omicron_skill(_SKILL_LIST, skill_id="nonexistent", skill_tier=1) is False
-
-    def test_invalid_omicron_list_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="list"):
-            is_omicron_skill("bad", skill_id="s", skill_tier=1)
-
-    def test_invalid_skill_id_type_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="skill_id"):
-            is_omicron_skill([], skill_id=123, skill_tier=1)
-
-    def test_missing_skill_id_and_tier_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError):
-            is_omicron_skill([], skill_id="", skill_tier=0)
-
-    def test_invalid_roster_unit_skill_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="Invalid"):
-            is_omicron_skill([], roster_unit_skill={"id": "", "tier": 0})
+@pytest.mark.parametrize(
+    ("call", "match"),
+    [
+        pytest.param(lambda: get_tw_omicrons("not a list"), "list", id="tw-not-list"),
+        pytest.param(lambda: get_omicron_skills("bad", 8), "list", id="skills-not-list"),
+        pytest.param(lambda: get_omicron_skills([], "bad"), "omicron_type", id="bad-omicron-type"),
+        pytest.param(lambda: get_omicron_skill_tier("not a dict"), "dictionary", id="tier-not-dict"),
+        pytest.param(lambda: get_omicron_skill_tier({"id": "skill_A"}), "tier", id="tier-key-missing"),
+        pytest.param(lambda: is_omicron_skill("bad", skill_id="s", skill_tier=1), "list", id="is-not-list"),
+        pytest.param(lambda: is_omicron_skill([], skill_id=123, skill_tier=1), "skill_id", id="bad-skill-id"),
+        pytest.param(lambda: is_omicron_skill([], skill_id="", skill_tier=0), "are required", id="no-skill-id-or-tier"),
+        pytest.param(
+            lambda: is_omicron_skill([], roster_unit_skill={"id": "", "tier": 0}), "Invalid", id="bad-roster-skill"
+        ),
+    ],
+)
+def test_omicron_helpers_reject_invalid_input(call, match):
+    with pytest.raises(SwgohComlinkValueError, match=match):
+        call()
 
 
 class TestGetUnitFromSkill:
@@ -513,65 +428,41 @@ class TestGetRaidLeaderboardIds:
 
 
 class TestCreateLocalizedUnitNameDictionary:
-    def test_string_input(self):
-
-        locale_str = "# comment\nUNIT_BOSSK_NAME|Bossk\nUNIT_BOSSK_DESC|A hunter\n"
-        result = create_localized_unit_name_dictionary(locale_str)
-        assert result == {"UNIT_BOSSK_NAME": "Bossk"}
-
-    def test_list_input(self):
-
-        locale_list = ["UNIT_VADER_NAME|Darth Vader", "UNIT_VADER_DESC|Sith Lord"]
-        result = create_localized_unit_name_dictionary(locale_list)
-        assert result == {"UNIT_VADER_NAME": "Darth Vader"}
-
-    def test_bytes_in_list(self):
-
-        locale_list = [b"UNIT_LUKE_NAME|Luke Skywalker"]
-        result = create_localized_unit_name_dictionary(locale_list)
-        assert result == {"UNIT_LUKE_NAME": "Luke Skywalker"}
-
-    def test_name_variant_suffixes_included(self):
-
-        locale_list = [
-            "UNIT_JEDIKNIGHTREVAN_NAME_V2|Jedi Knight Revan",
-            "UNIT_BOSSK_NAME|Bossk",
-            "UNIT_BOSSK_DESC|A hunter",
-        ]
-        result = create_localized_unit_name_dictionary(locale_list)
-        assert result == {
-            "UNIT_JEDIKNIGHTREVAN_NAME_V2": "Jedi Knight Revan",
-            "UNIT_BOSSK_NAME": "Bossk",
-        }
-
-    def test_comments_and_non_unit_lines_skipped(self):
-
-        locale_str = "# comment\nSOME_OTHER|value\nno pipe here\n"
-        result = create_localized_unit_name_dictionary(locale_str)
-        assert result == {}
+    @pytest.mark.parametrize(
+        ("locale", "expected"),
+        [
+            pytest.param(
+                "# comment\nUNIT_BOSSK_NAME|Bossk\nUNIT_BOSSK_DESC|A hunter\n", {"UNIT_BOSSK_NAME": "Bossk"}, id="str"
+            ),
+            pytest.param(
+                ["UNIT_VADER_NAME|Darth Vader", "UNIT_VADER_DESC|Sith Lord"],
+                {"UNIT_VADER_NAME": "Darth Vader"},
+                id="list",
+            ),
+            pytest.param([b"UNIT_LUKE_NAME|Luke Skywalker"], {"UNIT_LUKE_NAME": "Luke Skywalker"}, id="bytes-in-list"),
+            pytest.param(
+                ["UNIT_JEDIKNIGHTREVAN_NAME_V2|Jedi Knight Revan", "UNIT_BOSSK_NAME|Bossk", "UNIT_BOSSK_DESC|A hunter"],
+                {"UNIT_JEDIKNIGHTREVAN_NAME_V2": "Jedi Knight Revan", "UNIT_BOSSK_NAME": "Bossk"},
+                id="name-variant-suffix",
+            ),
+            pytest.param("# comment\nSOME_OTHER|value\nno pipe here\n", {}, id="non-unit-lines-skipped"),
+        ],
+    )
+    def test_keeps_unit_names(self, locale, expected):
+        assert create_localized_unit_name_dictionary(locale) == expected
 
     def test_invalid_type_raises(self):
-
         with pytest.raises(SwgohComlinkValueError, match="list"):
             create_localized_unit_name_dictionary(12345)
 
 
 class TestGetPlayableUnits:
-    def test_filters_correctly(self):
-
+    def test_keeps_obtainable_seven_star_units_and_tolerates_missing_fields(self):
         units = [
-            {"rarity": 7, "obtainable": True, "obtainableTime": "0"},
-            {"rarity": 5, "obtainable": True, "obtainableTime": "0"},
-            {"rarity": 7, "obtainable": False, "obtainableTime": "0"},
-            {"rarity": 7, "obtainable": True, "obtainableTime": "12345"},
-        ]
-        result = get_playable_units(units)
-        assert len(result) == 1
-        assert result[0]["rarity"] == 7
-
-    def test_tolerates_missing_fields_and_enum_rarity(self):
-
-        units = [
+            {"baseId": "PLAYABLE", "rarity": 7, "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "FIVE_STAR", "rarity": 5, "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "NOT_OBTAINABLE", "rarity": 7, "obtainable": False, "obtainableTime": "0"},
+            {"baseId": "TIMED", "rarity": 7, "obtainable": True, "obtainableTime": "12345"},
             {"baseId": "OLD_DUMP", "rarity": 7, "obtainable": True},  # predates obtainableTime
             {"baseId": "ENUMS", "rarity": "SEVEN_STAR", "obtainable": True, "obtainableTime": "0"},
             {"baseId": "INT_TIME", "rarity": 7, "obtainable": True, "obtainableTime": 0},
@@ -579,10 +470,9 @@ class TestGetPlayableUnits:
             {"baseId": "NO_OBTAINABLE", "rarity": 7, "obtainableTime": "0"},
             {"baseId": "GL_TEMPLATE", "rarity": 7, "obtainable": True, "obtainableTime": "4102444800000"},
         ]
-        assert [u["baseId"] for u in get_playable_units(units)] == ["OLD_DUMP", "ENUMS", "INT_TIME"]
+        assert [u["baseId"] for u in get_playable_units(units)] == ["PLAYABLE", "OLD_DUMP", "ENUMS", "INT_TIME"]
 
     def test_invalid_type_raises(self):
-
         with pytest.raises(SwgohComlinkValueError, match="list"):
             get_playable_units("bad")
 
@@ -607,72 +497,61 @@ class TestGetCurrentDatacronSets:
 
 
 class TestGetDatacronDismantleValue:
-    def test_normal_dismantle(self):
-
-        datacron = {"setId": "set1", "affix": [1, 2]}
-        sets = [
-            {
-                "id": "set1",
-                "tier": [
-                    {"id": 0, "dustGrantRecipeId": None},
-                    {"id": 1, "dustGrantRecipeId": None},
-                    {"id": 2, "dustGrantRecipeId": "recipe1"},
+    @pytest.mark.parametrize(
+        ("datacron", "sets", "recipes", "expected"),
+        [
+            pytest.param(
+                {"setId": "set1", "affix": [1, 2]},
+                [
+                    {
+                        "id": "set1",
+                        "tier": [
+                            {"id": 0, "dustGrantRecipeId": None},
+                            {"id": 1, "dustGrantRecipeId": None},
+                            {"id": 2, "dustGrantRecipeId": "recipe1"},
+                        ],
+                    }
                 ],
-            }
-        ]
-        recipes = [
-            {
-                "id": "recipe1",
-                "ingredients": [
-                    {"id": "mat_A", "maxQuantity": 100, "type": 3},
-                ],
-            }
-        ]
-        result = get_datacron_dismantle_value(datacron, sets, recipes)
-        assert result["mat_A"]["quantity"] == 100
-        assert result["focused"] is False
-
-    def test_focused_dismantle(self):
-
-        datacron = {"setId": "set1", "focused": True, "affix": [1]}
-        sets = [
-            {
-                "id": "set1",
-                "focusedTier": [{"id": 1, "dustGrantRecipeId": "recipe_f"}],
-            }
-        ]
-        recipes = [{"id": "recipe_f", "ingredients": [{"id": "mat_B", "maxQuantity": 50, "type": 2}]}]
-        result = get_datacron_dismantle_value(datacron, sets, recipes)
-        assert result["mat_B"]["quantity"] == 50
-        assert result["focused"] is True
-
-    def test_missing_set_returns_empty(self):
-
-        result = get_datacron_dismantle_value({"setId": "nope"}, [], [])
-        assert result == {}
-
-    def test_missing_recipe_returns_empty(self):
-
-        datacron = {"setId": "set1", "affix": [1]}
-        sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": "recipe_x"}]}]
-        result = get_datacron_dismantle_value(datacron, sets, [])
-        assert result == {}
+                [{"id": "recipe1", "ingredients": [{"id": "mat_A", "maxQuantity": 100, "type": 3}]}],
+                {"mat_A": {"quantity": 100, "type": 3}, "focused": False},
+                id="normal",
+            ),
+            pytest.param(
+                {"setId": "set1", "focused": True, "affix": [1]},
+                [{"id": "set1", "focusedTier": [{"id": 1, "dustGrantRecipeId": "recipe_f"}]}],
+                [{"id": "recipe_f", "ingredients": [{"id": "mat_B", "maxQuantity": 50, "type": 2}]}],
+                {"mat_B": {"quantity": 50, "type": 2}, "focused": True},
+                id="focused",
+            ),
+            pytest.param({"setId": "nope"}, [], [], {}, id="missing-set"),
+            pytest.param(
+                {"setId": "set1", "affix": [1]},
+                [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": "recipe_x"}]}],
+                [],
+                {},
+                id="missing-recipe",
+            ),
+            pytest.param(
+                {"setId": "set1", "affix": [1]},
+                [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": None}]}],
+                [],
+                {},
+                id="no-dust-recipe",
+            ),
+        ],
+    )
+    def test_dismantle_value(self, datacron, sets, recipes, expected):
+        assert get_datacron_dismantle_value(datacron, sets, recipes) == expected
 
 
 class TestGetDatacronDismantleTotal:
     def test_aggregates_materials(self):
-
-        datacrons = [
-            {"setId": "set1", "affix": [1]},
-            {"setId": "set1", "affix": [1]},
-        ]
+        datacrons = [{"setId": "set1", "affix": [1]}, {"setId": "set1", "affix": [1]}]
         sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": "r1"}]}]
         recipes = [{"id": "r1", "ingredients": [{"id": "mat_A", "maxQuantity": 10, "type": 1}]}]
-        result = get_datacron_dismantle_total(datacrons, sets, recipes)
-        assert result["mat_A"]["quantity"] == 20
+        assert get_datacron_dismantle_total(datacrons, sets, recipes) == {"mat_A": {"quantity": 20, "type": 1}}
 
     def test_empty_list_returns_empty(self):
-
         assert get_datacron_dismantle_total([], [], []) == {}
 
 
@@ -1576,9 +1455,8 @@ class TestAsEpoch:
         assert moment is not None
         assert moment.tzinfo == timezone.utc
 
-    def test_example_player_times(self):
-
-        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+    def test_example_player_times(self, example_player):
+        player = example_player
         assert as_epoch(player["lastActivityTime"]) == datetime(2026, 2, 8, 1, 50, 37, tzinfo=timezone.utc)
         assert all(as_epoch(season["joinTime"]) for season in player["seasonStatus"])
 
@@ -1621,9 +1499,8 @@ class TestBaseId:
 
         assert base_id(value) == expected
 
-    def test_example_player_roster(self):
-
-        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+    def test_example_player_roster(self, example_player):
+        player = example_player
         ids = {base_id(unit["definitionId"]) for unit in player["rosterUnit"]}
         assert "MAGMATROOPER" in ids
         assert not any(":" in unit_id for unit_id in ids)
@@ -1960,7 +1837,7 @@ class TestItemNames:
 def _recorded_enums() -> dict[str, Any]:
     """The ItemType and CurrencyType groups of a real get_enums() response (game data 0.40.6)."""
 
-    return json.loads((Path(__file__).parent.parent / "resources" / "enums-item-currency.json").read_text())
+    return json.loads((_RESOURCES / "enums-item-currency.json").read_text())
 
 
 class TestItemNamesLiveEnums:
@@ -2905,236 +2782,197 @@ class TestSumUpgradeCosts:
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 
-class TestConvertLeagueToInt:
-    def test_all_leagues(self):
-
-        assert convert_league_to_int("kyber") == 100
-        assert convert_league_to_int("aurodium") == 80
-        assert convert_league_to_int("chromium") == 60
-        assert convert_league_to_int("bronzium") == 40
-        assert convert_league_to_int("carbonite") == 20
-
-    def test_case_insensitive(self):
-
-        assert convert_league_to_int("KYBER") == 100
-        assert convert_league_to_int("Kyber") == 100
-
-    def test_unknown_returns_none(self):
-
-        assert convert_league_to_int("unknown") is None
-
-    def test_none_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_league_to_int(None)
-
-    def test_empty_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_league_to_int("")
-
-
-class TestConvertDivisionsToInt:
-    def test_string_divisions(self):
-
-        assert convert_divisions_to_int("1") == 25
-        assert convert_divisions_to_int("5") == 5
-
-    def test_int_divisions(self):
-
-        assert convert_divisions_to_int(1) == 25
-        assert convert_divisions_to_int(5) == 5
-
-    def test_unknown_returns_none(self):
-
-        assert convert_divisions_to_int("99") is None
-
-    def test_none_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_divisions_to_int(None)
-
-    def test_empty_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_divisions_to_int("")
+@pytest.mark.parametrize(
+    ("convert", "value", "expected"),
+    [
+        *(
+            pytest.param(convert_league_to_int, league, value, id=f"league-{league}")
+            for league, value in [
+                ("kyber", 100),
+                ("aurodium", 80),
+                ("chromium", 60),
+                ("bronzium", 40),
+                ("carbonite", 20),
+                ("KYBER", 100),
+                ("Kyber", 100),
+                ("unknown", None),
+            ]
+        ),
+        *(
+            pytest.param(convert_divisions_to_int, division, value, id=f"division-{type(division).__name__}-{division}")
+            for division, value in [
+                ("1", 25),
+                ("2", 20),
+                ("3", 15),
+                ("4", 10),
+                ("5", 5),
+                (1, 25),
+                (5, 5),
+                ("99", None),
+            ]
+        ),
+    ],
+)
+def test_gac_league_and_division_conversion(convert, value, expected):
+    assert convert(value) == expected
 
 
-class TestSearchGacBrackets:
-    def test_found(self):
-
-        brackets = {0: [{"name": "Player1"}, {"name": "Player2"}], 1: [{"name": "Player3"}]}
-        result = search_gac_brackets(brackets, "Player3")
-        assert result["player"]["name"] == "Player3"
-        assert result["bracket"] == 1
-
-    def test_not_found(self):
-
-        brackets = {0: [{"name": "Player1"}]}
-        assert search_gac_brackets(brackets, "Nobody") == {}
-
-    def test_case_insensitive(self):
-
-        brackets = {0: [{"name": "Player1"}]}
-        result = search_gac_brackets(brackets, "player1")
-        assert result["player"]["name"] == "Player1"
+@pytest.mark.parametrize("convert", [convert_league_to_int, convert_divisions_to_int])
+@pytest.mark.parametrize("value", [None, ""])
+def test_gac_league_and_division_conversion_requires_a_value(convert, value):
+    with pytest.raises(SwgohComlinkValueError, match="required"):
+        convert(value)
 
 
-class TestFindBracketBoundary:
-    def test_bracket_0_empty_returns_negative_1(self):
-
-        assert _find_bracket_boundary(lambda i: False) == -1
-
-    def test_finds_boundary(self):
-
-        # Non-empty for indices 0-9, empty for 10+
-        assert _find_bracket_boundary(lambda i: i < 10, initial_step=4) == 9
-
-    def test_single_bracket(self):
-
-        assert _find_bracket_boundary(lambda i: i == 0, initial_step=1) == 0
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        pytest.param("Player3", {"player": {"name": "Player3"}, "bracket": 1}, id="found"),
+        pytest.param("player1", {"player": {"name": "Player1"}, "bracket": 0}, id="case-insensitive"),
+        pytest.param("Nobody", {}, id="not-found"),
+    ],
+)
+def test_search_gac_brackets(name, expected):
+    brackets = {0: [{"name": "Player1"}, {"name": "Player2"}], 1: [{"name": "Player3"}]}
+    assert search_gac_brackets(brackets, name) == expected
 
 
-class TestAsyncFindBracketBoundary:
-    @pytest.mark.asyncio
-    async def test_bracket_0_empty_returns_negative_1(self):
+@pytest.mark.parametrize("implementation", ["sync", "async"])
+@pytest.mark.parametrize(
+    ("brackets", "initial_step", "expected"),
+    [
+        pytest.param(0, 1024, -1, id="bracket-0-empty"),
+        pytest.param(1, 1, 0, id="one-bracket-step-1"),
+        pytest.param(1, 1024, 0, id="one-bracket"),
+        pytest.param(2, 1024, 1, id="two-brackets"),
+        pytest.param(10, 4, 9, id="small-step"),
+        pytest.param(100, 1024, 99, id="first-probe-overshoots"),
+        pytest.param(500, 64, 499, id="custom-step"),
+        pytest.param(2048, 1024, 2047, id="power-of-two"),
+        pytest.param(6250, 1024, 6249, id="typical-league"),  # ~50k players / 8 per bracket
+        pytest.param(18750, 1024, 18749, id="large-league"),  # ~150k players
+    ],
+)
+async def test_find_bracket_boundary(implementation, brackets, initial_step, expected):
+    """Exponential probing then binary search: the last non-empty index in O(log n) probes."""
+    probed: list[int] = []
 
-        async def probe(i):
-            return False
+    def probe(index: int) -> bool:
+        probed.append(index)
+        return index < brackets
 
-        assert await _async_find_bracket_boundary(probe) == -1
+    async def async_probe(index: int) -> bool:
+        return probe(index)
 
-    @pytest.mark.asyncio
-    async def test_finds_boundary(self):
+    if implementation == "sync":
+        result = _find_bracket_boundary(probe, initial_step=initial_step)
+    else:
+        result = await _async_find_bracket_boundary(async_probe, initial_step=initial_step)
 
-        async def probe(i):
-            return i < 10
-
-        assert await _async_find_bracket_boundary(probe, initial_step=4) == 9
+    assert result == expected
+    # Each phase probes at most bit_length(max(brackets, step)) times; a linear scan would not.
+    assert len(probed) <= 2 * max(brackets, initial_step).bit_length() + 1
 
 
 # ── _constants ──────────────────────────────────────────────────────────
 
 
-class TestConstantsGet:
-    def test_own_attribute(self):
+class TestConstants:
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [
+            pytest.param("Segment1", str(Constants.Segment1), id="own-attribute"),
+            pytest.param("UnitDefinitions", "137438953472", id="legacy-name"),  # 2**37, DataItems.UNITS
+            pytest.param("UNITS", "137438953472", id="data-items-name"),
+            # Aligned with the live GameDataItemsEnum from get_enums().
+            pytest.param("AbilityDecisionTrees", "1099511627776", id="ability-decision-trees"),
+            pytest.param("EraDefinitions", "2251799813685248", id="era-definitions"),
+            pytest.param("UBSUpdate", "2150109456", id="ubs-update"),
+            pytest.param("EpisodeDefinitions", "281474976710656", id="episode-definitions-plural"),
+            pytest.param("AccountLinking", "562949953421312", id="account-linking-alias"),
+            pytest.param("TotallyFakeItem", None, id="unknown"),
+        ],
+    )
+    def test_get(self, name, expected):
+        assert Constants.get(name) == expected
 
-        assert Constants.get("Segment1") == str(Constants.Segment1)
+    def test_legacy_name_mapped_to_missing_data_item_returns_none(self):
+        with patch.dict(_LEGACY_NAME_MAP, {"FakeLegacyName": "NONEXISTENT_MEMBER"}):
+            assert Constants.get("FakeLegacyName") is None
 
-    def test_legacy_name(self):
-
-        result = Constants.get("UnitDefinitions")
-        assert result is not None
-        assert int(result) > 0
-
-    def test_data_items_name(self):
-
-        result = Constants.get("UNITS")
-        assert result is not None
-        assert int(result) > 0
-
-    def test_unknown_returns_none(self):
-
-        assert Constants.get("TotallyFakeItem") is None
-
-
-class TestConstantsGetNames:
-    def test_returns_list(self):
-
+    def test_get_names(self):
         names = Constants.get_names()
         assert isinstance(names, list)
-        assert len(names) > 0
+        assert {"RELIC_TIERS", "UnitDefinitions", "UNITS"} <= set(names)
 
-    def test_includes_expected_names(self):
+    def test_segment_values_match_server(self):
+        assert (Constants.Segment1, Constants.Segment2, Constants.Segment3, Constants.Segment4) == (
+            2097151,
+            1125968624222208,
+            206158430208,
+            3377424842620928,
+        )
 
-        names = Constants.get_names()
-        assert "RELIC_TIERS" in names
-        assert "UnitDefinitions" in names
-        assert "UNITS" in names
+    def test_dataitems_members_present(self):
+        assert DataItems.ABILITY_DECISION_TREE.value == 1099511627776
+        assert DataItems.ERA_DEFINITION.value == 2251799813685248
+        assert DataItems.UBS_UPDATE.value == 2150109456
 
 
 # ── _decorators ─────────────────────────────────────────────────────────
 
 
-class TestFuncTimer:
-    def test_returns_correct_result(self):
+def test_func_timer_returns_result_and_logs(caplog):
+    @func_timer
+    def add(a, b):
+        return a + b
 
-        @func_timer
-        def add(a, b):
-            return a + b
-
+    with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers._decorators"):
         assert add(2, 3) == 5
 
-    def test_logs_at_debug(self, caplog):
-
-        @func_timer
-        def noop():
-            return "done"
-
-        with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers._decorators"):
-            noop()
-
-        assert "noop" in caplog.text
-        assert "executed in" in caplog.text
+    assert "add" in caplog.text
+    assert "executed in" in caplog.text
 
 
-class TestFuncDebugLogger:
-    def test_returns_result(self):
+@pytest.mark.parametrize("sensitive_key", sorted(_SENSITIVE_KEYS))
+def test_func_debug_logger_returns_result_and_masks_sensitive_kwargs(caplog, sensitive_key):
+    @func_debug_logger
+    def dummy(**kwargs):
+        return "ok"
 
-        @func_debug_logger
-        def greet(name):
-            return f"hello {name}"
+    with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers._decorators"):
+        assert dummy(**{sensitive_key: "hidden_value"}, normal="visible") == "ok"
 
-        assert greet("world") == "hello world"
-
-    def test_masks_sensitive_keys(self, caplog):
-
-        @func_debug_logger
-        def dummy(**kwargs):
-            return "ok"
-
-        with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers._decorators"):
-            dummy(secret_key="my_secret", access_key="my_key", normal="visible")
-
-        assert "my_secret" not in caplog.text
-        assert "my_key" not in caplog.text
-        assert "***" in caplog.text
-        assert "visible" in caplog.text
+    assert "hidden_value" not in caplog.text
+    assert "***" in caplog.text
+    assert "visible" in caplog.text
 
 
 # ── globals ─────────────────────────────────────────────────────────────
 
 
-class TestLoggingFormatter:
-    def test_format_record(self):
-
-        formatter = LoggingFormatter()
-        record = logging.LogRecord(
-            name="test",
-            level=logging.INFO,
-            pathname="test.py",
-            lineno=1,
-            msg="hello",
-            args=None,
-            exc_info=None,
-            func="my_func",
-        )
-        output = formatter.format(record)
-        assert "hello" in output
-        assert "INFO" in output
-        assert "my_func" in output
+def test_logging_formatter_includes_level_function_and_message():
+    record = logging.LogRecord(
+        name="test",
+        level=logging.INFO,
+        pathname="test.py",
+        lineno=1,
+        msg="hello",
+        args=None,
+        exc_info=None,
+        func="my_func",
+    )
+    output = LoggingFormatter().format(record)
+    assert "hello" in output
+    assert "INFO" in output
+    assert "my_func" in output
 
 
-class TestGetLogger:
-    def test_default_name(self):
-
-        logger = get_logger()
-        assert isinstance(logger, logging.Logger)
-
-    def test_custom_name(self):
-
-        logger = get_logger("my.custom.logger")
-        assert logger.name == "my.custom.logger"
+@pytest.mark.parametrize(("args", "name"), [((), "swgoh_comlink.globals"), (("my.custom.logger",), "my.custom.logger")])
+def test_get_logger(args, name):
+    logger = get_logger(*args)
+    assert isinstance(logger, logging.Logger)
+    assert logger.name == name
 
 
 # ── _localization ──────────────────────────────────────────────────────
@@ -3690,76 +3528,3 @@ def test_web_output_is_well_nested(text):
 
 
 # ── Additional quick-win helper tests ──────────────────────────────────
-
-
-class TestSanitizeAllycodeInvalidType:
-    def test_float_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode(3.14)
-
-    def test_list_raises(self):
-
-        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode([1, 2, 3])
-
-
-class TestIsOmicronSkillNoTier:
-    def test_skill_with_no_omicron_tier_returns_false(self):
-
-        # skill_B has no omicron tier (all isOmicronTier=False)
-        # get_omicron_skill_tier returns None, triggering line 132
-        skill_list = [
-            {"id": "skill_B", "omicronMode": 3, "tier": [{"isOmicronTier": False}]},
-        ]
-        assert is_omicron_skill(skill_list, skill_id="skill_B", skill_tier=1) is False
-
-
-class TestConstantsGameDataItemsEnumSync:
-    """Lock in helper alignment with the live `GameDataItemsEnum` from `get_enums()`."""
-
-    def test_new_items_resolve(self):
-
-        assert Constants.get("AbilityDecisionTrees") == "1099511627776"
-        assert Constants.get("EraDefinitions") == "2251799813685248"
-        assert Constants.get("UBSUpdate") == "2150109456"
-
-    def test_episode_definitions_plural(self):
-
-        assert Constants.get("EpisodeDefinitions") == "281474976710656"
-
-    def test_account_linking_alias(self):
-
-        assert Constants.get("AccountLinking") == "562949953421312"
-
-    def test_segment_values_match_server(self):
-
-        assert Constants.Segment1 == 2097151
-        assert Constants.Segment2 == 1125968624222208
-        assert Constants.Segment3 == 206158430208
-        assert Constants.Segment4 == 3377424842620928
-
-    def test_dataitems_members_present(self):
-
-        assert DataItems.ABILITY_DECISION_TREE.value == 1099511627776
-        assert DataItems.ERA_DEFINITION.value == 2251799813685248
-        assert DataItems.UBS_UPDATE.value == 2150109456
-
-
-class TestConstantsGetLegacyKeyError:
-    def test_legacy_name_with_missing_dataitems_returns_none(self):
-
-        # Patch _LEGACY_NAME_MAP to include a key that maps to a nonexistent DataItems member
-        with patch.dict(_LEGACY_NAME_MAP, {"FakeLegacyName": "NONEXISTENT_MEMBER"}):
-            result = Constants.get("FakeLegacyName")
-            assert result is None
-
-
-class TestGetDatacronDismantleValueNoDustRecipe:
-    def test_no_dust_recipe_id_returns_empty(self):
-
-        datacron = {"setId": "set1", "affix": [1]}
-        # Tier exists but dustGrantRecipeId is None
-        sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": None}]}]
-        result = get_datacron_dismantle_value(datacron, sets, [])
-        assert result == {}
