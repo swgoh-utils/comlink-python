@@ -9,6 +9,7 @@ Uses the helper functions from swgoh_comlink.helpers:
 """
 
 from swgoh_comlink import SwgohComlink
+from swgoh_comlink.exceptions import SwgohComlinkValueError
 from swgoh_comlink.helpers import get_gac_brackets, search_gac_brackets
 
 # Create instance of SwgohComlink
@@ -17,9 +18,10 @@ comlink = SwgohComlink()
 # Scan all Kyber league brackets
 # Supported league names: "kyber", "aurodium", "chromium", "bronzium", "carbonite"
 print("Scanning Kyber brackets (this may take a moment)...")
-brackets = get_gac_brackets(comlink, league="kyber")
-
-if brackets is None:
+try:
+    brackets = get_gac_brackets(comlink, league="kyber")
+except SwgohComlinkValueError:
+    # Raised when no GAC event is running
     print("No active GAC event found.")
 else:
     print(f"Found {len(brackets)} brackets")

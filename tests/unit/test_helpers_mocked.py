@@ -176,6 +176,13 @@ class TestGetGacBrackets:
         result = get_gac_brackets(sync_client, league="kyber")
         assert result == {}
 
+    def test_no_gac_event_raises(self, httpx_mock: HTTPXMock, sync_client):
+        from swgoh_comlink.helpers._gac import get_gac_brackets
+
+        httpx_mock.add_response(json={"gameEvent": [{"type": 5}]})
+        with pytest.raises(SwgohComlinkValueError, match="No active GAC"):
+            get_gac_brackets(sync_client, league="kyber")
+
 
 # ── _gac: async_get_gac_brackets ───────────────────────────────────────
 
@@ -213,6 +220,15 @@ class TestAsyncGetGacBrackets:
         httpx_mock.add_response(json={"player": []})  # probe(0) → empty
         result = await async_get_gac_brackets(async_client, league="kyber")
         assert result == {}
+        await async_client.aclose()
+
+    @pytest.mark.asyncio
+    async def test_no_gac_event_raises(self, httpx_mock: HTTPXMock, async_client):
+        from swgoh_comlink.helpers._gac import async_get_gac_brackets
+
+        httpx_mock.add_response(json={"gameEvent": []})
+        with pytest.raises(SwgohComlinkValueError, match="No active GAC"):
+            await async_get_gac_brackets(async_client, league="kyber")
         await async_client.aclose()
 
 
