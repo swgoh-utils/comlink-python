@@ -116,6 +116,37 @@ class TestScanDirectory:
         findings = scan_directory(tmp_path)
         assert all(".venv" not in f.file for f in findings)
 
+    @pytest.mark.parametrize(
+        ("rel_path", "exclude_patterns"),
+        [
+            (".venv/b.py", ["vendor"]),
+            ("pkg.egg-info/c.py", None),
+            ("src/vendor/d.py", ["vend*"]),
+            ("old.py", ["old.py"]),
+        ],
+        ids=["extra-exclude-keeps-defaults", "egg-info-glob", "user-glob", "file-name"],
+    )
+    def test_skips_excluded_paths(self, tmp_path: Path, rel_path: str, exclude_patterns: list[str] | None):
+        from swgoh_comlink.migrate._scanner import scan_directory
+
+        skipped = tmp_path / rel_path
+        skipped.parent.mkdir(parents=True, exist_ok=True)
+        skipped.write_text("import requests\n")
+        (tmp_path / "main.py").write_text("import requests\n")
+
+        findings = scan_directory(tmp_path, exclude_patterns=exclude_patterns)
+        assert {f.file for f in findings} == {str(tmp_path / "main.py")}
+
+    def test_excluded_name_above_the_root_is_ignored(self, tmp_path: Path):
+        from swgoh_comlink.migrate._scanner import scan_directory
+
+        project = tmp_path / "build" / "proj"
+        project.mkdir(parents=True)
+        (project / "a.py").write_text("import requests\n")
+
+        findings = scan_directory(project)
+        assert {f.file for f in findings} == {str(project / "a.py")}
+
 
 # ── format_findings ────────────────────────────────────────────────────
 
