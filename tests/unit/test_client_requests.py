@@ -1,17 +1,16 @@
 """Request-building tests run against both the sync and async Comlink clients.
 
-Every test receives a client from the ``make_comlink``/``comlink`` fixtures, which are
-parametrized over :class:`SwgohComlink` and :class:`SwgohComlinkAsync`, and drives it
-through :func:`call` so one test body covers both implementations.
+The ``comlink``/``make_comlink`` fixtures (tests/unit/conftest.py) are parametrized over
+:class:`SwgohComlink` and :class:`SwgohComlinkAsync`; tests drive them through the ``call``
+fixture so one test body covers both implementations.
 """
 
 from __future__ import annotations
 
 import hashlib
 import hmac
-import inspect
 import json
-from collections.abc import AsyncIterator, Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import httpx
@@ -22,6 +21,7 @@ from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 from swgoh_comlink.exceptions import SwgohComlinkException, SwgohComlinkValueError
 
 Client = SwgohComlink | SwgohComlinkAsync
+Call = Callable[..., Awaitable[Any]]
 
 URL = "http://localhost:3000"
 STATS_URL = "http://localhost:3223"
@@ -29,35 +29,6 @@ STATS_URL = "http://localhost:3223"
 ENUMS_URL = f"{URL}/enums"
 METADATA_URL = f"{URL}/metadata"
 METADATA = {"latestGamedataVersion": "game-v1", "latestLocalizationBundleVersion": "lang-v1"}
-
-
-@pytest.fixture(params=[SwgohComlink, SwgohComlinkAsync], ids=["sync", "async"])
-async def make_comlink(request: pytest.FixtureRequest) -> AsyncIterator[Callable[..., Client]]:
-    """Build clients of the parametrized type and close every one of them on teardown."""
-    clients: list[Client] = []
-
-    def factory(**kwargs: Any) -> Client:
-        client = request.param(**{"url": URL, "stats_url": STATS_URL, **kwargs})
-        clients.append(client)
-        return client
-
-    yield factory
-    for client in clients:
-        if isinstance(client, SwgohComlinkAsync):
-            await client.aclose()
-        else:
-            client.close()
-
-
-@pytest.fixture
-def comlink(make_comlink: Callable[..., Client]) -> Client:
-    return make_comlink()
-
-
-async def call(client: Client, method: str, /, **kwargs: Any) -> Any:
-    """Call ``method`` on either client, awaiting the result when the client is async."""
-    result = getattr(client, method)(**kwargs)
-    return await result if inspect.isawaitable(result) else result
 
 
 # ── Request shape ────────────────────────────────────────────────────────
@@ -251,6 +222,7 @@ REQUEST_CASES = [
 @pytest.mark.parametrize(("method", "kwargs", "url", "body"), REQUEST_CASES)
 async def test_request_shape(
     comlink: Client,
+    call: Call,
     httpx_mock: HTTPXMock,
     method: str,
     kwargs: dict[str, Any],
@@ -280,7 +252,7 @@ async def test_request_shape(
     ],
 )
 async def test_get_guild_unwraps_guild_key(
-    comlink: Client, httpx_mock: HTTPXMock, response: dict[str, Any], expected: dict[str, Any]
+    comlink: Client, call: Call, httpx_mock: HTTPXMock, response: dict[str, Any], expected: dict[str, Any]
 ) -> None:
     httpx_mock.add_response(json=response)
 
@@ -298,6 +270,7 @@ async def test_get_guild_unwraps_guild_key(
 )
 async def test_missing_version_is_read_from_metadata(
     comlink: Client,
+    call: Call,
     httpx_mock: HTTPXMock,
     method: str,
     metadata: dict[str, str],
@@ -316,7 +289,7 @@ async def test_missing_version_is_read_from_metadata(
     assert json.loads(second.content)["payload"][payload_key] == version
 
 
-async def test_get_enums_sends_get_without_body(comlink: Client, httpx_mock: HTTPXMock) -> None:
+async def test_get_enums_sends_get_without_body(comlink: Client, call: Call, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(url=METADATA_URL, json=METADATA)
     httpx_mock.add_response(url=ENUMS_URL, json={"CombatType": {"1": "CHARACTER"}})
 
@@ -329,7 +302,7 @@ async def test_get_enums_sends_get_without_body(comlink: Client, httpx_mock: HTT
     assert out == {"CombatType": {"1": "CHARACTER"}}
 
 
-async def test_get_latest_game_data_version(comlink: Client, httpx_mock: HTTPXMock) -> None:
+async def test_get_latest_game_data_version(comlink: Client, call: Call, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(json={"latestGamedataVersion": "game-v2", "latestLocalizationBundleVersion": "lang-v2"})
 
     assert await call(comlink, "get_latest_game_data_version") == {"game": "game-v2", "language": "lang-v2"}
@@ -338,7 +311,7 @@ async def test_get_latest_game_data_version(comlink: Client, httpx_mock: HTTPXMo
 # ── Errors ───────────────────────────────────────────────────────────────
 
 
-async def test_request_error_raises_comlink_exception(comlink: Client, httpx_mock: HTTPXMock) -> None:
+async def test_request_error_raises_comlink_exception(comlink: Client, call: Call, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_exception(httpx.ConnectError("Connection refused"), is_reusable=True)
 
     with pytest.raises(SwgohComlinkException):
@@ -356,7 +329,7 @@ async def test_request_error_raises_comlink_exception(comlink: Client, httpx_moc
     ],
 )
 async def test_invalid_arguments_raise_before_any_request(
-    comlink: Client, httpx_mock: HTTPXMock, method: str, kwargs: dict[str, Any]
+    comlink: Client, call: Call, httpx_mock: HTTPXMock, method: str, kwargs: dict[str, Any]
 ) -> None:
     with pytest.raises(SwgohComlinkValueError):
         await call(comlink, method, **kwargs)
@@ -392,7 +365,7 @@ def _comlink_signature(request: httpx.Request, secret_key: str) -> str:
     ],
 )
 async def test_hmac_signature_matches_the_request_sent(
-    make_comlink: Callable[..., Client], httpx_mock: HTTPXMock, method: str, kwargs: dict[str, Any]
+    make_comlink: Callable[..., Client], call: Call, httpx_mock: HTTPXMock, method: str, kwargs: dict[str, Any]
 ) -> None:
     httpx_mock.add_response(json=METADATA, is_reusable=True)
 
