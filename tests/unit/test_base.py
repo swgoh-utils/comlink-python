@@ -5,9 +5,10 @@ from __future__ import annotations
 import hashlib
 import logging
 from json import dumps
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, get_type_hints
 
 import pytest
+from typing_extensions import Self
 
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink._base import _SENSITIVE_KEYS, SwgohComlinkBase, param_alias, sanitize_url
@@ -82,9 +83,18 @@ class TestParamAlias:
 
 
 class TestBaseDirectInstantiation:
-    def test_cannot_instantiate_base_directly(self):
-        with pytest.raises(TypeError, match="Only subclasses"):
+    def test_only_subclasses_can_be_instantiated(self):
+        with pytest.raises(TypeError, match="Only subclasses of 'SwgohComlinkBase' may be instantiated"):
             SwgohComlinkBase()
+
+        class ChildSwgohClient(SwgohComlinkBase):
+            pass
+
+        assert isinstance(ChildSwgohClient(), ChildSwgohClient)
+
+    def test_new_is_annotated_to_return_self(self):
+        """Runtime twin of the static ``assert_type`` guard below."""
+        assert get_type_hints(SwgohComlinkBase.__new__)["return"] == Self
 
 
 # ── Constructor type inference (PR #98 regression guard) ─────────────────
