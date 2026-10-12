@@ -193,14 +193,12 @@ async def async_get_current_gac_event(comlink: Any) -> dict[str, Any]:
 
 
 @overload
-def get_gac_brackets(comlink: SwgohComlink, league: str, limit: int = 0) -> dict[int, Any] | None: ...
+def get_gac_brackets(comlink: SwgohComlink, league: str, limit: int = 0) -> dict[int, Any]: ...
 @overload
 def get_gac_brackets(
     comlink: SwgohComlinkAsync, league: str, limit: int = 0
-) -> Coroutine[Any, Any, dict[int, Any] | None]: ...
-def get_gac_brackets(
-    comlink: Any, league: str, limit: int = 0
-) -> dict[int, Any] | None | Coroutine[Any, Any, dict[int, Any] | None]:
+) -> Coroutine[Any, Any, dict[int, Any]]: ...
+def get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> dict[int, Any] | Coroutine[Any, Any, dict[int, Any]]:
     """Scan currently running GAC brackets for the requested league.
 
     Uses exponential probing with binary search to find the last non-empty
@@ -213,8 +211,11 @@ def get_gac_brackets(
         limit: Maximum number of brackets to return. 0 means no limit.
 
     Returns:
-        Dictionary mapping bracket index to player list, or None if no GAC event is running. When
-        ``comlink`` is a SwgohComlinkAsync, an awaitable of that result.
+        Dictionary mapping bracket index to player list. When ``comlink`` is a SwgohComlinkAsync, an
+        awaitable of that result.
+
+    Raises:
+        SwgohComlinkValueError: If ``comlink`` or ``league`` is invalid, or no GAC event is running.
 
     """
     kind = _client_kind(comlink)
@@ -229,8 +230,6 @@ def get_gac_brackets(
         raise SwgohComlinkValueError(err_msg)
 
     current_gac_event = get_current_gac_event(comlink)
-    if not current_gac_event:
-        return None
 
     event_instance = f"{current_gac_event['id']}:{current_gac_event['instance'][0]['id']}"
 
@@ -254,7 +253,7 @@ def get_gac_brackets(
     return brackets
 
 
-async def async_get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> dict[int, Any] | None:
+async def async_get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> dict[int, Any]:
     """Scan currently running GAC brackets for the requested league (async version).
 
     Uses exponential probing with binary search to find the last non-empty
@@ -267,7 +266,10 @@ async def async_get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> d
         limit: Maximum number of brackets to return. 0 means no limit.
 
     Returns:
-        Dictionary mapping bracket index to player list, or None if no GAC event is running.
+        Dictionary mapping bracket index to player list.
+
+    Raises:
+        SwgohComlinkValueError: If ``comlink`` or ``league`` is invalid, or no GAC event is running.
 
     """
     if _client_kind(comlink) != "async":
@@ -279,8 +281,6 @@ async def async_get_gac_brackets(comlink: Any, league: str, limit: int = 0) -> d
         raise SwgohComlinkValueError(err_msg)
 
     current_gac_event = await async_get_current_gac_event(comlink)
-    if not current_gac_event:
-        return None
 
     event_instance = f"{current_gac_event['id']}:{current_gac_event['instance'][0]['id']}"
 

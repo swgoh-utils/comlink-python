@@ -407,6 +407,20 @@ class TestModFormats:
         mod_stats = calc._calculate_mod_stats(base_stats["base"], normalized)
         assert isinstance(mod_stats, dict)
 
+    @pytest.mark.parametrize(
+        "set_field", [{}, {"set": 0}, {"set": None}, {"set": 99}], ids=["missing", "zero", "none", "unknown"]
+    )
+    def test_mod_without_a_usable_set_keeps_its_stats(self, calc, player, set_field: dict[str, Any]):
+        """A mod with no set, or an unknown one, adds its stats and only misses out on a set bonus."""
+        char = _find_char(player["rosterUnit"], relic_min=3)
+        normalized = calc._normalize_char(char)
+        normalized["equippedStatMod"] = None
+        normalized["mods"] = [{**set_field, "level": 15, "pips": 5, "tier": 5, "stat": [(5, 100.0)]}]
+
+        base_stats = calc._get_char_raw_stats(normalized)
+        base_stats = calc._calculate_base_stats(base_stats, normalized["level"], normalized["defId"])
+        assert calc._calculate_mod_stats(base_stats["base"], normalized) == {"5": 1e10}
+
     def test_no_mods_returns_empty(self, calc, player):
         char = _find_char(player["rosterUnit"], relic_min=3)
         normalized = calc._normalize_char(char)

@@ -6,6 +6,10 @@ All tests use inline fixture data and require no running Comlink service.
 
 from __future__ import annotations
 
+from typing import Any
+
+import pytest
+
 from swgoh_comlink.StatCalc.data_builder._builder_base import (
     GameDataBuilderBase,
     _ability_special_gp,
@@ -90,6 +94,17 @@ class TestNum:
         result = _num("52500000000")
         assert result == 52500000000
         assert isinstance(result, int)
+
+    @pytest.mark.parametrize(
+        "value",
+        [True, False, float("inf"), float("-inf"), float("nan"), "inf", "nan", "1.0e400"],
+        ids=["true", "false", "inf", "-inf", "nan", "inf-string", "nan-string", "overflowing-string"],
+    )
+    def test_bools_and_non_finite_numbers_read_as_zero(self, value: Any):
+        """Game data carries ints, floats and decimal strings; nothing else is a number."""
+        result = _num(value)
+        assert result == 0
+        assert type(result) is int
 
 
 class TestResolveSkills:

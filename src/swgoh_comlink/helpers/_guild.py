@@ -8,7 +8,8 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, overload
 
 from ..exceptions import SwgohComlinkValueError
-from ._utils import _as_int, _client_kind, get_function_name, sanitize_allycode
+from ._utils import _client_kind, get_function_name, sanitize_allycode
+from ._wire import as_int
 
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
@@ -191,7 +192,7 @@ async def async_get_guild_members(
 
 def _epoch(value: Any, scale: int) -> datetime | None:
     """An epoch time in seconds (``scale=1``) or milliseconds (``scale=1000``); 0 or missing is ``None``."""
-    number = _as_int(value)
+    number = as_int(value)
     return datetime.fromtimestamp(number / scale, tz=timezone.utc) if number > 0 else None
 
 
@@ -238,13 +239,13 @@ def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
     members = _dicts(guild.get("member"))
 
     battles: list[TerritoryBattleResult] = [
-        {"definition_id": entry.get("definitionId", ""), "total_stars": _as_int(entry.get("totalStars"))}
+        {"definition_id": entry.get("definitionId", ""), "total_stars": as_int(entry.get("totalStars"))}
         for entry in _dicts(guild.get("recentTerritoryBattleResult"))
     ]
 
     wars: list[TerritoryWarResult] = []
     for entry in _dicts(guild.get("recentTerritoryWarResult")):
-        score, opponent_score = _as_int(entry.get("score")), _as_int(entry.get("opponentScore"))
+        score, opponent_score = as_int(entry.get("score")), as_int(entry.get("opponentScore"))
         opponent = entry.get("opponentGuildProfile")
         wars.append(
             {
@@ -260,9 +261,9 @@ def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
     if raids := _dicts(guild.get("recentRaidResult")):
         last_raid = {
             "raid_id": raids[0].get("raidId", ""),
-            "guild_score": _as_int(raids[0].get("guildRewardScore")),
+            "guild_score": as_int(raids[0].get("guildRewardScore")),
             "member_scores": {
-                member["playerId"]: _as_int(member.get("memberProgress"))
+                member["playerId"]: as_int(member.get("memberProgress"))
                 for member in _dicts(raids[0].get("raidMember"))
                 if member.get("playerId")
             },
@@ -279,7 +280,7 @@ def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
                 "name": member.get("playerName", ""),
                 "member_level": level,
                 "role": role,
-                "galactic_power": _as_int(member.get("galacticPower")),
+                "galactic_power": as_int(member.get("galacticPower")),
                 "joined": _epoch(member.get("guildJoinTime"), 1),
                 "last_activity": _epoch(member.get("lastActivityTime"), 1000),
                 "raid_score": raid_scores.get(player_id),
@@ -290,9 +291,9 @@ def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
         "guild_id": profile.get("id", ""),
         "name": profile.get("name", ""),
         # memberCount is the game's own figure; fall back to the roster when it is missing
-        "member_count": _as_int(profile.get("memberCount")) or len(members),
-        "member_max": _as_int(profile.get("memberMax")),
-        "galactic_power": _as_int(profile.get("guildGalacticPower")),
+        "member_count": as_int(profile.get("memberCount")) or len(members),
+        "member_max": as_int(profile.get("memberMax")),
+        "galactic_power": as_int(profile.get("guildGalacticPower")),
         "best_territory_battle": max(battles, key=lambda battle: battle["total_stars"]) if battles else None,
         "territory_wars": wars,
         "territory_war_wins": sum(war["result"] == "win" for war in wars),

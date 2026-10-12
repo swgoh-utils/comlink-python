@@ -14,6 +14,7 @@ making it significantly faster than the synchronous equivalent.
 import asyncio
 
 from swgoh_comlink import SwgohComlinkAsync
+from swgoh_comlink.exceptions import SwgohComlinkValueError
 from swgoh_comlink.helpers import async_get_gac_brackets, search_gac_brackets
 
 
@@ -22,9 +23,10 @@ async def main():
         # Scan all Kyber league brackets
         # Supported league names: "kyber", "aurodium", "chromium", "bronzium", "carbonite"
         print("Scanning Kyber brackets (this may take a moment)...")
-        brackets = await async_get_gac_brackets(comlink, league="kyber")
-
-        if brackets is None:
+        try:
+            brackets = await async_get_gac_brackets(comlink, league="kyber")
+        except SwgohComlinkValueError:
+            # Raised when no GAC event is running
             print("No active GAC event found.")
             return
 
