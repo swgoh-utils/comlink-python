@@ -3403,18 +3403,23 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "terminal": f"{_U}{_S}{_B}x{_R}{_U}{_S}y{_R}{_U}{_R}",
         },
     ),
-    # Unclosed styles: terminal and web close them at the end. Discord is not pinned: it leaves
-    # the markers open ("**no close"), which may or may not be intended.
+    # Unclosed styles are closed at the end, innermost first, in every format.
     (
         "unclosed-bold",
         "[b]no close",
-        {"bare": "no close", "web": "<p><b>no close</b></p>", "terminal": f"{_B}no close{_R}"},
+        {
+            "bare": "no close",
+            "discord": "**no close**",
+            "web": "<p><b>no close</b></p>",
+            "terminal": f"{_B}no close{_R}",
+        },
     ),
     (
         "unclosed-four-styles",
         "[b][i][u][s]x",
         {
             "bare": "x",
+            "discord": "***__~~x~~__***",
             "web": "<p><b><em><u><s>x</s></u></em></b></p>",
             "terminal": f"{_B}{_I}{_U}{_S}x{_R}",
         },
@@ -3425,6 +3430,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
         "[c][FF0000][i][u][s]x[/c]y",
         {
             "bare": "xy",
+            "discord": "*__~~xy~~__*",
             "web": '<p><span style="color:#FF0000"><em><u><s>x</s></u></em></span><em><u><s>y</s></u></em></p>',
             "terminal": f"{_fg(255, 0, 0)}{_I}{_U}{_S}x{_R}{_I}{_U}{_S}y{_R}",
         },
