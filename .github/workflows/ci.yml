@@ -132,6 +132,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Check README links are absolute
+        # README.md is also the PyPI project description, where relative links resolve
+        # against pypi.org and 404. Link to GitHub (or the docs site) with full URLs.
+        run: |
+          if grep -nP '\]\((?!https?://|#|mailto:)' README.md; then
+            echo "::error file=README.md::Use absolute URLs in README.md; relative links break on PyPI."
+            exit 1
+          fi
+
       - name: Build package
         run: uvx hatch build
 

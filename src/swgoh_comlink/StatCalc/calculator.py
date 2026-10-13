@@ -142,7 +142,7 @@ class StatCalc:
         self._LOGGER.debug("Calculating roster stats")
 
         if isinstance(units, list):
-            ships: list[dict[str, Any]] = []
+            ships: list[tuple[dict[str, Any], str, dict[str, Any]]] = []
             crew: dict[str, dict[str, Any]] = {}
 
             for unit in units:
@@ -153,18 +153,12 @@ class StatCalc:
                 if not meta:
                     continue
                 if meta["combatType"] == 2:
-                    ships.append(unit)
+                    ships.append((unit, def_id, meta))
                 else:
                     crew[def_id] = unit
                     unit = self.calc_char_stats(unit)
 
-            for ship in ships:
-                def_id = self._get_def_id(ship)
-                if not def_id:
-                    continue
-                meta = self._unit_data.get(def_id)
-                if not meta:
-                    continue
+            for ship, def_id, meta in ships:
                 crw = [crew[cid] for cid in meta["crew"] if cid in crew]
                 if len(crw) != len(meta["crew"]):
                     # Ship stats and GP are derived from the full crew, so neither can be computed
@@ -225,13 +219,10 @@ class StatCalc:
             for player in players:
                 self.calc_roster_stats(player.get("rosterUnit"))
             return players
-        elif isinstance(players, dict):
-            if "rosterUnit" not in players:
-                raise RuntimeError("Expected a dict with a 'rosterUnit' key")
-            self.calc_roster_stats(players["rosterUnit"])
-            return players
-        else:
-            raise TypeError("Expected a list or dict of players")
+        if "rosterUnit" not in players:
+            raise RuntimeError("Expected a dict with a 'rosterUnit' key")
+        self.calc_roster_stats(players["rosterUnit"])
+        return players
 
     def calc_char_gp(self, char: dict[str, Any]) -> int:
         """Calculate GP for a character.
@@ -600,19 +591,18 @@ class StatCalc:
 
         if char.get("mods"):
             for mod in char["mods"]:
-                if not mod.get("set"):
-                    continue
-
-                set_id = int(mod["set"])
-                if set_id in set_bonuses:
-                    set_bonuses[set_id]["count"] += 1
-                    if mod.get("level") == 15:
-                        set_bonuses[set_id]["maxLevel"] += 1
-                else:
-                    set_bonuses[set_id] = {
-                        "count": 1,
-                        "maxLevel": 1 if mod.get("level") == 15 else 0,
-                    }
+                # A mod without a set still adds its stats; it only counts toward no set bonus.
+                if mod.get("set"):
+                    set_id = int(mod["set"])
+                    if set_id in set_bonuses:
+                        set_bonuses[set_id]["count"] += 1
+                        if mod.get("level") == 15:
+                            set_bonuses[set_id]["maxLevel"] += 1
+                    else:
+                        set_bonuses[set_id] = {
+                            "count": 1,
+                            "maxLevel": 1 if mod.get("level") == 15 else 0,
+                        }
 
                 if mod.get("stat"):
                     for stat in mod["stat"]:

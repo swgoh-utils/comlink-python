@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -66,12 +67,17 @@ def scan_directory(
     directory: Path,
     exclude_patterns: list[str] | None = None,
 ) -> list[Finding]:
-    """Recursively scan a directory for Python files."""
+    """Recursively scan a directory for Python files.
+
+    A file is skipped when its name, or any directory between ``directory`` and the file, matches a
+    default exclude or one of ``exclude_patterns`` (``fnmatch`` patterns, added to the defaults).
+    """
     findings: list[Finding] = []
-    excludes = set(exclude_patterns) if exclude_patterns else set(_DEFAULT_EXCLUDES)
+    excludes = _DEFAULT_EXCLUDES.union(exclude_patterns or ())
 
     for py_file in sorted(directory.rglob("*.py")):
-        if any(part in excludes for part in py_file.parts):
+        # Only the parts below the scan root count, so a root inside e.g. ``build/`` is still scanned.
+        if any(fnmatch.fnmatch(part, pattern) for part in py_file.relative_to(directory).parts for pattern in excludes):
             continue
         findings.extend(scan_file(py_file))
     return findings

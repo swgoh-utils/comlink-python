@@ -1,15 +1,26 @@
-"""Tests for the instance-level game/localization version cache."""
+"""Tests for the instance-level game/localization version cache.
+
+The cache rules run against both clients via the ``comlink``/``make_comlink`` and ``call``
+fixtures in tests/unit/conftest.py. The lock tests are written per client, since a thread
+lock and an asyncio lock are driven differently.
+"""
 
 from __future__ import annotations
 
 import asyncio
 import math
+import threading
+from collections.abc import Awaitable, Callable
+from typing import Any, cast
 
 import pytest
 from pytest_httpx import HTTPXMock
 
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 from swgoh_comlink.exceptions import SwgohComlinkException, SwgohComlinkValueError
+
+Client = SwgohComlink | SwgohComlinkAsync
+Call = Callable[..., Awaitable[Any]]
 
 # Not every test exercises all three mocked endpoints.
 pytestmark = [pytest.mark.httpx_mock(assert_all_responses_were_requested=False)]
@@ -31,184 +42,191 @@ def _mock_endpoints(httpx_mock: HTTPXMock, metadata: dict | None = None) -> None
     httpx_mock.add_response(url=f"{BASE_URL}/localization", json={"localizationBundle": ""}, is_reusable=True)
 
 
-@pytest.fixture
-def clock(monkeypatch: pytest.MonkeyPatch) -> dict[str, float]:
-    """Controllable monotonic clock for cache expiry."""
-    state = {"t": 1000.0}
-    monkeypatch.setattr("swgoh_comlink._base._now", lambda: state["t"])
-    return state
+# ── Cache rules (both clients) ───────────────────────────────────────────
 
 
-# ── Sync client ──────────────────────────────────────────────────────────
-
-
-def test_repeated_game_data_calls_hit_metadata_once(httpx_mock: HTTPXMock):
+async def test_repeated_game_data_calls_hit_metadata_once(comlink: Client, call: Call, httpx_mock: HTTPXMock):
     _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL)
 
-    client.get_game_data()
-    client.get_game_data()
+    await call(comlink, "get_game_data")
+    await call(comlink, "get_game_data")
 
     assert len(_metadata_requests(httpx_mock)) == 1
 
 
-def test_cache_shared_between_game_data_and_localization(httpx_mock: HTTPXMock):
+async def test_cache_shared_between_game_data_and_localization(comlink: Client, call: Call, httpx_mock: HTTPXMock):
     _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL)
 
-    client.get_game_data()
-    client.get_localization()
+    await call(comlink, "get_game_data")
+    await call(comlink, "get_localization")
 
     assert len(_metadata_requests(httpx_mock)) == 1
 
 
-def test_ttl_expiry_triggers_refetch(httpx_mock: HTTPXMock, clock: dict[str, float]):
+async def test_ttl_expiry_triggers_refetch(
+    make_comlink: Callable[..., Client], call: Call, httpx_mock: HTTPXMock, clock: dict[str, float]
+):
     _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL, version_cache_ttl=60.0)
+    client = make_comlink(version_cache_ttl=60.0)
 
-    client.get_game_data()
+    await call(client, "get_game_data")
     clock["t"] += 59.0
-    client.get_game_data()
+    await call(client, "get_game_data")
     assert len(_metadata_requests(httpx_mock)) == 1
 
     clock["t"] += 2.0  # past the 60s TTL
-    client.get_game_data()
+    await call(client, "get_game_data")
     assert len(_metadata_requests(httpx_mock)) == 2
 
 
-def test_ttl_zero_disables_caching(httpx_mock: HTTPXMock):
+async def test_ttl_zero_disables_caching(make_comlink: Callable[..., Client], call: Call, httpx_mock: HTTPXMock):
     _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL, version_cache_ttl=0)
+    client = make_comlink(version_cache_ttl=0)
 
-    client.get_game_data()
-    client.get_game_data()
+    await call(client, "get_game_data")
+    await call(client, "get_game_data")
 
     assert len(_metadata_requests(httpx_mock)) == 2
 
 
-def test_infinite_ttl_caches_forever(httpx_mock: HTTPXMock, clock: dict[str, float]):
+async def test_infinite_ttl_caches_forever(
+    make_comlink: Callable[..., Client], call: Call, httpx_mock: HTTPXMock, clock: dict[str, float]
+):
     _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL, version_cache_ttl=math.inf)
+    client = make_comlink(version_cache_ttl=math.inf)
 
-    client.get_game_data()
+    await call(client, "get_game_data")
     clock["t"] += 10**9
-    client.get_game_data()
+    await call(client, "get_game_data")
 
     assert len(_metadata_requests(httpx_mock)) == 1
 
 
-def test_invalidate_version_cache_forces_refetch(httpx_mock: HTTPXMock):
+async def test_invalidate_version_cache_forces_refetch(comlink: Client, call: Call, httpx_mock: HTTPXMock):
     _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL)
 
-    client.get_game_data()
-    client.invalidate_version_cache()
-    client.get_game_data()
+    await call(comlink, "get_game_data")
+    comlink.invalidate_version_cache()
+    await call(comlink, "get_game_data")
 
     assert len(_metadata_requests(httpx_mock)) == 2
 
 
-def test_get_latest_game_data_version_refresh_bypasses_cache(httpx_mock: HTTPXMock):
+async def test_get_latest_game_data_version_refresh_bypasses_cache(comlink: Client, call: Call, httpx_mock: HTTPXMock):
     _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL)
 
-    versions = client.get_latest_game_data_version()
+    versions = await call(comlink, "get_latest_game_data_version")
     assert versions == {"game": "game-v1", "language": "lang-v1"}
-    assert client.get_latest_game_data_version() == versions
+    assert await call(comlink, "get_latest_game_data_version") == versions
     assert len(_metadata_requests(httpx_mock)) == 1
 
-    client.get_latest_game_data_version(refresh=True)
+    await call(comlink, "get_latest_game_data_version", refresh=True)
     assert len(_metadata_requests(httpx_mock)) == 2
 
 
-def test_get_game_metadata_populates_cache(httpx_mock: HTTPXMock):
+@pytest.mark.parametrize(
+    ("enums", "metadata_requests"),
+    [
+        pytest.param(False, 1, id="populates-cache"),
+        # An enums=True response is not the plain version payload, so it must not be cached.
+        pytest.param(True, 2, id="with-enums-does-not-populate-cache"),
+    ],
+)
+async def test_get_game_metadata_and_the_cache(
+    comlink: Client, call: Call, httpx_mock: HTTPXMock, enums: bool, metadata_requests: int
+):
     _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL)
 
-    client.get_game_metadata()
-    client.get_game_data()
+    await call(comlink, "get_game_metadata", enums=enums)
+    await call(comlink, "get_game_data")
 
-    assert len(_metadata_requests(httpx_mock)) == 1
+    assert len(_metadata_requests(httpx_mock)) == metadata_requests
 
 
-def test_get_game_metadata_with_enums_does_not_populate_cache(httpx_mock: HTTPXMock):
+async def test_explicit_version_skips_metadata_entirely(comlink: Client, call: Call, httpx_mock: HTTPXMock):
     _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL)
 
-    client.get_game_metadata(enums=True)
-    client.get_game_data()
-
-    assert len(_metadata_requests(httpx_mock)) == 2
-
-
-def test_explicit_version_skips_metadata_entirely(httpx_mock: HTTPXMock):
-    _mock_endpoints(httpx_mock)
-    client = SwgohComlink(url=BASE_URL)
-
-    client.get_game_data(version="explicit-version")
-    client.get_localization(localization_id="explicit-loc-id")
+    await call(comlink, "get_game_data", version="explicit-version")
+    await call(comlink, "get_localization", localization_id="explicit-loc-id")
 
     assert len(_metadata_requests(httpx_mock)) == 0
 
 
-def test_partial_metadata_supports_game_data_only(httpx_mock: HTTPXMock):
+async def test_partial_metadata_supports_game_data_only(comlink: Client, call: Call, httpx_mock: HTTPXMock):
     """A /metadata response missing the localization key still serves get_game_data."""
     _mock_endpoints(httpx_mock, metadata={"latestGamedataVersion": "game-only"})
-    client = SwgohComlink(url=BASE_URL)
 
-    client.get_game_data()
+    await call(comlink, "get_game_data")
 
     with pytest.raises(SwgohComlinkException, match="latestLocalizationBundleVersion"):
-        client.get_localization()
+        await call(comlink, "get_localization")
 
 
-def test_negative_ttl_rejected():
+def test_negative_ttl_rejected(make_comlink: Callable[..., Client]):
     with pytest.raises(SwgohComlinkValueError):
-        SwgohComlink(url=BASE_URL, version_cache_ttl=-1)
+        make_comlink(version_cache_ttl=-1)
 
 
-# ── Async client ─────────────────────────────────────────────────────────
+# ── Concurrency: a caller waiting on the version lock ────────────────────
+#
+# Each test holds the version lock as if a first caller were fetching /metadata, starts a second
+# caller that finds the cache cold and waits for the lock, fills the cache, then releases the lock.
+# The second caller must use the stored versions instead of fetching /metadata again. No response
+# is mocked, so any request fails the test.
 
 
-@pytest.mark.asyncio
-async def test_async_repeated_game_data_calls_hit_metadata_once(httpx_mock: HTTPXMock):
-    _mock_endpoints(httpx_mock)
+def test_sync_caller_waiting_on_the_version_lock_uses_the_stored_versions(httpx_mock: HTTPXMock):
+    lock = threading.Lock()
+    waiting = threading.Event()
+
+    class SignalingLock:
+        def __enter__(self) -> None:
+            waiting.set()
+            lock.acquire()
+
+        def __exit__(self, *exc: object) -> None:
+            lock.release()
+
+    client = SwgohComlink(url=BASE_URL)
+    cast(Any, client)._version_lock = SignalingLock()
+    result: dict[str, Any] = {}
+    lock.acquire()
+    second = threading.Thread(target=lambda: result.update(versions=client._get_versions()))
+    second.start()
+    try:
+        assert waiting.wait(timeout=5), "the second caller never reached the lock"
+        client._store_versions("game-v1", "lang-v1")
+    finally:
+        lock.release()
+        second.join(timeout=5)
+        client.close()
+
+    assert (result["versions"].game, result["versions"].language) == ("game-v1", "lang-v1")
+    assert httpx_mock.get_requests() == []
+
+
+async def test_async_caller_waiting_on_the_version_lock_uses_the_stored_versions(httpx_mock: HTTPXMock):
+    lock = asyncio.Lock()
+    waiting = asyncio.Event()
+
+    class SignalingLock:
+        async def __aenter__(self) -> None:
+            waiting.set()
+            await lock.acquire()
+
+        async def __aexit__(self, *exc: object) -> None:
+            lock.release()
+
     async with SwgohComlinkAsync(url=BASE_URL) as client:
-        await client.get_game_data()
-        await client.get_game_data()
+        cast(Any, client)._version_lock = SignalingLock()
+        await lock.acquire()
+        second = asyncio.create_task(client._get_versions())
+        try:
+            await asyncio.wait_for(waiting.wait(), timeout=5)
+            client._store_versions("game-v1", "lang-v1")
+        finally:
+            lock.release()
+        versions = await second
 
-    assert len(_metadata_requests(httpx_mock)) == 1
-
-
-@pytest.mark.asyncio
-async def test_async_concurrent_cold_calls_single_flight(httpx_mock: HTTPXMock):
-    _mock_endpoints(httpx_mock)
-    async with SwgohComlinkAsync(url=BASE_URL) as client:
-        await asyncio.gather(client.get_game_data(), client.get_game_data(), client.get_localization())
-
-    assert len(_metadata_requests(httpx_mock)) == 1
-
-
-@pytest.mark.asyncio
-async def test_async_ttl_zero_disables_caching(httpx_mock: HTTPXMock):
-    _mock_endpoints(httpx_mock)
-    async with SwgohComlinkAsync(url=BASE_URL, version_cache_ttl=0) as client:
-        await client.get_game_data()
-        await client.get_game_data()
-
-    assert len(_metadata_requests(httpx_mock)) == 2
-
-
-@pytest.mark.asyncio
-async def test_async_invalidate_and_refresh(httpx_mock: HTTPXMock, clock: dict[str, float]):
-    _mock_endpoints(httpx_mock)
-    async with SwgohComlinkAsync(url=BASE_URL, version_cache_ttl=60.0) as client:
-        await client.get_game_data()
-        client.invalidate_version_cache()
-        await client.get_game_data()
-        assert len(_metadata_requests(httpx_mock)) == 2
-
-        clock["t"] += 61.0
-        versions = await client.get_latest_game_data_version()
-        assert versions == {"game": "game-v1", "language": "lang-v1"}
-        assert len(_metadata_requests(httpx_mock)) == 3
+    assert (versions.game, versions.language) == ("game-v1", "lang-v1")
+    assert httpx_mock.get_requests() == []

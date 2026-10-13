@@ -11,15 +11,35 @@ authors = [
 description = "Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)"
 readme = "README.md"
 requires-python = ">=3.10"
+# PEP 639 license expression — do not also add a "License ::" classifier.
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = [
+    "swgoh",
+    "galaxy of heroes",
+    "star wars",
+    "comlink",
+    "api-client",
+    "async",
+    "httpx",
+]
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Framework :: AsyncIO",
+    "Topic :: Games/Entertainment",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 dependencies = [
     "httpx>=0.28",
@@ -30,8 +50,12 @@ dependencies = [
 swgoh-migrate = "swgoh_comlink.migrate:main"
 
 [project.urls]
-"Homepage" = "https://github.com/swgoh-utils/comlink-python"
-"Bug Tracker" = "https://github.com/swgoh-utils/comlink-python/issues"
+Homepage = "https://github.com/swgoh-utils/comlink-python"
+Documentation = "https://swgoh-utils.github.io/comlink-python/"
+Source = "https://github.com/swgoh-utils/comlink-python"
+Issues = "https://github.com/swgoh-utils/comlink-python/issues"
+Changelog = "https://github.com/swgoh-utils/comlink-python/blob/main/CHANGELOG.md"
+Discord = "https://discord.gg/6PBfG5MzR3"
 
 [tool.pytest.ini_options]
 addopts = [
@@ -104,6 +128,9 @@ dev = [
     "ruff>=0.8",
 ]
 docs = [
+    # MkDocs 2.0 removes the plugin system (mkdocstrings) and theme overrides that this
+    # site depends on, with no migration path — stay on 1.x until the ecosystem settles.
+    "mkdocs>=1.6,<2",
     "mkdocs-material>=9.5.0",
     "mkdocstrings[python]>=0.28.0",
 ]
