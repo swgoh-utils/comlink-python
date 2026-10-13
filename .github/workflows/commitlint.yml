@@ -33,6 +33,17 @@ jobs:
           # non-conventional squash) commits — those are already on main and are
           # not this PR's responsibility to police.
           commits="$(git rev-list --no-merges --reverse "${base}..${head}" --not FETCH_HEAD)"
+          # Dependabot copies its subject casing from repo history rather than from
+          # dependabot.yml, so its "chore(deps): Bump ..." can fail subject-case. Its own
+          # commits are machine-generated and never reach the changelog, so skip them —
+          # but only on PRs Dependabot opened, so a forged author elsewhere is still
+          # linted, and any human commit pushed onto a Dependabot PR still is too.
+          if [ "${{ github.event.pull_request.user.login }}" = "dependabot[bot]" ]; then
+            bot="49699333+dependabot[bot]@users.noreply.github.com"
+            commits="$(git rev-list --no-merges --reverse --no-commit-header --format='%H %ae' \
+              "${base}..${head}" --not FETCH_HEAD | awk -v bot="${bot}" '$2 != bot { print $1 }')"
+            echo "Dependabot PR: skipping commits authored by ${bot}."
+          fi
           if [ -z "${commits}" ]; then
             echo "No PR-unique commits to lint (mergeback/back-merge or merge-only PR)."
             exit 0
