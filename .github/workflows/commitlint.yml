@@ -16,10 +16,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Rules come from the committed .commitlintrc.json — the same file the local
-      # pre-commit commit-msg hook reads — so local and CI validation cannot drift.
-      - name: Install commitlint
-        run: npm install -g @commitlint/{cli,config-conventional}
+      # Rules come from the committed .commitlintrc.json, and the commitlint, preset and
+      # Node versions from the `commitlint` hook in .pre-commit-config.yaml. CI runs that
+      # same hook through pre-commit rather than its own npm install, so local and CI
+      # validation cannot drift.
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Cache the pre-commit hook environment
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Validate commits
         run: |
@@ -33,13 +41,27 @@ jobs:
           # non-conventional squash) commits — those are already on main and are
           # not this PR's responsibility to police.
           commits="$(git rev-list --no-merges --reverse "${base}..${head}" --not FETCH_HEAD)"
+          # Dependabot copies its subject casing from repo history rather than from
+          # dependabot.yml, so its "chore(deps): Bump ..." can fail subject-case. Its own
+          # commits are machine-generated and never reach the changelog, so skip them —
+          # but only on PRs Dependabot opened, so a forged author elsewhere is still
+          # linted, and any human commit pushed onto a Dependabot PR still is too.
+          if [ "${{ github.event.pull_request.user.login }}" = "dependabot[bot]" ]; then
+            bot="49699333+dependabot[bot]@users.noreply.github.com"
+            commits="$(git rev-list --no-merges --reverse --no-commit-header --format='%H %ae' \
+              "${base}..${head}" --not FETCH_HEAD | awk -v bot="${bot}" '$2 != bot { print $1 }')"
+            echo "Dependabot PR: skipping commits authored by ${bot}."
+          fi
           if [ -z "${commits}" ]; then
             echo "No PR-unique commits to lint (mergeback/back-merge or merge-only PR)."
             exit 0
           fi
+          msg="${RUNNER_TEMP}/COMMIT_EDITMSG"
           rc=0
           while read -r sha; do
             echo "── ${sha} ──"
-            git log -1 --format=%B "${sha}" | npx commitlint --verbose || rc=1
+            git log -1 --format=%B "${sha}" > "${msg}"
+            uvx pre-commit run commitlint --verbose \
+              --hook-stage commit-msg --commit-msg-filename "${msg}" || rc=1
           done <<< "${commits}"
           exit "${rc}"

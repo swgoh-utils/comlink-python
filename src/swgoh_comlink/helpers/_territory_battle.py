@@ -520,11 +520,11 @@ def get_tb_mission_scores(
     definitions = _select_definitions(territory_battle_definitions, None, tb_id, func_name)
     _check_collection("tables", tables, func_name)
 
-    wanted = {
-        zone.get("encounterRewardTableId")
+    wanted: set[str] = {
+        table_id
         for definition in definitions
         for _, zone in _mission_zones(definition)
-        if zone.get("encounterRewardTableId")
+        if (table_id := zone.get("encounterRewardTableId"))
     }
     # 'table' holds every kind of game table; only parse the ones a mission names.
     curves: dict[str, list[int]] = {}
