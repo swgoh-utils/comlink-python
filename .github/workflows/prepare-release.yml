@@ -56,6 +56,18 @@ jobs:
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
           echo "Next version: ${tag}"
 
+      # git-changelog's angular convention counts ANY message line matching
+      # ^break(s|ing changes?)?[ :] (case-insensitive) as breaking, so a wrapped body line
+      # like "Breaking changes are ..." silently bumps the major. On a major, list every
+      # triggering line in the job summary; with bump=auto, also stop here (before anything
+      # is pushed) unless one of them is the exact "BREAKING CHANGE: <description>" footer.
+      # An explicit bump=major is a human decision and is only reported, never blocked.
+      - name: Check for an accidental major bump
+        run: >-
+          uv run python .github/tools/breaking_changes.py
+          --bump '${{ inputs.bump }}'
+          --next-tag '${{ steps.version.outputs.tag }}'
+
       - name: Regenerate CHANGELOG.md
         run: uv run git-changelog --bump '${{ inputs.bump }}'
 
