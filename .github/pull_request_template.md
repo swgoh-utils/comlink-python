@@ -30,7 +30,7 @@
 - [ ] I have updated the docs (`README.md`, `docs/`, `examples/`) if user-facing behavior changed
 - [ ] I have added unit tests that cover my changes (mocked, not requiring a live comlink service)
 - [ ] Tests pass (`uv run pytest tests/`)
-- [ ] Ruff linter and formatter pass (`uvx ruff check src/ tests/` and `uvx ruff format --check src/ tests/`)
+- [ ] Ruff linter and formatter pass (`uv run ruff check src/ tests/` and `uv run ruff format --check src/ tests/`)
 - [ ] Type check passes (`uv run ty check src/swgoh_comlink/`)
 - [ ] I have not bundled unrelated changes in this PR
 
