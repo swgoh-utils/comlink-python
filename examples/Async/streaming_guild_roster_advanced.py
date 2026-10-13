@@ -20,6 +20,7 @@ Unlike the basic streaming_guild_roster.py example, this version:
   - Provides colored terminal output for warnings and errors
   - Tracks per-fetch and aggregate timing statistics
 """
+
 import sys
 
 if sys.version_info < (3, 11):
@@ -52,40 +53,41 @@ _BACKOFF_BASE = 1.0
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Fetch all guild member profiles concurrently with retry logic."
-    )
+    parser = argparse.ArgumentParser(description="Fetch all guild member profiles concurrently with retry logic.")
     parser.add_argument(
         "identifier",
         help="Ally code (numeric) or guild ID (alphanumeric string)",
     )
     parser.add_argument(
-        "-r", "--retries",
+        "-r",
+        "--retries",
         type=int,
         default=3,
         help="Maximum retry attempts per member fetch (default: 3)",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Show per-fetch timing information",
     )
     parser.add_argument(
-        "-d", "--debug",
+        "-d",
+        "--debug",
         action="store_true",
         help="Show detailed debug output including retry delays and response validation",
     )
     parser.add_argument(
-            "--host",
-            default="localhost",
-            help="Comlink server host/IP (default: localhost)",
-            )
+        "--host",
+        default="localhost",
+        help="Comlink server host/IP (default: localhost)",
+    )
     parser.add_argument(
-            "--port",
-            type=int,
-            default=3200,
-            help="Comlink server port (default: 3000)",
-            )
+        "--port",
+        type=int,
+        default=3200,
+        help="Comlink server port (default: 3000)",
+    )
     return parser.parse_args()
 
 
@@ -140,9 +142,7 @@ async def fetch_member(
 
             # Validate response structure
             if not validate_player_response(player, debug=debug):
-                raise ValueError(
-                    f"Invalid response structure for player_id={player_id}"
-                )
+                raise ValueError(f"Invalid response structure for player_id={player_id}")
 
             gp = extract_gp(player)
             timing_str = f" {DIM}({fetch_elapsed:.2f}s){RESET}" if verbose or debug else ""
@@ -154,7 +154,7 @@ async def fetch_member(
             remaining = max_retries - attempt - 1
 
             if remaining > 0:
-                delay = _BACKOFF_BASE * (2 ** attempt)
+                delay = _BACKOFF_BASE * (2**attempt)
                 print(
                     f"  {YELLOW}{BOLD}⚠ WARNING{RESET}{YELLOW} "
                     f"[{index}/{total}] Attempt {attempt + 1}/{max_retries} failed "
@@ -233,7 +233,10 @@ async def main():
             tasks = [
                 tg.create_task(
                     fetch_member(
-                        comlink, pid, i + 1, total,
+                        comlink,
+                        pid,
+                        i + 1,
+                        total,
                         max_retries=args.retries,
                         verbose=verbose,
                         debug=debug,
