@@ -14,9 +14,7 @@ from swgoh_comlink import StatCalc
 
 ROOT = Path(__file__).resolve().parents[2]
 
-DEFAULT_GAMEDATA_URL = (
-    "https://raw.githubusercontent.com/swgoh-utils/gamedata/main/gameData.json"
-)
+DEFAULT_GAMEDATA_URL = "https://raw.githubusercontent.com/swgoh-utils/gamedata/main/gameData.json"
 JS_RUNNER = ROOT / "parity" / "scripts" / "run_js_parity.js"
 
 
@@ -44,9 +42,7 @@ def _build_mods(mod_set_ids: list[int]) -> list[dict[str, Any]]:
     return mods
 
 
-def _build_char(
-    unit_data: dict[str, Any], mod_set_ids: list[int], unit_id: str
-) -> dict[str, Any]:
+def _build_char(unit_data: dict[str, Any], mod_set_ids: list[int], unit_id: str) -> dict[str, Any]:
     meta = unit_data[unit_id]
     rarity = _max_numeric_key(meta["growthModifiers"])
     gear = _max_numeric_key(meta["gearLvl"])
@@ -63,25 +59,17 @@ def _build_char(
         "rarity": rarity,
         "level": 85,
         "gear": gear,
-        "equipped": [
-            {"equipmentId": gid, "slot": idx} for idx, gid in enumerate(gear_ids[:6])
-        ],
-        "skills": [
-            {"id": s["id"], "tier": s["maxTier"]} for s in meta.get("skills", [])
-        ],
+        "equipped": [{"equipmentId": gid, "slot": idx} for idx, gid in enumerate(gear_ids[:6])],
+        "skills": [{"id": s["id"], "tier": s["maxTier"]} for s in meta.get("skills", [])],
         "mods": _build_mods(mod_set_ids),
         "relic": {"currentTier": relic_tier} if relic_tier else None,
     }
 
 
 def _select_units(unit_data: dict[str, Any]) -> tuple[str, str]:
-    char_ids = sorted(
-        uid for uid, meta in unit_data.items() if meta.get("combatType") == 1
-    )
+    char_ids = sorted(uid for uid, meta in unit_data.items() if meta.get("combatType") == 1)
     ship_ids = sorted(
-        uid
-        for uid, meta in unit_data.items()
-        if meta.get("combatType") == 2 and len(meta.get("crew", [])) > 0
+        uid for uid, meta in unit_data.items() if meta.get("combatType") == 2 and len(meta.get("crew", [])) > 0
     )
     if not char_ids:
         raise RuntimeError("No character units found in game data")
@@ -103,16 +91,12 @@ def _build_fixtures(game_data: dict[str, Any]) -> dict[str, Any]:
         "defId": ship_id,
         "rarity": ship_rarity,
         "level": 85,
-        "skills": [
-            {"id": s["id"], "tier": s["maxTier"]} for s in ship_meta.get("skills", [])
-        ],
+        "skills": [{"id": s["id"], "tier": s["maxTier"]} for s in ship_meta.get("skills", [])],
     }
 
     crew = [_build_char(unit_data, mod_set_ids, cid) for cid in ship_meta["crew"]]
 
-    roster = (
-        [copy.deepcopy(char)] + [copy.deepcopy(c) for c in crew] + [copy.deepcopy(ship)]
-    )
+    roster = [copy.deepcopy(char)] + [copy.deepcopy(c) for c in crew] + [copy.deepcopy(ship)]
     players = [{"roster": copy.deepcopy(roster)}]
 
     return {
@@ -166,9 +150,7 @@ def _run_python(fixtures: dict[str, Any], game_data: dict[str, Any]) -> dict[str
 
 
 def _run_js(fixtures: dict[str, Any], game_data_path: Path) -> dict[str, Any]:
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".json", delete=False, encoding="utf-8"
-    ) as tf:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as tf:
         json.dump(fixtures, tf)
         fixtures_path = Path(tf.name)
 
@@ -188,11 +170,7 @@ def _run_js(fixtures: dict[str, Any], game_data_path: Path) -> dict[str, Any]:
 def _normalize_game_data(payload: dict[str, Any]) -> dict[str, Any]:
     if "unitData" in payload:
         return payload
-    if (
-        "data" in payload
-        and isinstance(payload["data"], dict)
-        and "unitData" in payload["data"]
-    ):
+    if "data" in payload and isinstance(payload["data"], dict) and "unitData" in payload["data"]:
         return payload["data"]
     raise ValueError("Unsupported gameData payload format")
 
@@ -206,9 +184,7 @@ def _compare(lhs: Any, rhs: Any, path: str = "$", tol: float = 1e-9) -> list[str
         return errors
 
     if not isinstance(lhs, type(rhs)):
-        errors.append(
-            f"{path}: type mismatch {type(lhs).__name__} != {type(rhs).__name__}"
-        )
+        errors.append(f"{path}: type mismatch {type(lhs).__name__} != {type(rhs).__name__}")
         return errors
 
     if isinstance(lhs, dict):
@@ -226,7 +202,7 @@ def _compare(lhs: Any, rhs: Any, path: str = "$", tol: float = 1e-9) -> list[str
         if len(lhs) != len(rhs):
             errors.append(f"{path}: list length mismatch {len(lhs)} != {len(rhs)}")
             return errors
-        for idx, (lv, rv) in enumerate(zip(lhs, rhs)):
+        for idx, (lv, rv) in enumerate(zip(lhs, rhs, strict=True)):
             errors.extend(_compare(lv, rv, f"{path}[{idx}]", tol))
         return errors
 
