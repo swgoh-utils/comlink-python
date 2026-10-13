@@ -9,7 +9,8 @@ updates:
       - "dependencies"
       - "ci"
 
-  - package-ecosystem: "pip"
+  # "uv" (not "pip") so updates also refresh uv.lock
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
