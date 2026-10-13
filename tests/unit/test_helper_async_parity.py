@@ -37,7 +37,7 @@ def test_client_helpers_are_detected():
 @pytest.mark.parametrize("name", _client_helpers())
 def test_client_helper_has_matching_async_twin(name: str):
     if name in CLIENT_AGNOSTIC_HELPERS:
-        pytest.skip("accepts the async client directly")
+        return  # accepts the async client directly; _client_helpers() already found it in __all__
     twin = getattr(helpers, f"async_{name}", None)
     assert twin is not None, f"{name} takes a comlink client but has no async_{name}"
     assert f"async_{name}" in helpers.__all__
@@ -45,6 +45,6 @@ def test_client_helper_has_matching_async_twin(name: str):
     assert _parameters(twin) == _parameters(getattr(helpers, name))
 
 
-@pytest.mark.parametrize("name", sorted(CLIENT_AGNOSTIC_HELPERS))
-def test_client_agnostic_helper_is_exported(name: str):
-    assert name in helpers.__all__
+@pytest.mark.parametrize("name", sorted(n for n in helpers.__all__ if n.startswith("async_")))
+def test_async_helper_has_exported_sync_twin(name: str):
+    assert name.removeprefix("async_") in helpers.__all__

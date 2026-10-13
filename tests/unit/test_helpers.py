@@ -2,21 +2,118 @@
 
 from __future__ import annotations
 
+import doctest
+import inspect
+import json
 import logging
 from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
+from swgoh_comlink._base import _SENSITIVE_KEYS
 from swgoh_comlink.exceptions import SwgohComlinkValueError
+from swgoh_comlink.globals import LoggingFormatter, get_logger
+from swgoh_comlink.helpers import (
+    CURRENCY_NAMES,
+    CURRENCY_TYPES,
+    ITEM_TYPES,
+    MOD_SET_IDS,
+    ItemNames,
+    _wire,
+    as_epoch,
+    as_id,
+    as_int,
+    as_list,
+    as_scalar,
+    as_str,
+    base_id,
+    calc_current_stamina,
+    calc_stamina_full_time,
+    get_ability_upgrade_costs,
+    get_conquest_feats,
+    get_data_disc_names,
+    get_event_schedule,
+    get_game_config,
+    get_game_config_int,
+    get_gear_craft_tree,
+    get_guild_activity,
+    get_mod_catalog,
+    get_named_effects,
+    get_named_rewards,
+    get_player_title_names,
+    get_relic_promotion_costs,
+    get_tb_mission_requirements,
+    get_tb_mission_scores,
+    get_tb_platoon_definitions,
+    get_tb_star_thresholds,
+    get_unit_abilities,
+    get_unit_gear_tiers,
+    parse_enum,
+    sum_upgrade_costs,
+)
+from swgoh_comlink.helpers._arena import get_arena_payout, get_max_rank_jump
+from swgoh_comlink.helpers._constants import _LEGACY_NAME_MAP, Constants
+from swgoh_comlink.helpers._data_items import DataItems
+from swgoh_comlink.helpers._decorators import func_debug_logger, func_timer
+from swgoh_comlink.helpers._events import _event_name
+from swgoh_comlink.helpers._gac import (
+    _async_find_bracket_boundary,
+    _find_bracket_boundary,
+    convert_divisions_to_int,
+    convert_league_to_int,
+    search_gac_brackets,
+)
+from swgoh_comlink.helpers._game_data import (
+    create_localized_unit_name_dictionary,
+    get_current_datacron_sets,
+    get_datacron_dismantle_total,
+    get_datacron_dismantle_value,
+    get_playable_units,
+    get_raid_leaderboard_ids,
+)
+from swgoh_comlink.helpers._localization import (
+    ANSI_BOLD,
+    ANSI_ITALIC,
+    ANSI_RESET,
+    ANSI_STRIKE,
+    ANSI_UNDERLINE,
+    _hex_to_ansi_truecolor,
+    _parse_tokens,
+    parse_swgoh_string,
+)
+from swgoh_comlink.helpers._omicron import (
+    get_omicron_skill_tier,
+    get_omicron_skills,
+    get_tw_omicrons,
+    get_unit_from_skill,
+    is_omicron_skill,
+)
+from swgoh_comlink.helpers._utils import (
+    convert_relic_tier,
+    get_enum_key_by_value,
+    get_function_name,
+    human_time,
+    sanitize_allycode,
+    validate_file_path,
+)
 
 # ── _utils ──────────────────────────────────────────────────────────────
 
 
+_RESOURCES = Path(__file__).parent.parent / "resources"
+
+
+@pytest.fixture(scope="module")
+def example_player() -> dict[str, Any]:
+    return json.loads((_RESOURCES / "example-player.json").read_text())
+
+
 class TestGetFunctionName:
     def test_returns_calling_function_name(self):
-        from swgoh_comlink.helpers._utils import get_function_name
 
         def my_custom_func():
             return get_function_name()
@@ -24,156 +121,101 @@ class TestGetFunctionName:
         assert my_custom_func() == "my_custom_func()"
 
 
-class TestGetEnumKeyByValue:
-    def test_match_found(self):
-        from swgoh_comlink.helpers._utils import get_enum_key_by_value
-
-        enum_dict = {"colors": {"red": 1, "blue": 2}}
-        assert get_enum_key_by_value(enum_dict, "colors", 2) == "blue"
-
-    def test_no_match(self):
-        from swgoh_comlink.helpers._utils import get_enum_key_by_value
-
-        enum_dict = {"colors": {"red": 1}}
-        assert get_enum_key_by_value(enum_dict, "colors", 99) is None
-
-    def test_missing_category(self):
-        from swgoh_comlink.helpers._utils import get_enum_key_by_value
-
-        enum_dict = {"colors": {"red": 1}}
-        assert get_enum_key_by_value(enum_dict, "shapes", 1) is None
-
-    def test_custom_default_return(self):
-        from swgoh_comlink.helpers._utils import get_enum_key_by_value
-
-        enum_dict = {"colors": {"red": 1}}
-        assert get_enum_key_by_value(enum_dict, "shapes", 1, "fallback") == "fallback"
+@pytest.mark.parametrize(
+    ("category", "value", "default", "expected"),
+    [
+        pytest.param("colors", 2, None, "blue", id="match"),
+        pytest.param("colors", 99, None, None, id="no-match"),
+        pytest.param("shapes", 1, None, None, id="missing-category"),
+        pytest.param("shapes", 1, "fallback", "fallback", id="custom-default"),
+    ],
+)
+def test_get_enum_key_by_value(category, value, default, expected):
+    enum_dict = {"colors": {"red": 1, "blue": 2}}
+    args = (enum_dict, category, value) if default is None else (enum_dict, category, value, default)
+    assert get_enum_key_by_value(*args) == expected
 
 
 class TestValidateFilePath:
     def test_valid_file(self, tmp_path: Path):
-        from swgoh_comlink.helpers._utils import validate_file_path
 
         f = tmp_path / "test.txt"
         f.write_text("hello")
         assert validate_file_path(f) is True
 
     def test_nonexistent_file(self, tmp_path: Path):
-        from swgoh_comlink.helpers._utils import validate_file_path
 
         assert validate_file_path(tmp_path / "nope.txt") is False
 
     def test_directory_returns_false(self, tmp_path: Path):
-        from swgoh_comlink.helpers._utils import validate_file_path
 
         assert validate_file_path(tmp_path) is False
 
     def test_empty_raises(self):
-        from swgoh_comlink.helpers._utils import validate_file_path
 
         with pytest.raises(SwgohComlinkValueError, match="path"):
             validate_file_path("")
 
 
 class TestSanitizeAllycode:
-    def test_valid_string(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
+    @pytest.mark.parametrize("allycode", ["123456789", 123456789, "123-456-789"], ids=["str", "int", "dashes-removed"])
+    def test_valid(self, allycode):
+        assert sanitize_allycode(allycode) == "123456789"
 
-        assert sanitize_allycode("123456789") == "123456789"
-
-    def test_valid_int(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
-
-        assert sanitize_allycode(123456789) == "123456789"
-
-    def test_dashes_removed(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
-
-        assert sanitize_allycode("123-456-789") == "123456789"
-
-    def test_wrong_length_raises(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
-
+    @pytest.mark.parametrize(
+        "allycode",
+        [
+            pytest.param("12345", id="wrong-length"),
+            pytest.param("12345abcd", id="non-digits"),
+            # 0 is falsy but is not the REQUIRED sentinel, so it is validated and rejected.
+            pytest.param(0, id="zero"),
+            pytest.param(3.14, id="float"),
+            pytest.param([1, 2, 3], id="list"),
+        ],
+    )
+    def test_invalid_raises(self, allycode):
         with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode("12345")
-
-    def test_non_digits_raises(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
-
-        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode("12345abcd")
-
-    def test_zero_raises(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
-
-        # 0 is falsy but is not the REQUIRED sentinel, so it falls
-        # through to validation and raises (not a valid 9-digit allycode).
-        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode(0)
+            sanitize_allycode(allycode)
 
     def test_default_none_returns_empty(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
-
-        # Calling with no argument uses the None default,
-        # which triggers the early "" return.
         assert sanitize_allycode() == ""
 
 
 class TestHumanTime:
-    def test_seconds(self):
-        from swgoh_comlink.helpers._utils import human_time
+    @pytest.mark.parametrize(
+        ("timestamp", "expected"),
+        [
+            pytest.param(0, "1970-01-01 00:00:00", id="seconds"),
+            pytest.param("0", "1970-01-01 00:00:00", id="string"),
+            pytest.param(1700000000.5, "2023-11-14 22:13:20", id="float"),
+            # 13+ digit timestamps are milliseconds.
+            pytest.param(1700000000000, "2023-11-14 22:13:20", id="milliseconds"),
+        ],
+    )
+    def test_formats_utc(self, timestamp, expected):
+        assert human_time(timestamp) == expected
 
-        assert human_time(0) == "1970-01-01 00:00:00"
-
-    def test_milliseconds_converted(self):
-        from swgoh_comlink.helpers._utils import human_time
-
-        # 13+ digit timestamp treated as milliseconds
-        assert human_time(1700000000000) == human_time(1700000000)
-
-    def test_float_input(self):
-        from swgoh_comlink.helpers._utils import human_time
-
-        result = human_time(1700000000.5)
-        assert result == "2023-11-14 22:13:20"
-
-    def test_string_input(self):
-        from swgoh_comlink.helpers._utils import human_time
-
-        assert human_time("0") == "1970-01-01 00:00:00"
-
-    def test_invalid_string_raises(self):
-        from swgoh_comlink.helpers._utils import human_time
-
-        with pytest.raises(SwgohComlinkValueError, match="Unable to convert"):
-            human_time("not_a_number")
-
-    def test_non_numeric_type_raises(self):
-        from swgoh_comlink.helpers._utils import human_time
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            human_time([])
+    @pytest.mark.parametrize(
+        ("value", "match"),
+        [pytest.param("not_a_number", "Unable to convert", id="bad-string"), pytest.param([], "required", id="list")],
+    )
+    def test_invalid_raises(self, value, match):
+        with pytest.raises(SwgohComlinkValueError, match=match):
+            human_time(value)
 
 
 class TestConvertRelicTier:
     # The game's RelicTier enum: RelicTier_DEFAULT = 0, RELIC_LOCKED = 1, RELIC_UNLOCKED = 2, RELIC_TIER_01 = 3
-    def test_valid_int(self):
-        from swgoh_comlink.helpers._utils import convert_relic_tier
-
-        assert convert_relic_tier(0) == "LOCKED"
-        assert convert_relic_tier(1) == "LOCKED"
-        assert convert_relic_tier(2) == "UNLOCKED"
-        assert convert_relic_tier(3) == "1"
-        assert convert_relic_tier(12) == "10"
-
-    def test_valid_string(self):
-        from swgoh_comlink.helpers._utils import convert_relic_tier
-
-        assert convert_relic_tier("9") == "7"
-
     @pytest.mark.parametrize(
-        ("name", "expected"),
+        ("tier", "expected"),
         [
+            (0, "LOCKED"),
+            (1, "LOCKED"),
+            (2, "UNLOCKED"),
+            (3, "1"),
+            (12, "10"),
+            ("9", "7"),
+            (99, None),
             ("RelicTier_DEFAULT", "LOCKED"),
             ("RELIC_LOCKED", "LOCKED"),
             ("RELIC_UNLOCKED", "UNLOCKED"),
@@ -184,30 +226,16 @@ class TestConvertRelicTier:
             ("NOT_A_TIER", None),
         ],
     )
-    def test_enum_names(self, name: str, expected: str | None):
-        from swgoh_comlink.helpers._utils import convert_relic_tier
+    def test_converts(self, tier, expected):
+        assert convert_relic_tier(tier) == expected
 
-        assert convert_relic_tier(name) == expected
-
-    def test_every_relic_in_example_player_converts(self):
-        import json
-
-        from swgoh_comlink.helpers._utils import convert_relic_tier
-
-        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
-        tiers = {unit["relic"]["currentTier"] for unit in player["rosterUnit"] if unit.get("relic")}
+    def test_every_relic_in_example_player_converts(self, example_player):
+        tiers = {unit["relic"]["currentTier"] for unit in example_player["rosterUnit"] if unit.get("relic")}
         assert 12 in tiers  # relic 10, the maximum
         assert all(convert_relic_tier(tier) is not None for tier in tiers)
 
-    def test_unknown_tier_returns_none(self):
-        from swgoh_comlink.helpers._utils import convert_relic_tier
-
-        assert convert_relic_tier(99) is None
-
     @pytest.mark.parametrize("value", [None, True, 1.0])
     def test_invalid_type_raises(self, value: Any):
-        from swgoh_comlink.helpers._utils import convert_relic_tier
-
         with pytest.raises(SwgohComlinkValueError, match="relic_tier"):
             convert_relic_tier(value)
 
@@ -216,84 +244,41 @@ class TestConvertRelicTier:
 
 
 class TestGetMaxRankJump:
-    def test_rank_below_6_returns_1(self):
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
+    @pytest.mark.parametrize(
+        ("rank", "expected"),
+        [(1, 1), (5, 1), (6, 2), (10, 6), (54, 43), (55, 46), (100, 84)],
+    )
+    def test_max_rank_jump(self, rank, expected):
 
-        assert get_max_rank_jump(1) == 1
-        assert get_max_rank_jump(5) == 1
+        assert get_max_rank_jump(rank) == expected
 
-    def test_rank_6(self):
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
 
-        result = get_max_rank_jump(6)
-        assert result == 6 - (3 + max(5 // 6, 1))
-
-    def test_rank_54(self):
-        from math import floor
-
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
-
-        result = get_max_rank_jump(54)
-        assert result == 54 - (3 + max(floor(53 / 6), 1))
-
-    def test_rank_55(self):
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
-
-        result = get_max_rank_jump(55)
-        assert result == int(round(55 * 0.85 - 1))
-
-    def test_rank_100(self):
-        from swgoh_comlink.helpers._arena import get_max_rank_jump
-
-        result = get_max_rank_jump(100)
-        assert result == int(round(100 * 0.85 - 1))
+def _at(hour: int, minute: int = 0, day: int = 8) -> datetime:
+    return datetime(2026, 10, day, hour, minute, tzinfo=timezone.utc)
 
 
 class TestGetArenaPayout:
     # localTimeZoneOffsetMinutes: payout is 18:00 (squad) / 19:00 (fleet) UTC moved back by the offset
-    @staticmethod
-    def _at(hour: int, minute: int = 0, day: int = 8):
-        from datetime import datetime, timezone
-
-        return datetime(2026, 10, day, hour, minute, tzinfo=timezone.utc)
-
-    def test_squad_and_fleet_anchor_hours(self):
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        assert get_arena_payout(0, now=self._at(12)) == self._at(18)
-        assert get_arena_payout(0, fleet=True, now=self._at(12)) == self._at(19)
+    @pytest.mark.parametrize(
+        ("offset", "fleet", "now", "expected"),
+        [
+            pytest.param(0, False, _at(12), _at(18), id="squad-anchor"),
+            pytest.param(0, True, _at(12), _at(19), id="fleet-anchor"),
+            # UTC+10: 19:00 local is 09:00 UTC
+            pytest.param(600, True, _at(8), _at(9), id="offset-moves-payout"),
+            pytest.param(0, False, _at(18), _at(18, day=9), id="at-payout-rolls-over"),
+            pytest.param(0, False, _at(20), _at(18, day=9), id="passed-payout-rolls-over"),
+            # US Pacific (UTC-7) fleet pays at 02:00 UTC: at 01:00 UTC the next payout is an hour away.
+            pytest.param(-420, True, _at(1), _at(2), id="next-utc-day-not-skipped"),
+        ],
+    )
+    def test_next_payout(self, offset, fleet, now, expected):
+        assert get_arena_payout(offset, fleet=fleet, now=now) == expected
 
     def test_returns_aware_utc(self):
-        from datetime import timezone
-
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
         assert get_arena_payout(0).tzinfo == timezone.utc
 
-    def test_offset_moves_payout(self):
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        # UTC+10: 19:00 local is 09:00 UTC
-        assert get_arena_payout(600, fleet=True, now=self._at(8)) == self._at(9)
-
-    def test_passed_payout_rolls_to_next_day(self):
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        assert get_arena_payout(0, now=self._at(18)) == self._at(18, day=9)
-        assert get_arena_payout(0, now=self._at(20)) == self._at(18, day=9)
-
-    def test_payout_on_the_next_utc_day_is_not_skipped(self):
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
-        # US Pacific (UTC-7) fleet pays at 02:00 UTC. At 01:00 UTC the next payout is an hour away,
-        # not the one 25 hours later.
-        assert get_arena_payout(-420, fleet=True, now=self._at(1)) == self._at(2)
-
     def test_naive_now_is_local_time(self):
-        from datetime import datetime, timedelta
-
-        from swgoh_comlink.helpers._arena import get_arena_payout
-
         now = datetime.now()
         payout = get_arena_payout(0, now=now)
         assert timedelta(0) < payout - now.astimezone() <= timedelta(days=1)
@@ -308,136 +293,69 @@ _SKILL_LIST: list[dict[str, Any]] = [
 ]
 
 
-class TestGetTwOmicrons:
-    def test_filters_mode_8(self):
-        from swgoh_comlink.helpers._omicron import get_tw_omicrons
-
-        result = get_tw_omicrons(_SKILL_LIST)
-        assert len(result) == 2
-        assert all(s["omicronMode"] == 8 for s in result)
-
-    def test_empty_list(self):
-        from swgoh_comlink.helpers._omicron import get_tw_omicrons
-
-        assert get_tw_omicrons([]) == []
-
-    def test_invalid_type_raises(self):
-        from swgoh_comlink.helpers._omicron import get_tw_omicrons
-
-        with pytest.raises(SwgohComlinkValueError, match="list"):
-            get_tw_omicrons("not a list")
+@pytest.mark.parametrize(
+    ("select", "expected_ids"),
+    [
+        pytest.param(lambda: get_tw_omicrons(_SKILL_LIST), ["skill_A", "skill_C"], id="tw-mode-8"),
+        pytest.param(lambda: get_tw_omicrons([]), [], id="tw-empty"),
+        pytest.param(lambda: get_omicron_skills(_SKILL_LIST, 3), ["skill_B"], id="single-mode"),
+        pytest.param(lambda: get_omicron_skills(_SKILL_LIST, [3, 8]), ["skill_A", "skill_B", "skill_C"], id="modes"),
+        pytest.param(lambda: get_omicron_skills(_SKILL_LIST, 99), [], id="no-match"),
+    ],
+)
+def test_omicron_skill_selection(select, expected_ids):
+    assert [skill["id"] for skill in select()] == expected_ids
 
 
-class TestGetOmicronSkills:
-    def test_single_int(self):
-        from swgoh_comlink.helpers._omicron import get_omicron_skills
-
-        result = get_omicron_skills(_SKILL_LIST, 3)
-        assert len(result) == 1
-        assert result[0]["id"] == "skill_B"
-
-    def test_list_of_ints(self):
-        from swgoh_comlink.helpers._omicron import get_omicron_skills
-
-        result = get_omicron_skills(_SKILL_LIST, [3, 8])
-        assert len(result) == 3
-
-    def test_no_match(self):
-        from swgoh_comlink.helpers._omicron import get_omicron_skills
-
-        assert get_omicron_skills(_SKILL_LIST, 99) == []
-
-    def test_invalid_skill_list_raises(self):
-        from swgoh_comlink.helpers._omicron import get_omicron_skills
-
-        with pytest.raises(SwgohComlinkValueError, match="list"):
-            get_omicron_skills("bad", 8)
-
-    def test_invalid_omicron_type_raises(self):
-        from swgoh_comlink.helpers._omicron import get_omicron_skills
-
-        with pytest.raises(SwgohComlinkValueError, match="omicron_type"):
-            get_omicron_skills([], "bad")
+@pytest.mark.parametrize(
+    ("skill", "expected"),
+    [
+        pytest.param({"tier": [{"isOmicronTier": False}, {"isOmicronTier": True}]}, 1, id="found"),
+        pytest.param({"tier": [{"isOmicronTier": False}]}, None, id="none"),
+    ],
+)
+def test_get_omicron_skill_tier(skill, expected):
+    assert get_omicron_skill_tier(skill) == expected
 
 
-class TestGetOmicronSkillTier:
-    def test_tier_found(self):
-        from swgoh_comlink.helpers._omicron import get_omicron_skill_tier
-
-        skill = {"tier": [{"isOmicronTier": False}, {"isOmicronTier": True}]}
-        assert get_omicron_skill_tier(skill) == 1
-
-    def test_no_omicron_tier(self):
-        from swgoh_comlink.helpers._omicron import get_omicron_skill_tier
-
-        skill = {"tier": [{"isOmicronTier": False}]}
-        assert get_omicron_skill_tier(skill) is None
-
-    def test_invalid_type_raises(self):
-        from swgoh_comlink.helpers._omicron import get_omicron_skill_tier
-
-        with pytest.raises(SwgohComlinkValueError, match="dictionary"):
-            get_omicron_skill_tier("not a dict")
-
-    def test_missing_tier_key_raises(self):
-        from swgoh_comlink.helpers._omicron import get_omicron_skill_tier
-
-        with pytest.raises(SwgohComlinkValueError, match="tier"):
-            get_omicron_skill_tier({"id": "skill_A"})
+@pytest.mark.parametrize(
+    ("skills", "kwargs", "expected"),
+    [
+        pytest.param(_SKILL_LIST, {"skill_id": "skill_A", "skill_tier": 1}, True, id="omicron-tier"),
+        # skill_A has its omicron at tier index 1, so tier 99 does not match.
+        pytest.param(_SKILL_LIST, {"skill_id": "skill_A", "skill_tier": 99}, False, id="wrong-tier"),
+        pytest.param(_SKILL_LIST, {"roster_unit_skill": {"id": "skill_A", "tier": 1}}, True, id="roster-unit-skill"),
+        pytest.param(_SKILL_LIST, {"skill_id": "nonexistent", "skill_tier": 1}, False, id="not-in-list"),
+        pytest.param([_SKILL_LIST[1]], {"skill_id": "skill_B", "skill_tier": 1}, False, id="skill-without-omicron"),
+    ],
+)
+def test_is_omicron_skill(skills, kwargs, expected):
+    assert is_omicron_skill(skills, **kwargs) is expected
 
 
-class TestIsOmicronSkill:
-    def test_via_skill_id_and_tier_true(self):
-        from swgoh_comlink.helpers._omicron import is_omicron_skill
-
-        assert is_omicron_skill(_SKILL_LIST, skill_id="skill_A", skill_tier=1) is True
-
-    def test_via_skill_id_and_tier_wrong_tier(self):
-        from swgoh_comlink.helpers._omicron import is_omicron_skill
-
-        # skill_A has omicron at tier index 1, so tier 99 should not match
-        assert is_omicron_skill(_SKILL_LIST, skill_id="skill_A", skill_tier=99) is False
-
-    def test_via_roster_unit_skill(self):
-        from swgoh_comlink.helpers._omicron import is_omicron_skill
-
-        # skill_C has omicron at tier index 0, and tier must be truthy
-        roster_skill = {"id": "skill_A", "tier": 1}
-        assert is_omicron_skill(_SKILL_LIST, roster_unit_skill=roster_skill) is True
-
-    def test_not_in_list(self):
-        from swgoh_comlink.helpers._omicron import is_omicron_skill
-
-        assert is_omicron_skill(_SKILL_LIST, skill_id="nonexistent", skill_tier=1) is False
-
-    def test_invalid_omicron_list_raises(self):
-        from swgoh_comlink.helpers._omicron import is_omicron_skill
-
-        with pytest.raises(SwgohComlinkValueError, match="list"):
-            is_omicron_skill("bad", skill_id="s", skill_tier=1)
-
-    def test_invalid_skill_id_type_raises(self):
-        from swgoh_comlink.helpers._omicron import is_omicron_skill
-
-        with pytest.raises(SwgohComlinkValueError, match="skill_id"):
-            is_omicron_skill([], skill_id=123, skill_tier=1)
-
-    def test_missing_skill_id_and_tier_raises(self):
-        from swgoh_comlink.helpers._omicron import is_omicron_skill
-
-        with pytest.raises(SwgohComlinkValueError):
-            is_omicron_skill([], skill_id="", skill_tier=0)
-
-    def test_invalid_roster_unit_skill_raises(self):
-        from swgoh_comlink.helpers._omicron import is_omicron_skill
-
-        with pytest.raises(SwgohComlinkValueError, match="Invalid"):
-            is_omicron_skill([], roster_unit_skill={"id": "", "tier": 0})
+@pytest.mark.parametrize(
+    ("call", "match"),
+    [
+        pytest.param(lambda: get_tw_omicrons("not a list"), "list", id="tw-not-list"),
+        pytest.param(lambda: get_omicron_skills("bad", 8), "list", id="skills-not-list"),
+        pytest.param(lambda: get_omicron_skills([], "bad"), "omicron_type", id="bad-omicron-type"),
+        pytest.param(lambda: get_omicron_skill_tier("not a dict"), "dictionary", id="tier-not-dict"),
+        pytest.param(lambda: get_omicron_skill_tier({"id": "skill_A"}), "tier", id="tier-key-missing"),
+        pytest.param(lambda: is_omicron_skill("bad", skill_id="s", skill_tier=1), "list", id="is-not-list"),
+        pytest.param(lambda: is_omicron_skill([], skill_id=123, skill_tier=1), "skill_id", id="bad-skill-id"),
+        pytest.param(lambda: is_omicron_skill([], skill_id="", skill_tier=0), "are required", id="no-skill-id-or-tier"),
+        pytest.param(
+            lambda: is_omicron_skill([], roster_unit_skill={"id": "", "tier": 0}), "Invalid", id="bad-roster-skill"
+        ),
+    ],
+)
+def test_omicron_helpers_reject_invalid_input(call, match):
+    with pytest.raises(SwgohComlinkValueError, match=match):
+        call()
 
 
 class TestGetUnitFromSkill:
     def test_found(self):
-        from swgoh_comlink.helpers._omicron import get_unit_from_skill
 
         units = [
             {"baseId": "UNIT1", "nameKey": "Unit One", "skillReference": [{"id": "skill_X"}]},
@@ -449,25 +367,21 @@ class TestGetUnitFromSkill:
         assert result.nameKey == "Unit Two"
 
     def test_not_found(self):
-        from swgoh_comlink.helpers._omicron import get_unit_from_skill
 
         units = [{"baseId": "U1", "nameKey": "N1", "skillReference": [{"id": "s1"}]}]
         assert get_unit_from_skill(units, "nonexistent") is None
 
     def test_empty_skill_reference(self):
-        from swgoh_comlink.helpers._omicron import get_unit_from_skill
 
         units = [{"baseId": "U1", "nameKey": "N1", "skillReference": None}]
         assert get_unit_from_skill(units, "s1") is None
 
     def test_invalid_unit_list_raises(self):
-        from swgoh_comlink.helpers._omicron import get_unit_from_skill
 
         with pytest.raises(SwgohComlinkValueError, match="list"):
             get_unit_from_skill("bad", "skill")
 
     def test_invalid_skill_type_raises(self):
-        from swgoh_comlink.helpers._omicron import get_unit_from_skill
 
         with pytest.raises(SwgohComlinkValueError, match="string"):
             get_unit_from_skill([], 123)
@@ -478,7 +392,6 @@ class TestGetUnitFromSkill:
 
 class TestGetRaidLeaderboardIds:
     def test_valid_guild_campaign(self):
-        from swgoh_comlink.helpers._game_data import get_raid_leaderboard_ids
 
         campaign_data = [
             {
@@ -509,80 +422,47 @@ class TestGetRaidLeaderboardIds:
         assert result[1] == "GUILD:MAP1:NORMAL_DIFF:NODE1:MISSION2"
 
     def test_no_guild_returns_empty(self):
-        from swgoh_comlink.helpers._game_data import get_raid_leaderboard_ids
 
         campaign_data = [{"id": "LIGHT_SIDE"}]
         assert get_raid_leaderboard_ids(campaign_data) == []
 
 
 class TestCreateLocalizedUnitNameDictionary:
-    def test_string_input(self):
-        from swgoh_comlink.helpers._game_data import create_localized_unit_name_dictionary
-
-        locale_str = "# comment\nUNIT_BOSSK_NAME|Bossk\nUNIT_BOSSK_DESC|A hunter\n"
-        result = create_localized_unit_name_dictionary(locale_str)
-        assert result == {"UNIT_BOSSK_NAME": "Bossk"}
-
-    def test_list_input(self):
-        from swgoh_comlink.helpers._game_data import create_localized_unit_name_dictionary
-
-        locale_list = ["UNIT_VADER_NAME|Darth Vader", "UNIT_VADER_DESC|Sith Lord"]
-        result = create_localized_unit_name_dictionary(locale_list)
-        assert result == {"UNIT_VADER_NAME": "Darth Vader"}
-
-    def test_bytes_in_list(self):
-        from swgoh_comlink.helpers._game_data import create_localized_unit_name_dictionary
-
-        locale_list = [b"UNIT_LUKE_NAME|Luke Skywalker"]
-        result = create_localized_unit_name_dictionary(locale_list)
-        assert result == {"UNIT_LUKE_NAME": "Luke Skywalker"}
-
-    def test_name_variant_suffixes_included(self):
-        from swgoh_comlink.helpers._game_data import create_localized_unit_name_dictionary
-
-        locale_list = [
-            "UNIT_JEDIKNIGHTREVAN_NAME_V2|Jedi Knight Revan",
-            "UNIT_BOSSK_NAME|Bossk",
-            "UNIT_BOSSK_DESC|A hunter",
-        ]
-        result = create_localized_unit_name_dictionary(locale_list)
-        assert result == {
-            "UNIT_JEDIKNIGHTREVAN_NAME_V2": "Jedi Knight Revan",
-            "UNIT_BOSSK_NAME": "Bossk",
-        }
-
-    def test_comments_and_non_unit_lines_skipped(self):
-        from swgoh_comlink.helpers._game_data import create_localized_unit_name_dictionary
-
-        locale_str = "# comment\nSOME_OTHER|value\nno pipe here\n"
-        result = create_localized_unit_name_dictionary(locale_str)
-        assert result == {}
+    @pytest.mark.parametrize(
+        ("locale", "expected"),
+        [
+            pytest.param(
+                "# comment\nUNIT_BOSSK_NAME|Bossk\nUNIT_BOSSK_DESC|A hunter\n", {"UNIT_BOSSK_NAME": "Bossk"}, id="str"
+            ),
+            pytest.param(
+                ["UNIT_VADER_NAME|Darth Vader", "UNIT_VADER_DESC|Sith Lord"],
+                {"UNIT_VADER_NAME": "Darth Vader"},
+                id="list",
+            ),
+            pytest.param([b"UNIT_LUKE_NAME|Luke Skywalker"], {"UNIT_LUKE_NAME": "Luke Skywalker"}, id="bytes-in-list"),
+            pytest.param(
+                ["UNIT_JEDIKNIGHTREVAN_NAME_V2|Jedi Knight Revan", "UNIT_BOSSK_NAME|Bossk", "UNIT_BOSSK_DESC|A hunter"],
+                {"UNIT_JEDIKNIGHTREVAN_NAME_V2": "Jedi Knight Revan", "UNIT_BOSSK_NAME": "Bossk"},
+                id="name-variant-suffix",
+            ),
+            pytest.param("# comment\nSOME_OTHER|value\nno pipe here\n", {}, id="non-unit-lines-skipped"),
+        ],
+    )
+    def test_keeps_unit_names(self, locale, expected):
+        assert create_localized_unit_name_dictionary(locale) == expected
 
     def test_invalid_type_raises(self):
-        from swgoh_comlink.helpers._game_data import create_localized_unit_name_dictionary
-
         with pytest.raises(SwgohComlinkValueError, match="list"):
             create_localized_unit_name_dictionary(12345)
 
 
 class TestGetPlayableUnits:
-    def test_filters_correctly(self):
-        from swgoh_comlink.helpers._game_data import get_playable_units
-
+    def test_keeps_obtainable_seven_star_units_and_tolerates_missing_fields(self):
         units = [
-            {"rarity": 7, "obtainable": True, "obtainableTime": "0"},
-            {"rarity": 5, "obtainable": True, "obtainableTime": "0"},
-            {"rarity": 7, "obtainable": False, "obtainableTime": "0"},
-            {"rarity": 7, "obtainable": True, "obtainableTime": "12345"},
-        ]
-        result = get_playable_units(units)
-        assert len(result) == 1
-        assert result[0]["rarity"] == 7
-
-    def test_tolerates_missing_fields_and_enum_rarity(self):
-        from swgoh_comlink.helpers._game_data import get_playable_units
-
-        units = [
+            {"baseId": "PLAYABLE", "rarity": 7, "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "FIVE_STAR", "rarity": 5, "obtainable": True, "obtainableTime": "0"},
+            {"baseId": "NOT_OBTAINABLE", "rarity": 7, "obtainable": False, "obtainableTime": "0"},
+            {"baseId": "TIMED", "rarity": 7, "obtainable": True, "obtainableTime": "12345"},
             {"baseId": "OLD_DUMP", "rarity": 7, "obtainable": True},  # predates obtainableTime
             {"baseId": "ENUMS", "rarity": "SEVEN_STAR", "obtainable": True, "obtainableTime": "0"},
             {"baseId": "INT_TIME", "rarity": 7, "obtainable": True, "obtainableTime": 0},
@@ -590,18 +470,15 @@ class TestGetPlayableUnits:
             {"baseId": "NO_OBTAINABLE", "rarity": 7, "obtainableTime": "0"},
             {"baseId": "GL_TEMPLATE", "rarity": 7, "obtainable": True, "obtainableTime": "4102444800000"},
         ]
-        assert [u["baseId"] for u in get_playable_units(units)] == ["OLD_DUMP", "ENUMS", "INT_TIME"]
+        assert [u["baseId"] for u in get_playable_units(units)] == ["PLAYABLE", "OLD_DUMP", "ENUMS", "INT_TIME"]
 
     def test_invalid_type_raises(self):
-        from swgoh_comlink.helpers._game_data import get_playable_units
-
         with pytest.raises(SwgohComlinkValueError, match="list"):
             get_playable_units("bad")
 
 
 class TestGetCurrentDatacronSets:
     def test_active_sets_returned(self):
-        from swgoh_comlink.helpers._game_data import get_current_datacron_sets
 
         far_future = str(99999999999999)
         past = "0"
@@ -614,85 +491,67 @@ class TestGetCurrentDatacronSets:
         assert result[0]["id"] == "active"
 
     def test_invalid_type_raises(self):
-        from swgoh_comlink.helpers._game_data import get_current_datacron_sets
 
         with pytest.raises(SwgohComlinkValueError, match="list"):
             get_current_datacron_sets("bad")
 
 
 class TestGetDatacronDismantleValue:
-    def test_normal_dismantle(self):
-        from swgoh_comlink.helpers._game_data import get_datacron_dismantle_value
-
-        datacron = {"setId": "set1", "affix": [1, 2]}
-        sets = [
-            {
-                "id": "set1",
-                "tier": [
-                    {"id": 0, "dustGrantRecipeId": None},
-                    {"id": 1, "dustGrantRecipeId": None},
-                    {"id": 2, "dustGrantRecipeId": "recipe1"},
+    @pytest.mark.parametrize(
+        ("datacron", "sets", "recipes", "expected"),
+        [
+            pytest.param(
+                {"setId": "set1", "affix": [1, 2]},
+                [
+                    {
+                        "id": "set1",
+                        "tier": [
+                            {"id": 0, "dustGrantRecipeId": None},
+                            {"id": 1, "dustGrantRecipeId": None},
+                            {"id": 2, "dustGrantRecipeId": "recipe1"},
+                        ],
+                    }
                 ],
-            }
-        ]
-        recipes = [
-            {
-                "id": "recipe1",
-                "ingredients": [
-                    {"id": "mat_A", "maxQuantity": 100, "type": 3},
-                ],
-            }
-        ]
-        result = get_datacron_dismantle_value(datacron, sets, recipes)
-        assert result["mat_A"]["quantity"] == 100
-        assert result["focused"] is False
-
-    def test_focused_dismantle(self):
-        from swgoh_comlink.helpers._game_data import get_datacron_dismantle_value
-
-        datacron = {"setId": "set1", "focused": True, "affix": [1]}
-        sets = [
-            {
-                "id": "set1",
-                "focusedTier": [{"id": 1, "dustGrantRecipeId": "recipe_f"}],
-            }
-        ]
-        recipes = [{"id": "recipe_f", "ingredients": [{"id": "mat_B", "maxQuantity": 50, "type": 2}]}]
-        result = get_datacron_dismantle_value(datacron, sets, recipes)
-        assert result["mat_B"]["quantity"] == 50
-        assert result["focused"] is True
-
-    def test_missing_set_returns_empty(self):
-        from swgoh_comlink.helpers._game_data import get_datacron_dismantle_value
-
-        result = get_datacron_dismantle_value({"setId": "nope"}, [], [])
-        assert result == {}
-
-    def test_missing_recipe_returns_empty(self):
-        from swgoh_comlink.helpers._game_data import get_datacron_dismantle_value
-
-        datacron = {"setId": "set1", "affix": [1]}
-        sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": "recipe_x"}]}]
-        result = get_datacron_dismantle_value(datacron, sets, [])
-        assert result == {}
+                [{"id": "recipe1", "ingredients": [{"id": "mat_A", "maxQuantity": 100, "type": 3}]}],
+                {"mat_A": {"quantity": 100, "type": 3}, "focused": False},
+                id="normal",
+            ),
+            pytest.param(
+                {"setId": "set1", "focused": True, "affix": [1]},
+                [{"id": "set1", "focusedTier": [{"id": 1, "dustGrantRecipeId": "recipe_f"}]}],
+                [{"id": "recipe_f", "ingredients": [{"id": "mat_B", "maxQuantity": 50, "type": 2}]}],
+                {"mat_B": {"quantity": 50, "type": 2}, "focused": True},
+                id="focused",
+            ),
+            pytest.param({"setId": "nope"}, [], [], {}, id="missing-set"),
+            pytest.param(
+                {"setId": "set1", "affix": [1]},
+                [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": "recipe_x"}]}],
+                [],
+                {},
+                id="missing-recipe",
+            ),
+            pytest.param(
+                {"setId": "set1", "affix": [1]},
+                [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": None}]}],
+                [],
+                {},
+                id="no-dust-recipe",
+            ),
+        ],
+    )
+    def test_dismantle_value(self, datacron, sets, recipes, expected):
+        assert get_datacron_dismantle_value(datacron, sets, recipes) == expected
 
 
 class TestGetDatacronDismantleTotal:
     def test_aggregates_materials(self):
-        from swgoh_comlink.helpers._game_data import get_datacron_dismantle_total
-
-        datacrons = [
-            {"setId": "set1", "affix": [1]},
-            {"setId": "set1", "affix": [1]},
-        ]
+        datacrons = [{"setId": "set1", "affix": [1]}, {"setId": "set1", "affix": [1]}]
         sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": "r1"}]}]
         recipes = [{"id": "r1", "ingredients": [{"id": "mat_A", "maxQuantity": 10, "type": 1}]}]
-        result = get_datacron_dismantle_total(datacrons, sets, recipes)
-        assert result["mat_A"]["quantity"] == 20
+        assert get_datacron_dismantle_total(datacrons, sets, recipes) == {"mat_A": {"quantity": 20, "type": 1}}
 
     def test_empty_list_returns_empty(self):
-        from swgoh_comlink.helpers._game_data import get_datacron_dismantle_total
-
         assert get_datacron_dismantle_total([], [], []) == {}
 
 
@@ -703,49 +562,66 @@ _REFRESH = 1_790_164_800  # 2026-09-23 12:00:00 UTC, in seconds as lastRefreshTi
 
 
 def _utc(seconds: float):
-    from datetime import datetime, timezone
 
     return datetime.fromtimestamp(seconds, tz=timezone.utc)
 
 
-class TestCalcStaminaFullTime:
-    def test_one_point_per_thirty_minutes(self):
-        from swgoh_comlink.helpers import calc_stamina_full_time
+class TestCalcCurrentStamina:
+    @pytest.mark.parametrize(
+        ("minutes_ago", "remaining", "pass_plus", "expected"),
+        [
+            pytest.param(120, 87, False, 91, id="one-point-per-30-minutes"),  # floor(120 / 30 * 1.0) + 87
+            pytest.param(120, 87, True, 92, id="pass-plus"),  # floor(120 / 30 * 1.33) + 87
+            pytest.param(6000, 50, False, 100, id="capped-at-100"),
+        ],
+    )
+    def test_current_stamina(self, monkeypatch, minutes_ago, remaining, pass_plus, expected):
+        monkeypatch.setattr("swgoh_comlink.helpers._conquest.time.time", lambda: _REFRESH)
+        unit = {"lastRefreshTime": str(_REFRESH - minutes_ago * 60), "remainingStamina": remaining}
+        assert calc_current_stamina(unit, pass_plus=pass_plus) == expected
 
-        unit = {"unitId": "u1", "remainingStamina": 90, "lastRefreshTime": str(_REFRESH)}
+    @pytest.mark.parametrize(
+        ("unit", "match"),
+        [
+            pytest.param("not a dict", "dict", id="not-dict"),
+            pytest.param({"lastRefreshTime": "123"}, "Invalid unit data", id="no-remaining-stamina"),
+            pytest.param({"remainingStamina": 87}, "Invalid unit data", id="no-last-refresh-time"),
+        ],
+    )
+    def test_invalid_unit_raises(self, unit, match):
+        with pytest.raises(SwgohComlinkValueError, match=match):
+            calc_current_stamina(unit)
+
+
+class TestCalcStaminaFullTime:
+    @pytest.mark.parametrize("remaining", [90, 90.0, "90"], ids=["int", "float", "str"])
+    def test_one_point_per_thirty_minutes(self, remaining: Any):
+        unit = {"unitId": "u1", "remainingStamina": remaining, "lastRefreshTime": str(_REFRESH)}
         assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 3600)) == _utc(_REFRESH + 10 * 1800)
 
     def test_returns_aware_utc(self):
-        from datetime import timezone
-
-        from swgoh_comlink.helpers import calc_stamina_full_time
 
         result = calc_stamina_full_time({"remainingStamina": 50, "lastRefreshTime": _REFRESH})
         assert result.tzinfo == timezone.utc
 
     @pytest.mark.parametrize("pass_plus", [False, True])
-    @pytest.mark.parametrize("remaining", [0, 1, 37, 99])
-    def test_agrees_with_calc_current_stamina(self, remaining: int, pass_plus: bool):
-        from unittest.mock import patch
-
-        from swgoh_comlink.helpers import calc_current_stamina, calc_stamina_full_time
-
-        unit = {"remainingStamina": remaining, "lastRefreshTime": _REFRESH}
-        full = calc_stamina_full_time(unit, pass_plus, now=_utc(_REFRESH)).timestamp()
-        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full):
-            assert calc_current_stamina(unit, pass_plus) == 100
-        with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full - 1):
-            assert calc_current_stamina(unit, pass_plus) < 100
+    def test_agrees_with_calc_current_stamina(self, pass_plus: bool):
+        """For every starting stamina, the unit is full at the returned time and not one second before."""
+        for remaining in range(100):
+            unit = {"remainingStamina": remaining, "lastRefreshTime": _REFRESH}
+            full = calc_stamina_full_time(unit, pass_plus, now=_utc(_REFRESH)).timestamp()
+            with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full):
+                assert calc_current_stamina(unit, pass_plus) == 100, remaining
+            with patch("swgoh_comlink.helpers._conquest.time.time", return_value=full - 1):
+                assert calc_current_stamina(unit, pass_plus) < 100, remaining
 
     def test_pass_plus_is_faster(self):
-        from swgoh_comlink.helpers import calc_stamina_full_time
 
         unit = {"remainingStamina": 0, "lastRefreshTime": _REFRESH}
         now = _utc(_REFRESH)
         assert calc_stamina_full_time(unit, True, now=now) < calc_stamina_full_time(unit, now=now)
 
     def test_full_unit_returns_the_moment_it_filled(self):
-        from swgoh_comlink.helpers import calc_stamina_full_time
 
         unit = {"remainingStamina": 98, "lastRefreshTime": _REFRESH}
         assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 86_400)) == _utc(_REFRESH + 3600)
@@ -753,7 +629,6 @@ class TestCalcStaminaFullTime:
 
     @pytest.mark.parametrize("refresh", [None, 0, "", "junk"])
     def test_missing_refresh_time_counts_from_now(self, refresh: Any):
-        from swgoh_comlink.helpers import calc_stamina_full_time
 
         unit: dict[str, Any] = {"remainingStamina": 99}
         if refresh is not None:
@@ -762,15 +637,11 @@ class TestCalcStaminaFullTime:
         assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 0.75)) == _utc(_REFRESH + 1800)
 
     def test_future_refresh_time_counts_from_now(self):
-        from swgoh_comlink.helpers import calc_stamina_full_time
 
         unit = {"remainingStamina": 99, "lastRefreshTime": _REFRESH + 600}
         assert calc_stamina_full_time(unit, now=_utc(_REFRESH)) == _utc(_REFRESH + 1800)
 
     def test_naive_now_is_local_time(self):
-        from datetime import datetime
-
-        from swgoh_comlink.helpers import calc_stamina_full_time
 
         now = datetime.now()
         assert calc_stamina_full_time({"remainingStamina": 99}, now=now) == _utc(int(now.timestamp()) + 1800)
@@ -782,13 +653,13 @@ class TestCalcStaminaFullTime:
             [],
             {"lastRefreshTime": _REFRESH},
             {"remainingStamina": "full"},
+            {"remainingStamina": True},
             {"remainingStamina": float("inf"), "lastRefreshTime": _REFRESH},
             {"remainingStamina": float("nan"), "lastRefreshTime": _REFRESH},
         ],
-        ids=["none", "list", "no-stamina", "junk-stamina", "inf", "nan"],
+        ids=["none", "list", "no-stamina", "junk-stamina", "bool", "inf", "nan"],
     )
     def test_invalid_unit_raises(self, unit: Any):
-        from swgoh_comlink.helpers import calc_stamina_full_time
 
         with pytest.raises(SwgohComlinkValueError, match="calc_stamina_full_time"):
             calc_stamina_full_time(unit)
@@ -830,7 +701,6 @@ _ARTIFACTS = [{"id": "artifact_x", "nameKey": "ARTIFACT_X_NAME"}]
 
 class TestGetConquestFeats:
     def test_defaults_to_newest_conquest_and_orders_feats(self):
-        from swgoh_comlink.helpers import get_conquest_feats
 
         feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES)
         assert [f["challenge_id"] for f in feats] == [
@@ -844,7 +714,6 @@ class TestGetConquestFeats:
         assert [f["kind"] for f in feats] == ["Global", "Mini-Boss", "Global", "Sector", "Boss"]
 
     def test_localizes_names_sectors_and_artifacts(self):
-        from swgoh_comlink.helpers import get_conquest_feats
 
         feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, _LOC, _ARTIFACTS, difficulty="hard")
         bombs, sector, boss = feats
@@ -859,20 +728,17 @@ class TestGetConquestFeats:
         assert sector["name"] == "CONQUEST_VOL2_SECTOR_WIN_III_DIFF_S0_NAME"
 
     def test_without_localization_uses_ids(self):
-        from swgoh_comlink.helpers import get_conquest_feats
 
         feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, difficulty="Hard")
         assert feats[0]["reward_artifact"] == "artifact_x"
         assert feats[1]["scope"] == "S0"
 
     def test_enum_name_reward_types(self):
-        from swgoh_comlink.helpers import get_conquest_feats
 
         (feat,) = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, difficulty="normal")
         assert feat["keycards"] == 1
 
     def test_feats_without_a_kind_token(self):
-        from swgoh_comlink.helpers import get_conquest_feats
 
         challenges = [
             _feat("CONQUEST_VOL2_SILVO_VANE_III_DIFF_S0", keycards=5),
@@ -888,7 +754,6 @@ class TestGetConquestFeats:
         assert feats[1]["keycards"] == 5
 
     def test_explicit_conquest_id_is_case_insensitive(self):
-        from swgoh_comlink.helpers import get_conquest_feats
 
         feats = get_conquest_feats(_CONQUEST_DEFS, _CHALLENGES, conquest_id="conquest_vol1")
         assert [f["challenge_id"] for f in feats] == ["CONQUEST_VOL1_EVENT_OLD_III_DIFF"]
@@ -904,7 +769,6 @@ class TestGetConquestFeats:
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
-        from swgoh_comlink.helpers import get_conquest_feats
 
         with pytest.raises(SwgohComlinkValueError):
             get_conquest_feats(*args, **kwargs)
@@ -925,7 +789,6 @@ def _run(start: int, end: int | str, run_id: str | None = None, **extra: Any) ->
 
 
 def _events_now():
-    from datetime import datetime, timezone
 
     return datetime.fromtimestamp(_EVENTS_NOW_MS / 1000, tz=timezone.utc)
 
@@ -981,7 +844,6 @@ _EVENT_LOC = {
 
 class TestGetEventSchedule:
     def test_live_then_upcoming_soonest_first(self):
-        from swgoh_comlink.helpers import get_event_schedule
 
         schedule = get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())
         assert [(e["event_id"], e["status"]) for e in schedule] == [
@@ -992,7 +854,6 @@ class TestGetEventSchedule:
         ]
 
     def test_names_split_the_banner_and_keep_the_game_case(self):
-        from swgoh_comlink.helpers import get_event_schedule
 
         schedule = get_event_schedule(_GAME_EVENTS, _EVENT_LOC, now=_events_now())
         assert [(e["title"], e["subtitle"], e["name"]) for e in schedule] == [
@@ -1014,12 +875,10 @@ class TestGetEventSchedule:
         ],
     )
     def test_event_name_formatting(self, text: str, expected: tuple[str, str | None]):
-        from swgoh_comlink.helpers._events import _event_name
 
         assert _event_name(text) == expected
 
     def test_without_localization_uses_name_key(self):
-        from swgoh_comlink.helpers import get_event_schedule
 
         schedule = get_event_schedule(_GAME_EVENTS["gameEvent"], now=_events_now())
         assert schedule[0]["name"] == "EVENT_JOURNEY_MANDALORIAN_NAME"
@@ -1028,9 +887,6 @@ class TestGetEventSchedule:
         assert (no_key[0]["name"], no_key[0]["title"], no_key[0]["subtitle"]) == ("EV", "EV", None)
 
     def test_permanent_event_has_no_end(self):
-        from datetime import datetime, timezone
-
-        from swgoh_comlink.helpers import get_event_schedule
 
         journey = get_event_schedule(_GAME_EVENTS, now=_events_now())[0]
         assert journey["end"] is None
@@ -1040,9 +896,6 @@ class TestGetEventSchedule:
         assert journey["campaign_element"] == _NODE
 
     def test_overlapping_runs_pick_the_one_ending_first(self):
-        from datetime import timezone
-
-        from swgoh_comlink.helpers import get_event_schedule
 
         jaxxon = get_event_schedule(_GAME_EVENTS, now=_events_now())[1]
         assert jaxxon["instance_id"] == "EARLIER_END"
@@ -1050,30 +903,24 @@ class TestGetEventSchedule:
         assert jaxxon["end"].timestamp() * 1000 == _EVENTS_NOW_MS + _DAY_MS
 
     def test_upcoming_event_uses_its_next_run(self):
-        from swgoh_comlink.helpers import get_event_schedule
 
         ronin = get_event_schedule(_GAME_EVENTS, now=_events_now())[-1]
         assert ronin["instance_id"] == "FIRST"
         assert ronin["start"].timestamp() * 1000 == _EVENTS_NOW_MS + 13 * _DAY_MS
 
     def test_live_only(self):
-        from swgoh_comlink.helpers import get_event_schedule
 
         schedule = get_event_schedule(_GAME_EVENTS, now=_events_now(), include_upcoming=False)
         assert {e["status"] for e in schedule} == {"live"}
         assert len(schedule) == 2
 
     def test_run_boundaries(self):
-        from datetime import timedelta
-
-        from swgoh_comlink.helpers import get_event_schedule
 
         events = [{"id": "EV", "instance": [_run(_EVENTS_NOW_MS, _EVENTS_NOW_MS + _DAY_MS)]}]
         assert get_event_schedule(events, now=_events_now())[0]["status"] == "live"
         assert get_event_schedule(events, now=_events_now() + timedelta(days=1)) == []
 
     def test_integer_times_and_unusable_runs(self):
-        from swgoh_comlink.helpers import get_event_schedule
 
         events: list[Any] = [
             {"id": "INT", "instance": [{"startTime": _EVENTS_NOW_MS - 1, "endTime": _EVENTS_NOW_MS + 1}]},
@@ -1085,13 +932,11 @@ class TestGetEventSchedule:
 
     @pytest.mark.parametrize("events", [None, "events", {"events": []}])
     def test_invalid_events_raises(self, events: Any):
-        from swgoh_comlink.helpers import get_event_schedule
 
         with pytest.raises(SwgohComlinkValueError, match="get_event_schedule"):
             get_event_schedule(events)
 
     def test_invalid_localization_raises(self):
-        from swgoh_comlink.helpers import get_event_schedule
 
         localization: Any = ["not", "a", "dict"]
         with pytest.raises(SwgohComlinkValueError, match="localization"):
@@ -1153,7 +998,6 @@ def _guild_payload(**overrides: Any) -> dict[str, Any]:
 
 class TestGetGuildActivity:
     def test_profile_totals(self):
-        from swgoh_comlink.helpers import get_guild_activity
 
         activity = get_guild_activity(_guild_payload())
         assert (activity["guild_id"], activity["name"]) == ("g1", "Test Guild")
@@ -1161,12 +1005,10 @@ class TestGetGuildActivity:
         assert activity["galactic_power"] == 755564483
 
     def test_wrapped_response_is_accepted(self):
-        from swgoh_comlink.helpers import get_guild_activity
 
         assert get_guild_activity({"guild": _guild_payload()}) == get_guild_activity(_guild_payload())
 
     def test_best_territory_battle_is_the_most_stars(self):
-        from swgoh_comlink.helpers import get_guild_activity
 
         assert get_guild_activity(_guild_payload())["best_territory_battle"] == {
             "definition_id": "t05D",
@@ -1174,7 +1016,6 @@ class TestGetGuildActivity:
         }
 
     def test_territory_war_record(self):
-        from swgoh_comlink.helpers import get_guild_activity
 
         activity = get_guild_activity(_guild_payload())
         assert [(w["territory_war_id"], w["result"]) for w in activity["territory_wars"]] == [
@@ -1188,7 +1029,6 @@ class TestGetGuildActivity:
         assert (activity["territory_war_wins"], activity["territory_war_losses"]) == (1, 1)
 
     def test_last_raid_and_member_scores(self):
-        from swgoh_comlink.helpers import get_guild_activity
 
         activity = get_guild_activity(_guild_payload())
         raid = activity["last_raid"]
@@ -1198,9 +1038,6 @@ class TestGetGuildActivity:
         assert [m["raid_score"] for m in activity["members"]] == [13_500_000, 20_000_000, None]
 
     def test_members(self):
-        from datetime import datetime, timezone
-
-        from swgoh_comlink.helpers import get_guild_activity
 
         leader, officer, new = get_guild_activity(_guild_payload())["members"]
         assert (leader["player_id"], leader["name"], leader["galactic_power"]) == ("p1", "Leader", 11_000_000)
@@ -1229,13 +1066,11 @@ class TestGetGuildActivity:
         ],
     )
     def test_member_roles(self, member_level: Any, expected: tuple[Any, Any]):
-        from swgoh_comlink.helpers import get_guild_activity
 
         (member,) = get_guild_activity({"member": [{"playerId": "p", "memberLevel": member_level}]})["members"]
         assert (member["member_level"], member["role"]) == expected
 
     def test_without_recent_activity(self):
-        from swgoh_comlink.helpers import get_guild_activity
 
         activity = get_guild_activity(
             _guild_payload(recentTerritoryBattleResult=[], recentTerritoryWarResult=None, recentRaidResult=[])
@@ -1247,7 +1082,6 @@ class TestGetGuildActivity:
         assert all(m["raid_score"] is None for m in activity["members"])
 
     def test_member_count_falls_back_to_roster(self):
-        from swgoh_comlink.helpers import get_guild_activity
 
         activity = get_guild_activity(_guild_payload(profile={"id": "g1"}))
         assert activity["member_count"] == 3
@@ -1255,7 +1089,6 @@ class TestGetGuildActivity:
 
     @pytest.mark.parametrize("guild", [None, [], "guild"])
     def test_invalid_guild_raises(self, guild: Any):
-        from swgoh_comlink.helpers import get_guild_activity
 
         with pytest.raises(SwgohComlinkValueError, match="get_guild_activity"):
             get_guild_activity(guild)
@@ -1282,57 +1115,53 @@ _METADATA: dict[str, Any] = {
 
 class TestGetGameConfig:
     def test_all_keys(self):
-        from swgoh_comlink.helpers import get_game_config
+        # The duplicate stat-mod-max-level keeps its first value; a key without a value is dropped.
+        assert get_game_config(_METADATA) == {
+            "max-conquest-currency": "3500",
+            "stat-mod-max-storage": "500",
+            "stat-mod-max-level": "15",
+            "squad-preset-tab-total-max-squads-saved": "200",
+            "stat-mod-highlight-stat": "SPEED",
+            "conquest-energy-refresh-daily-cap": "CONQUEST_ENERGY_REFRESH_DAILY_CAP",
+        }
 
-        config = get_game_config(_METADATA)
-        assert config["max-conquest-currency"] == "3500"
-        assert config["stat-mod-highlight-stat"] == "SPEED"
-        assert "no-value" not in config
-        assert len(config) == 6
-
-    def test_duplicate_key_keeps_first_value(self):
-        from swgoh_comlink.helpers import get_game_config
-
-        assert get_game_config(_METADATA)["stat-mod-max-level"] == "15"
-        assert get_game_config(_METADATA, "stat-mod-max-level") == "15"
-
-    def test_single_key(self):
-        from swgoh_comlink.helpers import get_game_config
-
-        assert get_game_config(_METADATA, "stat-mod-max-storage") == "500"
-        assert get_game_config(_METADATA, "missing-key") is None
-        assert get_game_config(_METADATA, "no-value") is None
-
-    def test_config_list_is_accepted(self):
-        from swgoh_comlink.helpers import get_game_config
-
-        assert get_game_config(_METADATA["config"], "max-conquest-currency") == "3500"
+    @pytest.mark.parametrize(
+        ("source", "key", "expected"),
+        [
+            pytest.param(_METADATA, "stat-mod-max-storage", "500", id="single-key"),
+            pytest.param(_METADATA, "stat-mod-max-level", "15", id="duplicate-keeps-first"),
+            pytest.param(_METADATA, "missing-key", None, id="missing"),
+            pytest.param(_METADATA, "no-value", None, id="no-value"),
+            pytest.param(_METADATA["config"], "max-conquest-currency", "3500", id="config-list"),
+        ],
+    )
+    def test_single_key(self, source, key, expected):
+        assert get_game_config(source, key) == expected
 
     @pytest.mark.parametrize("metadata", [None, "config", {"latestGamedataVersion": "x"}, {"config": "x"}])
     def test_invalid_metadata_raises(self, metadata: Any):
-        from swgoh_comlink.helpers import get_game_config
-
         with pytest.raises(SwgohComlinkValueError, match="get_game_config"):
             get_game_config(metadata)
 
 
 class TestGetGameConfigInt:
-    def test_numeric_values(self):
-        from swgoh_comlink.helpers import get_game_config_int
-
-        assert get_game_config_int(_METADATA, "max-conquest-currency") == 3500
-        assert get_game_config_int(_METADATA, "squad-preset-tab-total-max-squads-saved") == 200
-
-    @pytest.mark.parametrize("key", ["missing-key", "stat-mod-highlight-stat", "conquest-energy-refresh-daily-cap"])
-    def test_missing_or_text_value_returns_default(self, key: str):
-        from swgoh_comlink.helpers import get_game_config_int
-
-        assert get_game_config_int(_METADATA, key) is None
-        assert get_game_config_int(_METADATA, key, 0) == 0
+    @pytest.mark.parametrize(
+        ("key", "default", "expected"),
+        [
+            ("max-conquest-currency", None, 3500),
+            ("squad-preset-tab-total-max-squads-saved", None, 200),
+            *(
+                pytest.param(key, default, default, id=f"{key}-default-{default}")
+                for key in ["missing-key", "stat-mod-highlight-stat", "conquest-energy-refresh-daily-cap"]
+                for default in (None, 0)
+            ),
+        ],
+    )
+    def test_reads_numeric_values(self, key: str, default: int | None, expected: int | None):
+        args = (_METADATA, key) if default is None else (_METADATA, key, default)
+        assert get_game_config_int(*args) == expected
 
     def test_invalid_metadata_raises(self):
-        from swgoh_comlink.helpers import get_game_config_int
-
         with pytest.raises(SwgohComlinkValueError, match="get_game_config_int"):
             get_game_config_int({}, "max-conquest-currency")
 
@@ -1422,7 +1251,6 @@ _ABILITY_LOC = {
 
 class TestGetUnitAbilities:
     def _get(self, **kwargs: Any) -> list[Any]:
-        from swgoh_comlink.helpers import get_unit_abilities
 
         return get_unit_abilities(_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES, _ABILITY_LOC, **kwargs)
 
@@ -1480,7 +1308,6 @@ class TestGetUnitAbilities:
         assert self._get(omicron_mode=1) == []
 
     def test_without_localization_returns_keys(self):
-        from swgoh_comlink.helpers import get_unit_abilities
 
         (ackbar,) = get_unit_abilities(_ABILITY_UNITS, _ABILITY_SKILLS, _ABILITIES, base_id="ADMIRALACKBAR")
         assert ackbar["unit_name"] == "UNIT_ACKBAR_NAME"
@@ -1498,7 +1325,6 @@ class TestGetUnitAbilities:
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
-        from swgoh_comlink.helpers import get_unit_abilities
 
         with pytest.raises(SwgohComlinkValueError):
             get_unit_abilities(*args, **kwargs)
@@ -1530,33 +1356,41 @@ _EFFECT_LOC = {
 
 
 class TestGetNamedEffects:
-    def test_reads_every_key_family(self):
-        from swgoh_comlink.helpers import get_named_effects
-
+    def test_reads_every_key_family_and_picks_the_authoritative_definition(self):
         effects = get_named_effects(_EFFECT_LOC)
-        assert list(effects) == sorted(
-            ["Concussion Mine", "Demoralized", "Fear", "Insight", "Overcharge", "Potency Up", "Provoked", "VIP",
-             "Vulnerable"]
-        )  # fmt: skip
-        assert effects["Potency Up"] == {
-            "name": "Potency Up",
-            "description": "Increased chance to apply detrimental effects",
-            "key": "BattleEffect_PotencyUp",
+        assert list(effects) == sorted(effects)
+        assert effects == {
+            "Concussion Mine": {
+                "name": "Concussion Mine",
+                "description": "Deals damage",
+                "key": "Battleeffect_ConcussionMine",
+            },
+            # The lowest tier wins.
+            "Demoralized": {"name": "Demoralized", "description": "tier 0", "key": "DEMORALIZED_DEBUFF_TIER0"},
+            "Fear": {"name": "Fear", "description": "Miss the next turn", "key": "FEAR_DEBUFF_DESC"},
+            "Insight": {"name": "Insight", "description": "additional effects", "key": "MOFFGIDEON_INSIGHT_V2"},
+            # BattleEffect_ beats the generic OVERCHARGE_BUFF_DESC; the colon may follow the closing tags.
+            "Overcharge": {
+                "name": "Overcharge",
+                "description": "Protection Temporarily Increased",
+                "key": "BattleEffect_Overcharge",
+            },
+            "Potency Up": {
+                "name": "Potency Up",
+                "description": "Increased chance to apply detrimental effects",
+                "key": "BattleEffect_PotencyUp",
+            },
+            # The newest _V<n> wins.
+            "Provoked": {
+                "name": "Provoked",
+                "description": "+100% counter chance\nnext line",
+                "key": "BattleEffect_Provoked_V2",
+            },
+            "VIP": {"name": "VIP", "description": "gain bonuses", "key": "50RT_VIP_ALLY"},
+            "Vulnerable": {"name": "Vulnerable", "description": "current", "key": "BattleEffect_Vulnerable_V2"},
         }
 
-    def test_picks_the_authoritative_definition(self):
-        from swgoh_comlink.helpers import get_named_effects
-
-        effects = get_named_effects(_EFFECT_LOC)
-        assert effects["Overcharge"]["key"] == "BattleEffect_Overcharge"
-        assert effects["Overcharge"]["description"] == "Protection Temporarily Increased"
-        assert effects["Provoked"]["description"] == "+100% counter chance\nnext line"
-        assert effects["Vulnerable"]["description"] == "current"
-        assert effects["Demoralized"]["key"] == "DEMORALIZED_DEBUFF_TIER0"
-
     def test_invalid_input_raises(self):
-        from swgoh_comlink.helpers import get_named_effects
-
         not_a_dict: Any = []
         with pytest.raises(SwgohComlinkValueError):
             get_named_effects(not_a_dict)
@@ -1590,45 +1424,46 @@ class TestAsInt:
         ],
     )
     def test_reads_numbers(self, value: Any, expected: int):
-        from swgoh_comlink.helpers import as_int
 
         assert as_int(value) == expected
 
     @pytest.mark.parametrize("value", [None, "", "abc", "1.5", True, False, [], {}, float("inf"), float("nan")])
     def test_unreadable_returns_default(self, value: Any):
-        from swgoh_comlink.helpers import as_int
 
         assert as_int(value) == 0
         assert as_int(value, default=-1) == -1
 
 
-class TestAsStr:
-    @pytest.mark.parametrize(("value", "expected"), [("Rebels", "Rebels"), ("", ""), (42, ""), (None, ""), ([], "")])
-    def test_only_strings_pass(self, value: Any, expected: str):
-        from swgoh_comlink.helpers import as_str
+@pytest.mark.parametrize(
+    ("value", "kwargs", "expected"),
+    [
+        ("Rebels", {}, "Rebels"),
+        ("", {}, ""),
+        (42, {}, ""),
+        (None, {}, ""),
+        ([], {}, ""),
+        (None, {"default": "?"}, "?"),
+    ],
+)
+def test_as_str_only_passes_strings(value: Any, kwargs: dict[str, str], expected: str):
+    assert as_str(value, **kwargs) == expected
 
-        assert as_str(value) == expected
 
-    def test_custom_default(self):
-        from swgoh_comlink.helpers import as_str
-
-        assert as_str(None, default="?") == "?"
-
-
-class TestAsId:
-    @pytest.mark.parametrize(
-        ("value", "expected"),
-        [("O1700000000000:1", "O1700000000000:1"), (2, "2"), (0, "0"), ("", ""), (None, ""), (True, ""), (1.5, "")],
-    )
-    def test_reads_string_or_int(self, value: Any, expected: str):
-        from swgoh_comlink.helpers import as_id
-
-        assert as_id(value) == expected
-
-    def test_custom_default(self):
-        from swgoh_comlink.helpers import as_id
-
-        assert as_id(None, default="none") == "none"
+@pytest.mark.parametrize(
+    ("value", "kwargs", "expected"),
+    [
+        ("O1700000000000:1", {}, "O1700000000000:1"),
+        (2, {}, "2"),
+        (0, {}, "0"),
+        ("", {}, ""),
+        (None, {}, ""),
+        (True, {}, ""),
+        (1.5, {}, ""),
+        (None, {"default": "none"}, "none"),
+    ],
+)
+def test_as_id_reads_string_or_int(value: Any, kwargs: dict[str, str], expected: str):
+    assert as_id(value, **kwargs) == expected
 
 
 class TestAsScalar:
@@ -1636,7 +1471,6 @@ class TestAsScalar:
         ("value", "expected"), [(3, 3), (0, 0), ("CHARACTER", "CHARACTER"), (True, None), (None, None), (1.5, None)]
     )
     def test_keeps_int_or_str(self, value: Any, expected: int | str | None):
-        from swgoh_comlink.helpers import as_scalar
 
         assert as_scalar(value) == expected
 
@@ -1656,37 +1490,23 @@ class TestAsEpoch:
             (100_000_000_000, datetime(1973, 3, 3, 9, 46, 40, tzinfo=timezone.utc)),
         ],
     )
-    def test_seconds_and_milliseconds(self, value: Any, expected: datetime):
-        from swgoh_comlink.helpers import as_epoch
-
-        assert as_epoch(value) == expected
+    def test_seconds_and_milliseconds_as_aware_utc(self, value: Any, expected: datetime):
+        moment = as_epoch(value)
+        # Aware datetimes compare by instant, so check the zone separately.
+        assert moment == expected
+        assert moment is not None and moment.tzinfo is timezone.utc
 
     @pytest.mark.parametrize("value", [None, 0, "0", "", "-5", -1, "abc", True, "99999999999999999999"])
     def test_no_time_returns_none(self, value: Any):
-        from swgoh_comlink.helpers import as_epoch
-
         assert as_epoch(value) is None
 
-    def test_result_is_aware_utc(self):
-        from swgoh_comlink.helpers import as_epoch
-
-        moment = as_epoch("1770515437000")
-        assert moment is not None
-        assert moment.tzinfo == timezone.utc
-
-    def test_example_player_times(self):
-        import json
-
-        from swgoh_comlink.helpers import as_epoch
-
-        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
-        assert as_epoch(player["lastActivityTime"]) == datetime(2026, 2, 8, 1, 50, 37, tzinfo=timezone.utc)
-        assert all(as_epoch(season["joinTime"]) for season in player["seasonStatus"])
+    def test_example_player_times(self, example_player):
+        assert as_epoch(example_player["lastActivityTime"]) == datetime(2026, 2, 8, 1, 50, 37, tzinfo=timezone.utc)
+        assert all(as_epoch(season["joinTime"]) for season in example_player["seasonStatus"])
 
 
 class TestAsList:
     def test_list_is_returned_as_is(self):
-        from swgoh_comlink.helpers import as_list
 
         rows = [{"id": "a"}, {"id": "b"}]
         assert as_list(rows) is rows
@@ -1703,7 +1523,6 @@ class TestAsList:
         ],
     )
     def test_wraps_other_values(self, value: Any, expected: list[Any]):
-        from swgoh_comlink.helpers import as_list
 
         assert as_list(value) == expected
 
@@ -1721,42 +1540,87 @@ class TestBaseId:
         ],
     )
     def test_strips_rarity(self, value: Any, expected: str):
-        from swgoh_comlink.helpers import base_id
 
         assert base_id(value) == expected
 
-    def test_example_player_roster(self):
-        import json
-
-        from swgoh_comlink.helpers import base_id
-
-        player = json.loads((Path(__file__).parent.parent / "resources" / "example-player.json").read_text())
+    def test_example_player_roster(self, example_player):
+        player = example_player
         ids = {base_id(unit["definitionId"]) for unit in player["rosterUnit"]}
         assert "MAGMATROOPER" in ids
         assert not any(":" in unit_id for unit_id in ids)
 
 
+# No <Type>_DEFAULT member, and one member is another's last word: a lower-case member name must
+# not also be read as a decoder-style name for that last word.
+_RESPONSE_CODES = {"OK": 0, "SERVER_ERROR": 1, "ERROR": 2, "FEATURE_SUSPENDED": 3, "SUSPENDED": 4}
+_METADATA_REQUEST_TYPES = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
+
+
 class TestParseEnum:
     @pytest.mark.parametrize(
-        ("value", "expected"),
+        ("value", "members", "kwargs", "expected"),
         [
-            (16, "SHARD_CURRENCY"),
-            ("16", "SHARD_CURRENCY"),
-            (" 16 ", "SHARD_CURRENCY"),
-            (0, "CurrencyType_DEFAULT"),
-            ("SHARD_CURRENCY", "SHARD_CURRENCY"),
-            ("shard_currency", "SHARD_CURRENCY"),
-            ("SHARDCURRENCY", "SHARD_CURRENCY"),
-            ("CURRENCYTYPE_SHARDCURRENCY", "SHARD_CURRENCY"),
-            ("CURRENCYTYPE_GUILDRAIDCURRENCY01", "GUILD_RAID_CURRENCY_01"),
-            ("CURRENCYTYPE_CURRENCYTYPEDEFAULT", "CurrencyType_DEFAULT"),
-            ("CurrencyType_DEFAULT", "CurrencyType_DEFAULT"),
+            # Every spelling of a member of an enum with a <Type>_DEFAULT member
+            *(
+                pytest.param(value, _CURRENCY, {}, expected, id=f"currency-{value!r}")
+                for value, expected in [
+                    (16, "SHARD_CURRENCY"),
+                    ("16", "SHARD_CURRENCY"),
+                    (" 16 ", "SHARD_CURRENCY"),
+                    (0, "CurrencyType_DEFAULT"),
+                    ("SHARD_CURRENCY", "SHARD_CURRENCY"),
+                    ("shard_currency", "SHARD_CURRENCY"),
+                    ("SHARDCURRENCY", "SHARD_CURRENCY"),
+                    ("CURRENCYTYPE_SHARDCURRENCY", "SHARD_CURRENCY"),
+                    ("CURRENCYTYPE_GUILDRAIDCURRENCY01", "GUILD_RAID_CURRENCY_01"),
+                    ("CURRENCYTYPE_CURRENCYTYPEDEFAULT", "CurrencyType_DEFAULT"),
+                    ("CurrencyType_DEFAULT", "CurrencyType_DEFAULT"),
+                ]
+            ),
+            # No <Type>_DEFAULT member: any type half is accepted unless enum_name is given.
+            pytest.param("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY, {}, "NORMAL_DIFF", id="decoder-any-type"),
+            pytest.param("OTHER_NORMALDIFF", _DIFFICULTY, {}, "NORMAL_DIFF", id="decoder-other-type"),
+            pytest.param(
+                "CAMPAIGNNODEDIFFICULTY_NORMALDIFF",
+                _DIFFICULTY,
+                {"enum_name": "CampaignNodeDifficulty"},
+                "NORMAL_DIFF",
+                id="decoder-named-type",
+            ),
+            pytest.param(
+                "OTHER_NORMALDIFF", _DIFFICULTY, {"enum_name": "CampaignNodeDifficulty"}, None, id="decoder-wrong-type"
+            ),
+            *(
+                pytest.param(value, _RESPONSE_CODES, {}, expected, id=f"case-variant-{value}")
+                for value, expected in [
+                    ("server_error", "SERVER_ERROR"),
+                    ("Server_Error", "SERVER_ERROR"),
+                    ("SERVER_ERROR", "SERVER_ERROR"),
+                    ("error", "ERROR"),
+                    ("feature_suspended", "FEATURE_SUSPENDED"),
+                    # Upper-case with one underscore is still read as a decoder-style name
+                    ("RESPONSECODE_SUSPENDED", "SUSPENDED"),
+                ]
+            ),
+            # "DEFAULT" is both a member and the <Type>_DEFAULT suffix.
+            pytest.param("METADATAREQUESTTYPE_DEFAULT", _METADATA_REQUEST_TYPES, {}, None, id="ambiguous"),
+            pytest.param("DEFAULT", _METADATA_REQUEST_TYPES, {}, "DEFAULT", id="ambiguous-exact-member"),
+            pytest.param(
+                "METADATAREQUESTTYPE_CLIENTPARAMS", _METADATA_REQUEST_TYPES, {}, "CLIENT_PARAMS", id="unambiguous"
+            ),
+            pytest.param(
+                "metadatarequesttype_default",
+                _METADATA_REQUEST_TYPES,
+                {},
+                "MetadataRequestType_DEFAULT",
+                id="lower-case-type-default",
+            ),
+            pytest.param(1, {"OLD_NAME": 1, "NEW_NAME": 1}, {}, "OLD_NAME", id="alias-returns-first-name"),
+            pytest.param("-1", {"ALL": -1, "NONE": 0}, {}, "ALL", id="negative-number"),
         ],
     )
-    def test_every_spelling(self, value: Any, expected: str):
-        from swgoh_comlink.helpers import parse_enum
-
-        assert parse_enum(value, _CURRENCY) == expected
+    def test_reads_member_names(self, value: Any, members: dict[str, int], kwargs: dict[str, str], expected):
+        assert parse_enum(value, members, **kwargs) == expected
 
     @pytest.mark.parametrize(
         "value",
@@ -1784,78 +1648,15 @@ class TestParseEnum:
         ],
     )
     def test_unknown_returns_none(self, value: Any):
-        from swgoh_comlink.helpers import parse_enum
-
         assert parse_enum(value, _CURRENCY) is None
-
-    def test_decoder_name_without_known_type(self):
-        from swgoh_comlink.helpers import parse_enum
-
-        # No <Type>_DEFAULT member, so any type half is accepted unless enum_name is given.
-        assert parse_enum("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY) == "NORMAL_DIFF"
-        assert parse_enum("OTHER_NORMALDIFF", _DIFFICULTY) == "NORMAL_DIFF"
-        assert (
-            parse_enum("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY, enum_name="CampaignNodeDifficulty")
-            == "NORMAL_DIFF"
-        )
-        assert parse_enum("OTHER_NORMALDIFF", _DIFFICULTY, enum_name="CampaignNodeDifficulty") is None
-
-    def test_ambiguous_spelling_returns_none(self):
-        from swgoh_comlink.helpers import parse_enum
-
-        members = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
-        assert parse_enum("METADATAREQUESTTYPE_DEFAULT", members) is None
-        assert parse_enum("DEFAULT", members) == "DEFAULT"
-        assert parse_enum("METADATAREQUESTTYPE_CLIENTPARAMS", members) == "CLIENT_PARAMS"
-
-    @pytest.mark.parametrize(
-        ("value", "expected"),
-        [
-            ("server_error", "SERVER_ERROR"),
-            ("Server_Error", "SERVER_ERROR"),
-            ("SERVER_ERROR", "SERVER_ERROR"),
-            ("error", "ERROR"),
-            ("feature_suspended", "FEATURE_SUSPENDED"),
-            # Upper-case with one underscore is still read as a decoder-style name
-            ("RESPONSECODE_SUSPENDED", "SUSPENDED"),
-        ],
-    )
-    def test_case_variant_without_known_type(self, value: str, expected: str):
-        from swgoh_comlink.helpers import parse_enum
-
-        # No <Type>_DEFAULT member, and one member is another's last word: a lower-case member
-        # name must not also be read as a decoder-style name for that last word.
-        members = {"OK": 0, "SERVER_ERROR": 1, "ERROR": 2, "FEATURE_SUSPENDED": 3, "SUSPENDED": 4}
-        assert parse_enum(value, members) == expected
-
-    def test_lower_case_type_default_member(self):
-        from swgoh_comlink.helpers import parse_enum
-
-        members = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
-        assert parse_enum("metadatarequesttype_default", members) == "MetadataRequestType_DEFAULT"
-
-    def test_alias_value_returns_first_name(self):
-        from swgoh_comlink.helpers import parse_enum
-
-        assert parse_enum(1, {"OLD_NAME": 1, "NEW_NAME": 1}) == "OLD_NAME"
-
-    def test_negative_numbers(self):
-        from swgoh_comlink.helpers import parse_enum
-
-        assert parse_enum("-1", {"ALL": -1, "NONE": 0}) == "ALL"
 
     @pytest.mark.parametrize("members", [None, [], "CurrencyType"])
     def test_invalid_members_raises(self, members: Any):
-        from swgoh_comlink.helpers import parse_enum
-
         with pytest.raises(SwgohComlinkValueError, match=r"parse_enum\(\)"):
             parse_enum(16, members)
 
 
 def test_wire_docstring_examples():
-    import doctest
-
-    from swgoh_comlink.helpers import _wire
 
     results = doctest.testmod(_wire)
     assert results.failed == 0
@@ -1890,7 +1691,10 @@ _ITEM_GAME_DATA: dict[str, Any] = {
     ],
     "equipment": [{"id": "016", "nameKey": "EQUIPMENT_016_NAME"}],
     "mysteryBox": [{"id": "mysterybox_era_T1", "titleKey": "MYSTERYBOX_ERA_T1_TITLE", "descKey": "X"}],
-    "playerTitle": [{"id": "PLAYERTITLE_GRANDARENA_INTRO", "nameKey": "PLAYERTITLE_GRANDARENA_INTRO_NAME"}],
+    "playerTitle": [
+        {"id": "PLAYERTITLE_GRANDARENA_INTRO", "nameKey": "PLAYERTITLE_GRANDARENA_INTRO_NAME"},
+        {"id": "PLAYERTITLE_NO_NAME", "nameKey": ""},
+    ],
     "playerPortrait": [{"id": "PLAYERPORTRAIT_MISSION", "nameKey": "PLAYERPORTRAIT_MISSION_NAME"}],
     "artifactDefinition": [
         {"id": "artifact_guard_and_pentrate_3_cost_rare", "nameKey": "ARTIFACT_GURAD_AND_PENTRATE_3_COST_RARE_NAME"}
@@ -1912,13 +1716,15 @@ _ITEM_GAME_DATA: dict[str, Any] = {
         # Game data fetched with enums=True carries enum names in place of the numbers.
         {"id": "enum", "slot": ["STATMOD_SLOT_02"], "setId": "4", "minRarity": "SIX_STAR", "maxRarity": "SIX_STAR",
          "minTier": "STATMOD_TIER_05", "maxTier": "STATMOD_TIER_05"},
+        # Unreadable rarities are shown as "?".
+        {"id": "unreadable", "slot": [2], "setId": "4", "minRarity": True, "maxRarity": None, "minTier": 1,
+         "maxTier": 1},
     ],
 }  # fmt: skip
 
 
 class TestItemTypeConstants:
     def test_tables(self):
-        from swgoh_comlink.helpers import CURRENCY_NAMES, CURRENCY_TYPES, ITEM_TYPES
 
         assert ITEM_TYPES[7] == "MATERIAL"
         assert ITEM_TYPES[16] == "MYSTERY_STAT_MOD"
@@ -1930,19 +1736,16 @@ class TestItemTypeConstants:
 
 class TestGetDataDiscNames:
     def test_joins_through_the_records_own_name_key(self):
-        from swgoh_comlink.helpers import get_data_disc_names
 
         discs = get_data_disc_names(_ITEM_GAME_DATA["artifactDefinition"], _ITEM_LOC)
         assert discs == {"artifact_guard_and_pentrate_3_cost_rare": "Guard and Penetrate"}
 
     def test_without_localization_returns_name_keys(self):
-        from swgoh_comlink.helpers import get_data_disc_names
 
         discs = get_data_disc_names(_ITEM_GAME_DATA["artifactDefinition"])
         assert discs["artifact_guard_and_pentrate_3_cost_rare"] == "ARTIFACT_GURAD_AND_PENTRATE_3_COST_RARE_NAME"
 
     def test_invalid_input_raises(self):
-        from swgoh_comlink.helpers import get_data_disc_names
 
         not_a_list: Any = {}
         with pytest.raises(SwgohComlinkValueError, match="get_data_disc_names"):
@@ -1954,14 +1757,12 @@ class TestGetDataDiscNames:
 
 class TestGetPlayerTitleNames:
     def test_names_are_localized_and_markup_free(self):
-        from swgoh_comlink.helpers import get_player_title_names
 
         titles = [*_ITEM_GAME_DATA["playerTitle"], {"id": "PLAYERTITLE_NEW", "nameKey": "PLAYERTITLE_NEW_NAME"}, {}]
         result = get_player_title_names(titles, _ITEM_LOC)
         assert result == {"PLAYERTITLE_GRANDARENA_INTRO": "Fight Me", "PLAYERTITLE_NEW": "PLAYERTITLE_NEW_NAME"}
 
     def test_invalid_input_raises(self):
-        from swgoh_comlink.helpers import get_player_title_names
 
         not_a_list: Any = "titles"
         with pytest.raises(SwgohComlinkValueError, match="get_player_title_names"):
@@ -1976,7 +1777,6 @@ class TestGetModCatalog:
     ]
 
     def test_sets_and_definitions(self):
-        from swgoh_comlink.helpers import get_mod_catalog
 
         catalog = get_mod_catalog(self._STAT_MODS, _ITEM_GAME_DATA["statModSet"], _ITEM_LOC)
         assert catalog["sets"]["4"] == {"set_id": "4", "name": "Speed", "set_count": 4}
@@ -1996,14 +1796,12 @@ class TestGetModCatalog:
         assert catalog["definitions"]["999"]["set_name"] == "9"
 
     def test_without_localization_uses_mod_set_ids(self):
-        from swgoh_comlink.helpers import MOD_SET_IDS, get_mod_catalog
 
         catalog = get_mod_catalog(self._STAT_MODS, _ITEM_GAME_DATA["statModSet"])
         assert catalog["sets"]["3"]["name"] == MOD_SET_IDS["3"]
         assert catalog["definitions"]["451"]["set_name"] == MOD_SET_IDS["4"]
 
     def test_invalid_input_raises(self):
-        from swgoh_comlink.helpers import get_mod_catalog
 
         not_a_list: Any = None
         with pytest.raises(SwgohComlinkValueError, match="get_mod_catalog"):
@@ -2036,10 +1834,10 @@ class TestItemNames:
             ("MYSTERY_STAT_MOD", "11112", "1-2-dot Speed any-slot mod (E-D)"),
             (16, "two", "5-dot Speed Square or Arrow mod (E)"),
             (16, "enum", "6-dot Speed Arrow mod (A)"),
+            (16, "unreadable", "?-dot Speed Square mod (E)"),
         ],
     )
     def test_names_each_item_type(self, item_type: Any, item_id: Any, expected: str):
-        from swgoh_comlink.helpers import ItemNames
 
         assert ItemNames(_ITEM_GAME_DATA, _ITEM_LOC).get(item_type, item_id) == expected
 
@@ -2052,54 +1850,51 @@ class TestItemNames:
             (3, "NOT_A_CURRENCY"),
             (3, "99"),
             (16, "missing"),
+            (17, "PLAYERTITLE_NO_NAME"),  # an empty name key resolves to nothing
             ("NOT_AN_ITEM_TYPE", "016"),
             (None, "016"),
         ],
     )
     def test_unresolved_returns_default(self, item_type: Any, item_id: str):
-        from swgoh_comlink.helpers import ItemNames
 
         names = ItemNames(_ITEM_GAME_DATA, _ITEM_LOC)
         assert names.get(item_type, item_id) is None
         assert names.get(item_type, item_id, "fallback") == "fallback"
 
     def test_missing_collections_resolve_to_nothing(self):
-        from swgoh_comlink.helpers import ItemNames
 
         names = ItemNames({}, _ITEM_LOC)
         assert names.get(7, "016") is None
         assert names.get(3, "GRIND") == "Credits"
 
     def test_without_localization_returns_keys(self):
-        from swgoh_comlink.helpers import ItemNames
 
         names = ItemNames(_ITEM_GAME_DATA)
         assert names.get(17, "PLAYERTITLE_GRANDARENA_INTRO") == "PLAYERTITLE_GRANDARENA_INTRO_NAME"
         # Mystery mods fall back to the English set names.
         assert names.get(16, "35155") == "5-dot Defense Square mod (A)"
 
-    def test_invalid_input_raises(self):
-        from swgoh_comlink.helpers import ItemNames
-
-        not_a_dict: Any = []
-        with pytest.raises(SwgohComlinkValueError, match="game_data"):
-            ItemNames(not_a_dict)
-        with pytest.raises(SwgohComlinkValueError, match="material"):
-            ItemNames({"material": {}})
-        with pytest.raises(SwgohComlinkValueError, match="localization"):
-            ItemNames({}, not_a_dict)
+    @pytest.mark.parametrize(
+        ("args", "match"),
+        [
+            pytest.param(([],), "game_data", id="game-data-not-dict"),
+            pytest.param(({"material": {}},), "material", id="collection-not-list"),
+            pytest.param(({}, []), "localization", id="localization-not-dict"),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], match: str):
+        with pytest.raises(SwgohComlinkValueError, match=match):
+            ItemNames(*args)
 
 
 def _recorded_enums() -> dict[str, Any]:
     """The ItemType and CurrencyType groups of a real get_enums() response (game data 0.40.6)."""
-    import json
 
-    return json.loads((Path(__file__).parent.parent / "resources" / "enums-item-currency.json").read_text())
+    return json.loads((_RESOURCES / "enums-item-currency.json").read_text())
 
 
 class TestItemNamesLiveEnums:
     def test_snapshots_match_recorded_get_enums(self):
-        from swgoh_comlink.helpers import CURRENCY_TYPES, ITEM_TYPES
 
         enums = _recorded_enums()
         for snapshot, group in ((ITEM_TYPES, "ItemType"), (CURRENCY_TYPES, "CurrencyType")):
@@ -2107,7 +1902,6 @@ class TestItemNamesLiveEnums:
             assert snapshot == live, f"{group} snapshot is out of date with get_enums()"
 
     def test_live_enums_name_a_new_currency(self):
-        from swgoh_comlink.helpers import ItemNames
 
         enums = _recorded_enums()
         enums["CurrencyType"]["GUILD_RAID_CURRENCY_13"] = 99
@@ -2124,7 +1918,6 @@ class TestItemNamesLiveEnums:
         assert snapshot.get(3, "GUILD_RAID_CURRENCY_13") is None
 
     def test_live_enums_recognise_a_new_item_type(self):
-        from swgoh_comlink.helpers import ItemNames, get_named_rewards
 
         live = ItemNames(_ITEM_GAME_DATA, enums={"ItemType": {"FUTURE_ITEM": 40}})
         snapshot = ItemNames(_ITEM_GAME_DATA)
@@ -2143,7 +1936,6 @@ class TestItemNamesLiveEnums:
         ]
 
     def test_default_members_are_not_names(self):
-        from swgoh_comlink.helpers import ItemNames, get_named_rewards
 
         names = ItemNames(_ITEM_GAME_DATA, enums=_recorded_enums())
 
@@ -2155,7 +1947,6 @@ class TestItemNamesLiveEnums:
 
     @pytest.mark.parametrize("enums", [["ItemType"], {"ItemType": ["MATERIAL"]}, {"CurrencyType": "GRIND"}])
     def test_invalid_enums_raise(self, enums: Any):
-        from swgoh_comlink.helpers import ItemNames
 
         with pytest.raises(SwgohComlinkValueError, match="enums"):
             ItemNames(_ITEM_GAME_DATA, enums=enums)
@@ -2163,7 +1954,6 @@ class TestItemNamesLiveEnums:
 
 class TestGetNamedRewards:
     def test_flat_and_conditional_items(self):
-        from swgoh_comlink.helpers import ItemNames, get_named_rewards
 
         rewards: list[Any] = [
             {"id": "GRIND", "type": 3, "minQuantity": 20000, "maxQuantity": 20000},
@@ -2195,18 +1985,18 @@ class TestGetNamedRewards:
         assert credits["requirement_id"] is None
         assert xp["id"] == ""
 
-    def test_invalid_input_raises(self):
-        from swgoh_comlink.helpers import ItemNames, get_named_rewards
-
-        not_a_list: Any = {}
-        with pytest.raises(SwgohComlinkValueError, match="get_named_rewards"):
-            get_named_rewards(not_a_list, ItemNames({}))
-        not_item_names: Any = {}
-        with pytest.raises(SwgohComlinkValueError, match="item_names"):
-            get_named_rewards([], not_item_names)
+    @pytest.mark.parametrize(
+        ("rewards", "item_names", "match"),
+        [
+            pytest.param({}, ItemNames({}), "get_named_rewards", id="rewards-not-list"),
+            pytest.param([], {}, "item_names", id="item-names-wrong-type"),
+        ],
+    )
+    def test_invalid_input_raises(self, rewards: Any, item_names: Any, match: str):
+        with pytest.raises(SwgohComlinkValueError, match=match):
+            get_named_rewards(rewards, item_names)
 
     def test_item_without_type_and_non_dict_bucket_items(self):
-        from swgoh_comlink.helpers import ItemNames, get_named_rewards
 
         rewards: list[Any] = [
             {"bucketItem": ["not an item", None, {"id": "x"}, {"type": 6}], "requirementId": "req"},
@@ -2217,7 +2007,6 @@ class TestGetNamedRewards:
 
 class TestItemHelpersRobustness:
     def test_non_dict_records_are_skipped(self):
-        from swgoh_comlink.helpers import ItemNames, get_data_disc_names, get_mod_catalog
 
         junk: list[Any] = ["x", None]
         assert get_data_disc_names([*junk, *_ITEM_GAME_DATA["artifactDefinition"]], _ITEM_LOC) == {
@@ -2232,7 +2021,6 @@ class TestItemHelpersRobustness:
         assert names.get(16, "35155") == "5-dot Defense Square mod (A)"
 
     def test_no_star_rarity_enum(self):
-        from swgoh_comlink.helpers import ItemNames, get_mod_catalog
 
         catalog = get_mod_catalog([{"id": "1", "rarity": "NO_STAR"}, {"id": "2", "rarity": 8}], [])
         assert catalog["definitions"]["1"]["rarity"] == catalog["definitions"]["2"]["rarity"] == 8
@@ -2240,15 +2028,6 @@ class TestItemHelpersRobustness:
         assert ItemNames({"mysteryStatMod": [mod]}).get(16, "m") == "8-dot Speed Square mod (E)"
 
     def test_valid_calls_do_not_walk_the_stack(self, monkeypatch: pytest.MonkeyPatch):
-        import inspect
-
-        from swgoh_comlink.helpers import (
-            ItemNames,
-            get_data_disc_names,
-            get_mod_catalog,
-            get_named_rewards,
-            get_player_title_names,
-        )
 
         def fail() -> None:
             raise AssertionError("inspect.stack() called on valid input")
@@ -2466,7 +2245,6 @@ _TB_TABLES = [
 
 class TestGetTbStarThresholds:
     def test_reads_only_victory_point_brackets_sorted(self):
-        from swgoh_comlink.helpers import get_tb_star_thresholds
 
         zones = get_tb_star_thresholds(_TB_DEFS, _TB_LOC)
         assert [(z["tb_id"], z["zone_id"], z["stars"]) for z in zones] == [
@@ -2482,7 +2260,6 @@ class TestGetTbStarThresholds:
         assert zones[0]["name"] == "geo_phase01_conflict01"
 
     def test_tb_id_is_case_insensitive(self):
-        from swgoh_comlink.helpers import get_tb_star_thresholds
 
         assert {z["tb_id"] for z in get_tb_star_thresholds(_TB_DEFS, tb_id="T04d")} == {"t04D"}
 
@@ -2498,7 +2275,6 @@ class TestGetTbStarThresholds:
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...], kwargs: dict[str, Any]):
-        from swgoh_comlink.helpers import get_tb_star_thresholds
 
         with pytest.raises(SwgohComlinkValueError):
             get_tb_star_thresholds(*args, **kwargs)
@@ -2506,7 +2282,6 @@ class TestGetTbStarThresholds:
 
 class TestGetTbMissionRequirements:
     def _get(self, **kwargs: Any) -> dict[str, Any]:
-        from swgoh_comlink.helpers import get_tb_mission_requirements
 
         missions = get_tb_mission_requirements(_TB_DEFS, _TB_CAMPAIGNS, _TB_CATEGORIES, _TB_LOC, **kwargs)
         return {m["zone_id"]: m for m in missions}
@@ -2540,7 +2315,6 @@ class TestGetTbMissionRequirements:
         assert strike["is_fleet"] is False
 
     def test_difficulty_without_a_group_is_unresolved(self):
-        from swgoh_comlink.helpers import get_tb_mission_requirements
 
         # Node and mission ids match the campaign, but no group has difficulty 3.
         zone = _tb_mission_zone("tb3_phase01_conflict01_strike01", "tb3_phase01_conflict01", "COMBAT_01", difficulty=3)
@@ -2585,7 +2359,6 @@ class TestGetTbMissionRequirements:
         assert missions["geo_phase01_conflict01_strike01"]["hidden_reason"] is None
 
     def test_dump_spelling_of_the_version_3_flag(self):
-        from swgoh_comlink.helpers import get_tb_mission_requirements
 
         definition = {k: v for k, v in _TB_DEFS[1].items() if k != "territoryBattleVersion3"}
         missions = get_tb_mission_requirements([definition], _TB_CAMPAIGNS, _TB_CATEGORIES)
@@ -2595,7 +2368,6 @@ class TestGetTbMissionRequirements:
         assert sum(m["hidden_reason"] == "special" for m in missions) == 1
 
     def test_without_localization_returns_keys(self):
-        from swgoh_comlink.helpers import get_tb_mission_requirements
 
         missions = get_tb_mission_requirements(_TB_DEFS, _TB_CAMPAIGNS, _TB_CATEGORIES, tb_id="t05D")
         assert missions[0]["requirement_text"] == "COMBAT_01_REQUIREMENTS"
@@ -2613,7 +2385,6 @@ class TestGetTbMissionRequirements:
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...]):
-        from swgoh_comlink.helpers import get_tb_mission_requirements
 
         with pytest.raises(SwgohComlinkValueError):
             get_tb_mission_requirements(*args)
@@ -2621,7 +2392,6 @@ class TestGetTbMissionRequirements:
 
 class TestGetTbMissionScores:
     def test_cumulative_points_by_waves(self):
-        from swgoh_comlink.helpers import get_tb_mission_scores
 
         scores = {s["zone_id"]: s for s in get_tb_mission_scores(_TB_DEFS, _TB_TABLES)}
         # The covert zone has no points table and is not listed.
@@ -2641,7 +2411,6 @@ class TestGetTbMissionScores:
         assert scores["geo_phase01_conflict01_strike01"]["max_points"] == 7
 
     def test_tb_id_filter(self):
-        from swgoh_comlink.helpers import get_tb_mission_scores
 
         assert {s["tb_id"] for s in get_tb_mission_scores(_TB_DEFS, _TB_TABLES, tb_id="t04d")} == {"t04D"}
 
@@ -2656,7 +2425,6 @@ class TestGetTbMissionScores:
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...]):
-        from swgoh_comlink.helpers import get_tb_mission_scores
 
         with pytest.raises(SwgohComlinkValueError):
             get_tb_mission_scores(*args)
@@ -2664,7 +2432,6 @@ class TestGetTbMissionScores:
 
 class TestGetTbPlatoonDefinitions:
     def test_reads_floors_and_points_per_platoon(self):
-        from swgoh_comlink.helpers import get_tb_platoon_definitions
 
         zone, fleet = get_tb_platoon_definitions(_TB_DEFS, _TB_LOC)
         assert (zone["tb_id"], zone["zone_id"], zone["conflict_zone_id"], zone["phase"]) == (
@@ -2687,14 +2454,12 @@ class TestGetTbPlatoonDefinitions:
         assert (fleet["platoons"], fleet["total_points"]) == ([], 0)
 
     def test_invalid_input_raises(self):
-        from swgoh_comlink.helpers import get_tb_platoon_definitions
 
         with pytest.raises(SwgohComlinkValueError):
             get_tb_platoon_definitions(_TB_DEFS, tb_id="t99D")
 
 
 def test_tb_helpers_read_type_prefixed_enum_names():
-    from swgoh_comlink.helpers import get_tb_mission_requirements, get_tb_platoon_definitions, get_tb_star_thresholds
 
     # Some servers send enums=True names prefixed with their type and without inner underscores.
     definition = {
@@ -2824,6 +2589,14 @@ def _enum_tiers(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{**row, "tier": f"TIER_{row['tier']:02d}"} for row in rows]
 
 
+def _digit_tiers(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """``rows`` with their UnitTier ``tier`` as a numeric string."""
+    return [{**row, "tier": str(row["tier"])} for row in rows]
+
+
+_TIER_SPELLINGS = [pytest.param(_enum_tiers, id="enum-names"), pytest.param(_digit_tiers, id="digit-strings")]
+
+
 def _cost(credits: int = 0, ship_credits: int = 0, materials: Any = None, equipment: Any = None) -> dict[str, Any]:
     return {"credits": credits, "ship_credits": ship_credits, "materials": materials or {},
             "equipment": equipment or {}}  # fmt: skip
@@ -2831,7 +2604,6 @@ def _cost(credits: int = 0, ship_credits: int = 0, materials: Any = None, equipm
 
 class TestGetUnitGearTiers:
     def test_lists_thirteen_tiers_in_order_without_the_placeholder(self):
-        from swgoh_comlink.helpers import get_unit_gear_tiers
 
         tiers = get_unit_gear_tiers(_UPGRADE_UNITS, "hero")
         assert [t["tier"] for t in tiers] == list(range(1, 14))
@@ -2841,14 +2613,12 @@ class TestGetUnitGearTiers:
         assert tiers[-1]["cost"] == _cost()
 
     def test_ship_has_no_gear(self):
-        from swgoh_comlink.helpers import get_unit_gear_tiers
 
         assert get_unit_gear_tiers(_UPGRADE_UNITS, "SHIP") == []
 
-    def test_enum_tier_names_match_integers(self):
-        from swgoh_comlink.helpers import get_unit_gear_tiers
-
-        units = [{**_UPGRADE_UNITS[0], "unitTier": _enum_tiers(_HERO_TIERS)}]
+    @pytest.mark.parametrize("spell", _TIER_SPELLINGS)
+    def test_tier_spellings_match_integers(self, spell):
+        units = [{**_UPGRADE_UNITS[0], "unitTier": spell(_HERO_TIERS)}]
         assert get_unit_gear_tiers(units, "HERO") == get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
 
     @pytest.mark.parametrize(
@@ -2861,7 +2631,6 @@ class TestGetUnitGearTiers:
         ],
     )
     def test_invalid_input_raises(self, units: Any, base_id: Any):
-        from swgoh_comlink.helpers import get_unit_gear_tiers
 
         with pytest.raises(SwgohComlinkValueError):
             get_unit_gear_tiers(units, base_id)
@@ -2869,7 +2638,6 @@ class TestGetUnitGearTiers:
 
 class TestGetGearCraftTree:
     def test_expands_down_to_farmed_pieces(self):
-        from swgoh_comlink.helpers import get_gear_craft_tree
 
         loc = {"EQUIPMENT_164_NAME": "[c][ffff33]Mk 12 ArmaTek Cybernetics[-][/c]"}
         tree = get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164", loc)
@@ -2895,22 +2663,22 @@ class TestGetGearCraftTree:
             credits=20350 + 14000 + 2 * 5150, equipment={"164PrototypeSalvage": 30, "156Salvage": 40}
         )
 
-    def test_enum_tier_names_match_integers(self):
-        from swgoh_comlink.helpers import get_gear_craft_tree
-
-        enum_equipment = _enum_tiers(_UPGRADE_EQUIPMENT)
-        tree = get_gear_craft_tree(enum_equipment, _UPGRADE_RECIPES, "164")
+    @pytest.mark.parametrize("spell", _TIER_SPELLINGS)
+    def test_tier_spellings_match_integers(self, spell):
+        tree = get_gear_craft_tree(spell(_UPGRADE_EQUIPMENT), _UPGRADE_RECIPES, "164")
         assert tree == get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164")
         assert (tree["tier"], tree["ingredients"][1]["tier"]) == (12, 7)
 
+    @pytest.mark.parametrize("tier", [None, "TIER_UNDEFINED"])
+    def test_missing_tier_counts_as_zero(self, tier):
+        assert get_gear_craft_tree([{**_piece("001"), "tier": tier}], [], "001")["tier"] == 0
+
     def test_unrecognized_tier_raises(self):
-        from swgoh_comlink.helpers import get_gear_craft_tree
 
         with pytest.raises(SwgohComlinkValueError, match="unrecognized tier 'TWELVE'"):
             get_gear_craft_tree([{**_piece("001"), "tier": "TWELVE"}], [], "001")
 
     def test_farmed_piece_is_a_leaf(self):
-        from swgoh_comlink.helpers import get_gear_craft_tree
 
         tree = get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "001")
         assert (tree["ingredients"], tree["recipe_credits"], tree["cost"]) == ([], 0, _cost(equipment={"001": 1}))
@@ -2929,7 +2697,6 @@ class TestGetGearCraftTree:
         ],
     )
     def test_rejects_recipes_it_cannot_cost_exactly(self, recipes: list[dict[str, Any]], message: str):
-        from swgoh_comlink.helpers import get_gear_craft_tree
 
         with pytest.raises(SwgohComlinkValueError, match=message):
             get_gear_craft_tree(_UPGRADE_EQUIPMENT, recipes, "156")
@@ -2944,7 +2711,6 @@ class TestGetGearCraftTree:
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...]):
-        from swgoh_comlink.helpers import get_gear_craft_tree
 
         with pytest.raises(SwgohComlinkValueError):
             get_gear_craft_tree(*args)
@@ -2952,7 +2718,6 @@ class TestGetGearCraftTree:
 
 class TestGetRelicPromotionCosts:
     def test_joins_the_promotion_table_to_recipes(self):
-        from swgoh_comlink.helpers import get_relic_promotion_costs
 
         assert get_relic_promotion_costs(_UPGRADE_TABLES, _UPGRADE_RECIPES) == [
             {
@@ -2978,7 +2743,6 @@ class TestGetRelicPromotionCosts:
         ],
     )
     def test_invalid_input_raises(self, tables: Any, recipes: Any, message: str):
-        from swgoh_comlink.helpers import get_relic_promotion_costs
 
         with pytest.raises(SwgohComlinkValueError, match=message):
             get_relic_promotion_costs(tables, recipes)
@@ -2986,7 +2750,6 @@ class TestGetRelicPromotionCosts:
 
 class TestGetAbilityUpgradeCosts:
     def test_costs_each_level_with_zeta_and_omicron_flags(self):
-        from swgoh_comlink.helpers import get_ability_upgrade_costs
 
         basic, leader = get_ability_upgrade_costs(_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "HERO")
         assert (basic["base_id"], basic["skill_id"], basic["crew_base_id"]) == ("HERO", "basicskill_HERO", None)
@@ -3001,7 +2764,6 @@ class TestGetAbilityUpgradeCosts:
         }
 
     def test_ship_includes_crew_abilities_and_ship_credits(self):
-        from swgoh_comlink.helpers import get_ability_upgrade_costs
 
         own, crew = get_ability_upgrade_costs(_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "ship")
         assert (own["crew_base_id"], crew["crew_base_id"], crew["skill_id"]) == (None, "PILOT", "specialskill_SHIP01")
@@ -3017,7 +2779,6 @@ class TestGetAbilityUpgradeCosts:
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...], message: str):
-        from swgoh_comlink.helpers import get_ability_upgrade_costs
 
         with pytest.raises(SwgohComlinkValueError, match=message):
             get_ability_upgrade_costs(*args)
@@ -3025,7 +2786,6 @@ class TestGetAbilityUpgradeCosts:
 
 class TestSumUpgradeCosts:
     def test_adds_costs_of_any_kind(self):
-        from swgoh_comlink.helpers import get_ability_upgrade_costs, get_relic_promotion_costs, sum_upgrade_costs
 
         relics = get_relic_promotion_costs(_UPGRADE_TABLES, _UPGRADE_RECIPES)
         ship = get_ability_upgrade_costs(_UPGRADE_UNITS, _UPGRADE_SKILLS, _UPGRADE_RECIPES, "SHIP")
@@ -3035,13 +2795,11 @@ class TestSumUpgradeCosts:
         )
 
     def test_missing_fields_count_as_zero(self):
-        from swgoh_comlink.helpers import sum_upgrade_costs
 
         assert sum_upgrade_costs([{"equipment": {"164": 2}}, {"credits": 5}]) == _cost(credits=5, equipment={"164": 2})
         assert sum_upgrade_costs([]) == _cost()
 
     def test_crafts_gear_down_to_salvage(self):
-        from swgoh_comlink.helpers import get_unit_gear_tiers, sum_upgrade_costs
 
         tiers = get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
         assert sum_upgrade_costs(t["cost"] for t in tiers)["equipment"] == {"001": 69, "156": 2, "164": 1}
@@ -3054,7 +2812,6 @@ class TestSumUpgradeCosts:
         assert list(crafted["equipment"]) == sorted(crafted["equipment"])
 
     def test_crafts_enum_tier_gear_like_integer_tier_gear(self):
-        from swgoh_comlink.helpers import get_unit_gear_tiers, sum_upgrade_costs
 
         units = [{**_UPGRADE_UNITS[0], "unitTier": _enum_tiers(_HERO_TIERS)}]
         enum_tiers = get_unit_gear_tiers(units, "HERO")
@@ -3065,7 +2822,6 @@ class TestSumUpgradeCosts:
         assert enum_total == sum_upgrade_costs((t["cost"] for t in int_tiers), _UPGRADE_EQUIPMENT, _UPGRADE_RECIPES)
 
     def test_checks_collections_before_consuming_costs(self):
-        from swgoh_comlink.helpers import sum_upgrade_costs
 
         costs = iter([_cost(credits=1)])
         not_a_list: Any = {}
@@ -3084,7 +2840,6 @@ class TestSumUpgradeCosts:
         ],
     )
     def test_invalid_input_raises(self, args: tuple[Any, ...], message: str):
-        from swgoh_comlink.helpers import sum_upgrade_costs
 
         with pytest.raises(SwgohComlinkValueError, match=message):
             sum_upgrade_costs(*args)
@@ -3093,1058 +2848,755 @@ class TestSumUpgradeCosts:
 # ── _gac (pure functions) ──────────────────────────────────────────────
 
 
-class TestConvertLeagueToInt:
-    def test_all_leagues(self):
-        from swgoh_comlink.helpers._gac import convert_league_to_int
-
-        assert convert_league_to_int("kyber") == 100
-        assert convert_league_to_int("aurodium") == 80
-        assert convert_league_to_int("chromium") == 60
-        assert convert_league_to_int("bronzium") == 40
-        assert convert_league_to_int("carbonite") == 20
-
-    def test_case_insensitive(self):
-        from swgoh_comlink.helpers._gac import convert_league_to_int
-
-        assert convert_league_to_int("KYBER") == 100
-        assert convert_league_to_int("Kyber") == 100
-
-    def test_unknown_returns_none(self):
-        from swgoh_comlink.helpers._gac import convert_league_to_int
-
-        assert convert_league_to_int("unknown") is None
-
-    def test_none_raises(self):
-        from swgoh_comlink.helpers._gac import convert_league_to_int
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_league_to_int(None)
-
-    def test_empty_raises(self):
-        from swgoh_comlink.helpers._gac import convert_league_to_int
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_league_to_int("")
-
-
-class TestConvertDivisionsToInt:
-    def test_string_divisions(self):
-        from swgoh_comlink.helpers._gac import convert_divisions_to_int
-
-        assert convert_divisions_to_int("1") == 25
-        assert convert_divisions_to_int("5") == 5
-
-    def test_int_divisions(self):
-        from swgoh_comlink.helpers._gac import convert_divisions_to_int
-
-        assert convert_divisions_to_int(1) == 25
-        assert convert_divisions_to_int(5) == 5
-
-    def test_unknown_returns_none(self):
-        from swgoh_comlink.helpers._gac import convert_divisions_to_int
-
-        assert convert_divisions_to_int("99") is None
-
-    def test_none_raises(self):
-        from swgoh_comlink.helpers._gac import convert_divisions_to_int
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_divisions_to_int(None)
-
-    def test_empty_raises(self):
-        from swgoh_comlink.helpers._gac import convert_divisions_to_int
-
-        with pytest.raises(SwgohComlinkValueError, match="required"):
-            convert_divisions_to_int("")
+@pytest.mark.parametrize(
+    ("convert", "value", "expected"),
+    [
+        *(
+            pytest.param(convert_league_to_int, league, value, id=f"league-{league}")
+            for league, value in [
+                ("kyber", 100),
+                ("aurodium", 80),
+                ("chromium", 60),
+                ("bronzium", 40),
+                ("carbonite", 20),
+                ("KYBER", 100),
+                ("Kyber", 100),
+                ("unknown", None),
+            ]
+        ),
+        *(
+            pytest.param(convert_divisions_to_int, division, value, id=f"division-{type(division).__name__}-{division}")
+            for division, value in [
+                ("1", 25),
+                ("2", 20),
+                ("3", 15),
+                ("4", 10),
+                ("5", 5),
+                (1, 25),
+                (5, 5),
+                ("99", None),
+            ]
+        ),
+    ],
+)
+def test_gac_league_and_division_conversion(convert, value, expected):
+    assert convert(value) == expected
 
 
-class TestSearchGacBrackets:
-    def test_found(self):
-        from swgoh_comlink.helpers._gac import search_gac_brackets
-
-        brackets = {0: [{"name": "Player1"}, {"name": "Player2"}], 1: [{"name": "Player3"}]}
-        result = search_gac_brackets(brackets, "Player3")
-        assert result["player"]["name"] == "Player3"
-        assert result["bracket"] == 1
-
-    def test_not_found(self):
-        from swgoh_comlink.helpers._gac import search_gac_brackets
-
-        brackets = {0: [{"name": "Player1"}]}
-        assert search_gac_brackets(brackets, "Nobody") == {}
-
-    def test_case_insensitive(self):
-        from swgoh_comlink.helpers._gac import search_gac_brackets
-
-        brackets = {0: [{"name": "Player1"}]}
-        result = search_gac_brackets(brackets, "player1")
-        assert result["player"]["name"] == "Player1"
+@pytest.mark.parametrize("convert", [convert_league_to_int, convert_divisions_to_int])
+@pytest.mark.parametrize("value", [None, ""])
+def test_gac_league_and_division_conversion_requires_a_value(convert, value):
+    with pytest.raises(SwgohComlinkValueError, match="required"):
+        convert(value)
 
 
-class TestFindBracketBoundary:
-    def test_bracket_0_empty_returns_negative_1(self):
-        from swgoh_comlink.helpers._gac import _find_bracket_boundary
-
-        assert _find_bracket_boundary(lambda i: False) == -1
-
-    def test_finds_boundary(self):
-        from swgoh_comlink.helpers._gac import _find_bracket_boundary
-
-        # Non-empty for indices 0-9, empty for 10+
-        assert _find_bracket_boundary(lambda i: i < 10, initial_step=4) == 9
-
-    def test_single_bracket(self):
-        from swgoh_comlink.helpers._gac import _find_bracket_boundary
-
-        assert _find_bracket_boundary(lambda i: i == 0, initial_step=1) == 0
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        pytest.param("Player3", {"player": {"name": "Player3"}, "bracket": 1}, id="found"),
+        pytest.param("player1", {"player": {"name": "Player1"}, "bracket": 0}, id="case-insensitive"),
+        pytest.param("Nobody", {}, id="not-found"),
+    ],
+)
+def test_search_gac_brackets(name, expected):
+    brackets = {0: [{"name": "Player1"}, {"name": "Player2"}], 1: [{"name": "Player3"}]}
+    assert search_gac_brackets(brackets, name) == expected
 
 
-class TestAsyncFindBracketBoundary:
-    @pytest.mark.asyncio
-    async def test_bracket_0_empty_returns_negative_1(self):
-        from swgoh_comlink.helpers._gac import _async_find_bracket_boundary
+@pytest.mark.parametrize("implementation", ["sync", "async"])
+@pytest.mark.parametrize(
+    ("brackets", "initial_step", "expected"),
+    [
+        pytest.param(0, 1024, -1, id="bracket-0-empty"),
+        pytest.param(1, 1, 0, id="one-bracket-step-1"),
+        pytest.param(1, 1024, 0, id="one-bracket"),
+        pytest.param(2, 1024, 1, id="two-brackets"),
+        pytest.param(10, 4, 9, id="small-step"),
+        pytest.param(100, 1024, 99, id="first-probe-overshoots"),
+        pytest.param(500, 64, 499, id="custom-step"),
+        pytest.param(2048, 1024, 2047, id="power-of-two"),
+        pytest.param(6250, 1024, 6249, id="typical-league"),  # ~50k players / 8 per bracket
+        pytest.param(18750, 1024, 18749, id="large-league"),  # ~150k players
+    ],
+)
+async def test_find_bracket_boundary(implementation, brackets, initial_step, expected):
+    """Exponential probing then binary search: the last non-empty index in O(log n) probes."""
+    probed: list[int] = []
 
-        async def probe(i):
-            return False
+    def probe(index: int) -> bool:
+        probed.append(index)
+        return index < brackets
 
-        assert await _async_find_bracket_boundary(probe) == -1
+    async def async_probe(index: int) -> bool:
+        return probe(index)
 
-    @pytest.mark.asyncio
-    async def test_finds_boundary(self):
-        from swgoh_comlink.helpers._gac import _async_find_bracket_boundary
+    if implementation == "sync":
+        result = _find_bracket_boundary(probe, initial_step=initial_step)
+    else:
+        result = await _async_find_bracket_boundary(async_probe, initial_step=initial_step)
 
-        async def probe(i):
-            return i < 10
-
-        assert await _async_find_bracket_boundary(probe, initial_step=4) == 9
+    assert result == expected
+    # Each phase probes at most bit_length(max(brackets, step)) times; a linear scan would not.
+    assert len(probed) <= 2 * max(brackets, initial_step).bit_length() + 1
 
 
 # ── _constants ──────────────────────────────────────────────────────────
 
 
-class TestConstantsGet:
-    def test_own_attribute(self):
-        from swgoh_comlink.helpers._constants import Constants
+class TestConstants:
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [
+            pytest.param("Segment1", str(Constants.Segment1), id="own-attribute"),
+            pytest.param("UnitDefinitions", "137438953472", id="legacy-name"),  # 2**37, DataItems.UNITS
+            pytest.param("UNITS", "137438953472", id="data-items-name"),
+            # Aligned with the live GameDataItemsEnum from get_enums().
+            pytest.param("AbilityDecisionTrees", "1099511627776", id="ability-decision-trees"),
+            pytest.param("EraDefinitions", "2251799813685248", id="era-definitions"),
+            pytest.param("UBSUpdate", "2150109456", id="ubs-update"),
+            pytest.param("EpisodeDefinitions", "281474976710656", id="episode-definitions-plural"),
+            pytest.param("AccountLinking", "562949953421312", id="account-linking-alias"),
+            pytest.param("TotallyFakeItem", None, id="unknown"),
+        ],
+    )
+    def test_get(self, name, expected):
+        assert Constants.get(name) == expected
 
-        assert Constants.get("Segment1") == str(Constants.Segment1)
+    def test_legacy_name_mapped_to_missing_data_item_returns_none(self):
+        with patch.dict(_LEGACY_NAME_MAP, {"FakeLegacyName": "NONEXISTENT_MEMBER"}):
+            assert Constants.get("FakeLegacyName") is None
 
-    def test_legacy_name(self):
-        from swgoh_comlink.helpers._constants import Constants
-
-        result = Constants.get("UnitDefinitions")
-        assert result is not None
-        assert int(result) > 0
-
-    def test_data_items_name(self):
-        from swgoh_comlink.helpers._constants import Constants
-
-        result = Constants.get("UNITS")
-        assert result is not None
-        assert int(result) > 0
-
-    def test_unknown_returns_none(self):
-        from swgoh_comlink.helpers._constants import Constants
-
-        assert Constants.get("TotallyFakeItem") is None
-
-
-class TestConstantsGetNames:
-    def test_returns_list(self):
-        from swgoh_comlink.helpers._constants import Constants
-
+    def test_get_names(self):
         names = Constants.get_names()
         assert isinstance(names, list)
-        assert len(names) > 0
-
-    def test_includes_expected_names(self):
-        from swgoh_comlink.helpers._constants import Constants
-
-        names = Constants.get_names()
-        assert "RELIC_TIERS" in names
-        assert "UnitDefinitions" in names
-        assert "UNITS" in names
-
-
-# ── _decorators ─────────────────────────────────────────────────────────
-
-
-class TestFuncTimer:
-    def test_returns_correct_result(self):
-        from swgoh_comlink.helpers._decorators import func_timer
-
-        @func_timer
-        def add(a, b):
-            return a + b
-
-        assert add(2, 3) == 5
-
-    def test_logs_at_debug(self, caplog):
-        from swgoh_comlink.helpers._decorators import func_timer
-
-        @func_timer
-        def noop():
-            return "done"
-
-        with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers._decorators"):
-            noop()
-
-        assert "noop" in caplog.text
-        assert "executed in" in caplog.text
-
-
-class TestFuncDebugLogger:
-    def test_returns_result(self):
-        from swgoh_comlink.helpers._decorators import func_debug_logger
-
-        @func_debug_logger
-        def greet(name):
-            return f"hello {name}"
-
-        assert greet("world") == "hello world"
-
-    def test_masks_sensitive_keys(self, caplog):
-        from swgoh_comlink.helpers._decorators import func_debug_logger
-
-        @func_debug_logger
-        def dummy(**kwargs):
-            return "ok"
-
-        with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers._decorators"):
-            dummy(secret_key="my_secret", access_key="my_key", normal="visible")
-
-        assert "my_secret" not in caplog.text
-        assert "my_key" not in caplog.text
-        assert "***" in caplog.text
-        assert "visible" in caplog.text
-
-
-# ── globals ─────────────────────────────────────────────────────────────
-
-
-class TestLoggingFormatter:
-    def test_format_record(self):
-        from swgoh_comlink.globals import LoggingFormatter
-
-        formatter = LoggingFormatter()
-        record = logging.LogRecord(
-            name="test",
-            level=logging.INFO,
-            pathname="test.py",
-            lineno=1,
-            msg="hello",
-            args=None,
-            exc_info=None,
-            func="my_func",
-        )
-        output = formatter.format(record)
-        assert "hello" in output
-        assert "INFO" in output
-        assert "my_func" in output
-
-
-class TestGetLogger:
-    def test_default_name(self):
-        from swgoh_comlink.globals import get_logger
-
-        logger = get_logger()
-        assert isinstance(logger, logging.Logger)
-
-    def test_custom_name(self):
-        from swgoh_comlink.globals import get_logger
-
-        logger = get_logger("my.custom.logger")
-        assert logger.name == "my.custom.logger"
-
-
-# ── _localization ──────────────────────────────────────────────────────
-
-
-class TestHexToAnsiTruecolor:
-    def test_basic_conversion(self):
-        from swgoh_comlink.helpers._localization import _hex_to_ansi_truecolor
-
-        result = _hex_to_ansi_truecolor("FF0000")
-        assert result == "\033[38;2;255;0;0m"
-
-    def test_with_hash_prefix(self):
-        from swgoh_comlink.helpers._localization import _hex_to_ansi_truecolor
-
-        result = _hex_to_ansi_truecolor("#00FF00")
-        assert result == "\033[38;2;0;255;0m"
-
-    def test_mixed_case(self):
-        from swgoh_comlink.helpers._localization import _hex_to_ansi_truecolor
-
-        result = _hex_to_ansi_truecolor("aaBBcc")
-        assert result == "\033[38;2;170;187;204m"
-
-
-class TestParseTokens:
-    def test_plain_text(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("hello world")
-        assert len(tokens) == 1
-        assert tokens[0] == {"type": "text", "value": "hello world"}
-
-    def test_color_tags(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[c][FF0000]red[-][/c]")
-        types = [t["type"] for t in tokens]
-        assert "color_block_open" in types
-        assert "color" in types
-        assert "color_reset" in types
-        assert "color_end" in types
-
-    def test_bold_tags(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[b]bold[/b]")
-        types = [t["type"] for t in tokens]
-        assert types == ["bold_open", "text", "bold_close"]
-
-    def test_italic_tags(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[i]italic[/i]")
-        types = [t["type"] for t in tokens]
-        assert types == ["italic_open", "text", "italic_close"]
-
-    def test_newline_escape(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("line1\\nline2")
-        types = [t["type"] for t in tokens]
-        assert types == ["text", "newline", "text"]
-
-    def test_color_end_dash_c(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[-c]")
-        assert tokens[0]["type"] == "color_end"
-
-    def test_hex_color_token(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[F0FF23]")
-        assert tokens[0]["type"] == "color"
-        assert tokens[0]["hex6"] == "F0FF23"
-        assert tokens[0]["hex8"] == "F0FF23FF"
-        assert tokens[0]["r"] == 0xF0
-        assert tokens[0]["g"] == 0xFF
-        assert tokens[0]["b"] == 0x23
-        assert tokens[0]["a"] == 0xFF
-
-    def test_empty_parts_skipped(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("")
-        assert tokens == []
-
-
-class TestParseSwgohStringBare:
-    def test_plain_text(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("hello world", output="bare") == "hello world"
-
-    def test_strips_color_markup(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[c][FFAA00]golden[-][/c]", output="bare")
-        assert result == "golden"
-
-    def test_strips_bold(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[b]bold[/b]", output="bare") == "bold"
-
-    def test_strips_italic(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[i]italic[/i]", output="bare") == "italic"
-
-    def test_newline(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("a\\nb", output="bare") == "a\nb"
-
-    def test_default_is_bare(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[b]text[/b]") == "text"
-
-
-class TestParseSwgohStringTerminal:
-    def test_color_block(self):
-        from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
-
-        result = parse_swgoh_string("[c][FF0000]red[/c]", output="terminal")
-        assert "\033[38;2;255;0;0m" in result
-        assert "red" in result
-        assert result.endswith(ANSI_RESET)
-
-    def test_bold(self):
-        from swgoh_comlink.helpers._localization import ANSI_BOLD, ANSI_RESET, parse_swgoh_string
-
-        result = parse_swgoh_string("[b]bold[/b]", output="terminal")
-        assert ANSI_BOLD in result
-        assert ANSI_RESET in result
-        assert "bold" in result
-
-    def test_italic(self):
-        from swgoh_comlink.helpers._localization import ANSI_ITALIC, ANSI_RESET, parse_swgoh_string
-
-        result = parse_swgoh_string("[i]italic[/i]", output="terminal")
-        assert ANSI_ITALIC in result
-        assert ANSI_RESET in result
-
-    def test_color_reset_within_block(self):
-        from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
-
-        result = parse_swgoh_string("[c][FF0000]red[-]plain[/c]", output="terminal")
-        assert "red" in result
-        assert "plain" in result
-        # Color reset [-] should produce ANSI_RESET
-        assert result.count(ANSI_RESET) >= 2
-
-    def test_bold_with_active_color_reapplies(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        # Bold close should reapply active color
-        result = parse_swgoh_string("[c][FF0000][b]bold[/b]text[/c]", output="terminal")
-        assert "bold" in result
-        assert "text" in result
-
-    def test_italic_with_active_color_reapplies(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[c][FF0000][i]ital[/i]text[/c]", output="terminal")
-        assert "ital" in result
-
-    def test_bold_close_preserves_italic(self):
-        from swgoh_comlink.helpers._localization import ANSI_ITALIC, parse_swgoh_string
-
-        result = parse_swgoh_string("[i][b]both[/b]just_italic[/i]", output="terminal")
-        # After bold close, italic should be reapplied
-        parts = result.split("both")
-        assert ANSI_ITALIC in parts[1]
-
-    def test_italic_close_preserves_bold(self):
-        from swgoh_comlink.helpers._localization import ANSI_BOLD, parse_swgoh_string
-
-        result = parse_swgoh_string("[b][i]both[/i]just_bold[/b]", output="terminal")
-        parts = result.split("both")
-        assert ANSI_BOLD in parts[1]
-
-    def test_color_end_reapplies_styles(self):
-        from swgoh_comlink.helpers._localization import ANSI_BOLD, parse_swgoh_string
-
-        result = parse_swgoh_string("[b][c][FF0000]red[/c]still_bold[/b]", output="terminal")
-        # After color end, bold should be reapplied
-        assert ANSI_BOLD in result
-
-    def test_finalize_resets_active_styles(self):
-        from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
-
-        # Unclosed bold — finalize should add reset
-        result = parse_swgoh_string("[b]no close", output="terminal")
-        assert result.endswith(ANSI_RESET)
-
-
-class TestParseSwgohStringDiscord:
-    def test_bold(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[b]bold[/b]", output="discord")
-        assert result == "**bold**"
-
-    def test_italic(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[i]italic[/i]", output="discord")
-        assert result == "*italic*"
-
-    def test_color_ignored(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[c][FF0000]red[/c]", output="discord")
-        assert result == "red"
-
-    @pytest.mark.parametrize(
-        ("text", "expected"),
-        [
-            ("[b]no close", "**no close**"),
-            ("[b][i][u][s]x", "***__~~x~~__***"),
-            ("[c][FF0000][i][u][s]x[/c]y", "*__~~xy~~__*"),
-        ],
-        ids=["unclosed-bold", "unclosed-four-styles", "color-end-with-open-styles"],
-    )
-    def test_unclosed_styles_are_closed(self, text: str, expected: str):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string(text, output="discord") == expected
-
-
-class TestParseSwgohStringWeb:
-    def test_color_span(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[c][FF0000]red[/c]", output="web")
-        assert '<span style="color:#FF0000">' in result
-        assert "</span>" in result
-        assert result.startswith("<p>")
-        assert result.endswith("</p>")
-
-    def test_bold(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[b]bold[/b]", output="web")
-        assert "<b>bold</b>" in result
-
-    def test_italic(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[i]italic[/i]", output="web")
-        assert "<em>italic</em>" in result
-
-    def test_color_reset_closes_span(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[c][FF0000]red[-]plain[/c]", output="web")
-        assert "</span>" in result
-        assert "red" in result
-        assert "plain" in result
-
-    def test_wraps_in_p_tag(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("simple", output="web")
-        assert result == "<p>simple</p>"
-
-    @pytest.mark.parametrize(
-        ("text", "expected"),
-        [
-            (
-                "[c][FF0000][i][u][s]x[/c]y",
-                '<p><span style="color:#FF0000"><em><u><s>x</s></u></em></span><em><u><s>y</s></u></em></p>',
-            ),
-            (
-                "[b][FF0000][i]x[-]y[/i][/b]",
-                '<p><b><span style="color:#FF0000"><em>x</em></span><em>y</em></b></p>',
-            ),
-            (
-                "[FF0000][i]x[00FF00]y[/i]",
-                '<p><span style="color:#FF0000"><em>x</em></span><span style="color:#00FF00"><em>y</em></span></p>',
-            ),
-            (
-                "[FF0000][b]x[8]y[/b]",
-                '<p><span style="color:#FF0000"><b>x</b></span><span style="color:rgba(255,0,0,0.533)"><b>y</b></span></p>',
-            ),
-            ("[b][FF0000]x", '<p><b><span style="color:#FF0000">x</span></b></p>'),
-            ("[FF0000][b]x", '<p><span style="color:#FF0000"><b>x</b></span></p>'),
-        ],
-        ids=["color-end", "color-reset", "color-change", "alpha-change", "unclosed-outer", "unclosed-inner"],
-    )
-    def test_styles_opened_inside_a_span_stay_nested(self, text: str, expected: str):
-        """Closing a color span closes the styles opened inside it first, then reopens them after."""
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string(text, output="web") == expected
-
-
-class TestParseSwgohStringComplex:
-    def test_nested_bold_italic(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[b][i]bold-italic[/i][/b]", output="bare")
-        assert result == "bold-italic"
-
-    def test_mixed_markup(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        text = "[b]Title[/b]\\n[c][FFAA00]Gold text[-][/c] and [i]italic[/i]"
-        result = parse_swgoh_string(text, output="bare")
-        assert "Title" in result
-        assert "\n" in result
-        assert "Gold text" in result
-        assert "italic" in result
-
-    def test_empty_string(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("", output="bare") == ""
-        assert parse_swgoh_string("", output="web") == "<p></p>"
-
-
-class TestParseTokensExtendedTags:
-    """Tokenization coverage for tags added in response to issue #83."""
-
-    def test_underline_tokens(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[u]x[/u]")
-        types = [t["type"] for t in tokens]
-        assert types == ["underline_open", "text", "underline_close"]
-
-    def test_strike_tokens(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[s]x[/s]")
-        types = [t["type"] for t in tokens]
-        assert types == ["strike_open", "text", "strike_close"]
-
-    def test_sprite_tokens(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[t]x[/t]")
-        types = [t["type"] for t in tokens]
-        assert types == ["sprite_open", "text", "sprite_close"]
-
-    def test_sub_and_sup_tokens(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[sub]a[/sub][sup]b[/sup]")
-        types = [t["type"] for t in tokens]
-        assert types == ["sub_open", "text", "sub_close", "sup_open", "text", "sup_close"]
-
-    def test_sub_sup_with_scale(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[sub=1.5]a[/sub][sup=0.8]b[/sup]")
-        opens = [t for t in tokens if t["type"] in ("sub_open", "sup_open")]
-        assert opens[0] == {"type": "sub_open", "scale": 1.5}
-        assert opens[1] == {"type": "sup_open", "scale": 0.8}
-
-    def test_scale_tokens(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[y=2]xx[/y]")
-        types = [t["type"] for t in tokens]
-        assert types == ["scale_open", "text", "scale_close"]
-        assert tokens[0]["scale"] == 2.0
-
-    def test_three_digit_hex_expands(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[F0A]")
-        assert tokens[0]["type"] == "color"
-        assert tokens[0]["hex6"] == "FF00AA"
-        assert tokens[0]["a"] == 0xFF
-
-    def test_four_digit_hex_rgba(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[F0A8]")
-        assert tokens[0]["type"] == "color"
-        assert tokens[0]["hex8"] == "FF00AA88"
-        assert tokens[0]["a"] == 0x88
-
-    def test_eight_digit_hex_rgba(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[12345678]")
-        assert tokens[0]["type"] == "color"
-        assert tokens[0]["hex8"] == "12345678"
-
-    def test_single_hex_alpha_token(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[F]")
-        assert tokens[0] == {"type": "alpha", "a": 0xFF}
-
-    def test_standalone_color_without_block(self):
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        tokens = _parse_tokens("[FF0000]red")
-        types = [t["type"] for t in tokens]
-        assert types == ["color", "text"]
-
-    def test_named_tag_wins_over_hex(self):
-        """Single-letter named tags must not be misread as 1-digit alpha."""
-        from swgoh_comlink.helpers._localization import _parse_tokens
-
-        assert _parse_tokens("[b]")[0]["type"] == "bold_open"
-        assert _parse_tokens("[c]")[0]["type"] == "color_block_open"
-        assert _parse_tokens("[i]")[0]["type"] == "italic_open"
-        assert _parse_tokens("[s]")[0]["type"] == "strike_open"
-        assert _parse_tokens("[t]")[0]["type"] == "sprite_open"
-        assert _parse_tokens("[u]")[0]["type"] == "underline_open"
-
-
-class TestParseSwgohStringBareExtended:
-    def test_strips_underline(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[u]under[/u]", output="bare") == "under"
-
-    def test_strips_strike(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[s]cross[/s]", output="bare") == "cross"
-
-    def test_strips_sub_sup_scale(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        text = "[sub=0.8]x[/sub][sup]y[/sup][y=1.5]z[/y]"
-        assert parse_swgoh_string(text, output="bare") == "xyz"
-
-    def test_strips_sprite_and_short_color(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[t]icon[/t][F0A]red", output="bare") == "iconred"
-
-    def test_strips_alpha_literal(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("hello[8]world", output="bare") == "helloworld"
-
-
-class TestParseSwgohStringTerminalExtended:
-    def test_underline_emits_ansi(self):
-        from swgoh_comlink.helpers._localization import ANSI_RESET, ANSI_UNDERLINE, parse_swgoh_string
-
-        result = parse_swgoh_string("[u]x[/u]", output="terminal")
-        assert ANSI_UNDERLINE in result
-        assert "x" in result
-        assert result.endswith(ANSI_RESET)
-
-    def test_strike_emits_ansi(self):
-        from swgoh_comlink.helpers._localization import ANSI_RESET, ANSI_STRIKE, parse_swgoh_string
-
-        result = parse_swgoh_string("[s]x[/s]", output="terminal")
-        assert ANSI_STRIKE in result
-        assert result.endswith(ANSI_RESET)
-
-    def test_underline_preserves_color(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[FF0000][u]red[/u]still", output="terminal")
-        # After closing underline, the red foreground should be reapplied.
-        after_close = result.split("red")[1]
-        assert "\033[38;2;255;0;0m" in after_close
-
-    def test_strike_close_reapplies_bold(self):
-        from swgoh_comlink.helpers._localization import ANSI_BOLD, parse_swgoh_string
-
-        result = parse_swgoh_string("[b][s]x[/s]still_bold[/b]", output="terminal")
-        tail = result.split("x")[1]
-        assert ANSI_BOLD in tail
-
-    def test_short_rgb_expands(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[F0A]x", output="terminal")
-        assert "\033[38;2;255;0;170m" in result
-
-    def test_standalone_color_without_c_wrapper(self):
-        """A color literal without [c] should still colorize in terminal output."""
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[00FF00]green", output="terminal")
-        assert "\033[38;2;0;255;0m" in result
-        assert "green" in result
-
-    def test_dash_resets_color_outside_block(self):
-        from swgoh_comlink.helpers._localization import ANSI_RESET, parse_swgoh_string
-
-        result = parse_swgoh_string("[FF0000]red[-]plain", output="terminal")
-        assert ANSI_RESET in result
-        assert "plain" in result
-
-
-class TestParseSwgohStringDiscordExtended:
-    def test_underline_markdown(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[u]x[/u]", output="discord") == "__x__"
-
-    def test_strike_markdown(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[s]x[/s]", output="discord") == "~~x~~"
-
-    def test_sub_sup_scale_stripped(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        text = "[sub=0.8]a[/sub][sup]b[/sup][y=1.2]c[/y]"
-        assert parse_swgoh_string(text, output="discord") == "abc"
-
-
-class TestParseSwgohStringWebExtended:
-    def test_underline_html(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[u]x[/u]", output="web") == "<p><u>x</u></p>"
-
-    def test_strike_html(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[s]x[/s]", output="web") == "<p><s>x</s></p>"
-
-    def test_sub_default_no_scale(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[sub]x[/sub]", output="web") == "<p><sub>x</sub></p>"
-
-    def test_sub_with_scale(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[sub=0.8]x[/sub]", output="web")
-        assert '<sub style="font-size:0.8em">x</sub>' in result
-
-    def test_sup_with_scale(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[sup=1.25]x[/sup]", output="web")
-        assert '<sup style="font-size:1.25em">x</sup>' in result
-
-    def test_scale_integer_formatted_without_decimal(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[y=2]x[/y]", output="web")
-        assert '<span style="font-size:2em">x</span>' in result
-
-    def test_short_hex_color_span(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[F0A]x[/c]", output="web")
-        assert '<span style="color:#FF00AA">x</span>' in result
-
-    def test_rgba_color_uses_rgba_css(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        # [F0A8] -> FF00AA with alpha 0x88 (136). 136/255 ≈ 0.533
-        result = parse_swgoh_string("[F0A8]x[/c]", output="web")
-        assert "rgba(255,0,170,0.533)" in result
-
-    def test_alpha_only_reuses_prior_rgb(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[FF0000]red[8]faded", output="web")
-        # First span opens with opaque red, then closes, then reopens at alpha 0x88.
-        assert '<span style="color:#FF0000">' in result
-        assert "rgba(255,0,0," in result
-
-    def test_sprite_tag_stripped(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[t]icon[/t]", output="web") == "<p>icon</p>"
-
-
-class TestParseSwgohStringComplexExtended:
-    def test_deep_nested_styles(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[b][u][i]x[/i][/u][/b]", output="bare") == "x"
-
-    def test_discord_nested_style_combo(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[b][u][s]x[/s][/u][/b]", output="discord")
-        assert result == "**__~~x~~__**"
-
-    def test_web_nested_preserves_tag_structure(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[b][u]x[/u][/b]", output="web")
-        assert result == "<p><b><u>x</u></b></p>"
-
-    def test_color_then_alpha_then_new_color(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        text = "[FF0000]red[8]faded[00FF00]green[/c]"
-        result = parse_swgoh_string(text, output="web")
-        # One opening span for each color change; matching closes at [/c].
-        assert result.count('<span style="color:') == 3
-        # Must close every span opened.
-        assert result.count("</span>") == 3
-
-    def test_issue_83_golden_string(self):
-        """End-to-end smoke for all four outputs on a representative string."""
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        s = "[c][FF0000][b]Boss[/b][-] deals [u]2x[/u] damage[/c]"
-        assert parse_swgoh_string(s, output="bare") == "Boss deals 2x damage"
-        assert parse_swgoh_string(s, output="discord") == "**Boss** deals __2x__ damage"
-
-
-class TestParseSwgohStringIssue83Coverage:
-    """Round-trip coverage for every tag and color format named in issue #83.
-
-    For text-only outputs (bare/terminal/discord) the visual-only tags
-    ([t], [y=X], [sub], [sup]) are expected to be stripped without leaking
-    any markup characters into the rendered string.
-    """
-
-    # --- [t] / [/t] sprite color forcing ---------------------------------------
-    def test_sprite_terminal_strips(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[t]icon[/t]", output="terminal") == "icon"
-
-    def test_sprite_discord_strips(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[t]icon[/t]", output="discord") == "icon"
-
-    # --- [y=FLOAT] / [/y] font scaling -----------------------------------------
-    def test_scale_terminal_strips(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[y=1.5]big[/y]", output="terminal") == "big"
-
-    # --- [sub] / [sub=FLOAT] / [/sub] subscript --------------------------------
-    def test_sub_terminal_strips(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[sub]x[/sub]", output="terminal") == "x"
-        assert parse_swgoh_string("[sub=0.8]x[/sub]", output="terminal") == "x"
-
-    # --- [sup] / [sup=FLOAT] / [/sup] superscript ------------------------------
-    def test_sup_terminal_strips(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[sup]x[/sup]", output="terminal") == "x"
-        assert parse_swgoh_string("[sup=1.25]x[/sup]", output="terminal") == "x"
-
-    # --- 4-digit [RGBA] color --------------------------------------------------
-    def test_four_digit_rgba_bare(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[F0A8]x[/c]", output="bare") == "x"
-
-    def test_four_digit_rgba_terminal_uses_rgb_channel(self):
-        """Terminal can't render alpha, but it must still emit the RGB channel."""
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[F0A8]x[/c]", output="terminal")
-        # F0A8 -> RGB FF00AA, alpha 88 -> ignored by ANSI but RGB still shown.
-        assert "\033[38;2;255;0;170m" in result
-        assert "x" in result
-
-    # --- 8-digit [RRGGBBAA] color ----------------------------------------------
-    def test_eight_digit_rgba_bare(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string("[12345678]x[/c]", output="bare") == "x"
-
-    def test_eight_digit_rgba_terminal(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[12345678]x[/c]", output="terminal")
-        # 0x12=18, 0x34=52, 0x56=86 (alpha 0x78 dropped by ANSI)
-        assert "\033[38;2;18;52;86m" in result
-        assert "x" in result
-
-    def test_eight_digit_rgba_web(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[12345678]x[/c]", output="web")
-        # alpha 0x78 = 120 -> 120/255 = 0.471
-        assert "rgba(18,52,86,0.471)" in result
-
-    # --- 1-digit [A] alpha-only ------------------------------------------------
-    def test_alpha_only_terminal_no_rgb_change(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[FF0000]r[8]still_red[/c]", output="terminal")
-        # The alpha tag re-emits the same RGB sequence in terminal output.
-        assert result.count("\033[38;2;255;0;0m") == 2
-        assert "still_red" in result
-
-    # --- [c] is optional: standalone color without wrapper ---------------------
-    def test_standalone_color_web_without_c_wrapper(self):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        result = parse_swgoh_string("[00FF00]green", output="web")
-        assert '<span style="color:#00FF00">green</span>' in result
-
-
-# ── Additional quick-win helper tests ──────────────────────────────────
-
-
-class TestSanitizeAllycodeInvalidType:
-    def test_float_raises(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
-
-        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode(3.14)
-
-    def test_list_raises(self):
-        from swgoh_comlink.helpers._utils import sanitize_allycode
-
-        with pytest.raises(SwgohComlinkValueError, match="Invalid ally code"):
-            sanitize_allycode([1, 2, 3])
-
-
-class TestIsOmicronSkillNoTier:
-    def test_skill_with_no_omicron_tier_returns_false(self):
-        from swgoh_comlink.helpers._omicron import is_omicron_skill
-
-        # skill_B has no omicron tier (all isOmicronTier=False)
-        # get_omicron_skill_tier returns None, triggering line 132
-        skill_list = [
-            {"id": "skill_B", "omicronMode": 3, "tier": [{"isOmicronTier": False}]},
-        ]
-        assert is_omicron_skill(skill_list, skill_id="skill_B", skill_tier=1) is False
-
-
-class TestConstantsGameDataItemsEnumSync:
-    """Lock in helper alignment with the live `GameDataItemsEnum` from `get_enums()`."""
-
-    def test_new_items_resolve(self):
-        from swgoh_comlink.helpers._constants import Constants
-
-        assert Constants.get("AbilityDecisionTrees") == "1099511627776"
-        assert Constants.get("EraDefinitions") == "2251799813685248"
-        assert Constants.get("UBSUpdate") == "2150109456"
-
-    def test_episode_definitions_plural(self):
-        from swgoh_comlink.helpers._constants import Constants
-
-        assert Constants.get("EpisodeDefinitions") == "281474976710656"
-
-    def test_account_linking_alias(self):
-        from swgoh_comlink.helpers._constants import Constants
-
-        assert Constants.get("AccountLinking") == "562949953421312"
+        assert {"RELIC_TIERS", "UnitDefinitions", "UNITS"} <= set(names)
 
     def test_segment_values_match_server(self):
-        from swgoh_comlink.helpers._constants import Constants
-
-        assert Constants.Segment1 == 2097151
-        assert Constants.Segment2 == 1125968624222208
-        assert Constants.Segment3 == 206158430208
-        assert Constants.Segment4 == 3377424842620928
+        assert (Constants.Segment1, Constants.Segment2, Constants.Segment3, Constants.Segment4) == (
+            2097151,
+            1125968624222208,
+            206158430208,
+            3377424842620928,
+        )
 
     def test_dataitems_members_present(self):
-        from swgoh_comlink.helpers._data_items import DataItems
-
         assert DataItems.ABILITY_DECISION_TREE.value == 1099511627776
         assert DataItems.ERA_DEFINITION.value == 2251799813685248
         assert DataItems.UBS_UPDATE.value == 2150109456
 
 
-class TestConstantsGetLegacyKeyError:
-    def test_legacy_name_with_missing_dataitems_returns_none(self):
-        from unittest.mock import patch
-
-        from swgoh_comlink.helpers._constants import _LEGACY_NAME_MAP, Constants
-
-        # Patch _LEGACY_NAME_MAP to include a key that maps to a nonexistent DataItems member
-        with patch.dict(_LEGACY_NAME_MAP, {"FakeLegacyName": "NONEXISTENT_MEMBER"}):
-            result = Constants.get("FakeLegacyName")
-            assert result is None
+# ── _decorators ─────────────────────────────────────────────────────────
 
 
-class TestGetDatacronDismantleValueNoDustRecipe:
-    def test_no_dust_recipe_id_returns_empty(self):
-        from swgoh_comlink.helpers._game_data import get_datacron_dismantle_value
+def test_func_timer_returns_result_and_logs(caplog):
+    @func_timer
+    def add(a, b):
+        return a + b
 
-        datacron = {"setId": "set1", "affix": [1]}
-        # Tier exists but dustGrantRecipeId is None
-        sets = [{"id": "set1", "tier": [{"id": 1, "dustGrantRecipeId": None}]}]
-        result = get_datacron_dismantle_value(datacron, sets, [])
-        assert result == {}
+    with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers._decorators"):
+        assert add(2, 3) == 5
+
+    assert "add" in caplog.text
+    assert "executed in" in caplog.text
+
+
+@pytest.mark.parametrize("sensitive_key", sorted(_SENSITIVE_KEYS))
+def test_func_debug_logger_returns_result_and_masks_sensitive_kwargs(caplog, sensitive_key):
+    @func_debug_logger
+    def dummy(**kwargs):
+        return "ok"
+
+    with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers._decorators"):
+        assert dummy(**{sensitive_key: "hidden_value"}, normal="visible") == "ok"
+
+    assert "hidden_value" not in caplog.text
+    assert "***" in caplog.text
+    assert "visible" in caplog.text
+
+
+# ── globals ─────────────────────────────────────────────────────────────
+
+
+def test_logging_formatter_includes_level_function_and_message():
+    record = logging.LogRecord(
+        name="test",
+        level=logging.INFO,
+        pathname="test.py",
+        lineno=1,
+        msg="hello",
+        args=None,
+        exc_info=None,
+        func="my_func",
+    )
+    output = LoggingFormatter().format(record)
+    assert "hello" in output
+    assert "INFO" in output
+    assert "my_func" in output
+
+
+@pytest.mark.parametrize(("args", "name"), [((), "swgoh_comlink.globals"), (("my.custom.logger",), "my.custom.logger")])
+def test_get_logger(args, name):
+    logger = get_logger(*args)
+    assert isinstance(logger, logging.Logger)
+    assert logger.name == name
+
+
+# ── _localization ──────────────────────────────────────────────────────
+
+_R, _B, _I, _U, _S = ANSI_RESET, ANSI_BOLD, ANSI_ITALIC, ANSI_UNDERLINE, ANSI_STRIKE
+
+
+def _fg(r: int, g: int, b: int) -> str:
+    """24-bit ANSI foreground color sequence."""
+    return f"\033[38;2;{r};{g};{b}m"
+
+
+@pytest.mark.parametrize(
+    ("hex_color", "expected"),
+    [
+        pytest.param("FF0000", "\033[38;2;255;0;0m", id="basic"),
+        pytest.param("#00FF00", "\033[38;2;0;255;0m", id="hash-prefix"),
+        pytest.param("aaBBcc", "\033[38;2;170;187;204m", id="mixed-case"),
+    ],
+)
+def test_hex_to_ansi_truecolor(hex_color, expected):
+    assert _hex_to_ansi_truecolor(hex_color) == expected
+
+
+def _text(value: str) -> dict[str, Any]:
+    return {"type": "text", "value": value}
+
+
+def _tok(kind: str, **fields: Any) -> dict[str, Any]:
+    return {"type": kind, **fields}
+
+
+def _color(r: int, g: int, b: int, a: int = 0xFF) -> dict[str, Any]:
+    hex6 = f"{r:02X}{g:02X}{b:02X}"
+    return {"type": "color", "r": r, "g": g, "b": b, "a": a, "hex6": hex6, "hex8": f"{hex6}{a:02X}"}
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        pytest.param("", [], id="empty"),
+        pytest.param("hello world", [_text("hello world")], id="plain"),
+        pytest.param("line1\\nline2", [_text("line1"), _tok("newline"), _text("line2")], id="newline-escape"),
+        pytest.param(
+            "[c][FF0000]red[-][/c]",
+            [_tok("color_block_open"), _color(255, 0, 0), _text("red"), _tok("color_reset"), _tok("color_end")],
+            id="color-block",
+        ),
+        pytest.param("[-c]", [_tok("color_end")], id="dash-c-ends-color"),
+        pytest.param("[FF0000]red", [_color(255, 0, 0), _text("red")], id="standalone-color"),
+        pytest.param("[F0FF23]", [_color(0xF0, 0xFF, 0x23)], id="hex6"),
+        pytest.param("[F0A]", [_color(0xFF, 0x00, 0xAA)], id="hex3-expands"),
+        pytest.param("[F0A8]", [_color(0xFF, 0x00, 0xAA, 0x88)], id="hex4-rgba"),
+        pytest.param("[12345678]", [_color(0x12, 0x34, 0x56, 0x78)], id="hex8-rgba"),
+        pytest.param("[F]", [_tok("alpha", a=0xFF)], id="hex1-alpha"),
+        pytest.param("[b]bold[/b]", [_tok("bold_open"), _text("bold"), _tok("bold_close")], id="bold"),
+        pytest.param("[i]italic[/i]", [_tok("italic_open"), _text("italic"), _tok("italic_close")], id="italic"),
+        pytest.param("[u]x[/u]", [_tok("underline_open"), _text("x"), _tok("underline_close")], id="underline"),
+        pytest.param("[s]x[/s]", [_tok("strike_open"), _text("x"), _tok("strike_close")], id="strike"),
+        pytest.param("[t]x[/t]", [_tok("sprite_open"), _text("x"), _tok("sprite_close")], id="sprite"),
+        pytest.param(
+            "[sub]a[/sub][sup]b[/sup]",
+            [
+                *(_tok("sub_open", scale=None), _text("a"), _tok("sub_close")),
+                *(_tok("sup_open", scale=None), _text("b"), _tok("sup_close")),
+            ],
+            id="sub-sup",
+        ),
+        pytest.param(
+            "[sub=1.5]a[/sub][sup=0.8]b[/sup]",
+            [
+                *(_tok("sub_open", scale=1.5), _text("a"), _tok("sub_close")),
+                *(_tok("sup_open", scale=0.8), _text("b"), _tok("sup_close")),
+            ],
+            id="sub-sup-scaled",
+        ),
+        pytest.param("[y=2]xx[/y]", [_tok("scale_open", scale=2.0), _text("xx"), _tok("scale_close")], id="scale"),
+        # Single-letter named tags must not be misread as a 1-digit alpha literal.
+        *(
+            pytest.param(f"[{tag}]", [_tok(kind)], id=f"named-tag-{tag}-not-alpha")
+            for tag, kind in [
+                ("b", "bold_open"),
+                ("c", "color_block_open"),
+                ("i", "italic_open"),
+                ("s", "strike_open"),
+                ("t", "sprite_open"),
+                ("u", "underline_open"),
+            ]
+        ),
+    ],
+)
+def test_parse_tokens(text, expected):
+    assert _parse_tokens(text) == expected
+
+
+# Every input rendered in every output format, compared exactly. A missing format means that
+# rendering is deliberately not pinned (see the comment on the row).
+_RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
+    (
+        "plain",
+        "hello world",
+        {
+            "bare": "hello world",
+            "discord": "hello world",
+            "web": "<p>hello world</p>",
+            "terminal": "hello world",
+        },
+    ),
+    ("empty", "", {"bare": "", "discord": "", "web": "<p></p>", "terminal": ""}),
+    ("newline", "a\\nb", {"bare": "a\nb", "discord": "a\nb", "web": "<p>a\nb</p>", "terminal": "a\nb"}),
+    (
+        "bold",
+        "[b]bold[/b]",
+        {
+            "bare": "bold",
+            "discord": "**bold**",
+            "web": "<p><b>bold</b></p>",
+            "terminal": f"{_B}bold{_R}",
+        },
+    ),
+    (
+        "italic",
+        "[i]italic[/i]",
+        {
+            "bare": "italic",
+            "discord": "*italic*",
+            "web": "<p><em>italic</em></p>",
+            "terminal": f"{_I}italic{_R}",
+        },
+    ),
+    ("underline", "[u]x[/u]", {"bare": "x", "discord": "__x__", "web": "<p><u>x</u></p>", "terminal": f"{_U}x{_R}"}),
+    ("strike", "[s]x[/s]", {"bare": "x", "discord": "~~x~~", "web": "<p><s>x</s></p>", "terminal": f"{_S}x{_R}"}),
+    (
+        "color-block",
+        "[c][FF0000]red[/c]",
+        {
+            "bare": "red",
+            "discord": "red",
+            "web": '<p><span style="color:#FF0000">red</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}red{_R}",
+        },
+    ),
+    (
+        "color-reset-then-end",
+        "[c][FFAA00]golden[-][/c]",
+        {
+            "bare": "golden",
+            "discord": "golden",
+            "web": '<p><span style="color:#FFAA00">golden</span></p>',
+            "terminal": f"{_fg(255, 170, 0)}golden{_R}{_R}",
+        },
+    ),
+    (
+        "color-reset-within-block",
+        "[c][FF0000]red[-]plain[/c]",
+        {
+            "bare": "redplain",
+            "discord": "redplain",
+            "web": '<p><span style="color:#FF0000">red</span>plain</p>',
+            "terminal": f"{_fg(255, 0, 0)}red{_R}plain{_R}",
+        },
+    ),
+    (
+        "color-reset-outside-block",
+        "[FF0000]red[-]plain",
+        {
+            "bare": "redplain",
+            "discord": "redplain",
+            "web": '<p><span style="color:#FF0000">red</span>plain</p>',
+            "terminal": f"{_fg(255, 0, 0)}red{_R}plain",
+        },
+    ),
+    (
+        "standalone-color",
+        "[00FF00]green",
+        {
+            "bare": "green",
+            "discord": "green",
+            "web": '<p><span style="color:#00FF00">green</span></p>',
+            "terminal": f"{_fg(0, 255, 0)}green{_R}",
+        },
+    ),
+    (
+        "hex3",
+        "[F0A]x[/c]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><span style="color:#FF00AA">x</span></p>',
+            "terminal": f"{_fg(255, 0, 170)}x{_R}",
+        },
+    ),
+    # Terminal output cannot render alpha, but still emits the RGB channel.
+    (
+        "hex4-rgba",
+        "[F0A8]x[/c]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><span style="color:rgba(255,0,170,0.533)">x</span></p>',
+            "terminal": f"{_fg(255, 0, 170)}x{_R}",
+        },
+    ),
+    (
+        "hex8-rgba",
+        "[12345678]x[/c]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><span style="color:rgba(18,52,86,0.471)">x</span></p>',
+            "terminal": f"{_fg(18, 52, 86)}x{_R}",
+        },
+    ),
+    # An alpha literal with no prior color applies to the default white.
+    (
+        "alpha-without-color",
+        "hello[8]world",
+        {
+            "bare": "helloworld",
+            "discord": "helloworld",
+            "web": '<p>hello<span style="color:rgba(255,255,255,0.533)">world</span></p>',
+            "terminal": f"hello{_fg(255, 255, 255)}world{_R}",
+        },
+    ),
+    (
+        "alpha-reuses-color",
+        "[FF0000]r[8]still_red[/c]",
+        {
+            "bare": "rstill_red",
+            "discord": "rstill_red",
+            "web": '<p><span style="color:#FF0000">r</span><span style="color:rgba(255,0,0,0.533)">still_red</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}r{_fg(255, 0, 0)}still_red{_R}",
+        },
+    ),
+    (
+        "color-alpha-color",
+        "[FF0000]red[8]faded[00FF00]green[/c]",
+        {
+            "bare": "redfadedgreen",
+            "discord": "redfadedgreen",
+            "web": (
+                '<p><span style="color:#FF0000">red</span><span style="color:rgba(255,0,0,0.533)">faded</span>'
+                '<span style="color:#00FF00">green</span></p>'
+            ),
+            "terminal": f"{_fg(255, 0, 0)}red{_fg(255, 0, 0)}faded{_fg(0, 255, 0)}green{_R}",
+        },
+    ),
+    # Closing a style resets the terminal, so the still-open color must be re-emitted.
+    (
+        "bold-close-reapplies-color",
+        "[c][FF0000][b]styled[/b]text[/c]",
+        {
+            "bare": "styledtext",
+            "discord": "**styled**text",
+            "web": '<p><span style="color:#FF0000"><b>styled</b>text</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}{_B}styled{_R}{_fg(255, 0, 0)}text{_R}",
+        },
+    ),
+    (
+        "italic-close-reapplies-color",
+        "[c][FF0000][i]styled[/i]text[/c]",
+        {
+            "bare": "styledtext",
+            "discord": "*styled*text",
+            "web": '<p><span style="color:#FF0000"><em>styled</em>text</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}{_I}styled{_R}{_fg(255, 0, 0)}text{_R}",
+        },
+    ),
+    (
+        "underline-close-reapplies-color",
+        "[FF0000][u]red[/u]still",
+        {
+            "bare": "redstill",
+            "discord": "__red__still",
+            "web": '<p><span style="color:#FF0000"><u>red</u>still</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}{_U}red{_R}{_fg(255, 0, 0)}still{_R}",
+        },
+    ),
+    # Ending the color resets the terminal, so the still-open bold must be re-emitted.
+    (
+        "color-end-reapplies-bold",
+        "[b][c][FF0000]red[/c]still_bold[/b]",
+        {
+            "bare": "redstill_bold",
+            "discord": "**redstill_bold**",
+            "web": '<p><b><span style="color:#FF0000">red</span>still_bold</b></p>',
+            "terminal": f"{_B}{_fg(255, 0, 0)}red{_R}{_B}still_bold{_R}",
+        },
+    ),
+    (
+        "bold-close-keeps-italic",
+        "[i][b]both[/b]just_italic[/i]",
+        {
+            "bare": "bothjust_italic",
+            "discord": "***both**just_italic*",
+            "web": "<p><em><b>both</b>just_italic</em></p>",
+            "terminal": f"{_I}{_B}both{_R}{_I}just_italic{_R}",
+        },
+    ),
+    (
+        "italic-close-keeps-bold",
+        "[b][i]both[/i]just_bold[/b]",
+        {
+            "bare": "bothjust_bold",
+            "discord": "***both*just_bold**",
+            "web": "<p><b><em>both</em>just_bold</b></p>",
+            "terminal": f"{_B}{_I}both{_R}{_B}just_bold{_R}",
+        },
+    ),
+    (
+        "strike-close-keeps-bold",
+        "[b][s]x[/s]still_bold[/b]",
+        {
+            "bare": "xstill_bold",
+            "discord": "**~~x~~still_bold**",
+            "web": "<p><b><s>x</s>still_bold</b></p>",
+            "terminal": f"{_B}{_S}x{_R}{_B}still_bold{_R}",
+        },
+    ),
+    (
+        "nested-bold-italic",
+        "[b][i]bold-italic[/i][/b]",
+        {
+            "bare": "bold-italic",
+            "discord": "***bold-italic***",
+            "web": "<p><b><em>bold-italic</em></b></p>",
+            "terminal": f"{_B}{_I}bold-italic{_R}{_B}{_R}",
+        },
+    ),
+    (
+        "nested-bold-underline",
+        "[b][u]x[/u][/b]",
+        {"bare": "x", "discord": "**__x__**", "web": "<p><b><u>x</u></b></p>", "terminal": f"{_B}{_U}x{_R}{_B}{_R}"},
+    ),
+    (
+        "nested-bold-underline-italic",
+        "[b][u][i]x[/i][/u][/b]",
+        {
+            "bare": "x",
+            "discord": "**__*x*__**",
+            "web": "<p><b><u><em>x</em></u></b></p>",
+            "terminal": f"{_B}{_U}{_I}x{_R}{_B}{_U}{_R}{_B}{_R}",
+        },
+    ),
+    (
+        "nested-bold-underline-strike",
+        "[b][u][s]x[/s][/u][/b]",
+        {
+            "bare": "x",
+            "discord": "**__~~x~~__**",
+            "web": "<p><b><u><s>x</s></u></b></p>",
+            "terminal": f"{_B}{_U}{_S}x{_R}{_B}{_U}{_R}{_B}{_R}",
+        },
+    ),
+    (
+        "styles-reapplied-after-inner-close",
+        "[u][s][b]x[/b]y[/s][/u]",
+        {
+            "bare": "xy",
+            "discord": "__~~**x**y~~__",
+            "web": "<p><u><s><b>x</b>y</s></u></p>",
+            "terminal": f"{_U}{_S}{_B}x{_R}{_U}{_S}y{_R}{_U}{_R}",
+        },
+    ),
+    # Unclosed styles are closed at the end, innermost first, in every format.
+    (
+        "unclosed-bold",
+        "[b]no close",
+        {
+            "bare": "no close",
+            "discord": "**no close**",
+            "web": "<p><b>no close</b></p>",
+            "terminal": f"{_B}no close{_R}",
+        },
+    ),
+    (
+        "unclosed-four-styles",
+        "[b][i][u][s]x",
+        {
+            "bare": "x",
+            "discord": "***__~~x~~__***",
+            "web": "<p><b><em><u><s>x</s></u></em></b></p>",
+            "terminal": f"{_B}{_I}{_U}{_S}x{_R}",
+        },
+    ),
+    # Closing a color span closes the styles opened inside it, then reopens them after it.
+    (
+        "color-end-with-open-styles",
+        "[c][FF0000][i][u][s]x[/c]y",
+        {
+            "bare": "xy",
+            "discord": "*__~~xy~~__*",
+            "web": '<p><span style="color:#FF0000"><em><u><s>x</s></u></em></span><em><u><s>y</s></u></em></p>',
+            "terminal": f"{_fg(255, 0, 0)}{_I}{_U}{_S}x{_R}{_I}{_U}{_S}y{_R}",
+        },
+    ),
+    (
+        "color-reset-with-open-styles",
+        "[b][FF0000][i]x[-]y[/i][/b]",
+        {"bare": "xy", "web": '<p><b><span style="color:#FF0000"><em>x</em></span><em>y</em></b></p>'},
+    ),
+    (
+        "color-change-with-open-styles",
+        "[FF0000][i]x[00FF00]y[/i]",
+        {
+            "bare": "xy",
+            "web": '<p><span style="color:#FF0000"><em>x</em></span><span style="color:#00FF00"><em>y</em></span></p>',
+        },
+    ),
+    (
+        "alpha-change-with-open-styles",
+        "[FF0000][b]x[8]y[/b]",
+        {
+            "bare": "xy",
+            "web": '<p><span style="color:#FF0000"><b>x</b></span>'
+            '<span style="color:rgba(255,0,0,0.533)"><b>y</b></span></p>',
+        },
+    ),
+    (
+        "unclosed-style-around-color",
+        "[b][FF0000]x",
+        {"bare": "x", "web": '<p><b><span style="color:#FF0000">x</span></b></p>'},
+    ),
+    (
+        "unclosed-style-inside-color",
+        "[FF0000][b]x",
+        {"bare": "x", "web": '<p><span style="color:#FF0000"><b>x</b></span></p>'},
+    ),
+    # Visual-only tags: stripped from text outputs, kept as HTML on the web.
+    ("sprite", "[t]icon[/t]", {"bare": "icon", "discord": "icon", "web": "<p>icon</p>", "terminal": "icon"}),
+    (
+        "sprite-then-color",
+        "[t]icon[/t][F0A]red",
+        {
+            "bare": "iconred",
+            "discord": "iconred",
+            "web": '<p>icon<span style="color:#FF00AA">red</span></p>',
+            "terminal": f"icon{_fg(255, 0, 170)}red{_R}",
+        },
+    ),
+    ("sub", "[sub]x[/sub]", {"bare": "x", "discord": "x", "web": "<p><sub>x</sub></p>", "terminal": "x"}),
+    (
+        "sub-scaled",
+        "[sub=0.8]x[/sub]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><sub style="font-size:0.8em">x</sub></p>',
+            "terminal": "x",
+        },
+    ),
+    ("sup", "[sup]x[/sup]", {"bare": "x", "discord": "x", "web": "<p><sup>x</sup></p>", "terminal": "x"}),
+    (
+        "sup-scaled",
+        "[sup=1.25]x[/sup]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><sup style="font-size:1.25em">x</sup></p>',
+            "terminal": "x",
+        },
+    ),
+    ("scale-without-value", "[y]x[/y]", {"bare": "x", "discord": "x", "web": "<p><span>x</span></p>", "terminal": "x"}),
+    (
+        "scale-integer",
+        "[y=2]x[/y]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><span style="font-size:2em">x</span></p>',
+            "terminal": "x",
+        },
+    ),
+    (
+        "scale-float",
+        "[y=1.5]big[/y]",
+        {
+            "bare": "big",
+            "discord": "big",
+            "web": '<p><span style="font-size:1.5em">big</span></p>',
+            "terminal": "big",
+        },
+    ),
+    (
+        "sub-sup-scale",
+        "[sub=0.8]a[/sub][sup]b[/sup][y=1.2]c[/y]",
+        {
+            "bare": "abc",
+            "discord": "abc",
+            "web": '<p><sub style="font-size:0.8em">a</sub><sup>b</sup><span style="font-size:1.2em">c</span></p>',
+            "terminal": "abc",
+        },
+    ),
+    (
+        "mixed-markup",
+        "[b]Title[/b]\\n[c][FFAA00]Gold text[-][/c] and [i]italic[/i]",
+        {
+            "bare": "Title\nGold text and italic",
+            "discord": "**Title**\nGold text and *italic*",
+            "web": '<p><b>Title</b>\n<span style="color:#FFAA00">Gold text</span> and <em>italic</em></p>',
+            "terminal": f"{_B}Title{_R}\n{_fg(255, 170, 0)}Gold text{_R}{_R} and {_I}italic{_R}",
+        },
+    ),
+    (
+        "issue-83-golden",
+        "[c][FF0000][b]Boss[/b][-] deals [u]2x[/u] damage[/c]",
+        {
+            "bare": "Boss deals 2x damage",
+            "discord": "**Boss** deals __2x__ damage",
+            "web": '<p><span style="color:#FF0000"><b>Boss</b></span> deals <u>2x</u> damage</p>',
+            "terminal": f"{_fg(255, 0, 0)}{_B}Boss{_R}{_fg(255, 0, 0)}{_R} deals {_U}2x{_R} damage{_R}",
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("text", "output", "expected"),
+    [
+        pytest.param(text, output, expected, id=f"{output}-{name}")
+        for name, text, rendered in _RENDERINGS
+        for output, expected in rendered.items()
+    ],
+)
+def test_parse_swgoh_string(text, output, expected):
+    assert parse_swgoh_string(text, output=output) == expected
+
+
+def test_parse_swgoh_string_defaults_to_bare():
+    assert parse_swgoh_string("[b]text[/b]") == "text"
+
+
+class _NestingChecker(HTMLParser):
+    """Record whether every end tag closes the most recently opened element."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.stack: list[str] = []
+        self.well_nested = True
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.stack.append(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        if not self.stack or self.stack.pop() != tag:
+            self.well_nested = False
+
+
+@pytest.mark.parametrize(
+    "text",
+    [pytest.param(text, id=name) for name, text, _ in _RENDERINGS],
+)
+def test_web_output_is_well_nested(text):
+    checker = _NestingChecker()
+    checker.feed(parse_swgoh_string(text, output="web"))
+    checker.close()
+    assert checker.well_nested
+    assert checker.stack == []
+
+
+# ── Additional quick-win helper tests ──────────────────────────────────

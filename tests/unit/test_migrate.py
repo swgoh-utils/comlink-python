@@ -157,28 +157,21 @@ class TestFormatFindings:
 
         assert format_findings([]) == "No migration issues found."
 
-    def test_with_findings(self, tmp_path: Path):
+    @pytest.mark.parametrize("use_color", [True, False], ids=["color", "no-color"])
+    def test_with_findings(self, tmp_path: Path, use_color: bool):
         from swgoh_comlink.migrate._reporter import format_findings
         from swgoh_comlink.migrate._scanner import scan_file
 
         f = tmp_path / "test.py"
         f.write_text("import requests\n")
-        findings = scan_file(f)
-        report = format_findings(findings, use_color=True)
-        assert "migration issue" in report
-        assert "WARNING" in report
+        report = format_findings(scan_file(f), use_color=use_color)
 
-    def test_no_color_mode(self, tmp_path: Path):
-        from swgoh_comlink.migrate._reporter import format_findings
-        from swgoh_comlink.migrate._scanner import scan_file
-
-        f = tmp_path / "test.py"
-        f.write_text("import requests\n")
-        findings = scan_file(f)
-        report = format_findings(findings, use_color=False)
-        # No ANSI escape codes
-        assert "\033[" not in report
-        assert "WARNING" in report
+        assert "Found 1 migration issue(s) in 1 file(s):" in report
+        assert "DEP002" in report
+        # Severity is wrapped in yellow ANSI codes only when color is on.
+        assert ("[\033[93mWARNING\033[0m]" in report) is use_color
+        assert ("\033[" in report) is use_color
+        assert ("[WARNING]" in report) is not use_color
 
 
 # ── main CLI ───────────────────────────────────────────────────────────
@@ -206,23 +199,30 @@ class TestMain:
         exit_code = main([str(tmp_path / "nonexistent")])
         assert exit_code == 1
 
-    def test_severity_filter(self, tmp_path: Path):
+    @pytest.mark.parametrize(
+        ("severity", "reported"),
+        [("INFO", True), ("WARNING", False), ("ERROR", False)],
+    )
+    def test_severity_filter(self, tmp_path: Path, capsys: pytest.CaptureFixture[str], severity: str, reported: bool):
         from swgoh_comlink.migrate.__main__ import main
 
         f = tmp_path / "code.py"
         # DEP005 is INFO severity
         f.write_text("from swgoh_comlink.globals import get_logger\n")
-        # With INFO filter, should find it
-        exit_code = main([str(f), "--severity", "INFO"])
-        assert exit_code == 0
-        # With WARNING filter, should filter it out
-        exit_code = main([str(f), "--severity", "WARNING"])
-        assert exit_code == 0
 
-    def test_no_color_flag(self, tmp_path: Path):
+        assert main([str(f), "--severity", severity, "--no-color"]) == 0
+        out = capsys.readouterr().out
+        assert ("DEP005" in out) is reported
+        assert ("No migration issues found." in out) is not reported
+
+    @pytest.mark.parametrize("no_color", [True, False], ids=["no-color", "color"])
+    def test_no_color_flag(self, tmp_path: Path, capsys: pytest.CaptureFixture[str], no_color: bool):
         from swgoh_comlink.migrate.__main__ import main
 
         f = tmp_path / "code.py"
         f.write_text("import requests\n")
-        exit_code = main([str(f), "--no-color"])
-        assert exit_code == 0
+
+        assert main([str(f), *(["--no-color"] if no_color else [])]) == 0
+        out = capsys.readouterr().out
+        assert "DEP002" in out
+        assert ("\033[" in out) is not no_color

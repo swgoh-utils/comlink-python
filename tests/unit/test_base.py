@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import hashlib
-import logging
 from json import dumps
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, get_type_hints
 
 import pytest
+from typing_extensions import Self
 
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink._base import _SENSITIVE_KEYS, SwgohComlinkBase, param_alias, sanitize_url
@@ -82,9 +82,18 @@ class TestParamAlias:
 
 
 class TestBaseDirectInstantiation:
-    def test_cannot_instantiate_base_directly(self):
-        with pytest.raises(TypeError, match="Only subclasses"):
+    def test_only_subclasses_can_be_instantiated(self):
+        with pytest.raises(TypeError, match="Only subclasses of 'SwgohComlinkBase' may be instantiated"):
             SwgohComlinkBase()
+
+        class ChildSwgohClient(SwgohComlinkBase):
+            pass
+
+        assert isinstance(ChildSwgohClient(), ChildSwgohClient)
+
+    def test_new_is_annotated_to_return_self(self):
+        """Runtime twin of the static ``assert_type`` guard below."""
+        assert get_type_hints(SwgohComlinkBase.__new__)["return"] == Self
 
 
 # ── Constructor type inference (PR #98 regression guard) ─────────────────
@@ -398,21 +407,6 @@ class TestSensitiveKeyMasking:
     def test_sensitive_keys_set_contains_expected(self):
         assert "secret_key" in _SENSITIVE_KEYS
         assert "access_key" in _SENSITIVE_KEYS
-
-    def test_func_debug_logger_masks_sensitive_kwargs(self, caplog):
-        from swgoh_comlink.helpers import func_debug_logger
-
-        @func_debug_logger
-        def dummy(**kwargs):
-            return "ok"
-
-        with caplog.at_level(logging.DEBUG, logger="swgoh_comlink.helpers"):
-            dummy(secret_key="top_secret", access_key="pub_key", normal="visible")
-
-        log_output = caplog.text
-        assert "top_secret" not in log_output
-        assert "pub_key" not in log_output
-        assert "visible" in log_output
 
 
 # ── Version property (read-only) ────────────────────────────────────────
