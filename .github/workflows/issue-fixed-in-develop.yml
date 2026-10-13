@@ -1,0 +1,41 @@
+name: note issues fixed in develop
+
+# When a pull request merges into develop, comment on each still-open issue it resolves
+# (via "Closes #12" / "Fixes #12" in its description or commit messages).
+#
+# GitHub only closes issues for PRs merged into the default branch (main), so an issue fixed
+# on develop stays open with no sign of progress until the next release. This note fills that
+# gap; prepare-release then restates the same keywords in the release PR, and GitHub closes
+# the issue when the release merges into main. See .github/tools/closing_issues.py.
+#
+# Triggered by `push` rather than `pull_request_target`: a push to develop happens only after a
+# maintainer merges, runs entirely in this repository's context, and never executes or checks
+# out code from a fork — yet still gets a token that can comment on issues, fork PRs included.
+
+on:
+  push:
+    branches: [develop]
+
+permissions: {}
+
+concurrency:
+  group: issue-fixed-in-develop-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  note:
+    name: Comment on resolved issues
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Comment on open issues this merge resolves
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/tools/closing_issues.py develop --sha "${GITHUB_SHA}"
