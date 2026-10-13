@@ -351,6 +351,7 @@ This project uses the [Conventional Commits](https://www.conventionalcommits.org
 | `fix` | Bug fixes | Bug Fixes |
 | `perf` | Performance improvements | Performance Improvements |
 | `refactor` | Code restructuring (no behavior change) | Code Refactoring |
+| `revert` | Reverting an earlier change (`revert: <original subject>`) | Reverts |
 | `docs` | Documentation additions or updates | Docs |
 
 Other accepted types — `build`, `deps`, `chore`, `test`, `style`, `ci` — are valid but **not included** in the generated changelog.
@@ -367,7 +368,8 @@ Other accepted types — `build`, `deps`, `chore`, `test`, `style`, `ci` — are
 - `hmac`, `async`, `exceptions`, `typing` — focused areas of the clients
 - `deps`, `ci`, `docs`, `tests`, `examples`, `release`
 
-The full list lives in `.github/workflows/commitlint.yml`. Unknown scopes produce a warning, not a failure.
+Types and scopes are defined in [`.commitlintrc.json`](.commitlintrc.json), the single config used by both the
+pre-commit `commit-msg` hook and the CI **Commit Lint** check. Unknown scopes produce a warning, not a failure.
 
 **Examples:**
 
