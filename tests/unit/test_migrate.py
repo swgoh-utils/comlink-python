@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -30,7 +31,7 @@ class TestMigrationRule:
 
         rule = MigrationRule(id="T", pattern="p", severity="INFO", message="m", suggestion="s")
         with pytest.raises(FrozenInstanceError):
-            rule.id = "NEW"
+            cast(Any, rule).id = "NEW"
 
     def test_rules_list_not_empty(self):
         from swgoh_comlink.migrate._rules import RULES
