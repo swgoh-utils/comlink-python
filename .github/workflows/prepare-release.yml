@@ -23,6 +23,9 @@ on:
 
 permissions:
   contents: write
+  # Read merged PRs and their issues to restate closing keywords (closing_issues.py).
+  pull-requests: read
+  issues: read
 
 jobs:
   prepare:
@@ -71,6 +74,20 @@ jobs:
       - name: Regenerate CHANGELOG.md
         run: uv run git-changelog --bump '${{ inputs.bump }}'
 
+      # Closing keywords ("Closes #12") only fire for PRs merged into the default branch, so
+      # the ones in PRs merged into develop never close anything. Restate them in the release
+      # PR, which does merge into main, so the issues close when the release lands.
+      - name: Collect the issues this release closes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Newest release tag, not `git describe`: until the post-release back-merge lands,
+          # develop cannot reach the latest tag and describe would fall back to an older one.
+          since="$(git tag --list 'v*' --sort=-v:refname | head -n1)"
+          python3 .github/tools/closing_issues.py release --since "${since}" > "${RUNNER_TEMP}/closes.md"
+          cat "${RUNNER_TEMP}/closes.md"
+
       - name: Write the release PR text
         id: pr_text
         run: |
@@ -89,7 +106,8 @@ jobs:
             printf 'Automated release prep for **%s**. CHANGELOG.md regenerated via git-changelog.\n\n' "${tag}"
             printf 'Merging promotes `develop` -> `main` with the changelog already in place.\n'
             printf 'Afterwards, run the **release** workflow on `main` to build, publish, and tag %s.\n\n' "${tag}"
-            printf -- '---\n\n'
+            cat "${RUNNER_TEMP}/closes.md"
+            printf '\n---\n\n'
             printf '%s\n' "${notes}"
           } > "${body_file}"
 
