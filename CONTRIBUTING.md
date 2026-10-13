@@ -402,7 +402,27 @@ Closes #12
 
 Mark breaking changes with a `BREAKING CHANGE: <description>` footer — this drives the major version bump.
 **Don't use the `feat!:` shorthand:** the changelog generator's Angular convention doesn't recognize it, so the
-commit would be left out of the changelog entirely.
+commit would be left out of the changelog entirely. Commit Lint rejects `!` before the colon for this reason.
+
+> **Gotcha — accidental major bumps.** git-changelog decides a commit is breaking by matching
+> `^break(s|ing changes?)?[ :].+$` against **every line** of the message, case-insensitively. So any
+> body line that *starts* with `break`, `breaks`, `breaking change` or `breaking changes` followed by a
+> space or colon bumps the major version — even mid-paragraph prose that just happened to wrap there:
+>
+> ```
+> docs: explain the changelog conventions
+>
+> Commits must use the
+> BREAKING CHANGE footer (the angular convention ignores "feat!:").   <- bumps to 3.0.0!
+> ```
+>
+> Never start a body line with those words unless it is the intentional `BREAKING CHANGE: <description>`
+> footer — reflow the text so the word lands mid-line instead (`Commits must use the BREAKING CHANGE`
+> / `footer ...`). Upper-case `BREAKING CHANGE:` with a colon is the only form to use; `BREAKING-CHANGE:`
+> is not recognized at all. As a backstop, the **prepare release** workflow lists every line that
+> triggered a major in its job summary, and with `bump=auto` it stops unless one of them is the exact
+> `BREAKING CHANGE: ` footer. Check before pushing with
+> `uv run python .github/tools/breaking_changes.py --bump auto --next-tag "$(uv run git-changelog --bumped-version)"`.
 
 ---
 
@@ -514,7 +534,7 @@ Never paste your comlink `access_key` / `secret_key` into an issue.
 
 Releases are handled by the maintainer through GitHub Actions. Contributors don't need to manage versioning or releases, but here's how it works for reference:
 
-1. **prepare release** (`prepare-release.yml`) is dispatched on `develop`. It computes the next version from the Conventional Commits since the last tag (or a chosen `patch`/`minor`/`major` bump), regenerates `CHANGELOG.md`, and pushes a `release/vX.Y.Z` branch.
+1. **prepare release** (`prepare-release.yml`) is dispatched on `develop`. It computes the next version from the Conventional Commits since the last tag (or a chosen `patch`/`minor`/`major` bump), regenerates `CHANGELOG.md`, and pushes a `release/vX.Y.Z` branch. If the computed version is a major, the job summary lists the commit lines that triggered it, and an `auto` bump stops unless one is a real `BREAKING CHANGE:` footer (see [Commit Messages](#commit-messages)).
 2. The maintainer opens the release PR from that branch into `main` (a link is in the workflow summary). CI runs as normal and the PR is merged.
 3. **comlink-python release** (`release.yml`) is dispatched on `main`. It reads the version from `CHANGELOG.md`, builds the package — [hatch-vcs](https://github.com/ofek/hatch-vcs) stamps that version, so **no version string is committed to the repo** — and publishes to [PyPI](https://pypi.org/project/swgoh-comlink/) via trusted publishing.
 4. Only after a successful publish is the Git tag created and a GitHub Release cut, with release notes auto-generated from the PR history.
