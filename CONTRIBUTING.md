@@ -133,7 +133,7 @@ comlink-python/
 │   ├── workflows/
 │   │   ├── backmerge.yml           # Stages the main → develop back-merge after a release
 │   │   ├── ci.yml                  # CI pipeline (lint, type-check, test, docs, build)
-│   │   ├── commitlint.yml          # Commit message validation (npm-based)
+│   │   ├── commitlint.yml          # Commit message validation (runs the pre-commit hook)
 │   │   ├── docs.yml                # Publishes the docs site to GitHub Pages from main
 │   │   ├── integration.yml         # Integration tests against live comlink services
 │   │   ├── labeler.yml             # Auto-label PRs by file path
@@ -370,6 +370,9 @@ Other accepted types — `build`, `deps`, `chore`, `test`, `style`, `ci` — are
 
 Types and scopes are defined in [`.commitlintrc.json`](.commitlintrc.json), the single config used by both the
 pre-commit `commit-msg` hook and the CI **Commit Lint** check. Unknown scopes produce a warning, not a failure.
+The commitlint, preset and Node versions are pinned once, on the `commitlint` hook in
+[`.pre-commit-config.yaml`](.pre-commit-config.yaml); CI runs that same hook, so a message that passes locally
+passes in CI.
 
 **Examples:**
 
