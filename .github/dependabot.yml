@@ -1,4 +1,10 @@
 version: 2
+
+# Dependabot reads this file from the DEFAULT branch (main), not from target-branch, so
+# edits take effect only once they are released to main.
+#
+# Updates are grouped (one PR per group per week, not one per dependency), and the commit
+# prefix is pinned so Dependabot doesn't guess a type/scope from repo history.
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -8,6 +14,11 @@ updates:
     labels:
       - "dependencies"
       - "ci"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      github-actions:
+        patterns: ["*"]
 
   # "uv" (not "pip") so updates also refresh uv.lock
   - package-ecosystem: "uv"
@@ -18,3 +29,13 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # ruff and ty bumps routinely bring new lint/type diagnostics that need code fixes;
+      # keep them apart so they can't hold up the routine bumps. A dependency joins the
+      # FIRST group it matches, so this must stay above the catch-all.
+      astral-tools:
+        patterns: ["ruff", "ty"]
+      python:
+        patterns: ["*"]
