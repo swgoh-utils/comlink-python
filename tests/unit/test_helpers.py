@@ -594,9 +594,9 @@ class TestCalcCurrentStamina:
 
 
 class TestCalcStaminaFullTime:
-    def test_one_point_per_thirty_minutes(self):
-
-        unit = {"unitId": "u1", "remainingStamina": 90, "lastRefreshTime": str(_REFRESH)}
+    @pytest.mark.parametrize("remaining", [90, 90.0, "90"], ids=["int", "float", "str"])
+    def test_one_point_per_thirty_minutes(self, remaining: Any):
+        unit = {"unitId": "u1", "remainingStamina": remaining, "lastRefreshTime": str(_REFRESH)}
         assert calc_stamina_full_time(unit, now=_utc(_REFRESH + 3600)) == _utc(_REFRESH + 10 * 1800)
 
     def test_returns_aware_utc(self):
@@ -653,10 +653,11 @@ class TestCalcStaminaFullTime:
             [],
             {"lastRefreshTime": _REFRESH},
             {"remainingStamina": "full"},
+            {"remainingStamina": True},
             {"remainingStamina": float("inf"), "lastRefreshTime": _REFRESH},
             {"remainingStamina": float("nan"), "lastRefreshTime": _REFRESH},
         ],
-        ids=["none", "list", "no-stamina", "junk-stamina", "inf", "nan"],
+        ids=["none", "list", "no-stamina", "junk-stamina", "bool", "inf", "nan"],
     )
     def test_invalid_unit_raises(self, unit: Any):
 
@@ -1114,49 +1115,53 @@ _METADATA: dict[str, Any] = {
 
 class TestGetGameConfig:
     def test_all_keys(self):
+        # The duplicate stat-mod-max-level keeps its first value; a key without a value is dropped.
+        assert get_game_config(_METADATA) == {
+            "max-conquest-currency": "3500",
+            "stat-mod-max-storage": "500",
+            "stat-mod-max-level": "15",
+            "squad-preset-tab-total-max-squads-saved": "200",
+            "stat-mod-highlight-stat": "SPEED",
+            "conquest-energy-refresh-daily-cap": "CONQUEST_ENERGY_REFRESH_DAILY_CAP",
+        }
 
-        config = get_game_config(_METADATA)
-        assert config["max-conquest-currency"] == "3500"
-        assert config["stat-mod-highlight-stat"] == "SPEED"
-        assert "no-value" not in config
-        assert len(config) == 6
-
-    def test_duplicate_key_keeps_first_value(self):
-
-        assert get_game_config(_METADATA)["stat-mod-max-level"] == "15"
-        assert get_game_config(_METADATA, "stat-mod-max-level") == "15"
-
-    def test_single_key(self):
-
-        assert get_game_config(_METADATA, "stat-mod-max-storage") == "500"
-        assert get_game_config(_METADATA, "missing-key") is None
-        assert get_game_config(_METADATA, "no-value") is None
-
-    def test_config_list_is_accepted(self):
-
-        assert get_game_config(_METADATA["config"], "max-conquest-currency") == "3500"
+    @pytest.mark.parametrize(
+        ("source", "key", "expected"),
+        [
+            pytest.param(_METADATA, "stat-mod-max-storage", "500", id="single-key"),
+            pytest.param(_METADATA, "stat-mod-max-level", "15", id="duplicate-keeps-first"),
+            pytest.param(_METADATA, "missing-key", None, id="missing"),
+            pytest.param(_METADATA, "no-value", None, id="no-value"),
+            pytest.param(_METADATA["config"], "max-conquest-currency", "3500", id="config-list"),
+        ],
+    )
+    def test_single_key(self, source, key, expected):
+        assert get_game_config(source, key) == expected
 
     @pytest.mark.parametrize("metadata", [None, "config", {"latestGamedataVersion": "x"}, {"config": "x"}])
     def test_invalid_metadata_raises(self, metadata: Any):
-
         with pytest.raises(SwgohComlinkValueError, match="get_game_config"):
             get_game_config(metadata)
 
 
 class TestGetGameConfigInt:
-    def test_numeric_values(self):
-
-        assert get_game_config_int(_METADATA, "max-conquest-currency") == 3500
-        assert get_game_config_int(_METADATA, "squad-preset-tab-total-max-squads-saved") == 200
-
-    @pytest.mark.parametrize("key", ["missing-key", "stat-mod-highlight-stat", "conquest-energy-refresh-daily-cap"])
-    def test_missing_or_text_value_returns_default(self, key: str):
-
-        assert get_game_config_int(_METADATA, key) is None
-        assert get_game_config_int(_METADATA, key, 0) == 0
+    @pytest.mark.parametrize(
+        ("key", "default", "expected"),
+        [
+            ("max-conquest-currency", None, 3500),
+            ("squad-preset-tab-total-max-squads-saved", None, 200),
+            *(
+                pytest.param(key, default, default, id=f"{key}-default-{default}")
+                for key in ["missing-key", "stat-mod-highlight-stat", "conquest-energy-refresh-daily-cap"]
+                for default in (None, 0)
+            ),
+        ],
+    )
+    def test_reads_numeric_values(self, key: str, default: int | None, expected: int | None):
+        args = (_METADATA, key) if default is None else (_METADATA, key, default)
+        assert get_game_config_int(*args) == expected
 
     def test_invalid_metadata_raises(self):
-
         with pytest.raises(SwgohComlinkValueError, match="get_game_config_int"):
             get_game_config_int({}, "max-conquest-currency")
 
@@ -1351,30 +1356,41 @@ _EFFECT_LOC = {
 
 
 class TestGetNamedEffects:
-    def test_reads_every_key_family(self):
-
+    def test_reads_every_key_family_and_picks_the_authoritative_definition(self):
         effects = get_named_effects(_EFFECT_LOC)
-        assert list(effects) == sorted(
-            ["Concussion Mine", "Demoralized", "Fear", "Insight", "Overcharge", "Potency Up", "Provoked", "VIP",
-             "Vulnerable"]
-        )  # fmt: skip
-        assert effects["Potency Up"] == {
-            "name": "Potency Up",
-            "description": "Increased chance to apply detrimental effects",
-            "key": "BattleEffect_PotencyUp",
+        assert list(effects) == sorted(effects)
+        assert effects == {
+            "Concussion Mine": {
+                "name": "Concussion Mine",
+                "description": "Deals damage",
+                "key": "Battleeffect_ConcussionMine",
+            },
+            # The lowest tier wins.
+            "Demoralized": {"name": "Demoralized", "description": "tier 0", "key": "DEMORALIZED_DEBUFF_TIER0"},
+            "Fear": {"name": "Fear", "description": "Miss the next turn", "key": "FEAR_DEBUFF_DESC"},
+            "Insight": {"name": "Insight", "description": "additional effects", "key": "MOFFGIDEON_INSIGHT_V2"},
+            # BattleEffect_ beats the generic OVERCHARGE_BUFF_DESC; the colon may follow the closing tags.
+            "Overcharge": {
+                "name": "Overcharge",
+                "description": "Protection Temporarily Increased",
+                "key": "BattleEffect_Overcharge",
+            },
+            "Potency Up": {
+                "name": "Potency Up",
+                "description": "Increased chance to apply detrimental effects",
+                "key": "BattleEffect_PotencyUp",
+            },
+            # The newest _V<n> wins.
+            "Provoked": {
+                "name": "Provoked",
+                "description": "+100% counter chance\nnext line",
+                "key": "BattleEffect_Provoked_V2",
+            },
+            "VIP": {"name": "VIP", "description": "gain bonuses", "key": "50RT_VIP_ALLY"},
+            "Vulnerable": {"name": "Vulnerable", "description": "current", "key": "BattleEffect_Vulnerable_V2"},
         }
 
-    def test_picks_the_authoritative_definition(self):
-
-        effects = get_named_effects(_EFFECT_LOC)
-        assert effects["Overcharge"]["key"] == "BattleEffect_Overcharge"
-        assert effects["Overcharge"]["description"] == "Protection Temporarily Increased"
-        assert effects["Provoked"]["description"] == "+100% counter chance\nnext line"
-        assert effects["Vulnerable"]["description"] == "current"
-        assert effects["Demoralized"]["key"] == "DEMORALIZED_DEBUFF_TIER0"
-
     def test_invalid_input_raises(self):
-
         not_a_dict: Any = []
         with pytest.raises(SwgohComlinkValueError):
             get_named_effects(not_a_dict)
@@ -1418,29 +1434,36 @@ class TestAsInt:
         assert as_int(value, default=-1) == -1
 
 
-class TestAsStr:
-    @pytest.mark.parametrize(("value", "expected"), [("Rebels", "Rebels"), ("", ""), (42, ""), (None, ""), ([], "")])
-    def test_only_strings_pass(self, value: Any, expected: str):
+@pytest.mark.parametrize(
+    ("value", "kwargs", "expected"),
+    [
+        ("Rebels", {}, "Rebels"),
+        ("", {}, ""),
+        (42, {}, ""),
+        (None, {}, ""),
+        ([], {}, ""),
+        (None, {"default": "?"}, "?"),
+    ],
+)
+def test_as_str_only_passes_strings(value: Any, kwargs: dict[str, str], expected: str):
+    assert as_str(value, **kwargs) == expected
 
-        assert as_str(value) == expected
 
-    def test_custom_default(self):
-
-        assert as_str(None, default="?") == "?"
-
-
-class TestAsId:
-    @pytest.mark.parametrize(
-        ("value", "expected"),
-        [("O1700000000000:1", "O1700000000000:1"), (2, "2"), (0, "0"), ("", ""), (None, ""), (True, ""), (1.5, "")],
-    )
-    def test_reads_string_or_int(self, value: Any, expected: str):
-
-        assert as_id(value) == expected
-
-    def test_custom_default(self):
-
-        assert as_id(None, default="none") == "none"
+@pytest.mark.parametrize(
+    ("value", "kwargs", "expected"),
+    [
+        ("O1700000000000:1", {}, "O1700000000000:1"),
+        (2, {}, "2"),
+        (0, {}, "0"),
+        ("", {}, ""),
+        (None, {}, ""),
+        (True, {}, ""),
+        (1.5, {}, ""),
+        (None, {"default": "none"}, "none"),
+    ],
+)
+def test_as_id_reads_string_or_int(value: Any, kwargs: dict[str, str], expected: str):
+    assert as_id(value, **kwargs) == expected
 
 
 class TestAsScalar:
@@ -1467,25 +1490,19 @@ class TestAsEpoch:
             (100_000_000_000, datetime(1973, 3, 3, 9, 46, 40, tzinfo=timezone.utc)),
         ],
     )
-    def test_seconds_and_milliseconds(self, value: Any, expected: datetime):
-
-        assert as_epoch(value) == expected
+    def test_seconds_and_milliseconds_as_aware_utc(self, value: Any, expected: datetime):
+        moment = as_epoch(value)
+        # Aware datetimes compare by instant, so check the zone separately.
+        assert moment == expected
+        assert moment is not None and moment.tzinfo is timezone.utc
 
     @pytest.mark.parametrize("value", [None, 0, "0", "", "-5", -1, "abc", True, "99999999999999999999"])
     def test_no_time_returns_none(self, value: Any):
-
         assert as_epoch(value) is None
 
-    def test_result_is_aware_utc(self):
-
-        moment = as_epoch("1770515437000")
-        assert moment is not None
-        assert moment.tzinfo == timezone.utc
-
     def test_example_player_times(self, example_player):
-        player = example_player
-        assert as_epoch(player["lastActivityTime"]) == datetime(2026, 2, 8, 1, 50, 37, tzinfo=timezone.utc)
-        assert all(as_epoch(season["joinTime"]) for season in player["seasonStatus"])
+        assert as_epoch(example_player["lastActivityTime"]) == datetime(2026, 2, 8, 1, 50, 37, tzinfo=timezone.utc)
+        assert all(as_epoch(season["joinTime"]) for season in example_player["seasonStatus"])
 
 
 class TestAsList:
@@ -1533,26 +1550,77 @@ class TestBaseId:
         assert not any(":" in unit_id for unit_id in ids)
 
 
+# No <Type>_DEFAULT member, and one member is another's last word: a lower-case member name must
+# not also be read as a decoder-style name for that last word.
+_RESPONSE_CODES = {"OK": 0, "SERVER_ERROR": 1, "ERROR": 2, "FEATURE_SUSPENDED": 3, "SUSPENDED": 4}
+_METADATA_REQUEST_TYPES = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
+
+
 class TestParseEnum:
     @pytest.mark.parametrize(
-        ("value", "expected"),
+        ("value", "members", "kwargs", "expected"),
         [
-            (16, "SHARD_CURRENCY"),
-            ("16", "SHARD_CURRENCY"),
-            (" 16 ", "SHARD_CURRENCY"),
-            (0, "CurrencyType_DEFAULT"),
-            ("SHARD_CURRENCY", "SHARD_CURRENCY"),
-            ("shard_currency", "SHARD_CURRENCY"),
-            ("SHARDCURRENCY", "SHARD_CURRENCY"),
-            ("CURRENCYTYPE_SHARDCURRENCY", "SHARD_CURRENCY"),
-            ("CURRENCYTYPE_GUILDRAIDCURRENCY01", "GUILD_RAID_CURRENCY_01"),
-            ("CURRENCYTYPE_CURRENCYTYPEDEFAULT", "CurrencyType_DEFAULT"),
-            ("CurrencyType_DEFAULT", "CurrencyType_DEFAULT"),
+            # Every spelling of a member of an enum with a <Type>_DEFAULT member
+            *(
+                pytest.param(value, _CURRENCY, {}, expected, id=f"currency-{value!r}")
+                for value, expected in [
+                    (16, "SHARD_CURRENCY"),
+                    ("16", "SHARD_CURRENCY"),
+                    (" 16 ", "SHARD_CURRENCY"),
+                    (0, "CurrencyType_DEFAULT"),
+                    ("SHARD_CURRENCY", "SHARD_CURRENCY"),
+                    ("shard_currency", "SHARD_CURRENCY"),
+                    ("SHARDCURRENCY", "SHARD_CURRENCY"),
+                    ("CURRENCYTYPE_SHARDCURRENCY", "SHARD_CURRENCY"),
+                    ("CURRENCYTYPE_GUILDRAIDCURRENCY01", "GUILD_RAID_CURRENCY_01"),
+                    ("CURRENCYTYPE_CURRENCYTYPEDEFAULT", "CurrencyType_DEFAULT"),
+                    ("CurrencyType_DEFAULT", "CurrencyType_DEFAULT"),
+                ]
+            ),
+            # No <Type>_DEFAULT member: any type half is accepted unless enum_name is given.
+            pytest.param("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY, {}, "NORMAL_DIFF", id="decoder-any-type"),
+            pytest.param("OTHER_NORMALDIFF", _DIFFICULTY, {}, "NORMAL_DIFF", id="decoder-other-type"),
+            pytest.param(
+                "CAMPAIGNNODEDIFFICULTY_NORMALDIFF",
+                _DIFFICULTY,
+                {"enum_name": "CampaignNodeDifficulty"},
+                "NORMAL_DIFF",
+                id="decoder-named-type",
+            ),
+            pytest.param(
+                "OTHER_NORMALDIFF", _DIFFICULTY, {"enum_name": "CampaignNodeDifficulty"}, None, id="decoder-wrong-type"
+            ),
+            *(
+                pytest.param(value, _RESPONSE_CODES, {}, expected, id=f"case-variant-{value}")
+                for value, expected in [
+                    ("server_error", "SERVER_ERROR"),
+                    ("Server_Error", "SERVER_ERROR"),
+                    ("SERVER_ERROR", "SERVER_ERROR"),
+                    ("error", "ERROR"),
+                    ("feature_suspended", "FEATURE_SUSPENDED"),
+                    # Upper-case with one underscore is still read as a decoder-style name
+                    ("RESPONSECODE_SUSPENDED", "SUSPENDED"),
+                ]
+            ),
+            # "DEFAULT" is both a member and the <Type>_DEFAULT suffix.
+            pytest.param("METADATAREQUESTTYPE_DEFAULT", _METADATA_REQUEST_TYPES, {}, None, id="ambiguous"),
+            pytest.param("DEFAULT", _METADATA_REQUEST_TYPES, {}, "DEFAULT", id="ambiguous-exact-member"),
+            pytest.param(
+                "METADATAREQUESTTYPE_CLIENTPARAMS", _METADATA_REQUEST_TYPES, {}, "CLIENT_PARAMS", id="unambiguous"
+            ),
+            pytest.param(
+                "metadatarequesttype_default",
+                _METADATA_REQUEST_TYPES,
+                {},
+                "MetadataRequestType_DEFAULT",
+                id="lower-case-type-default",
+            ),
+            pytest.param(1, {"OLD_NAME": 1, "NEW_NAME": 1}, {}, "OLD_NAME", id="alias-returns-first-name"),
+            pytest.param("-1", {"ALL": -1, "NONE": 0}, {}, "ALL", id="negative-number"),
         ],
     )
-    def test_every_spelling(self, value: Any, expected: str):
-
-        assert parse_enum(value, _CURRENCY) == expected
+    def test_reads_member_names(self, value: Any, members: dict[str, int], kwargs: dict[str, str], expected):
+        assert parse_enum(value, members, **kwargs) == expected
 
     @pytest.mark.parametrize(
         "value",
@@ -1580,62 +1648,10 @@ class TestParseEnum:
         ],
     )
     def test_unknown_returns_none(self, value: Any):
-
         assert parse_enum(value, _CURRENCY) is None
-
-    def test_decoder_name_without_known_type(self):
-
-        # No <Type>_DEFAULT member, so any type half is accepted unless enum_name is given.
-        assert parse_enum("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY) == "NORMAL_DIFF"
-        assert parse_enum("OTHER_NORMALDIFF", _DIFFICULTY) == "NORMAL_DIFF"
-        assert (
-            parse_enum("CAMPAIGNNODEDIFFICULTY_NORMALDIFF", _DIFFICULTY, enum_name="CampaignNodeDifficulty")
-            == "NORMAL_DIFF"
-        )
-        assert parse_enum("OTHER_NORMALDIFF", _DIFFICULTY, enum_name="CampaignNodeDifficulty") is None
-
-    def test_ambiguous_spelling_returns_none(self):
-
-        members = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
-        assert parse_enum("METADATAREQUESTTYPE_DEFAULT", members) is None
-        assert parse_enum("DEFAULT", members) == "DEFAULT"
-        assert parse_enum("METADATAREQUESTTYPE_CLIENTPARAMS", members) == "CLIENT_PARAMS"
-
-    @pytest.mark.parametrize(
-        ("value", "expected"),
-        [
-            ("server_error", "SERVER_ERROR"),
-            ("Server_Error", "SERVER_ERROR"),
-            ("SERVER_ERROR", "SERVER_ERROR"),
-            ("error", "ERROR"),
-            ("feature_suspended", "FEATURE_SUSPENDED"),
-            # Upper-case with one underscore is still read as a decoder-style name
-            ("RESPONSECODE_SUSPENDED", "SUSPENDED"),
-        ],
-    )
-    def test_case_variant_without_known_type(self, value: str, expected: str):
-
-        # No <Type>_DEFAULT member, and one member is another's last word: a lower-case member
-        # name must not also be read as a decoder-style name for that last word.
-        members = {"OK": 0, "SERVER_ERROR": 1, "ERROR": 2, "FEATURE_SUSPENDED": 3, "SUSPENDED": 4}
-        assert parse_enum(value, members) == expected
-
-    def test_lower_case_type_default_member(self):
-
-        members = {"MetadataRequestType_DEFAULT": 0, "DEFAULT": 1, "CLIENT_PARAMS": 2}
-        assert parse_enum("metadatarequesttype_default", members) == "MetadataRequestType_DEFAULT"
-
-    def test_alias_value_returns_first_name(self):
-
-        assert parse_enum(1, {"OLD_NAME": 1, "NEW_NAME": 1}) == "OLD_NAME"
-
-    def test_negative_numbers(self):
-
-        assert parse_enum("-1", {"ALL": -1, "NONE": 0}) == "ALL"
 
     @pytest.mark.parametrize("members", [None, [], "CurrencyType"])
     def test_invalid_members_raises(self, members: Any):
-
         with pytest.raises(SwgohComlinkValueError, match=r"parse_enum\(\)"):
             parse_enum(16, members)
 
@@ -1675,7 +1691,10 @@ _ITEM_GAME_DATA: dict[str, Any] = {
     ],
     "equipment": [{"id": "016", "nameKey": "EQUIPMENT_016_NAME"}],
     "mysteryBox": [{"id": "mysterybox_era_T1", "titleKey": "MYSTERYBOX_ERA_T1_TITLE", "descKey": "X"}],
-    "playerTitle": [{"id": "PLAYERTITLE_GRANDARENA_INTRO", "nameKey": "PLAYERTITLE_GRANDARENA_INTRO_NAME"}],
+    "playerTitle": [
+        {"id": "PLAYERTITLE_GRANDARENA_INTRO", "nameKey": "PLAYERTITLE_GRANDARENA_INTRO_NAME"},
+        {"id": "PLAYERTITLE_NO_NAME", "nameKey": ""},
+    ],
     "playerPortrait": [{"id": "PLAYERPORTRAIT_MISSION", "nameKey": "PLAYERPORTRAIT_MISSION_NAME"}],
     "artifactDefinition": [
         {"id": "artifact_guard_and_pentrate_3_cost_rare", "nameKey": "ARTIFACT_GURAD_AND_PENTRATE_3_COST_RARE_NAME"}
@@ -1697,6 +1716,9 @@ _ITEM_GAME_DATA: dict[str, Any] = {
         # Game data fetched with enums=True carries enum names in place of the numbers.
         {"id": "enum", "slot": ["STATMOD_SLOT_02"], "setId": "4", "minRarity": "SIX_STAR", "maxRarity": "SIX_STAR",
          "minTier": "STATMOD_TIER_05", "maxTier": "STATMOD_TIER_05"},
+        # Unreadable rarities are shown as "?".
+        {"id": "unreadable", "slot": [2], "setId": "4", "minRarity": True, "maxRarity": None, "minTier": 1,
+         "maxTier": 1},
     ],
 }  # fmt: skip
 
@@ -1812,6 +1834,7 @@ class TestItemNames:
             ("MYSTERY_STAT_MOD", "11112", "1-2-dot Speed any-slot mod (E-D)"),
             (16, "two", "5-dot Speed Square or Arrow mod (E)"),
             (16, "enum", "6-dot Speed Arrow mod (A)"),
+            (16, "unreadable", "?-dot Speed Square mod (E)"),
         ],
     )
     def test_names_each_item_type(self, item_type: Any, item_id: Any, expected: str):
@@ -1827,6 +1850,7 @@ class TestItemNames:
             (3, "NOT_A_CURRENCY"),
             (3, "99"),
             (16, "missing"),
+            (17, "PLAYERTITLE_NO_NAME"),  # an empty name key resolves to nothing
             ("NOT_AN_ITEM_TYPE", "016"),
             (None, "016"),
         ],
@@ -1850,15 +1874,17 @@ class TestItemNames:
         # Mystery mods fall back to the English set names.
         assert names.get(16, "35155") == "5-dot Defense Square mod (A)"
 
-    def test_invalid_input_raises(self):
-
-        not_a_dict: Any = []
-        with pytest.raises(SwgohComlinkValueError, match="game_data"):
-            ItemNames(not_a_dict)
-        with pytest.raises(SwgohComlinkValueError, match="material"):
-            ItemNames({"material": {}})
-        with pytest.raises(SwgohComlinkValueError, match="localization"):
-            ItemNames({}, not_a_dict)
+    @pytest.mark.parametrize(
+        ("args", "match"),
+        [
+            pytest.param(([],), "game_data", id="game-data-not-dict"),
+            pytest.param(({"material": {}},), "material", id="collection-not-list"),
+            pytest.param(({}, []), "localization", id="localization-not-dict"),
+        ],
+    )
+    def test_invalid_input_raises(self, args: tuple[Any, ...], match: str):
+        with pytest.raises(SwgohComlinkValueError, match=match):
+            ItemNames(*args)
 
 
 def _recorded_enums() -> dict[str, Any]:
@@ -1959,14 +1985,16 @@ class TestGetNamedRewards:
         assert credits["requirement_id"] is None
         assert xp["id"] == ""
 
-    def test_invalid_input_raises(self):
-
-        not_a_list: Any = {}
-        with pytest.raises(SwgohComlinkValueError, match="get_named_rewards"):
-            get_named_rewards(not_a_list, ItemNames({}))
-        not_item_names: Any = {}
-        with pytest.raises(SwgohComlinkValueError, match="item_names"):
-            get_named_rewards([], not_item_names)
+    @pytest.mark.parametrize(
+        ("rewards", "item_names", "match"),
+        [
+            pytest.param({}, ItemNames({}), "get_named_rewards", id="rewards-not-list"),
+            pytest.param([], {}, "item_names", id="item-names-wrong-type"),
+        ],
+    )
+    def test_invalid_input_raises(self, rewards: Any, item_names: Any, match: str):
+        with pytest.raises(SwgohComlinkValueError, match=match):
+            get_named_rewards(rewards, item_names)
 
     def test_item_without_type_and_non_dict_bucket_items(self):
 
@@ -2561,6 +2589,14 @@ def _enum_tiers(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{**row, "tier": f"TIER_{row['tier']:02d}"} for row in rows]
 
 
+def _digit_tiers(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """``rows`` with their UnitTier ``tier`` as a numeric string."""
+    return [{**row, "tier": str(row["tier"])} for row in rows]
+
+
+_TIER_SPELLINGS = [pytest.param(_enum_tiers, id="enum-names"), pytest.param(_digit_tiers, id="digit-strings")]
+
+
 def _cost(credits: int = 0, ship_credits: int = 0, materials: Any = None, equipment: Any = None) -> dict[str, Any]:
     return {"credits": credits, "ship_credits": ship_credits, "materials": materials or {},
             "equipment": equipment or {}}  # fmt: skip
@@ -2580,9 +2616,9 @@ class TestGetUnitGearTiers:
 
         assert get_unit_gear_tiers(_UPGRADE_UNITS, "SHIP") == []
 
-    def test_enum_tier_names_match_integers(self):
-
-        units = [{**_UPGRADE_UNITS[0], "unitTier": _enum_tiers(_HERO_TIERS)}]
+    @pytest.mark.parametrize("spell", _TIER_SPELLINGS)
+    def test_tier_spellings_match_integers(self, spell):
+        units = [{**_UPGRADE_UNITS[0], "unitTier": spell(_HERO_TIERS)}]
         assert get_unit_gear_tiers(units, "HERO") == get_unit_gear_tiers(_UPGRADE_UNITS, "HERO")
 
     @pytest.mark.parametrize(
@@ -2627,12 +2663,15 @@ class TestGetGearCraftTree:
             credits=20350 + 14000 + 2 * 5150, equipment={"164PrototypeSalvage": 30, "156Salvage": 40}
         )
 
-    def test_enum_tier_names_match_integers(self):
-
-        enum_equipment = _enum_tiers(_UPGRADE_EQUIPMENT)
-        tree = get_gear_craft_tree(enum_equipment, _UPGRADE_RECIPES, "164")
+    @pytest.mark.parametrize("spell", _TIER_SPELLINGS)
+    def test_tier_spellings_match_integers(self, spell):
+        tree = get_gear_craft_tree(spell(_UPGRADE_EQUIPMENT), _UPGRADE_RECIPES, "164")
         assert tree == get_gear_craft_tree(_UPGRADE_EQUIPMENT, _UPGRADE_RECIPES, "164")
         assert (tree["tier"], tree["ingredients"][1]["tier"]) == (12, 7)
+
+    @pytest.mark.parametrize("tier", [None, "TIER_UNDEFINED"])
+    def test_missing_tier_counts_as_zero(self, tier):
+        assert get_gear_craft_tree([{**_piece("001"), "tier": tier}], [], "001")["tier"] == 0
 
     def test_unrecognized_tier_raises(self):
 
