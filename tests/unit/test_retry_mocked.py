@@ -506,6 +506,21 @@ def test_sync_rate_refusal_does_not_hold_unpaced_endpoints(httpx_mock: HTTPXMock
     client.close()
 
 
+def test_retry_policy_assigned_after_construction_still_waits(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    """The pacer is built in __init__, so a policy assigned later retries without holding the endpoint."""
+    httpx_mock.add_callback(_refuse_first(1), is_reusable=True)
+    client = SwgohComlink(url=URL)
+    client.retry_policy = RetryPolicy()
+
+    client.get_player(allycode=123456789)
+    client.get_player(allycode=987654321)
+
+    # The refused call waits out its own retry; with no pacer, the next call is not held.
+    assert waits == [5.0]
+    assert len(httpx_mock.get_requests()) == 3
+    client.close()
+
+
 async def test_async_rate_refusal_holds_back_concurrent_callers(httpx_mock: HTTPXMock, waits: list[float]) -> None:
     httpx_mock.add_callback(_refuse_first(1), is_reusable=True)
 

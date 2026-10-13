@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -336,13 +336,15 @@ def test_is_omicron_skill(skills, kwargs, expected):
 @pytest.mark.parametrize(
     ("call", "match"),
     [
-        pytest.param(lambda: get_tw_omicrons("not a list"), "list", id="tw-not-list"),
-        pytest.param(lambda: get_omicron_skills("bad", 8), "list", id="skills-not-list"),
-        pytest.param(lambda: get_omicron_skills([], "bad"), "omicron_type", id="bad-omicron-type"),
-        pytest.param(lambda: get_omicron_skill_tier("not a dict"), "dictionary", id="tier-not-dict"),
+        pytest.param(lambda: get_tw_omicrons(cast(Any, "not a list")), "list", id="tw-not-list"),
+        pytest.param(lambda: get_omicron_skills(cast(Any, "bad"), 8), "list", id="skills-not-list"),
+        pytest.param(lambda: get_omicron_skills([], cast(Any, "bad")), "omicron_type", id="bad-omicron-type"),
+        pytest.param(lambda: get_omicron_skill_tier(cast(Any, "not a dict")), "dictionary", id="tier-not-dict"),
         pytest.param(lambda: get_omicron_skill_tier({"id": "skill_A"}), "tier", id="tier-key-missing"),
-        pytest.param(lambda: is_omicron_skill("bad", skill_id="s", skill_tier=1), "list", id="is-not-list"),
-        pytest.param(lambda: is_omicron_skill([], skill_id=123, skill_tier=1), "skill_id", id="bad-skill-id"),
+        pytest.param(lambda: is_omicron_skill(cast(Any, "bad"), skill_id="s", skill_tier=1), "list", id="is-not-list"),
+        pytest.param(
+            lambda: is_omicron_skill([], skill_id=cast(Any, 123), skill_tier=1), "skill_id", id="bad-skill-id"
+        ),
         pytest.param(lambda: is_omicron_skill([], skill_id="", skill_tier=0), "are required", id="no-skill-id-or-tier"),
         pytest.param(
             lambda: is_omicron_skill([], roster_unit_skill={"id": "", "tier": 0}), "Invalid", id="bad-roster-skill"
@@ -379,12 +381,12 @@ class TestGetUnitFromSkill:
     def test_invalid_unit_list_raises(self):
 
         with pytest.raises(SwgohComlinkValueError, match="list"):
-            get_unit_from_skill("bad", "skill")
+            get_unit_from_skill(cast(Any, "bad"), "skill")
 
     def test_invalid_skill_type_raises(self):
 
         with pytest.raises(SwgohComlinkValueError, match="string"):
-            get_unit_from_skill([], 123)
+            get_unit_from_skill([], cast(Any, 123))
 
 
 # ── _game_data ──────────────────────────────────────────────────────────
@@ -453,7 +455,7 @@ class TestCreateLocalizedUnitNameDictionary:
 
     def test_invalid_type_raises(self):
         with pytest.raises(SwgohComlinkValueError, match="list"):
-            create_localized_unit_name_dictionary(12345)
+            create_localized_unit_name_dictionary(cast(Any, 12345))
 
 
 class TestGetPlayableUnits:
@@ -474,7 +476,7 @@ class TestGetPlayableUnits:
 
     def test_invalid_type_raises(self):
         with pytest.raises(SwgohComlinkValueError, match="list"):
-            get_playable_units("bad")
+            get_playable_units(cast(Any, "bad"))
 
 
 class TestGetCurrentDatacronSets:
@@ -493,7 +495,7 @@ class TestGetCurrentDatacronSets:
     def test_invalid_type_raises(self):
 
         with pytest.raises(SwgohComlinkValueError, match="list"):
-            get_current_datacron_sets("bad")
+            get_current_datacron_sets(cast(Any, "bad"))
 
 
 class TestGetDatacronDismantleValue:

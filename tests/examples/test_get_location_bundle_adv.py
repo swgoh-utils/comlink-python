@@ -1,5 +1,7 @@
 """Tests for parse_loc_zip from examples/Sync/get_location_bundle_adv.py.
 
+These test an example script, not the library, so they live outside tests/unit/.
+
 Validates zip -> JSON parsing, comment skipping, delimiter handling, directory skipping,
 encoding support, and output file creation.
 """

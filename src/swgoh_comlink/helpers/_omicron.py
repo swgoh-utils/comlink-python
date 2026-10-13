@@ -3,10 +3,16 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
 from typing import Any, NamedTuple
 
 from ..exceptions import SwgohComlinkValueError
+
+
+class Unit(NamedTuple):
+    """The unit that owns a skill, as returned by :func:`get_unit_from_skill`."""
+
+    baseId: str | None
+    nameKey: str | None
 
 
 def get_tw_omicrons(skill_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -135,7 +141,7 @@ def is_omicron_skill(
     return result
 
 
-def get_unit_from_skill(unit_list: list[dict[str, Any]], skill: str) -> NamedTuple | None:
+def get_unit_from_skill(unit_list: list[dict[str, Any]], skill: str) -> Unit | None:
     """
     Extracts the base ID and name key of a unit from a list of units based on a specific skill.
 
@@ -144,8 +150,8 @@ def get_unit_from_skill(unit_list: list[dict[str, Any]], skill: str) -> NamedTup
       skill (str): The skill to search for in the 'skillReference' field of each unit.
 
     Returns:
-      NamedTuple | None: Returns a namedtuple containing the 'baseId' and 'nameKey' of the first
-        unit that matches the specified skill, or None if no such unit is found.
+      Unit | None: A ``Unit`` named tuple with the 'baseId' and 'nameKey' of the first unit
+        that matches the specified skill, or None if no such unit is found.
 
     Raises:
       SwgohComlinkValueError: If 'unit_list' is not of type list.
@@ -162,13 +168,11 @@ def get_unit_from_skill(unit_list: list[dict[str, Any]], skill: str) -> NamedTup
             return False
         return any(value in d.values() for d in dict_list)
 
-    Unit = namedtuple("Unit", "baseId nameKey")
-    base_ids: list[NamedTuple] = [
-        Unit(unit.get("baseId"), unit.get("nameKey"))
-        for unit in unit_list
-        if skill_exists(skill, unit.get("skillReference"))
-    ]
-    if base_ids:
-        return base_ids[0]
-    else:
-        return None
+    return next(
+        (
+            Unit(unit.get("baseId"), unit.get("nameKey"))
+            for unit in unit_list
+            if skill_exists(skill, unit.get("skillReference"))
+        ),
+        None,
+    )

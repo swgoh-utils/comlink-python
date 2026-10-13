@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import logging
 import pickle
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from email.utils import format_datetime
 from typing import Any
@@ -128,10 +129,19 @@ def test_retry_after_delta_seconds(header: str, expected: float | None) -> None:
     assert SwgohComlinkHTTPError.from_response(response).retry_after == expected
 
 
-def test_retry_after_http_date() -> None:
+@pytest.mark.parametrize(
+    "fmt",
+    [
+        pytest.param(lambda when: format_datetime(when, usegmt=True), id="gmt"),
+        pytest.param(format_datetime, id="+0000"),
+        # A naive datetime formats with the "-0000" zone, which parses back naive and is read as UTC.
+        pytest.param(lambda when: format_datetime(when.replace(tzinfo=None)), id="-0000"),
+    ],
+)
+def test_retry_after_http_date(fmt: Callable[[datetime], str]) -> None:
     now = datetime.now(timezone.utc)
-    future = format_datetime(now + timedelta(seconds=30), usegmt=True)
-    past = format_datetime(now - timedelta(seconds=30), usegmt=True)
+    future = fmt(now + timedelta(seconds=30))
+    past = fmt(now - timedelta(seconds=30))
 
     later = SwgohComlinkHTTPError.from_response(httpx.Response(503, headers={"Retry-After": future}))
     earlier = SwgohComlinkHTTPError.from_response(httpx.Response(503, headers={"Retry-After": past}))

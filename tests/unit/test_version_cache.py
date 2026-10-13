@@ -1,16 +1,17 @@
 """Tests for the instance-level game/localization version cache.
 
 The cache rules run against both clients via the ``comlink``/``make_comlink`` and ``call``
-fixtures in tests/unit/conftest.py. The async single-flight test stays async-only: it
-exercises concurrent cold calls, which have no sync equivalent.
+fixtures in tests/unit/conftest.py. The lock tests are written per client, since a thread
+lock and an asyncio lock are driven differently.
 """
 
 from __future__ import annotations
 
 import asyncio
 import math
+import threading
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from pytest_httpx import HTTPXMock
@@ -166,12 +167,66 @@ def test_negative_ttl_rejected(make_comlink: Callable[..., Client]):
         make_comlink(version_cache_ttl=-1)
 
 
-# ── Concurrency (async only) ─────────────────────────────────────────────
+# ── Concurrency: a caller waiting on the version lock ────────────────────
+#
+# Each test holds the version lock as if a first caller were fetching /metadata, starts a second
+# caller that finds the cache cold and waits for the lock, fills the cache, then releases the lock.
+# The second caller must use the stored versions instead of fetching /metadata again. No response
+# is mocked, so any request fails the test.
 
 
-async def test_async_concurrent_cold_calls_single_flight(httpx_mock: HTTPXMock):
-    _mock_endpoints(httpx_mock)
+def test_sync_caller_waiting_on_the_version_lock_uses_the_stored_versions(httpx_mock: HTTPXMock):
+    lock = threading.Lock()
+    waiting = threading.Event()
+
+    class SignalingLock:
+        def __enter__(self) -> None:
+            waiting.set()
+            lock.acquire()
+
+        def __exit__(self, *exc: object) -> None:
+            lock.release()
+
+    client = SwgohComlink(url=BASE_URL)
+    cast(Any, client)._version_lock = SignalingLock()
+    result: dict[str, Any] = {}
+    lock.acquire()
+    second = threading.Thread(target=lambda: result.update(versions=client._get_versions()))
+    second.start()
+    try:
+        assert waiting.wait(timeout=5), "the second caller never reached the lock"
+        client._store_versions("game-v1", "lang-v1")
+    finally:
+        lock.release()
+        second.join(timeout=5)
+        client.close()
+
+    assert (result["versions"].game, result["versions"].language) == ("game-v1", "lang-v1")
+    assert httpx_mock.get_requests() == []
+
+
+async def test_async_caller_waiting_on_the_version_lock_uses_the_stored_versions(httpx_mock: HTTPXMock):
+    lock = asyncio.Lock()
+    waiting = asyncio.Event()
+
+    class SignalingLock:
+        async def __aenter__(self) -> None:
+            waiting.set()
+            await lock.acquire()
+
+        async def __aexit__(self, *exc: object) -> None:
+            lock.release()
+
     async with SwgohComlinkAsync(url=BASE_URL) as client:
-        await asyncio.gather(client.get_game_data(), client.get_game_data(), client.get_localization())
+        cast(Any, client)._version_lock = SignalingLock()
+        await lock.acquire()
+        second = asyncio.create_task(client._get_versions())
+        try:
+            await asyncio.wait_for(waiting.wait(), timeout=5)
+            client._store_versions("game-v1", "lang-v1")
+        finally:
+            lock.release()
+        versions = await second
 
-    assert len(_metadata_requests(httpx_mock)) == 1
+    assert (versions.game, versions.language) == ("game-v1", "lang-v1")
+    assert httpx_mock.get_requests() == []

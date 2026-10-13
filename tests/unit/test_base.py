@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from json import dumps
-from typing import TYPE_CHECKING, get_type_hints
+from typing import TYPE_CHECKING, Any, cast, get_type_hints
 
 import pytest
 from typing_extensions import Self
@@ -349,7 +349,7 @@ class TestBuildUnitStatsEndpoint:
 
     def test_non_list_flags_raises(self):
         with pytest.raises(SwgohComlinkValueError, match="flags"):
-            SwgohComlinkBase._build_unit_stats_endpoint(flags="calcGP")
+            SwgohComlinkBase._build_unit_stats_endpoint(flags=cast(Any, "calcGP"))
 
 
 # ── _mask ─────────────────────────────────────────────────────────────────
