@@ -128,6 +128,9 @@ dev = [
     "ruff>=0.8",
 ]
 docs = [
+    # MkDocs 2.0 removes the plugin system (mkdocstrings) and theme overrides that this
+    # site depends on, with no migration path — stay on 1.x until the ecosystem settles.
+    "mkdocs>=1.6,<2",
     "mkdocs-material>=9.5.0",
     "mkdocstrings[python]>=0.28.0",
 ]
