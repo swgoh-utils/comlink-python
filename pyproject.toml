@@ -166,6 +166,8 @@ ignore = [
 # Existing violations to address incrementally — do not add new suppressions
 "src/swgoh_comlink/__init__.py" = ["UP036"]   # outdated version block (sys.exit check)
 "src/swgoh_comlink/helpers/*.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
+# Examples assign results to named variables to show what each call returns
+"examples/**" = ["F841"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["swgoh_comlink"]
