@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/swgoh-utils/comlink-python/security/advisories/new
+    about: Please report security issues privately, not as a public issue. See SECURITY.md.
+  - name: swgoh-comlink service issues
+    url: https://github.com/swgoh-utils/swgoh-comlink/issues
+    about: Problems with the comlink service itself (game data, Docker image, service errors) belong in the upstream project.
+  - name: Questions and discussion (Discord)
+    url: https://discord.gg/6PBfG5MzR3
+    about: Ask usage questions and chat with the community in the swgoh-utils Discord.

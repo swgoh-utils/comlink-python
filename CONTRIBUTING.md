@@ -26,6 +26,10 @@ Thanks for your interest in contributing to comlink-python! This guide covers ev
 
 Be respectful, constructive, and patient. We're all here because we enjoy the game and want to build useful tools for the community. Harassment, insults, and unconstructive negativity won't be tolerated.
 
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold it.
+
+> **Found a security vulnerability?** Please don't open a public issue — follow the private reporting process in [SECURITY.md](SECURITY.md).
+
 ---
 
 ## Getting Started
@@ -108,6 +112,8 @@ comlink-python/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.yml          # Bug report template
+│   │   ├── config.yml              # Issue chooser links (security, upstream comlink, Discord)
+│   │   ├── documentation.yml       # Documentation issue template
 │   │   └── feature_request.yml     # Feature request template
 │   ├── workflows/
 │   │   ├── ci.yml                  # CI pipeline (lint, type-check, test, docs, build)
@@ -175,9 +181,11 @@ comlink-python/
 ├── pyproject.toml                    # Project metadata, build config, tool settings
 ├── uv.lock                           # Locked dependency versions
 ├── CHANGELOG.md                      # Auto-generated from commit history
+├── CODE_OF_CONDUCT.md                # Contributor Covenant code of conduct
 ├── CONTRIBUTING.md                   # This file
 ├── LICENSE                           # MIT License
-└── README.md
+├── README.md
+└── SECURITY.md                       # Supported versions and vulnerability reporting
 ```
 
 ### Key modules at a glance
