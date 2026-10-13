@@ -3,11 +3,19 @@
 Tests use two Comlink instances:
 - Port 3000: open access (no HMAC)
 - Port 3001: HMAC-protected (requires ACCESS_KEY and SECRET_KEY secrets)
+
+Each request test runs once per client through the ``make_comlink`` and ``call`` fixtures in
+conftest.py.
 """
+
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 import pytest
 
-from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
+from swgoh_comlink import SwgohComlink
 from swgoh_comlink.exceptions import SwgohComlinkException
 
 from .conftest import (
@@ -15,14 +23,13 @@ from .conftest import (
     HMAC_ACCESS_KEY,
     HMAC_SECRET_KEY,
     TEST_ALLYCODE,
+    Client,
 )
 
-pytestmark = pytest.mark.integration
-
-hmac_configured = pytest.mark.skipif(
-    not HMAC_ACCESS_KEY or not HMAC_SECRET_KEY,
-    reason="HMAC secrets not configured",
-)
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(not HMAC_ACCESS_KEY or not HMAC_SECRET_KEY, reason="HMAC secrets not configured"),
+]
 
 # SwgohComlinkException wraps transport failures as well as HTTP status errors, so a
 # bare `pytest.raises(SwgohComlinkException)` is satisfied by "connection refused" —
@@ -31,136 +38,53 @@ hmac_configured = pytest.mark.skipif(
 REJECTED = r"HTTP 4\d{2}"
 
 
-# ── Sync: valid HMAC ────────────────────────────────────────────────────
-
-
-@hmac_configured
-def test_hmac_sync_request_succeeds(comlink_hmac):
-    """Sync client with correct HMAC keys can reach a signed POST endpoint.
-
-    Uses `metadata` rather than `enums`: HMAC is only enforced on POST, so a GET
-    endpoint would pass whether or not request signing works at all.
-    """
-    result = comlink_hmac.get_game_metadata()
+@pytest.mark.parametrize(
+    ("method", "kwargs", "populated_key"),
+    [
+        # `metadata` rather than `enums`: HMAC is only enforced on POST, so a GET
+        # endpoint would pass whether or not request signing works at all.
+        pytest.param("get_game_metadata", {}, "latestGamedataVersion", id="metadata"),
+        pytest.param("get_player", {"allycode": TEST_ALLYCODE}, "name", id="player"),
+    ],
+)
+async def test_signed_request_succeeds(
+    make_comlink: Callable[..., Client],
+    call: Callable[..., Awaitable[Any]],
+    method: str,
+    kwargs: dict[str, Any],
+    populated_key: str,
+):
+    """A client with correct HMAC keys can reach a signed POST endpoint."""
+    client = make_comlink(url=COMLINK_HMAC_URL, access_key=HMAC_ACCESS_KEY, secret_key=HMAC_SECRET_KEY)
+    result = await call(client, method, **kwargs)
     assert isinstance(result, dict)
-    assert result.get("latestGamedataVersion"), "signed POST must return real metadata"
+    assert result.get(populated_key), f"signed POST must return a populated {populated_key!r}"
 
 
-@hmac_configured
-def test_hmac_sync_player_request_succeeds(comlink_hmac):
-    """Sync HMAC client can fetch a player profile from the protected endpoint."""
-    result = comlink_hmac.get_player(allycode=TEST_ALLYCODE)
-    assert isinstance(result, dict)
-    assert result["name"]
+@pytest.mark.parametrize(
+    "credentials",
+    [
+        pytest.param({}, id="no-key"),
+        pytest.param({"access_key": HMAC_ACCESS_KEY, "secret_key": "wrong_secret_key"}, id="wrong-key"),
+    ],
+)
+async def test_unsigned_or_badly_signed_request_is_rejected(
+    make_comlink: Callable[..., Client], call: Callable[..., Awaitable[Any]], credentials: dict[str, str]
+):
+    """A client without HMAC keys, or with the wrong secret, is rejected by the protected endpoint.
 
-
-# ── Sync: invalid HMAC ──────────────────────────────────────────────────
-
-
-@hmac_configured
-def test_hmac_no_key_rejected():
-    """Sync client without HMAC keys is rejected by the protected endpoint.
-
-    Uses a POST endpoint (`playerArena`) because the Comlink HMAC service
-    only enforces HMAC on POST; GET endpoints like `/enums` are
-    unauthenticated.
+    Uses a POST endpoint (`playerArena`) because the Comlink HMAC service only enforces HMAC
+    on POST; GET endpoints like `/enums` are unauthenticated.
     """
-    with SwgohComlink(url=COMLINK_HMAC_URL) as client, pytest.raises(SwgohComlinkException, match=REJECTED):
-        client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
+    client = make_comlink(url=COMLINK_HMAC_URL, **credentials)
+    with pytest.raises(SwgohComlinkException, match=REJECTED):
+        await call(client, "get_player_arena", allycode=TEST_ALLYCODE, player_details_only=True)
 
 
-@hmac_configured
-def test_hmac_wrong_key_rejected():
-    """Sync client with wrong secret key is rejected by the protected endpoint.
-
-    Uses a POST endpoint (`playerArena`) because the Comlink HMAC service
-    only enforces HMAC on POST; GET endpoints like `/enums` are
-    unauthenticated.
-    """
-    with (
-        SwgohComlink(
-            url=COMLINK_HMAC_URL,
-            access_key=HMAC_ACCESS_KEY,
-            secret_key="wrong_secret_key",
-        ) as client,
-        pytest.raises(SwgohComlinkException, match=REJECTED),
-    ):
-        client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
-
-
-# ── Async: valid HMAC ───────────────────────────────────────────────────
-
-
-@hmac_configured
-@pytest.mark.asyncio
-async def test_hmac_async_request_succeeds(async_comlink_hmac):
-    """Async client with correct HMAC keys can reach a signed POST endpoint.
-
-    Uses `metadata` rather than `enums`: HMAC is only enforced on POST, so a GET
-    endpoint would pass whether or not request signing works at all.
-    """
-    result = await async_comlink_hmac.get_game_metadata()
-    assert isinstance(result, dict)
-    assert result.get("latestGamedataVersion"), "signed POST must return real metadata"
-
-
-@hmac_configured
-@pytest.mark.asyncio
-async def test_hmac_async_player_request_succeeds(async_comlink_hmac):
-    """Async HMAC client can fetch a player profile from the protected endpoint."""
-    result = await async_comlink_hmac.get_player(allycode=TEST_ALLYCODE)
-    assert isinstance(result, dict)
-    assert result["name"]
-
-
-# ── Async: invalid HMAC ─────────────────────────────────────────────────
-
-
-@hmac_configured
-@pytest.mark.asyncio
-async def test_hmac_no_key_async_rejected():
-    """Async client without HMAC keys is rejected by the protected endpoint.
-
-    Uses a POST endpoint (`playerArena`) because the Comlink HMAC service
-    only enforces HMAC on POST; GET endpoints like `/enums` are
-    unauthenticated.
-    """
-    async with SwgohComlinkAsync(url=COMLINK_HMAC_URL) as client:
-        with pytest.raises(SwgohComlinkException, match=REJECTED):
-            await client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
-
-
-@hmac_configured
-@pytest.mark.asyncio
-async def test_hmac_wrong_key_async_rejected():
-    """Async client with wrong secret key is rejected by the protected endpoint.
-
-    Uses a POST endpoint (`playerArena`) because the Comlink HMAC service
-    only enforces HMAC on POST; GET endpoints like `/enums` are
-    unauthenticated.
-    """
-    async with SwgohComlinkAsync(
-        url=COMLINK_HMAC_URL,
-        access_key=HMAC_ACCESS_KEY,
-        secret_key="wrong_secret_key",
-    ) as client:
-        with pytest.raises(SwgohComlinkException, match=REJECTED):
-            await client.get_player_arena(allycode=TEST_ALLYCODE, player_details_only=True)
-
-
-# ── HMAC header verification ────────────────────────────────────────────
-
-
-@hmac_configured
 def test_hmac_headers_present():
     """HMAC client includes Authorization and X-Date headers in requests."""
-    client = SwgohComlink(
-        url=COMLINK_HMAC_URL,
-        access_key=HMAC_ACCESS_KEY,
-        secret_key=HMAC_SECRET_KEY,
-    )
-    headers = client._construct_request_headers("GET", "enums", None)
+    with SwgohComlink(url=COMLINK_HMAC_URL, access_key=HMAC_ACCESS_KEY, secret_key=HMAC_SECRET_KEY) as client:
+        headers = client._construct_request_headers("GET", "enums", None)
     assert "Authorization" in headers
     assert "X-Date" in headers
     assert headers["Authorization"].startswith(f"HMAC-SHA256 Credential={HMAC_ACCESS_KEY},Signature=")
-    client.close()
