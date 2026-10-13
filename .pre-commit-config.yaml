@@ -22,7 +22,6 @@ repos:
         name: ruff check
         entry: uv run ruff check --fix --force-exclude
         language: system
-        exclude: ^examples/
         types: [python]
         require_serial: true
       - id: ruff-format

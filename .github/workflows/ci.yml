@@ -34,8 +34,7 @@ jobs:
         run: uv sync --locked --only-group lint
 
       - name: Run Ruff linter
-        # examples/ is excluded, matching the pre-commit ruff hook
-        run: uv run --no-sync ruff check src/ tests/ parity/
+        run: uv run --no-sync ruff check src/ tests/ examples/ parity/
 
       - name: Run Ruff formatter check
         run: uv run --no-sync ruff format --check src/ tests/ examples/ parity/
