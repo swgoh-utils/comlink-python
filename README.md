@@ -4,7 +4,8 @@
 [![PyPI version](https://badge.fury.io/py/swgoh-comlink.svg)](https://pypi.org/project/swgoh-comlink/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)](https://github.com/swgoh-utils/comlink-python)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://swgoh-utils.github.io/comlink-python/)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/swgoh-utils/comlink-python)
 
 ## Description
 
@@ -16,11 +17,18 @@ Supports both **synchronous** and **asynchronous** usage via `SwgohComlink` and 
 
 ## Installation
 
-Install from [PyPi package repository](https://pypi.org/project/swgoh-comlink/) using the following shell command.
+Install from [PyPI](https://pypi.org/project/swgoh-comlink/):
 
 ```bash
-uv pip install swgoh_comlink
+# Add to a uv-managed project
+uv add swgoh_comlink
+
+# Or install with pip
+pip install swgoh_comlink
 ```
+
+Full documentation, including the API reference, is at
+[swgoh-utils.github.io/comlink-python](https://swgoh-utils.github.io/comlink-python/).
 
 ## Synchronous Usage
 
@@ -331,6 +339,19 @@ See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for mor
 
 ## Support
 
-Issues can be reported in [GitHub](https://github.com/swgoh-utils/comlink-python/issues).
+Usage questions are best asked in the [Discord server](https://discord.gg/6PBfG5MzR3). Bugs and feature requests
+go in [GitHub issues](https://github.com/swgoh-utils/comlink-python/issues/new/choose). See [SUPPORT.md](SUPPORT.md)
+for where to report what.
 
-Join the [discord server](https://discord.gg/6PBfG5MzR3)
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, workflow, and
+conventions. This project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+Please report security vulnerabilities privately as described in [SECURITY.md](SECURITY.md), not in public issues.
+
+## License
+
+Released under the [MIT License](LICENSE).

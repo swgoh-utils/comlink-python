@@ -112,4 +112,4 @@ body:
     attributes:
       label: Comlink Service Version (if applicable)
       description: The version of the swgoh-comlink service you are connecting to.
-      placeholder: "e.g. 0.38.1"
+      placeholder: "e.g. 4.5.0"
