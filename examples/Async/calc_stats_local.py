@@ -11,7 +11,7 @@ Demonstrates:
 
 import asyncio
 
-from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync, GameDataBuilderAsync
+from swgoh_comlink import StatCalcAsync
 
 
 async def main():

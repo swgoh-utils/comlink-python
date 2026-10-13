@@ -9,7 +9,6 @@ import time
 
 from swgoh_comlink import SwgohComlinkAsync
 
-
 # Example ally codes to fetch concurrently
 ALLY_CODES = [
     314927874,

@@ -28,7 +28,6 @@ if sys.version_info < (3, 11):
 
 import argparse
 import asyncio
-import statistics
 import time
 
 from swgoh_comlink import SwgohComlinkAsync
@@ -225,7 +224,6 @@ async def main():
         print(f"Fetching {total} member profiles (max {args.retries} retries each)...\n")
 
         # Step 3: Fetch all members concurrently using TaskGroup
-        fetch_times: list[float] = []
         results: list[dict | None] = []
         overall_start = time.perf_counter()
 

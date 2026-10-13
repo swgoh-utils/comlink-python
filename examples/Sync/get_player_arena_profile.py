@@ -4,8 +4,8 @@ Script to illustrate the basic usage of the swgoh_comlink wrapper library
 """
 
 # Place module imports below this line
+
 from swgoh_comlink import SwgohComlink
-from pprint import pprint as pp
 
 # create an instance of a SwgohComlink object
 comlink = SwgohComlink()
