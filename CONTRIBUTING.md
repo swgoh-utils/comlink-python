@@ -236,7 +236,7 @@ This project follows standard Python conventions, enforced by [Ruff](https://doc
 
 **General principles:**
 
-- Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting — `uvx ruff format` handles this for you
+- Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting — `uv run ruff format` handles this for you
 - Use **complete type annotations** on all functions, parameters, and return values — the package ships a `py.typed` marker, so downstream users' type checkers rely on them
 - Use `from __future__ import annotations` at the top of each module for modern annotation syntax
 - Use docstrings (Google style) on all public classes and methods — they are rendered into the API reference
@@ -421,8 +421,8 @@ commit would be left out of the changelog entirely.
 
    ```bash
    # Lint and format
-   uvx ruff check src/ tests/
-   uvx ruff format --check src/ tests/
+   uv run ruff check src/ tests/
+   uv run ruff format --check src/ tests/
 
    # Type check
    uv run ty check src/swgoh_comlink/

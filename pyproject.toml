@@ -118,6 +118,9 @@ test = [
 typecheck = [
     "ty>=0.0.34",
 ]
+lint = [
+    "ruff>=0.8",
+]
 changelog = [
     "git-changelog>=2.9,<3",
 ]
@@ -125,7 +128,7 @@ dev = [
     {include-group = "test"},
     {include-group = "typecheck"},
     {include-group = "changelog"},
-    "ruff>=0.8",
+    {include-group = "lint"},
 ]
 docs = [
     # MkDocs 2.0 removes the plugin system (mkdocstrings) and theme overrides that this

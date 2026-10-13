@@ -15,13 +15,22 @@ repos:
       - id: debug-statements
 
   # ── Ruff linter & formatter (mirrors CI lint job) ─────────────────────
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
+  # Run via local uv so the version comes from uv.lock, same as CI.
+  - repo: local
     hooks:
       - id: ruff
-        args: [--fix]
+        name: ruff check
+        entry: uv run ruff check --fix --force-exclude
+        language: system
         exclude: ^examples/
+        types: [python]
+        require_serial: true
       - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types: [python]
+        require_serial: true
 
   # ── ty type checking (Astral, run via local uv) ───────────────────────
   - repo: local

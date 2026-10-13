@@ -942,6 +942,9 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
+lint = [
+    { name = "ruff" },
+]
 test = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -974,6 +977,7 @@ docs = [
     { name = "mkdocs-material", specifier = ">=9.5.0" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.28.0" },
 ]
+lint = [{ name = "ruff", specifier = ">=0.8" }]
 test = [
     { name = "pytest", specifier = ">=7.0" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
