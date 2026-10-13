@@ -116,6 +116,20 @@ class TestScanDirectory:
         findings = scan_directory(tmp_path)
         assert all(".venv" not in f.file for f in findings)
 
+    def test_an_extra_exclude_keeps_the_default_excludes(self, tmp_path: Path):
+        from swgoh_comlink.migrate._scanner import scan_directory
+
+        venv = tmp_path / ".venv"
+        venv.mkdir()
+        (venv / "lib.py").write_text("import requests\n")
+        vendor = tmp_path / "vendor"
+        vendor.mkdir()
+        (vendor / "old.py").write_text("import requests\n")
+        (tmp_path / "main.py").write_text("import requests\n")
+
+        findings = scan_directory(tmp_path, exclude_patterns=["vendor"])
+        assert {Path(f.file).name for f in findings} == {"main.py"}
+
 
 # ── format_findings ────────────────────────────────────────────────────
 

@@ -68,7 +68,7 @@ def scan_directory(
 ) -> list[Finding]:
     """Recursively scan a directory for Python files."""
     findings: list[Finding] = []
-    excludes = set(exclude_patterns) if exclude_patterns else set(_DEFAULT_EXCLUDES)
+    excludes = set(_DEFAULT_EXCLUDES) | set(exclude_patterns or ())
 
     for py_file in sorted(directory.rglob("*.py")):
         if any(part in excludes for part in py_file.parts):
