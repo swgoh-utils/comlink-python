@@ -34,12 +34,11 @@ jobs:
         run: uv sync --locked --only-group lint
 
       - name: Run Ruff linter
-        run: uv run --no-sync ruff check src/ tests/
+        # examples/ is excluded, matching the pre-commit ruff hook
+        run: uv run --no-sync ruff check src/ tests/ parity/
 
       - name: Run Ruff formatter check
-        # NOTE: Set continue-on-error to false once the initial formatting PR is merged
-        continue-on-error: true
-        run: uv run --no-sync ruff format --check src/ tests/
+        run: uv run --no-sync ruff format --check src/ tests/ examples/ parity/
 
   # ── Type check ─────────────────────────────────────────────────────────
   type-check:
