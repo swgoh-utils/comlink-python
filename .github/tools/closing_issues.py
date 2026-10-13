@@ -36,8 +36,11 @@ KEYWORD_REGEX = re.compile(
     r"|https://github\.com/(?P<url_repo>[\w.-]+/[\w.-]+)/issues/(?P<url_number>\d+))\b",
     re.IGNORECASE,
 )
-# Text GitHub does not scan for keywords: HTML comments, fenced code blocks, inline code.
-IGNORED_REGEX = re.compile(r"<!--.*?-->|^(?P<fence>```|~~~).*?^(?P=fence)|`[^`\n]*`", re.DOTALL | re.MULTILINE)
+# Text GitHub does not scan for keywords: HTML comments, fenced code blocks (including ones
+# indented inside list items), and inline code.
+IGNORED_REGEX = re.compile(
+    r"<!--.*?-->|^[ \t]*(?P<fence>```|~~~).*?^[ \t]*(?P=fence)|`[^`\n]*`", re.DOTALL | re.MULTILINE
+)
 MERGE_SUBJECT_REGEX = re.compile(r"^Merge pull request #(\d+) from ")
 # Marks comments this script posted, so a re-run never posts the same note twice.
 MARKER = "<!-- closing-issues: pr={pr} -->"
