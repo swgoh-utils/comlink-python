@@ -11,7 +11,9 @@ result only when the client is async::
 from __future__ import annotations
 
 import inspect
+import json
 from collections.abc import AsyncIterator, Awaitable, Callable
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -56,6 +58,12 @@ async def _call(client: Client, method: str, /, *args: Any, **kwargs: Any) -> An
 def call() -> Callable[..., Awaitable[Any]]:
     """``await call(client, "method", **kwargs)`` works for either client type."""
     return _call
+
+
+@pytest.fixture(scope="session")
+def game_data() -> dict[str, Any]:
+    """StatCalc game data from tests/resources/gameData.json, parsed once per session. Do not mutate."""
+    return json.loads((Path(__file__).resolve().parent.parent / "resources" / "gameData.json").read_text())["data"]
 
 
 @pytest.fixture
