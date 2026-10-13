@@ -278,42 +278,42 @@ Methods available on both `SwgohComlink` and `SwgohComlinkAsync` (async methods 
 
 ## Examples
 
-The [`examples/`](examples/) directory contains runnable scripts for common tasks using both the sync and async clients.
+The [`examples/`](https://github.com/swgoh-utils/comlink-python/tree/main/examples) directory contains runnable scripts for common tasks using both the sync and async clients.
 
-### Synchronous ([`examples/Sync/`](examples/Sync/))
-
-| Script | Description |
-|--------|-------------|
-| [`get_player.py`](examples/Sync/get_player.py) | Get a player's full profile including roster |
-| [`get_guild.py`](examples/Sync/get_guild.py) | Look up guild info from a player's ally code |
-| [`get_events.py`](examples/Sync/get_events.py) | Retrieve current game events with timestamps |
-| [`get_game_data.py`](examples/Sync/get_game_data.py) | Retrieve game data collections |
-| [`get_gac_leaderboard.py`](examples/Sync/get_gac_leaderboard.py) | Get GAC leaderboard data |
-| [`get_gac_brackets.py`](examples/Sync/get_gac_brackets.py) | Scan GAC brackets and search for a player |
-| [`calc_stats_local.py`](examples/Sync/calc_stats_local.py) | Calculate character stats locally with `StatCalc` |
-| [`search_for_guilds.py`](examples/Sync/search_for_guilds.py) | Search for guilds by name or criteria |
-
-### Asynchronous ([`examples/Async/`](examples/Async/))
+### Synchronous ([`examples/Sync/`](https://github.com/swgoh-utils/comlink-python/tree/main/examples/Sync))
 
 | Script | Description |
 |--------|-------------|
-| [`get_player.py`](examples/Async/get_player.py) | Get a player's full profile using `await` |
-| [`concurrent_requests.py`](examples/Async/concurrent_requests.py) | Fetch multiple players in parallel with `asyncio.gather()` |
-| [`streaming_guild_roster.py`](examples/Async/streaming_guild_roster.py) | Fetch all guild members concurrently with `asyncio.TaskGroup` |
-| [`streaming_guild_roster_advanced.py`](examples/Async/streaming_guild_roster_advanced.py) | Production-quality guild roster fetch with CLI args and retry logic |
-| [`calc_stats_local.py`](examples/Async/calc_stats_local.py) | Calculate character stats locally with `StatCalcAsync` |
+| [`get_player.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_player.py) | Get a player's full profile including roster |
+| [`get_guild.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_guild.py) | Look up guild info from a player's ally code |
+| [`get_events.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_events.py) | Retrieve current game events with timestamps |
+| [`get_game_data.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_game_data.py) | Retrieve game data collections |
+| [`get_gac_leaderboard.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_gac_leaderboard.py) | Get GAC leaderboard data |
+| [`get_gac_brackets.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_gac_brackets.py) | Scan GAC brackets and search for a player |
+| [`calc_stats_local.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/calc_stats_local.py) | Calculate character stats locally with `StatCalc` |
+| [`search_for_guilds.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/search_for_guilds.py) | Search for guilds by name or criteria |
 
-See the [full examples listing](examples/README.md) for all available scripts and usage details.
+### Asynchronous ([`examples/Async/`](https://github.com/swgoh-utils/comlink-python/tree/main/examples/Async))
+
+| Script | Description |
+|--------|-------------|
+| [`get_player.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/get_player.py) | Get a player's full profile using `await` |
+| [`concurrent_requests.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/concurrent_requests.py) | Fetch multiple players in parallel with `asyncio.gather()` |
+| [`streaming_guild_roster.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/streaming_guild_roster.py) | Fetch all guild members concurrently with `asyncio.TaskGroup` |
+| [`streaming_guild_roster_advanced.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/streaming_guild_roster_advanced.py) | Production-quality guild roster fetch with CLI args and retry logic |
+| [`calc_stats_local.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/calc_stats_local.py) | Calculate character stats locally with `StatCalcAsync` |
+
+See the [full examples listing](https://github.com/swgoh-utils/comlink-python/blob/main/examples/README.md) for all available scripts and usage details.
 
 ## Logging
 
 Logging is handled by the [python logging module](https://docs.python.org/3/library/logging.html). The library follows Python best practice by attaching only a `NullHandler` — no output is produced unless your application configures logging.
 
-For details on enabling and customizing log output, see [docs/logging.md](docs/logging.md).
+For details on enabling and customizing log output, see [docs/logging.md](https://github.com/swgoh-utils/comlink-python/blob/main/docs/logging.md).
 
 ## Migrating from v1.x
 
-This release replaces `requests` with `httpx` and changes how logging is configured. If you are upgrading from a previous version, see the [Migration Guide](docs/migration.md) for a walkthrough of required changes:
+This release replaces `requests` with `httpx` and changes how logging is configured. If you are upgrading from a previous version, see the [Migration Guide](https://github.com/swgoh-utils/comlink-python/blob/main/docs/migration.md) for a walkthrough of required changes:
 
 - Replace `requests` with `httpx` in your dependencies
 - Update `except requests.RequestException` to `except httpx.RequestError` (or catch `SwgohComlinkException`)
@@ -340,18 +340,18 @@ See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for mor
 ## Support
 
 Usage questions are best asked in the [Discord server](https://discord.gg/6PBfG5MzR3). Bugs and feature requests
-go in [GitHub issues](https://github.com/swgoh-utils/comlink-python/issues/new/choose). See [SUPPORT.md](SUPPORT.md)
+go in [GitHub issues](https://github.com/swgoh-utils/comlink-python/issues/new/choose). See [SUPPORT.md](https://github.com/swgoh-utils/comlink-python/blob/main/SUPPORT.md)
 for where to report what.
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, workflow, and
-conventions. This project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
+Contributions are welcome! See [CONTRIBUTING.md](https://github.com/swgoh-utils/comlink-python/blob/main/CONTRIBUTING.md) for the development setup, workflow, and
+conventions. This project follows a [Code of Conduct](https://github.com/swgoh-utils/comlink-python/blob/main/CODE_OF_CONDUCT.md).
 
 ## Security
 
-Please report security vulnerabilities privately as described in [SECURITY.md](SECURITY.md), not in public issues.
+Please report security vulnerabilities privately as described in [SECURITY.md](https://github.com/swgoh-utils/comlink-python/blob/main/SECURITY.md), not in public issues.
 
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](https://github.com/swgoh-utils/comlink-python/blob/main/LICENSE).
