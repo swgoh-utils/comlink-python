@@ -11,6 +11,7 @@
       "version", "release", "changelog", "deps", "ci",
       "docs", "examples", "tests"
     ]],
+    "subject-exclamation-mark": [2, "never"],
     "subject-max-length": [1, "always", 100],
     "header-max-length": [0, "always"],
     "body-max-line-length": [0, "always"],
