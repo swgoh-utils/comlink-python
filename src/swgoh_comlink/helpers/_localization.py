@@ -14,6 +14,12 @@ ANSI_BOLD = "\033[1m"
 ANSI_ITALIC = "\033[3m"
 ANSI_UNDERLINE = "\033[4m"
 ANSI_STRIKE = "\033[9m"
+# SGR codes that turn off one attribute, so closing a style never needs a full reset.
+ANSI_BOLD_OFF = "\033[22m"
+ANSI_ITALIC_OFF = "\033[23m"
+ANSI_UNDERLINE_OFF = "\033[24m"
+ANSI_STRIKE_OFF = "\033[29m"
+ANSI_DEFAULT_FG = "\033[39m"
 
 
 # ANSI color support: convert hex to nearest 256-color or use truecolor if available
@@ -422,10 +428,8 @@ def _handle_alpha(token: dict[str, Any], output: OutputFormat, state: _Formattin
 
 def _handle_color_reset(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     """Handle color reset token [-]."""
-    if output == "terminal":
-        # Reset covers both active color and all SGR styles; reapply the styles after.
-        result.append(ANSI_RESET)
-        _reapply_terminal_styles(state, result)
+    if output == "terminal" and state.active_color is not None:
+        result.append(ANSI_DEFAULT_FG)
     elif output == "web" and state.active_color is not None:
         _set_web_color(None, state, result)
     state.active_color = None
@@ -434,9 +438,8 @@ def _handle_color_reset(output: OutputFormat, state: _FormattingState, result: l
 def _handle_color_end(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     """Handle color end token [/c]."""
     state.in_color_block = False
-    if output == "terminal":
-        result.append(ANSI_RESET)
-        _reapply_terminal_styles(state, result)
+    if output == "terminal" and state.active_color is not None:
+        result.append(ANSI_DEFAULT_FG)
     elif output == "web" and state.active_color is not None:
         _set_web_color(None, state, result)
     state.active_color = None
@@ -455,7 +458,7 @@ def _handle_bold_open(output: OutputFormat, state: _FormattingState, result: lis
 def _handle_bold_close(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     state.bold_depth = max(0, state.bold_depth - 1)
     if output == "terminal" and state.bold_depth == 0:
-        _reset_and_reapply_terminal(state, result, drop_bold=True)
+        result.append(ANSI_BOLD_OFF)
     elif output == "discord":
         result.append("**")
     elif output == "web":
@@ -475,7 +478,7 @@ def _handle_italic_open(output: OutputFormat, state: _FormattingState, result: l
 def _handle_italic_close(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     state.italic_depth = max(0, state.italic_depth - 1)
     if output == "terminal" and state.italic_depth == 0:
-        _reset_and_reapply_terminal(state, result, drop_italic=True)
+        result.append(ANSI_ITALIC_OFF)
     elif output == "discord":
         result.append("*")
     elif output == "web":
@@ -495,7 +498,7 @@ def _handle_underline_open(output: OutputFormat, state: _FormattingState, result
 def _handle_underline_close(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     state.underline_depth = max(0, state.underline_depth - 1)
     if output == "terminal" and state.underline_depth == 0:
-        _reset_and_reapply_terminal(state, result, drop_underline=True)
+        result.append(ANSI_UNDERLINE_OFF)
     elif output == "discord":
         result.append("__")
     elif output == "web":
@@ -515,7 +518,7 @@ def _handle_strike_open(output: OutputFormat, state: _FormattingState, result: l
 def _handle_strike_close(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     state.strike_depth = max(0, state.strike_depth - 1)
     if output == "terminal" and state.strike_depth == 0:
-        _reset_and_reapply_terminal(state, result, drop_strike=True)
+        result.append(ANSI_STRIKE_OFF)
     elif output == "discord":
         result.append("~~")
     elif output == "web":
@@ -572,42 +575,6 @@ def _fmt_scale(value: float) -> str:
     if value == int(value):
         return str(int(value))
     return f"{value:g}"
-
-
-def _reset_and_reapply_terminal(
-    state: _FormattingState,
-    result: list[str],
-    *,
-    drop_bold: bool = False,
-    drop_italic: bool = False,
-    drop_underline: bool = False,
-    drop_strike: bool = False,
-) -> None:
-    """Emit ANSI_RESET and reapply remaining active color/styles (minus any dropped ones)."""
-    result.append(ANSI_RESET)
-    if state.active_color is not None:
-        r, g, b, _ = state.active_color
-        result.append(_hex_to_ansi_truecolor(f"{r:02X}{g:02X}{b:02X}"))
-    if not drop_bold and state.bold_depth > 0:
-        result.append(ANSI_BOLD)
-    if not drop_italic and state.italic_depth > 0:
-        result.append(ANSI_ITALIC)
-    if not drop_underline and state.underline_depth > 0:
-        result.append(ANSI_UNDERLINE)
-    if not drop_strike and state.strike_depth > 0:
-        result.append(ANSI_STRIKE)
-
-
-def _reapply_terminal_styles(state: _FormattingState, result: list[str]) -> None:
-    """Re-apply active bold/italic/underline/strike styles after ANSI reset."""
-    if state.bold_depth > 0:
-        result.append(ANSI_BOLD)
-    if state.italic_depth > 0:
-        result.append(ANSI_ITALIC)
-    if state.underline_depth > 0:
-        result.append(ANSI_UNDERLINE)
-    if state.strike_depth > 0:
-        result.append(ANSI_STRIKE)
 
 
 def _finalize_output(output: OutputFormat, state: _FormattingState, result: list[str]) -> str:

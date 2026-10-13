@@ -77,10 +77,15 @@ from swgoh_comlink.helpers._game_data import (
 )
 from swgoh_comlink.helpers._localization import (
     ANSI_BOLD,
+    ANSI_BOLD_OFF,
+    ANSI_DEFAULT_FG,
     ANSI_ITALIC,
+    ANSI_ITALIC_OFF,
     ANSI_RESET,
     ANSI_STRIKE,
+    ANSI_STRIKE_OFF,
     ANSI_UNDERLINE,
+    ANSI_UNDERLINE_OFF,
     _hex_to_ansi_truecolor,
     _parse_tokens,
     parse_swgoh_string,
@@ -3046,6 +3051,8 @@ def test_get_logger(args, name):
 # ── _localization ──────────────────────────────────────────────────────
 
 _R, _B, _I, _U, _S = ANSI_RESET, ANSI_BOLD, ANSI_ITALIC, ANSI_UNDERLINE, ANSI_STRIKE
+# Closing a style turns off only that attribute; ending a color restores the default foreground.
+_B0, _I0, _U0, _S0, _FG0 = ANSI_BOLD_OFF, ANSI_ITALIC_OFF, ANSI_UNDERLINE_OFF, ANSI_STRIKE_OFF, ANSI_DEFAULT_FG
 
 
 def _fg(r: int, g: int, b: int) -> str:
@@ -3158,7 +3165,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "bold",
             "discord": "**bold**",
             "web": "<p><b>bold</b></p>",
-            "terminal": f"{_B}bold{_R}",
+            "terminal": f"{_B}bold{_B0}",
         },
     ),
     (
@@ -3168,11 +3175,11 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "italic",
             "discord": "*italic*",
             "web": "<p><em>italic</em></p>",
-            "terminal": f"{_I}italic{_R}",
+            "terminal": f"{_I}italic{_I0}",
         },
     ),
-    ("underline", "[u]x[/u]", {"bare": "x", "discord": "__x__", "web": "<p><u>x</u></p>", "terminal": f"{_U}x{_R}"}),
-    ("strike", "[s]x[/s]", {"bare": "x", "discord": "~~x~~", "web": "<p><s>x</s></p>", "terminal": f"{_S}x{_R}"}),
+    ("underline", "[u]x[/u]", {"bare": "x", "discord": "__x__", "web": "<p><u>x</u></p>", "terminal": f"{_U}x{_U0}"}),
+    ("strike", "[s]x[/s]", {"bare": "x", "discord": "~~x~~", "web": "<p><s>x</s></p>", "terminal": f"{_S}x{_S0}"}),
     (
         "color-block",
         "[c][FF0000]red[/c]",
@@ -3180,7 +3187,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "red",
             "discord": "red",
             "web": '<p><span style="color:#FF0000">red</span></p>',
-            "terminal": f"{_fg(255, 0, 0)}red{_R}",
+            "terminal": f"{_fg(255, 0, 0)}red{_FG0}",
         },
     ),
     (
@@ -3190,7 +3197,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "golden",
             "discord": "golden",
             "web": '<p><span style="color:#FFAA00">golden</span></p>',
-            "terminal": f"{_fg(255, 170, 0)}golden{_R}{_R}",
+            "terminal": f"{_fg(255, 170, 0)}golden{_FG0}",
         },
     ),
     (
@@ -3200,7 +3207,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "redplain",
             "discord": "redplain",
             "web": '<p><span style="color:#FF0000">red</span>plain</p>',
-            "terminal": f"{_fg(255, 0, 0)}red{_R}plain{_R}",
+            "terminal": f"{_fg(255, 0, 0)}red{_FG0}plain",
         },
     ),
     (
@@ -3210,7 +3217,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "redplain",
             "discord": "redplain",
             "web": '<p><span style="color:#FF0000">red</span>plain</p>',
-            "terminal": f"{_fg(255, 0, 0)}red{_R}plain",
+            "terminal": f"{_fg(255, 0, 0)}red{_FG0}plain",
         },
     ),
     (
@@ -3230,7 +3237,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "x",
             "discord": "x",
             "web": '<p><span style="color:#FF00AA">x</span></p>',
-            "terminal": f"{_fg(255, 0, 170)}x{_R}",
+            "terminal": f"{_fg(255, 0, 170)}x{_FG0}",
         },
     ),
     # Terminal output cannot render alpha, but still emits the RGB channel.
@@ -3241,7 +3248,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "x",
             "discord": "x",
             "web": '<p><span style="color:rgba(255,0,170,0.533)">x</span></p>',
-            "terminal": f"{_fg(255, 0, 170)}x{_R}",
+            "terminal": f"{_fg(255, 0, 170)}x{_FG0}",
         },
     ),
     (
@@ -3251,7 +3258,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "x",
             "discord": "x",
             "web": '<p><span style="color:rgba(18,52,86,0.471)">x</span></p>',
-            "terminal": f"{_fg(18, 52, 86)}x{_R}",
+            "terminal": f"{_fg(18, 52, 86)}x{_FG0}",
         },
     ),
     # An alpha literal with no prior color applies to the default white.
@@ -3272,7 +3279,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "rstill_red",
             "discord": "rstill_red",
             "web": '<p><span style="color:#FF0000">r</span><span style="color:rgba(255,0,0,0.533)">still_red</span></p>',
-            "terminal": f"{_fg(255, 0, 0)}r{_fg(255, 0, 0)}still_red{_R}",
+            "terminal": f"{_fg(255, 0, 0)}r{_fg(255, 0, 0)}still_red{_FG0}",
         },
     ),
     (
@@ -3285,49 +3292,49 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
                 '<p><span style="color:#FF0000">red</span><span style="color:rgba(255,0,0,0.533)">faded</span>'
                 '<span style="color:#00FF00">green</span></p>'
             ),
-            "terminal": f"{_fg(255, 0, 0)}red{_fg(255, 0, 0)}faded{_fg(0, 255, 0)}green{_R}",
+            "terminal": f"{_fg(255, 0, 0)}red{_fg(255, 0, 0)}faded{_fg(0, 255, 0)}green{_FG0}",
         },
     ),
-    # Closing a style resets the terminal, so the still-open color must be re-emitted.
+    # Closing a style turns off only that style, so the still-open color stays on.
     (
-        "bold-close-reapplies-color",
+        "bold-close-keeps-color",
         "[c][FF0000][b]styled[/b]text[/c]",
         {
             "bare": "styledtext",
             "discord": "**styled**text",
             "web": '<p><span style="color:#FF0000"><b>styled</b>text</span></p>',
-            "terminal": f"{_fg(255, 0, 0)}{_B}styled{_R}{_fg(255, 0, 0)}text{_R}",
+            "terminal": f"{_fg(255, 0, 0)}{_B}styled{_B0}text{_FG0}",
         },
     ),
     (
-        "italic-close-reapplies-color",
+        "italic-close-keeps-color",
         "[c][FF0000][i]styled[/i]text[/c]",
         {
             "bare": "styledtext",
             "discord": "*styled*text",
             "web": '<p><span style="color:#FF0000"><em>styled</em>text</span></p>',
-            "terminal": f"{_fg(255, 0, 0)}{_I}styled{_R}{_fg(255, 0, 0)}text{_R}",
+            "terminal": f"{_fg(255, 0, 0)}{_I}styled{_I0}text{_FG0}",
         },
     ),
     (
-        "underline-close-reapplies-color",
+        "underline-close-keeps-color",
         "[FF0000][u]red[/u]still",
         {
             "bare": "redstill",
             "discord": "__red__still",
             "web": '<p><span style="color:#FF0000"><u>red</u>still</span></p>',
-            "terminal": f"{_fg(255, 0, 0)}{_U}red{_R}{_fg(255, 0, 0)}still{_R}",
+            "terminal": f"{_fg(255, 0, 0)}{_U}red{_U0}still{_R}",
         },
     ),
-    # Ending the color resets the terminal, so the still-open bold must be re-emitted.
+    # Ending the color restores the default foreground and leaves the still-open bold on.
     (
-        "color-end-reapplies-bold",
+        "color-end-keeps-bold",
         "[b][c][FF0000]red[/c]still_bold[/b]",
         {
             "bare": "redstill_bold",
             "discord": "**redstill_bold**",
             "web": '<p><b><span style="color:#FF0000">red</span>still_bold</b></p>',
-            "terminal": f"{_B}{_fg(255, 0, 0)}red{_R}{_B}still_bold{_R}",
+            "terminal": f"{_B}{_fg(255, 0, 0)}red{_FG0}still_bold{_B0}",
         },
     ),
     (
@@ -3337,7 +3344,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "bothjust_italic",
             "discord": "***both**just_italic*",
             "web": "<p><em><b>both</b>just_italic</em></p>",
-            "terminal": f"{_I}{_B}both{_R}{_I}just_italic{_R}",
+            "terminal": f"{_I}{_B}both{_B0}just_italic{_I0}",
         },
     ),
     (
@@ -3347,7 +3354,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "bothjust_bold",
             "discord": "***both*just_bold**",
             "web": "<p><b><em>both</em>just_bold</b></p>",
-            "terminal": f"{_B}{_I}both{_R}{_B}just_bold{_R}",
+            "terminal": f"{_B}{_I}both{_I0}just_bold{_B0}",
         },
     ),
     (
@@ -3357,7 +3364,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "xstill_bold",
             "discord": "**~~x~~still_bold**",
             "web": "<p><b><s>x</s>still_bold</b></p>",
-            "terminal": f"{_B}{_S}x{_R}{_B}still_bold{_R}",
+            "terminal": f"{_B}{_S}x{_S0}still_bold{_B0}",
         },
     ),
     (
@@ -3367,13 +3374,13 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "bold-italic",
             "discord": "***bold-italic***",
             "web": "<p><b><em>bold-italic</em></b></p>",
-            "terminal": f"{_B}{_I}bold-italic{_R}{_B}{_R}",
+            "terminal": f"{_B}{_I}bold-italic{_I0}{_B0}",
         },
     ),
     (
         "nested-bold-underline",
         "[b][u]x[/u][/b]",
-        {"bare": "x", "discord": "**__x__**", "web": "<p><b><u>x</u></b></p>", "terminal": f"{_B}{_U}x{_R}{_B}{_R}"},
+        {"bare": "x", "discord": "**__x__**", "web": "<p><b><u>x</u></b></p>", "terminal": f"{_B}{_U}x{_U0}{_B0}"},
     ),
     (
         "nested-bold-underline-italic",
@@ -3382,7 +3389,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "x",
             "discord": "**__*x*__**",
             "web": "<p><b><u><em>x</em></u></b></p>",
-            "terminal": f"{_B}{_U}{_I}x{_R}{_B}{_U}{_R}{_B}{_R}",
+            "terminal": f"{_B}{_U}{_I}x{_I0}{_U0}{_B0}",
         },
     ),
     (
@@ -3392,17 +3399,17 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "x",
             "discord": "**__~~x~~__**",
             "web": "<p><b><u><s>x</s></u></b></p>",
-            "terminal": f"{_B}{_U}{_S}x{_R}{_B}{_U}{_R}{_B}{_R}",
+            "terminal": f"{_B}{_U}{_S}x{_S0}{_U0}{_B0}",
         },
     ),
     (
-        "styles-reapplied-after-inner-close",
+        "styles-kept-after-inner-close",
         "[u][s][b]x[/b]y[/s][/u]",
         {
             "bare": "xy",
             "discord": "__~~**x**y~~__",
             "web": "<p><u><s><b>x</b>y</s></u></p>",
-            "terminal": f"{_U}{_S}{_B}x{_R}{_U}{_S}y{_R}{_U}{_R}",
+            "terminal": f"{_U}{_S}{_B}x{_B0}y{_S0}{_U0}",
         },
     ),
     # Unclosed styles are closed at the end, innermost first, in every format.
@@ -3434,7 +3441,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "xy",
             "discord": "*__~~xy~~__*",
             "web": '<p><span style="color:#FF0000"><em><u><s>x</s></u></em></span><em><u><s>y</s></u></em></p>',
-            "terminal": f"{_fg(255, 0, 0)}{_I}{_U}{_S}x{_R}{_I}{_U}{_S}y{_R}",
+            "terminal": f"{_fg(255, 0, 0)}{_I}{_U}{_S}x{_FG0}y{_R}",
         },
     ),
     (
@@ -3541,7 +3548,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "Title\nGold text and italic",
             "discord": "**Title**\nGold text and *italic*",
             "web": '<p><b>Title</b>\n<span style="color:#FFAA00">Gold text</span> and <em>italic</em></p>',
-            "terminal": f"{_B}Title{_R}\n{_fg(255, 170, 0)}Gold text{_R}{_R} and {_I}italic{_R}",
+            "terminal": f"{_B}Title{_B0}\n{_fg(255, 170, 0)}Gold text{_FG0} and {_I}italic{_I0}",
         },
     ),
     (
@@ -3551,7 +3558,7 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
             "bare": "Boss deals 2x damage",
             "discord": "**Boss** deals __2x__ damage",
             "web": '<p><span style="color:#FF0000"><b>Boss</b></span> deals <u>2x</u> damage</p>',
-            "terminal": f"{_fg(255, 0, 0)}{_B}Boss{_R}{_fg(255, 0, 0)}{_R} deals {_U}2x{_R} damage{_R}",
+            "terminal": f"{_fg(255, 0, 0)}{_B}Boss{_B0}{_FG0} deals {_U}2x{_U0} damage",
         },
     ),
 ]
@@ -3567,6 +3574,13 @@ _RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
 )
 def test_parse_swgoh_string(text, output, expected):
     assert parse_swgoh_string(text, output=output) == expected
+
+
+@pytest.mark.parametrize("text", [pytest.param(text, id=name) for name, text, _ in _RENDERINGS])
+def test_terminal_output_resets_only_at_the_end(text):
+    """Closing a style or color emits its own off code; a full reset only closes what is left open."""
+    rendered = parse_swgoh_string(text, output="terminal")
+    assert _R not in rendered.removesuffix(_R)
 
 
 def test_parse_swgoh_string_defaults_to_bare():
