@@ -2,6 +2,7 @@
 get_latest_game_data_version.py
 Script to illustrate the basic usage of the swgoh_comlink wrapper library
 """
+
 # import the SwgohComlink class from the swgoh_comlink module
 from swgoh_comlink import SwgohComlink
 
@@ -19,9 +20,9 @@ The result is a dictionary with the following two keys:
 """
 current_game_version = comlink.get_latest_game_data_version()
 
-print(f'{current_game_version}')
+print(f"{current_game_version}")
 # For those that are averse to typing long descriptive function names, there is an alias that can be used
 # which is much shorter, getVersion()
 
 current_versions = comlink.getVersion()
-print(f'{current_versions}')
+print(f"{current_versions}")

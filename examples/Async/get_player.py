@@ -47,7 +47,7 @@ async def main():
         player_profile_data = await comlink.get_player(allycode=314927874)
 
         # We can extract a list of the characters in the player's roster
-        player_roster = player_profile_data['rosterUnit']
+        player_roster = player_profile_data["rosterUnit"]
 
         """
         # Each unit in a player's roster is a dictionary with entries for all attributes including skills,
