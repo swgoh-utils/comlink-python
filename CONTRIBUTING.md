@@ -130,12 +130,14 @@ comlink-python/
 │   │   ├── documentation.yml       # Documentation issue template
 │   │   └── feature_request.yml     # Feature request template
 │   ├── release-pr/                 # Release PR bodies written by prepare-release.yml
+│   ├── tools/                      # Python helpers the workflows run (release + issue bookkeeping)
 │   ├── workflows/
 │   │   ├── backmerge.yml           # Stages the main → develop back-merge after a release
 │   │   ├── ci.yml                  # CI pipeline (lint, type-check, test, docs, build)
 │   │   ├── commitlint.yml          # Commit message validation (runs the pre-commit hook)
 │   │   ├── docs.yml                # Publishes the docs site to GitHub Pages from main
 │   │   ├── integration.yml         # Integration tests against live comlink services
+│   │   ├── issue-fixed-in-develop.yml # Comments on issues a merge into develop resolves
 │   │   ├── labeler.yml             # Auto-label PRs by file path
 │   │   ├── prepare-release.yml     # Regenerates CHANGELOG.md and stages a release branch
 │   │   └── release.yml             # Build → PyPI → tag + GitHub Release (version via hatch-vcs)
@@ -478,6 +480,12 @@ commit would be left out of the changelog entirely. Commit Lint rejects `!` befo
    - How you tested the change
    - A short checklist mirroring the CI checks
 
+   **Linking issues:** use a closing keyword (`Closes #51`, `Fixes #51`, `Resolves #51`), with one
+   keyword per issue — `Closes #1, #2` only closes #1. Because PRs merge into `develop` rather than
+   the default branch, GitHub won't close the issue at merge time. Instead, a bot comment on the
+   issue notes that the fix is in `develop`, and the issue closes automatically when the next
+   release merges into `main`.
+
 6. **After submitting:**
 
    CI checks (lint, type check, tests on Python 3.10–3.14, docs build, package build, commit message validation, and integration tests) run automatically.
@@ -538,7 +546,7 @@ Never paste your comlink `access_key` / `secret_key` into an issue.
 Releases are handled by the maintainer through GitHub Actions. Contributors don't need to manage versioning or releases, but here's how it works for reference:
 
 1. **prepare release** (`prepare-release.yml`) is dispatched on `develop`. It computes the next version from the Conventional Commits since the last tag (or a chosen `patch`/`minor`/`major` bump), regenerates `CHANGELOG.md`, and pushes a `release/vX.Y.Z` branch. If the computed version is a major, the job summary lists the commit lines that triggered it, and an `auto` bump stops unless one is a real `BREAKING CHANGE:` footer (see [Commit Messages](#commit-messages)).
-2. The maintainer opens the release PR from that branch into `main` (a link is in the workflow summary). CI runs as normal and the PR is merged.
+2. The maintainer opens the release PR from that branch into `main` (a link is in the workflow summary). Its body restates every `Closes #N` from the PRs merged since the last release, so GitHub closes those issues when it merges. CI runs as normal and the PR is merged.
 3. **comlink-python release** (`release.yml`) is dispatched on `main`. It reads the version from `CHANGELOG.md`, builds the package — [hatch-vcs](https://github.com/ofek/hatch-vcs) stamps that version, so **no version string is committed to the repo** — and publishes to [PyPI](https://pypi.org/project/swgoh-comlink/) via trusted publishing.
 4. Only after a successful publish is the Git tag created and a GitHub Release cut, with release notes auto-generated from the PR history.
 5. **back-merge main into develop** (`backmerge.yml`) then stages a branch so `main` can be merged back into `develop`.
