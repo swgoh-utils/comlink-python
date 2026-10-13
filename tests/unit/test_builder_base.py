@@ -6,6 +6,7 @@ All tests use inline fixture data and require no running Comlink service.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -13,11 +14,13 @@ import pytest
 from swgoh_comlink.StatCalc.data_builder._builder_base import (
     GameDataBuilderBase,
     _ability_special_gp,
+    _build_cr_gp_tables,
     _build_gear_data,
     _build_mod_set_data,
     _build_relic_data,
     _build_skills_map,
     _build_stat_tables,
+    _build_unit_data,
     _gear_level_rows,
     _gear_piece_gp_rows,
     _int_rows,
@@ -38,100 +41,59 @@ from swgoh_comlink.StatCalc.data_builder._builder_base import (
 # ===================================================================
 
 
-class TestNum:
-    """Tests for _num() value coercion."""
-
-    def test_int_passthrough(self):
-        assert _num(42) == 42
-        assert isinstance(_num(42), int)
-
-    def test_float_passthrough(self):
-        assert _num(3.14) == 3.14
-        assert isinstance(_num(3.14), float)
-
-    def test_whole_float_normalized_to_int(self):
-        assert _num(10.0) == 10
-        assert isinstance(_num(10.0), int)
-
-    def test_string_int(self):
-        assert _num("100") == 100
-        assert isinstance(_num("100"), int)
-
-    def test_string_float(self):
-        assert _num("3.14") == 3.14
-        assert isinstance(_num("3.14"), float)
-
-    def test_string_whole_float(self):
-        assert _num("10.0") == 10
-        assert isinstance(_num("10.0"), int)
-
-    def test_none_returns_zero(self):
-        assert _num(None) == 0
-
-    def test_empty_string_returns_zero(self):
-        assert _num("") == 0
-
-    def test_non_numeric_string_returns_zero(self):
-        assert _num("abc") == 0
-
-    def test_negative_int(self):
-        assert _num(-5) == -5
-        assert isinstance(_num(-5), int)
-
-    def test_negative_float(self):
-        assert _num(-3.14) == -3.14
-        assert isinstance(_num(-3.14), float)
-
-    def test_zero_int(self):
-        assert _num(0) == 0
-        assert isinstance(_num(0), int)
-
-    def test_zero_float(self):
-        assert _num(0.0) == 0
-        assert isinstance(_num(0.0), int)
-
-    def test_large_int_string(self):
-        result = _num("52500000000")
-        assert result == 52500000000
-        assert isinstance(result, int)
-
-    @pytest.mark.parametrize(
-        "value",
-        [True, False, float("inf"), float("-inf"), float("nan"), "inf", "nan", "1.0e400"],
-        ids=["true", "false", "inf", "-inf", "nan", "inf-string", "nan-string", "overflowing-string"],
-    )
-    def test_bools_and_non_finite_numbers_read_as_zero(self, value: Any):
-        """Game data carries ints, floats and decimal strings; nothing else is a number."""
-        result = _num(value)
-        assert result == 0
-        assert type(result) is int
+@pytest.mark.parametrize(
+    ("value", "expected", "expected_type"),
+    [
+        (42, 42, int),
+        (-5, -5, int),
+        (0, 0, int),
+        (3.14, 3.14, float),
+        (-3.14, -3.14, float),
+        # Whole floats are normalized to int.
+        (10.0, 10, int),
+        (0.0, 0, int),
+        ("100", 100, int),
+        ("52500000000", 52500000000, int),
+        ("3.14", 3.14, float),
+        ("10.0", 10, int),
+        (" 7 ", 7, int),
+        (None, 0, int),
+        ("", 0, int),
+        ("abc", 0, int),
+        # Game data carries ints, floats and decimal strings; nothing else is a number.
+        (True, 0, int),
+        (False, 0, int),
+        (float("inf"), 0, int),
+        (float("-inf"), 0, int),
+        (float("nan"), 0, int),
+        ("inf", 0, int),
+        ("nan", 0, int),
+        ("1.0e400", 0, int),
+    ],
+)
+def test_num_coerces_to_int_or_float(value: Any, expected: int | float, expected_type: type):
+    result = _num(value)
+    assert result == expected
+    assert type(result) is expected_type
 
 
 class TestResolveSkills:
-    """Tests for _resolve_skills() skill reference resolution."""
-
-    def test_empty_refs(self):
-        assert _resolve_skills([], {"basic01": {"id": "basic01"}}) == []
-
-    def test_empty_map(self):
-        assert _resolve_skills([{"skillId": "x"}], {}) == []
-
-    def test_single_match(self):
-        skills_map = {"basic01": {"id": "basic01", "maxTier": 8, "isZeta": False}}
-        result = _resolve_skills([{"skillId": "basic01"}], skills_map)
-        assert len(result) == 1
-        assert result[0]["id"] == "basic01"
-
-    def test_multiple_refs_partial_match(self):
-        skills_map = {
-            "s1": {"id": "s1"},
-            "s2": {"id": "s2"},
-        }
-        refs = [{"skillId": "s1"}, {"skillId": "missing"}, {"skillId": "s2"}]
-        result = _resolve_skills(refs, skills_map)
-        assert len(result) == 2
-        assert result[0]["id"] == "s1"
-        assert result[1]["id"] == "s2"
+    @pytest.mark.parametrize(
+        ("refs", "skills_map", "expected_ids"),
+        [
+            pytest.param([], {"basic01": {"id": "basic01"}}, [], id="no-refs"),
+            pytest.param([{"skillId": "x"}], {}, [], id="empty-map"),
+            pytest.param([{"skillId": "basic01"}], {"basic01": {"id": "basic01"}}, ["basic01"], id="single"),
+            pytest.param(
+                [{"skillId": "s1"}, {"skillId": "missing"}, {"skillId": "s2"}],
+                {"s1": {"id": "s1"}, "s2": {"id": "s2"}},
+                ["s1", "s2"],
+                id="unknown-refs-skipped-in-order",
+            ),
+        ],
+    )
+    def test_resolves_known_refs(self, refs, skills_map, expected_ids):
+        assert [skill["id"] for skill in _resolve_skills(refs, skills_map)] == expected_ids
 
     def test_returns_copies(self):
         skills_map = {"s1": {"id": "s1", "maxTier": 5}}
@@ -140,283 +102,120 @@ class TestResolveSkills:
         assert skills_map["s1"]["maxTier"] == 5
 
 
-class TestMasteryName:
-    """Tests for _mastery_name() mastery table name derivation."""
-
-    def test_strength_attacker(self):
-        assert _mastery_name(2, ["role_attacker"]) == "strength_role_attacker_mastery"
-
-    def test_agility_tank(self):
-        assert _mastery_name(3, ["role_tank"]) == "agility_role_tank_mastery"
-
-    def test_intelligence_healer(self):
-        assert _mastery_name(4, ["role_healer"]) == "intelligence_role_healer_mastery"
-
-    def test_unknown_stat_defaults_to_strength(self):
-        assert _mastery_name(99, ["role_support"]) == "strength_role_support_mastery"
-
-    def test_no_role_defaults_to_attacker(self):
-        assert _mastery_name(2, []) == "strength_role_attacker_mastery"
-
-    def test_role_leader_ignored(self):
-        assert _mastery_name(2, ["role_leader", "role_support"]) == "strength_role_support_mastery"
-
-    def test_first_matching_role_wins(self):
-        assert _mastery_name(3, ["role_tank", "role_attacker"]) == "agility_role_tank_mastery"
-
-    def test_non_role_categories_ignored(self):
-        assert _mastery_name(2, ["faction_jedi", "role_healer"]) == "strength_role_healer_mastery"
+@pytest.mark.parametrize(
+    ("primary_stat", "categories", "expected"),
+    [
+        pytest.param(2, ["role_attacker"], "strength_role_attacker_mastery", id="strength"),
+        pytest.param(3, ["role_tank"], "agility_role_tank_mastery", id="agility"),
+        pytest.param(4, ["role_healer"], "intelligence_role_healer_mastery", id="intelligence"),
+        pytest.param(99, ["role_support"], "strength_role_support_mastery", id="unknown-stat-is-strength"),
+        pytest.param(2, [], "strength_role_attacker_mastery", id="no-role-is-attacker"),
+        pytest.param(2, ["role_leader", "role_support"], "strength_role_support_mastery", id="leader-ignored"),
+        pytest.param(3, ["role_tank", "role_attacker"], "agility_role_tank_mastery", id="first-role-wins"),
+        pytest.param(2, ["faction_jedi", "role_healer"], "strength_role_healer_mastery", id="non-role-ignored"),
+    ],
+)
+def test_mastery_name(primary_stat: int, categories: list[str], expected: str):
+    assert _mastery_name(primary_stat, categories) == expected
 
 
 # ===================================================================
 # Group B — Row parsers
 # ===================================================================
 
-
-class TestRarityRows:
-    """Tests for _rarity_rows() rarity enum parsing."""
-
-    def test_all_seven_rarities(self):
-        rows = [
-            {"key": f"{name}_STAR", "value": i * 10}
-            for name, i in [("ONE", 1), ("TWO", 2), ("THREE", 3), ("FOUR", 4), ("FIVE", 5), ("SIX", 6), ("SEVEN", 7)]
-        ]
-        result = _rarity_rows(rows)
-        assert len(result) == 7
-        assert result["1"] == 10
-        assert result["7"] == 70
-
-    def test_unknown_key_skipped(self):
-        assert _rarity_rows([{"key": "UNKNOWN", "value": 100}]) == {}
-
-    def test_empty_rows(self):
-        assert _rarity_rows([]) == {}
-
-    def test_subset_of_rarities(self):
-        rows = [
-            {"key": "THREE_STAR", "value": 30},
-            {"key": "FIVE_STAR", "value": 50},
-        ]
-        result = _rarity_rows(rows)
-        assert result == {"3": 30, "5": 50}
+_STARS = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN"]
 
 
-class TestTierRows:
-    """Tests for _tier_rows() tier key parsing."""
-
-    def test_standard_tiers(self):
-        rows = [
-            {"key": "TIER_01", "value": 100},
-            {"key": "TIER_12", "value": 1200},
-        ]
-        result = _tier_rows(rows)
-        assert result == {"1": 100, "12": 1200}
-
-    def test_leading_zero_stripped(self):
-        rows = [{"key": "TIER_01", "value": 5}]
-        result = _tier_rows(rows)
-        assert "1" in result
-        assert "01" not in result
-
-    def test_non_matching_key_skipped(self):
-        assert _tier_rows([{"key": "SOMETHING", "value": 5}]) == {}
-
-    def test_empty_rows(self):
-        assert _tier_rows([]) == {}
+def _rows(*pairs: tuple[str, Any]) -> list[dict[str, Any]]:
+    return [{"key": key, "value": value} for key, value in pairs]
 
 
-class TestIntRows:
-    """Tests for _int_rows() plain key→value parsing."""
-
-    def test_plain_keys(self):
-        rows = [
-            {"key": "1", "value": 0.37},
-            {"key": "2", "value": 0.50},
-        ]
-        result = _int_rows(rows)
-        assert result["1"] == 0.37
-        assert result["2"] == 0.50
-
-    def test_empty_rows(self):
-        assert _int_rows([]) == {}
-
-
-class TestRelicRows:
-    """Tests for _relic_rows() offset-shifted parsing."""
-
-    def test_offset_applied(self):
-        rows = [
-            {"key": "0", "value": 100},
-            {"key": "1", "value": 200},
-        ]
-        result = _relic_rows(rows)
-        # offset = 2, so 0+2=2, 1+2=3
-        assert result == {"2": 100, "3": 200}
-
-    def test_invalid_key_skipped(self):
-        assert _relic_rows([{"key": "abc", "value": 100}]) == {}
-
-    def test_empty_rows(self):
-        assert _relic_rows([]) == {}
-
-
-class TestStatEnumRows:
-    """Tests for _stat_enum_rows() stat enum string parsing."""
-
-    def test_known_stats(self):
-        rows = [
-            {"key": "STRENGTH", "value": 3},
-            {"key": "MAX_HEALTH", "value": 420},
-        ]
-        result = _stat_enum_rows(rows)
-        assert result == {"2": 3, "1": 420}
-
-    def test_unknown_stat_skipped(self):
-        assert _stat_enum_rows([{"key": "NONEXISTENT", "value": 99}]) == {}
-
-    def test_empty_rows(self):
-        assert _stat_enum_rows([]) == {}
-
-
-class TestModCrRows:
-    """Tests for _mod_cr_rows() mod CR parsing (pips:level:tier:set)."""
-
-    def test_keeps_tier1_set0(self):
-        rows = [
-            {"key": "5:10:1:0", "value": 100},
-            {"key": "5:10:2:0", "value": 200},  # tier=2, filtered
-            {"key": "5:10:1:1", "value": 300},  # set=1, filtered
-        ]
-        result = _mod_cr_rows(rows)
-        assert result == {"5": {"10": 100}}
-
-    def test_nested_structure(self):
-        rows = [
-            {"key": "5:10:1:0", "value": 100},
-            {"key": "5:15:1:0", "value": 150},
-            {"key": "6:10:1:0", "value": 200},
-        ]
-        result = _mod_cr_rows(rows)
-        assert result["5"]["10"] == 100
-        assert result["5"]["15"] == 150
-        assert result["6"]["10"] == 200
-
-    def test_empty_rows(self):
-        assert _mod_cr_rows([]) == {}
+@pytest.mark.parametrize(
+    ("parser", "rows", "expected"),
+    [
+        pytest.param(
+            _rarity_rows,
+            _rows(*((f"{name}_STAR", (i + 1) * 10) for i, name in enumerate(_STARS))),
+            {str(i): i * 10 for i in range(1, 8)},
+            id="rarity-all-seven",
+        ),
+        pytest.param(
+            _rarity_rows, _rows(("THREE_STAR", 30), ("FIVE_STAR", 50)), {"3": 30, "5": 50}, id="rarity-subset"
+        ),
+        pytest.param(_rarity_rows, _rows(("UNKNOWN", 100)), {}, id="rarity-unknown-skipped"),
+        pytest.param(_tier_rows, _rows(("TIER_01", 100), ("TIER_12", 1200)), {"1": 100, "12": 1200}, id="tier"),
+        pytest.param(_tier_rows, _rows(("SOMETHING", 5)), {}, id="tier-unknown-skipped"),
+        pytest.param(_int_rows, _rows(("1", 0.37), ("2", 0.50)), {"1": 0.37, "2": 0.50}, id="int"),
+        # Relic keys are shifted by the relic tier offset (2).
+        pytest.param(_relic_rows, _rows(("0", 100), ("1", 200)), {"2": 100, "3": 200}, id="relic-offset"),
+        pytest.param(_relic_rows, _rows(("abc", 100)), {}, id="relic-invalid-skipped"),
+        pytest.param(_stat_enum_rows, _rows(("STRENGTH", 3), ("MAX_HEALTH", 420)), {"2": 3, "1": 420}, id="stat-enum"),
+        pytest.param(_stat_enum_rows, _rows(("NONEXISTENT", 99)), {}, id="stat-enum-unknown-skipped"),
+        # Mod CR keeps tier 1, set 0 rows: pips -> level -> value.
+        pytest.param(
+            _mod_cr_rows,
+            _rows(("5:10:1:0", 100), ("5:15:1:0", 150), ("6:10:1:0", 200), ("5:10:2:0", 999), ("5:10:1:1", 999)),
+            {"5": {"10": 100, "15": 150}, "6": {"10": 200}},
+            id="mod-cr",
+        ),
+        # Mod GP keeps set 0 rows: pips -> level -> tier -> value.
+        pytest.param(
+            _mod_gp_rows,
+            _rows(("5:10:1:0", 100), ("5:10:2:0", 200), ("6:15:1:0", 300), ("5:10:1:1", 999)),
+            {"5": {"10": {"1": 100, "2": 200}}, "6": {"15": {"1": 300}}},
+            id="mod-gp",
+        ),
+        pytest.param(_mod_gp_rows, _rows(("1:2:0", 5)), {}, id="mod-gp-short-key-skipped"),
+        # Gear level GP is shifted up one tier; gear 1 is always 0.
+        pytest.param(
+            _gear_level_rows,
+            _rows(("TIER_01", 10), ("TIER_05", 50), ("TIER_13", 130)),
+            {"1": 0, "2": 10, "6": 50, "14": 130},
+            id="gear-level",
+        ),
+        # Gear piece slots are 1-based in the key and 0-based in the table.
+        pytest.param(
+            _gear_piece_gp_rows,
+            _rows(("TIER_01:1", 10), ("TIER_01:6", 60), ("2:2", 20)),
+            {"1": {"0": 10, "5": 60}, "2": {"1": 20}},
+            id="gear-piece",
+        ),
+        pytest.param(_gear_piece_gp_rows, _rows(("TIER_01", 5)), {}, id="gear-piece-no-slot-skipped"),
+        pytest.param(
+            _ability_special_gp, _rows(("zeta", 1500), ("omicron", 2000)), {"zeta": 1500, "omicron": 2000}, id="special"
+        ),
+        # XP rows are 0-indexed in the payload and 1-indexed in the table.
+        pytest.param(
+            _xp_rows,
+            [{"index": 0, "xp": 100}, {"index": 1, "xp": 200}, {"index": 2, "xp": 400}],
+            {"1": 100, "2": 200, "3": 400},
+            id="xp",
+        ),
+    ],
+)
+def test_row_parser(parser: Callable[[list[dict[str, Any]]], dict[str, Any]], rows, expected):
+    assert parser(rows) == expected
 
 
-class TestModGpRows:
-    """Tests for _mod_gp_rows() mod GP parsing (pips:level:tier:set)."""
-
-    def test_filters_set0(self):
-        rows = [
-            {"key": "5:10:1:0", "value": 100},
-            {"key": "5:10:1:1", "value": 200},  # set=1, filtered
-        ]
-        result = _mod_gp_rows(rows)
-        assert result == {"5": {"10": {"1": 100}}}
-
-    def test_three_level_nesting(self):
-        rows = [
-            {"key": "5:10:1:0", "value": 100},
-            {"key": "5:10:2:0", "value": 200},
-            {"key": "6:15:1:0", "value": 300},
-        ]
-        result = _mod_gp_rows(rows)
-        assert result["5"]["10"]["1"] == 100
-        assert result["5"]["10"]["2"] == 200
-        assert result["6"]["15"]["1"] == 300
-
-    def test_key_too_short_skipped(self):
-        assert _mod_gp_rows([{"key": "1:2:0", "value": 5}]) == {}
-
-    def test_empty_rows(self):
-        assert _mod_gp_rows([]) == {}
-
-
-class TestGearLevelRows:
-    """Tests for _gear_level_rows() gear-level-with-increment parsing."""
-
-    def test_initializes_with_gear_1_zero(self):
-        result = _gear_level_rows([])
-        assert result == {"1": 0}
-
-    def test_tier_incremented(self):
-        rows = [{"key": "TIER_01", "value": 42}]
-        result = _gear_level_rows(rows)
-        assert result == {"1": 0, "2": 42}
-
-    def test_multiple_tiers(self):
-        rows = [
-            {"key": "TIER_01", "value": 10},
-            {"key": "TIER_05", "value": 50},
-            {"key": "TIER_13", "value": 130},
-        ]
-        result = _gear_level_rows(rows)
-        assert result["1"] == 0
-        assert result["2"] == 10
-        assert result["6"] == 50
-        assert result["14"] == 130
-
-
-class TestGearPieceGpRows:
-    """Tests for _gear_piece_gp_rows() tier:slot parsing with slot decrement."""
-
-    def test_slot_decremented(self):
-        rows = [{"key": "TIER_01:1", "value": 10}]
-        result = _gear_piece_gp_rows(rows)
-        assert result == {"1": {"0": 10}}
-
-    def test_slot_range(self):
-        rows = [
-            {"key": "TIER_01:1", "value": 10},
-            {"key": "TIER_01:6", "value": 60},
-        ]
-        result = _gear_piece_gp_rows(rows)
-        assert result["1"]["0"] == 10
-        assert result["1"]["5"] == 60
-
-    def test_plain_tier_key(self):
-        rows = [{"key": "1:2", "value": 20}]
-        result = _gear_piece_gp_rows(rows)
-        assert result == {"1": {"1": 20}}
-
-    def test_key_without_colon_skipped(self):
-        assert _gear_piece_gp_rows([{"key": "TIER_01", "value": 5}]) == {}
-
-    def test_empty_rows(self):
-        assert _gear_piece_gp_rows([]) == {}
-
-
-class TestAbilitySpecialGp:
-    """Tests for _ability_special_gp() flat key→value parsing."""
-
-    def test_flat_mapping(self):
-        rows = [
-            {"key": "zeta", "value": 1500},
-            {"key": "omicron", "value": 2000},
-        ]
-        result = _ability_special_gp(rows)
-        assert result == {"zeta": 1500, "omicron": 2000}
-
-    def test_empty_rows(self):
-        assert _ability_special_gp([]) == {}
-
-
-class TestXpRows:
-    """Tests for _xp_rows() 0-indexed → 1-indexed conversion."""
-
-    def test_zero_indexed_to_one_indexed(self):
-        rows = [
-            {"index": 0, "xp": 100},
-            {"index": 1, "xp": 200},
-            {"index": 2, "xp": 400},
-        ]
-        result = _xp_rows(rows)
-        assert result == {"1": 100, "2": 200, "3": 400}
-
-    def test_empty_rows(self):
-        assert _xp_rows([]) == {}
+@pytest.mark.parametrize(
+    ("parser", "expected"),
+    [
+        (_rarity_rows, {}),
+        (_tier_rows, {}),
+        (_int_rows, {}),
+        (_relic_rows, {}),
+        (_stat_enum_rows, {}),
+        (_mod_cr_rows, {}),
+        (_mod_gp_rows, {}),
+        (_gear_level_rows, {"1": 0}),
+        (_gear_piece_gp_rows, {}),
+        (_ability_special_gp, {}),
+        (_xp_rows, {}),
+    ],
+    ids=lambda p: getattr(p, "__name__", None),
+)
+def test_row_parser_empty_rows(parser: Callable[[list[dict[str, Any]]], dict[str, Any]], expected):
+    assert parser([]) == expected
 
 
 # ===================================================================
@@ -424,555 +223,310 @@ class TestXpRows:
 # ===================================================================
 
 
-class TestBuildStatTables:
-    """Tests for _build_stat_tables() stat progression parsing."""
-
-    def test_empty_input(self):
-        assert _build_stat_tables([]) == {}
-
-    def test_non_stattable_filtered(self):
-        entries = [{"id": "other_thing", "stat": {"stat": [{"unitStatId": 1, "unscaledDecimalValue": 5}]}}]
-        result = _build_stat_tables(entries)
-        assert result == {}
-
-    def test_single_table(self):
-        entries = [
-            {
-                "id": "stattable_foo",
-                "stat": {
-                    "stat": [
-                        {"unitStatId": 2, "unscaledDecimalValue": 100},
-                        {"unitStatId": 3, "unscaledDecimalValue": "50.0"},
-                    ]
-                },
-            }
-        ]
-        result = _build_stat_tables(entries)
-        assert "stattable_foo" in result
-        assert result["stattable_foo"]["2"] == 100
-        assert result["stattable_foo"]["3"] == 50
-        assert isinstance(result["stattable_foo"]["3"], int)
-
-    def test_multiple_tables(self):
-        entries = [
-            {"id": "stattable_a", "stat": {"stat": [{"unitStatId": 1, "unscaledDecimalValue": 10}]}},
-            {"id": "stattable_b", "stat": {"stat": [{"unitStatId": 2, "unscaledDecimalValue": 20}]}},
-        ]
-        result = _build_stat_tables(entries)
-        assert len(result) == 2
+def _stat(stat_id: int, value: Any) -> dict[str, Any]:
+    return {"unitStatId": stat_id, "unscaledDecimalValue": value}
 
 
-class TestBuildSkillsMap:
-    """Tests for _build_skills_map() skill metadata building."""
-
-    def test_empty_input(self):
-        assert _build_skills_map([]) == {}
-
-    def test_skill_no_tiers(self):
-        skills = [{"id": "basic01", "tier": []}]
-        result = _build_skills_map(skills)
-        assert result["basic01"]["maxTier"] == 1
-        assert result["basic01"]["isZeta"] is False
-        assert result["basic01"]["powerOverrideTags"] == {}
-
-    def test_skill_with_zeta(self):
-        skills = [
-            {
-                "id": "special01",
-                "tier": [
-                    {"powerOverrideTag": ""},
-                    {"powerOverrideTag": ""},
-                    {"powerOverrideTag": "zeta"},
-                ],
-            }
-        ]
-        result = _build_skills_map(skills)
-        assert result["special01"]["isZeta"] is True
-        assert result["special01"]["maxTier"] == 4
-
-    def test_power_override_tags_collected(self):
-        skills = [
-            {
-                "id": "unique01",
-                "tier": [
-                    {"powerOverrideTag": ""},
-                    {"powerOverrideTag": "zeta"},
-                    {"powerOverrideTag": ""},
-                    {"powerOverrideTag": "omicron"},
-                ],
-            }
-        ]
-        result = _build_skills_map(skills)
-        tags = result["unique01"]["powerOverrideTags"]
-        assert tags == {"3": "zeta", "5": "omicron"}
+@pytest.mark.parametrize(
+    "build",
+    [
+        _build_stat_tables,
+        _build_skills_map,
+        _build_gear_data,
+        _build_mod_set_data,
+        lambda entries: _build_relic_data(entries, {}),
+    ],
+    ids=["stat-tables", "skills-map", "gear-data", "mod-set-data", "relic-data"],
+)
+def test_builders_return_empty_for_empty_input(build: Callable[[list[Any]], dict[str, Any]]):
+    assert build([]) == {}
 
 
-class TestBuildGearData:
-    """Tests for _build_gear_data() equipment stat parsing."""
-
-    def test_empty_input(self):
-        assert _build_gear_data([]) == {}
-
-    def test_gear_with_stats(self):
-        equipment = [
-            {
-                "id": "gear001",
-                "equipmentStat": {
-                    "stat": [
-                        {"unitStatId": 1, "unscaledDecimalValue": 500},
-                        {"unitStatId": 6, "unscaledDecimalValue": 25},
-                    ]
-                },
-            }
-        ]
-        result = _build_gear_data(equipment)
-        assert "gear001" in result
-        assert result["gear001"]["stats"]["1"] == 500
-        assert result["gear001"]["stats"]["6"] == 25
-
-    def test_gear_without_stats_excluded(self):
-        equipment = [{"id": "gear_empty", "equipmentStat": {"stat": []}}]
-        result = _build_gear_data(equipment)
-        assert result == {}
-
-    def test_mixed_gear(self):
-        equipment = [
-            {"id": "g1", "equipmentStat": {"stat": [{"unitStatId": 1, "unscaledDecimalValue": 10}]}},
-            {"id": "g2", "equipmentStat": {"stat": []}},
-            {"id": "g3", "equipmentStat": {"stat": [{"unitStatId": 2, "unscaledDecimalValue": 20}]}},
-        ]
-        result = _build_gear_data(equipment)
-        assert len(result) == 2
-        assert "g1" in result
-        assert "g2" not in result
-        assert "g3" in result
+def test_build_stat_tables():
+    entries = [
+        {"id": "stattable_a", "stat": {"stat": [_stat(2, 100), _stat(3, "50.0")]}},
+        {"id": "stattable_b", "stat": {"stat": [_stat(1, 10)]}},
+        {"id": "other_thing", "stat": {"stat": [_stat(1, 5)]}},  # not a stat table
+    ]
+    result = _build_stat_tables(entries)
+    assert result == {"stattable_a": {"2": 100, "3": 50}, "stattable_b": {"1": 10}}
+    assert type(result["stattable_a"]["3"]) is int
 
 
-class TestBuildModSetData:
-    """Tests for _build_mod_set_data() mod set parsing."""
+def test_build_skills_map():
+    def tiers(*tags: str) -> list[dict[str, str]]:
+        return [{"powerOverrideTag": tag} for tag in tags]
 
-    def test_empty_input(self):
-        assert _build_mod_set_data([]) == {}
-
-    def test_single_mod_set(self):
-        mod_sets = [
-            {
-                "id": "1",
-                "setCount": 4,
-                "completeBonus": {
-                    "stat": {
-                        "unitStatId": 1,
-                        "unscaledDecimalValue": "0.05",
-                    }
-                },
-            }
-        ]
-        result = _build_mod_set_data(mod_sets)
-        assert "1" in result
-        assert result["1"]["id"] == 1
-        assert result["1"]["count"] == 4
-        assert result["1"]["value"] == 0.05
-
-    def test_value_coercion(self):
-        mod_sets = [
-            {
-                "id": "2",
-                "setCount": 2,
-                "completeBonus": {
-                    "stat": {
-                        "unitStatId": 5,
-                        "unscaledDecimalValue": "10.0",
-                    }
-                },
-            }
-        ]
-        result = _build_mod_set_data(mod_sets)
-        assert result["2"]["value"] == 10
-        assert isinstance(result["2"]["value"], int)
+    skills = [
+        {"id": "basic01", "tier": []},
+        {"id": "special01", "tier": tiers("", "", "zeta")},
+        {"id": "unique01", "tier": tiers("", "zeta", "", "omicron")},
+    ]
+    # maxTier counts the base tier, so it is len(tier) + 1 and the tier at index i is level i + 2.
+    # isZeta means the *last* upgrade is the zeta; a zeta earlier in the list does not count.
+    assert _build_skills_map(skills) == {
+        "basic01": {"id": "basic01", "maxTier": 1, "isZeta": False, "powerOverrideTags": {}},
+        "special01": {"id": "special01", "maxTier": 4, "isZeta": True, "powerOverrideTags": {"4": "zeta"}},
+        "unique01": {
+            "id": "unique01",
+            "maxTier": 5,
+            "isZeta": False,
+            "powerOverrideTags": {"3": "zeta", "5": "omicron"},
+        },
+    }
 
 
-class TestBuildRelicData:
-    """Tests for _build_relic_data() relic tier parsing."""
+def test_build_gear_data_skips_gear_without_stats():
+    equipment = [
+        {"id": "g1", "equipmentStat": {"stat": [_stat(1, 500), _stat(6, 25)]}},
+        {"id": "g2", "equipmentStat": {"stat": []}},
+        {"id": "g3", "equipmentStat": {"stat": [_stat(2, 20)]}},
+    ]
+    assert _build_gear_data(equipment) == {"g1": {"stats": {"1": 500, "6": 25}}, "g3": {"stats": {"2": 20}}}
 
-    def test_empty_input(self):
-        assert _build_relic_data([], {}) == {}
 
-    def test_relic_with_stats_and_gms(self):
-        relic_defs = [
-            {
-                "id": "relic_tier_01",
-                "stat": {
-                    "stat": [
-                        {"unitStatId": 1, "unscaledDecimalValue": 1000},
-                    ]
-                },
-                "relicStatTable": "stattable_relic_01",
-            }
-        ]
-        stat_tables = {
-            "stattable_relic_01": {"2": 50, "3": 30},
+def test_build_mod_set_data():
+    mod_sets = [
+        {"id": "1", "setCount": 4, "completeBonus": {"stat": _stat(1, "0.05")}},
+        {"id": "2", "setCount": 2, "completeBonus": {"stat": _stat(5, "10.0")}},
+    ]
+    result = _build_mod_set_data(mod_sets)
+    assert result == {"1": {"id": 1, "count": 4, "value": 0.05}, "2": {"id": 5, "count": 2, "value": 10}}
+    assert type(result["2"]["value"]) is int
+
+
+def test_build_relic_data():
+    relic_defs = [
+        {"id": "relic_tier_01", "stat": {"stat": [_stat(1, 1000)]}, "relicStatTable": "stattable_relic_01"},
+        {"id": "relic_tier_02", "stat": {"stat": []}, "relicStatTable": "nonexistent_table"},
+    ]
+    assert _build_relic_data(relic_defs, {"stattable_relic_01": {"2": 50, "3": 30}}) == {
+        "relic_tier_01": {"stats": {"1": 1000}, "gms": {"2": 50, "3": 30}},
+        "relic_tier_02": {"stats": {}, "gms": {}},
+    }
+
+
+# ── CR / GP table routing ──────────────────────────────────────────────
+# Each table ID is routed to fixed keys in the CR and/or GP output. The parsers have their own
+# tests above, so these check routing: which keys appear, which parser filled each, and which
+# CR/GP pairs share one object.
+
+_RARITY = _rows(("SEVEN_STAR", 70))
+_TIER = _rows(("TIER_01", 42))
+_MOD = _rows(("5:10:1:0", 100))
+_RELIC = _rows(("0", 100))
+_FACTOR = _rows(("1", 0.5))
+_XP = [{"index": 0, "xp": 100}]
+
+
+@pytest.mark.parametrize(
+    ("table_id", "rows", "cr", "gp", "shared"),
+    [
+        pytest.param("crew_rating_per_unit_rarity", _RARITY, {"crewRarityCR": _rarity_rows},
+                     {"unitRarityGP": _rarity_rows}, True, id="unit-rarity"),
+        pytest.param("crew_rating_per_gear_piece_at_tier", _TIER, {"gearPieceCR": _tier_rows}, {}, False,
+                     id="gear-piece-cr"),
+        pytest.param("galactic_power_per_complete_gear_tier_table", _TIER, {"gearLevelCR": _gear_level_rows},
+                     {"gearLevelGP": _gear_level_rows}, True, id="gear-level"),
+        pytest.param("crew_contribution_multiplier_per_rarity", _RARITY, {"shipRarityFactor": _rarity_rows},
+                     {"shipRarityFactor": _rarity_rows}, True, id="ship-rarity-factor"),
+        pytest.param("crew_rating_per_mod_rarity_level_tier", _MOD, {"modRarityLevelCR": _mod_cr_rows},
+                     {"modRarityLevelTierGP": _mod_gp_rows}, False, id="mods"),
+        pytest.param("crew_rating_modifier_per_relic_tier", _RELIC, {"relicTierLevelFactor": _relic_rows}, {}, False,
+                     id="relic-level-factor-cr"),
+        pytest.param("crew_rating_per_relic_tier", _RELIC, {"relicTierCR": _relic_rows}, {}, False, id="relic-cr"),
+        pytest.param("crew_rating_modifier_per_ability_crewless_ships", _FACTOR,
+                     {"crewlessAbilityFactor": _int_rows}, {}, False, id="crewless-cr"),
+        pytest.param("galactic_power_per_tagged_ability_level_table", _rows(("zeta", 1500)), {},
+                     {"abilitySpecialGP": _ability_special_gp}, False, id="ability-special-gp"),
+        pytest.param("galactic_power_modifier_per_ship_crew_size_table", _FACTOR, {}, {"crewSizeFactor": _int_rows},
+                     False, id="crew-size"),
+        pytest.param("galactic_power_per_relic_tier", _RELIC, {}, {"relicTierGP": _relic_rows}, False, id="relic-gp"),
+        pytest.param("galactic_power_modifier_per_relic_tier", _RELIC, {}, {"relicTierLevelFactor": _relic_rows},
+                     False, id="relic-level-factor-gp"),
+        pytest.param("galactic_power_per_tier_slot_table", _rows(("TIER_01:1", 10)), {},
+                     {"gearPieceGP": _gear_piece_gp_rows}, False, id="gear-piece-gp"),
+        pytest.param("galactic_power_modifier_per_ability_crewless_ships", _FACTOR, {},
+                     {"crewlessAbilityFactor": _int_rows}, False, id="crewless-gp"),
+        pytest.param("strength_role_attacker_mastery", _rows(("STRENGTH", 5)),
+                     {"strength_role_attacker_mastery": _stat_enum_rows}, {}, False, id="mastery"),
+        pytest.param("unknown_table", _RARITY, {}, {}, False, id="unknown"),
+    ],
+)  # fmt: skip
+def test_cr_gp_table_routing(table_id: str, rows, cr: dict[str, Any], gp: dict[str, Any], shared: bool):
+    built_cr, built_gp = _build_cr_gp_tables([{"id": table_id, "row": rows}], [])
+    _assert_routed(built_cr, built_gp, cr, gp, rows, shared)
+
+
+@pytest.mark.parametrize(
+    ("table_id", "cr", "gp", "shared"),
+    [
+        pytest.param("crew_rating_per_unit_level", {"unitLevelCR": _xp_rows}, {"unitLevelGP": _xp_rows}, True,
+                     id="unit-level"),
+        pytest.param("crew_rating_per_ability_level", {"abilityLevelCR": _xp_rows}, {"abilityLevelGP": _xp_rows},
+                     True, id="ability-level"),
+        pytest.param("galactic_power_per_ship_level_table", {}, {"shipLevelGP": _xp_rows}, False, id="ship-level"),
+        pytest.param("galactic_power_per_ship_ability_level_table", {}, {"shipAbilityLevelGP": _xp_rows}, False,
+                     id="ship-ability-level"),
+        pytest.param("unknown_xp_table", {}, {}, False, id="unknown"),
+    ],
+)  # fmt: skip
+def test_cr_gp_xp_table_routing(table_id: str, cr: dict[str, Any], gp: dict[str, Any], shared: bool):
+    built_cr, built_gp = _build_cr_gp_tables([], [{"id": table_id, "row": _XP}])
+    _assert_routed(built_cr, built_gp, cr, gp, _XP, shared)
+
+
+def _assert_routed(built_cr, built_gp, cr, gp, rows, shared: bool) -> None:
+    assert built_cr == {key: parser(rows) for key, parser in cr.items()}
+    assert built_gp == {key: parser(rows) for key, parser in gp.items()}
+    assert all(value for value in [*built_cr.values(), *built_gp.values()])  # never vacuously empty
+    if shared:
+        ((cr_value,), (gp_value,)) = built_cr.values(), built_gp.values()
+        assert cr_value is gp_value
+
+
+def test_cr_gp_tables_empty_inputs():
+    assert _build_cr_gp_tables([], []) == ({}, {})
+
+
+# ===================================================================
+# Group D — Units and the full build
+# ===================================================================
+
+
+def _char_unit(base_id: str, **overrides: Any) -> dict[str, Any]:
+    return {
+        "baseId": base_id,
+        "obtainable": True,
+        "obtainableTime": "0",
+        "rarity": 1,
+        "combatType": 1,
+        "primaryUnitStat": 2,
+        "unitTier": [],
+        "skillReference": [],
+        "categoryId": [],
+        "relicDefinition": {"relicTierDefinitionId": []},
+        "statProgressionId": "",
+        **overrides,
+    }
+
+
+def _ship_unit(base_id: str, **overrides: Any) -> dict[str, Any]:
+    return {
+        "baseId": base_id,
+        "obtainable": True,
+        "obtainableTime": "0",
+        "rarity": 1,
+        "combatType": 2,
+        "primaryUnitStat": 2,
+        "baseStat": {"stat": []},
+        "skillReference": [],
+        "crewContributionTableId": "",
+        "crew": [],
+        "statProgressionId": "",
+        **overrides,
+    }
+
+
+def test_build_character():
+    skills_map = {"basic01": {"id": "basic01", "maxTier": 8, "isZeta": False, "powerOverrideTags": {}}}
+    unit = _char_unit(
+        "BOSSK",
+        unitTier=[
+            {"tier": 1, "baseStat": {"stat": [_stat(1, 100)]}, "equipmentSet": ["eq001"]},
+            {"tier": 2, "baseStat": {"stat": []}, "equipmentSet": ["eq002"]},
+        ],
+        skillReference=[{"skillId": "basic01"}],
+        categoryId=["role_tank"],
+        relicDefinition={"relicTierDefinitionId": ["relic_def_01_tier_0", "relic_def_01_tier_1"]},
+        statProgressionId="stattable_bossk",
+    )
+
+    result = _build_unit_data([unit], {"stattable_bossk": {"2": 50}}, skills_map)
+
+    assert result == {
+        "BOSSK": {
+            "combatType": 1,
+            "primaryStat": 2,
+            "gearLvl": {"1": {"gear": ["eq001"], "stats": {"1": 100}}, "2": {"gear": ["eq002"], "stats": {}}},
+            "growthModifiers": {"1": {"2": 50}},
+            "skills": [skills_map["basic01"]],
+            # Relic tier ids are keyed by their numeric suffix plus the relic tier offset (2).
+            "relic": {"2": "relic_def_01_tier_0", "3": "relic_def_01_tier_1"},
+            "masteryModifierID": "strength_role_tank_mastery",
         }
-        result = _build_relic_data(relic_defs, stat_tables)
-        assert "relic_tier_01" in result
-        assert result["relic_tier_01"]["stats"]["1"] == 1000
-        assert result["relic_tier_01"]["gms"] == {"2": 50, "3": 30}
-
-    def test_relic_missing_stat_table(self):
-        relic_defs = [
-            {
-                "id": "relic_tier_02",
-                "stat": {"stat": []},
-                "relicStatTable": "nonexistent_table",
-            }
-        ]
-        result = _build_relic_data(relic_defs, {})
-        assert result["relic_tier_02"]["gms"] == {}
+    }
 
 
-class TestBuildCrGpTables:
-    """Tests for _build_cr_gp_tables() CR/GP table building."""
+def test_build_ship_collects_crew_skills():
+    skills_map = {
+        "ship_skill": {"id": "ship_skill", "maxTier": 8, "isZeta": False, "powerOverrideTags": {}},
+        "crew_skill": {"id": "crew_skill", "maxTier": 3, "isZeta": False, "powerOverrideTags": {}},
+    }
+    unit = _ship_unit(
+        "SHIP1",
+        baseStat={"stat": [_stat(1, 5000)]},
+        skillReference=[{"skillId": "ship_skill"}],
+        crewContributionTableId="crew_table",
+        crew=[
+            {"unitId": "PILOT_A", "skillReference": [{"skillId": "crew_skill"}]},
+            {"unitId": "PILOT_B", "skillReference": []},
+        ],
+    )
 
-    def test_empty_inputs(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
+    result = _build_unit_data([unit], {"crew_table": {"5": 0.5}}, skills_map)
 
-        cr, gp = _build_cr_gp_tables([], [])
-        assert cr == {}
-        assert gp == {}
-
-    def test_shared_table_populates_both(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-
-        tables = [
-            {
-                "id": "crew_rating_per_unit_rarity",
-                "row": [
-                    {"key": "ONE_STAR", "value": 10},
-                    {"key": "SEVEN_STAR", "value": 70},
-                ],
-            }
-        ]
-        cr, gp = _build_cr_gp_tables(tables, [])
-        assert "crewRarityCR" in cr
-        assert "unitRarityGP" in gp
-        assert cr["crewRarityCR"] is gp["unitRarityGP"]
-
-    def test_mastery_table(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-
-        tables = [
-            {
-                "id": "strength_role_attacker_mastery",
-                "row": [{"key": "STRENGTH", "value": 5}],
-            }
-        ]
-        cr, gp = _build_cr_gp_tables(tables, [])
-        assert "strength_role_attacker_mastery" in cr
-        assert cr["strength_role_attacker_mastery"]["2"] == 5
-
-    def test_xp_tables_shared(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-
-        xp_tables = [
-            {
-                "id": "crew_rating_per_unit_level",
-                "row": [
-                    {"index": 0, "xp": 100},
-                    {"index": 1, "xp": 200},
-                ],
-            }
-        ]
-        cr, gp = _build_cr_gp_tables([], xp_tables)
-        assert "unitLevelCR" in cr
-        assert "unitLevelGP" in gp
-        assert cr["unitLevelCR"] is gp["unitLevelGP"]
-        assert cr["unitLevelCR"]["1"] == 100
-
-    def test_gp_only_tables(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-
-        tables = [
-            {
-                "id": "galactic_power_modifier_per_ship_crew_size_table",
-                "row": [{"key": "1", "value": 0.5}, {"key": "2", "value": 0.75}],
-            }
-        ]
-        cr, gp = _build_cr_gp_tables(tables, [])
-        assert "crewSizeFactor" in gp
-        assert "crewSizeFactor" not in cr
-
-    def test_gear_level_shared(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_cr_gp_tables
-
-        tables = [
-            {
-                "id": "galactic_power_per_complete_gear_tier_table",
-                "row": [{"key": "TIER_01", "value": 42}],
-            }
-        ]
-        cr, gp = _build_cr_gp_tables(tables, [])
-        assert "gearLevelGP" in gp
-        assert "gearLevelCR" in cr
-        assert gp["gearLevelGP"] is cr["gearLevelCR"]
-        assert gp["gearLevelGP"]["1"] == 0
-        assert gp["gearLevelGP"]["2"] == 42
-
-
-class TestBuildCharacter:
-    """Tests for _build_character() via _build_unit_data()."""
-
-    def test_basic_character_structure(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
-
-        units = [
-            {
-                "baseId": "BOSSK",
-                "obtainable": True,
-                "obtainableTime": "0",
-                "rarity": 1,
-                "combatType": 1,
-                "primaryUnitStat": 2,
-                "unitTier": [
-                    {
-                        "tier": 1,
-                        "baseStat": {"stat": [{"unitStatId": 1, "unscaledDecimalValue": 100}]},
-                        "equipmentSet": ["eq001"],
-                    }
-                ],
-                "skillReference": [],
-                "categoryId": ["role_tank"],
-                "relicDefinition": {"relicTierDefinitionId": []},
-                "statProgressionId": "stattable_bossk",
-            }
-        ]
-        stat_tables = {"stattable_bossk": {"2": 50}}
-        result = _build_unit_data(units, stat_tables, {})
-        assert "BOSSK" in result
-        char = result["BOSSK"]
-        assert char["combatType"] == 1
-        assert char["primaryStat"] == 2
-        assert "gearLvl" in char
-        assert "growthModifiers" in char
-        assert "skills" in char
-        assert "relic" in char
-        assert char["masteryModifierID"] == "strength_role_tank_mastery"
-
-    def test_gear_tiers_parsed(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
-
-        units = [
-            {
-                "baseId": "VADER",
-                "obtainable": True,
-                "obtainableTime": "0",
-                "rarity": 1,
-                "combatType": 1,
-                "primaryUnitStat": 2,
-                "unitTier": [
-                    {"tier": 1, "baseStat": {"stat": []}, "equipmentSet": ["a"]},
-                    {"tier": 2, "baseStat": {"stat": []}, "equipmentSet": ["b"]},
-                ],
-                "skillReference": [],
-                "categoryId": [],
-                "relicDefinition": {"relicTierDefinitionId": []},
-                "statProgressionId": "",
-            }
-        ]
-        result = _build_unit_data(units, {}, {})
-        assert "1" in result["VADER"]["gearLvl"]
-        assert "2" in result["VADER"]["gearLvl"]
-
-    def test_relic_tier_ids_offset(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
-
-        units = [
-            {
-                "baseId": "CHAR1",
-                "obtainable": True,
-                "obtainableTime": "0",
-                "rarity": 1,
-                "combatType": 1,
-                "primaryUnitStat": 2,
-                "unitTier": [],
-                "skillReference": [],
-                "categoryId": [],
-                "relicDefinition": {
-                    "relicTierDefinitionId": ["relic_def_01_tier_0", "relic_def_01_tier_1"],
-                },
-                "statProgressionId": "",
-            }
-        ]
-        result = _build_unit_data(units, {}, {})
-        relic = result["CHAR1"]["relic"]
-        # tier 0 + offset 2 = key "2", tier 1 + offset 2 = key "3"
-        assert "2" in relic
-        assert "3" in relic
-
-
-class TestBuildShip:
-    """Tests for _build_ship() via _build_unit_data()."""
-
-    def test_basic_ship_structure(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
-
-        units = [
-            {
-                "baseId": "YOURSHIP",
-                "obtainable": True,
-                "obtainableTime": "0",
-                "rarity": 1,
-                "combatType": 2,
-                "primaryUnitStat": 2,
-                "baseStat": {
-                    "stat": [
-                        {"unitStatId": 1, "unscaledDecimalValue": 5000},
-                    ]
-                },
-                "skillReference": [],
-                "crewContributionTableId": "",
-                "crew": [],
-                "statProgressionId": "",
-            }
-        ]
-        result = _build_unit_data(units, {}, {})
-        assert "YOURSHIP" in result
-        ship = result["YOURSHIP"]
-        assert ship["combatType"] == 2
-        assert ship["primaryStat"] == 2
-        assert "stats" in ship
-        assert "growthModifiers" in ship
-        assert "skills" in ship
-        assert "crewStats" in ship
-        assert "crew" in ship
-
-    def test_crew_members_collected(self):
-        from swgoh_comlink.StatCalc.data_builder._builder_base import _build_unit_data
-
-        skills_map = {
-            "crew_skill_1": {"id": "crew_skill_1", "maxTier": 3, "isZeta": False, "powerOverrideTags": {}},
+    assert result == {
+        "SHIP1": {
+            "combatType": 2,
+            "primaryStat": 2,
+            "stats": {"1": 5000},
+            "growthModifiers": {},
+            "skills": [skills_map["ship_skill"], skills_map["crew_skill"]],
+            "crewStats": {"5": 0.5},
+            "crew": ["PILOT_A", "PILOT_B"],
         }
-        units = [
-            {
-                "baseId": "SHIP1",
-                "obtainable": True,
-                "obtainableTime": "0",
-                "rarity": 1,
-                "combatType": 2,
-                "primaryUnitStat": 2,
-                "baseStat": {"stat": []},
-                "skillReference": [],
-                "crewContributionTableId": "",
-                "crew": [
-                    {"unitId": "PILOT_A", "skillReference": [{"skillId": "crew_skill_1"}]},
-                    {"unitId": "PILOT_B", "skillReference": []},
-                ],
-                "statProgressionId": "",
-            }
-        ]
-        result = _build_unit_data(units, {}, skills_map)
-        ship = result["SHIP1"]
-        assert ship["crew"] == ["PILOT_A", "PILOT_B"]
-        assert len(ship["skills"]) == 1
-        assert ship["skills"][0]["id"] == "crew_skill_1"
+    }
 
 
-class TestBuildGameData:
-    """Tests for GameDataBuilderBase._build_game_data() orchestration."""
+@pytest.mark.parametrize("make_unit", [_char_unit, _ship_unit], ids=["character", "ship"])
+@pytest.mark.parametrize("seven_star", [7, "SEVEN_STAR"], ids=["int-rarity", "enum-rarity"])
+def test_growth_modifiers_across_rarities(make_unit: Callable[..., dict[str, Any]], seven_star: Any):
+    """Every rarity row of a unit contributes its stat progression; enum rarities are read as numbers."""
+    units = [
+        make_unit("UNIT1", statProgressionId="stattable_unit1_r1"),
+        make_unit("UNIT1", rarity=seven_star, statProgressionId="stattable_unit1_r7"),
+    ]
+    stat_progression = [
+        {"id": "stattable_unit1_r1", "stat": {"stat": [_stat(2, 10)]}},
+        {"id": "stattable_unit1_r7", "stat": {"stat": [_stat(2, 70)]}},
+    ]
 
-    def test_empty_raw_has_all_six_keys(self):
-        result = GameDataBuilderBase._build_game_data({})
-        expected_keys = {"unitData", "gearData", "modSetData", "crTables", "gpTables", "relicData"}
-        assert set(result.keys()) == expected_keys
+    result = GameDataBuilderBase._build_game_data({"units": units, "statProgression": stat_progression})
 
-    def test_empty_raw_produces_empty_sections(self):
-        result = GameDataBuilderBase._build_game_data({})
-        for key in ("unitData", "gearData", "modSetData", "crTables", "gpTables", "relicData"):
-            assert isinstance(result[key], dict)
+    assert result["unitData"]["UNIT1"]["growthModifiers"] == {"1": {"2": 10}, "7": {"2": 70}}
 
-    def test_minimal_raw_produces_nonempty_gear(self):
-        raw = {
-            "equipment": [
-                {
-                    "id": "gear001",
-                    "equipmentStat": {
-                        "stat": [
-                            {"unitStatId": 1, "unscaledDecimalValue": 100},
-                        ]
-                    },
-                }
-            ],
-        }
-        result = GameDataBuilderBase._build_game_data(raw)
-        assert len(result["gearData"]) == 1
 
-    def test_growth_modifiers_across_rarities(self):
-        """Multiple rarities for the same unit populate growthModifiers."""
-        units = [
-            {
-                "baseId": "UNIT1",
-                "obtainable": True,
-                "obtainableTime": "0",
-                "rarity": 1,
-                "combatType": 1,
-                "primaryUnitStat": 2,
-                "unitTier": [],
-                "skillReference": [],
-                "categoryId": [],
-                "relicDefinition": {"relicTierDefinitionId": []},
-                "statProgressionId": "stattable_unit1_r1",
-            },
-            {
-                "baseId": "UNIT1",
-                "obtainable": True,
-                "obtainableTime": "0",
-                "rarity": 7,
-                "combatType": 1,
-                "primaryUnitStat": 2,
-                "statProgressionId": "stattable_unit1_r7",
-            },
-        ]
-        stat_tables_raw = [
-            {"id": "stattable_unit1_r1", "stat": {"stat": [{"unitStatId": 2, "unscaledDecimalValue": 10}]}},
-            {"id": "stattable_unit1_r7", "stat": {"stat": [{"unitStatId": 2, "unscaledDecimalValue": 70}]}},
-        ]
-        raw = {"units": units, "statProgression": stat_tables_raw}
-        result = GameDataBuilderBase._build_game_data(raw)
-        gm = result["unitData"]["UNIT1"]["growthModifiers"]
-        assert "1" in gm
-        assert "7" in gm
-        assert gm["1"]["2"] == 10
-        assert gm["7"]["2"] == 70
+@pytest.mark.parametrize(
+    "excluded",
+    [
+        pytest.param({"obtainable": False}, id="not-obtainable"),
+        pytest.param({"obtainableTime": "123"}, id="obtainable-later"),
+        pytest.param({"baseId": ""}, id="no-base-id"),
+    ],
+)
+def test_unobtainable_or_unidentified_units_are_excluded(excluded: dict[str, Any]):
+    units = [_char_unit("PLAYABLE"), _char_unit("EXCLUDED", **excluded)]
 
-    def test_non_obtainable_units_excluded(self):
-        """Units with obtainable=False or obtainableTime != '0' are skipped."""
-        units = [
-            {
-                "baseId": "PLAYABLE",
-                "obtainable": True,
-                "obtainableTime": "0",
-                "rarity": 1,
-                "combatType": 1,
-                "primaryUnitStat": 2,
-                "unitTier": [],
-                "skillReference": [],
-                "categoryId": [],
-                "relicDefinition": {"relicTierDefinitionId": []},
-                "statProgressionId": "",
-            },
-            {
-                "baseId": "NOT_OBTAINABLE",
-                "obtainable": False,
-                "obtainableTime": "0",
-                "rarity": 1,
-                "combatType": 1,
-                "primaryUnitStat": 2,
-                "unitTier": [],
-                "skillReference": [],
-                "categoryId": [],
-                "relicDefinition": {"relicTierDefinitionId": []},
-                "statProgressionId": "",
-            },
-        ]
-        raw = {"units": units}
-        result = GameDataBuilderBase._build_game_data(raw)
-        assert "PLAYABLE" in result["unitData"]
-        assert "NOT_OBTAINABLE" not in result["unitData"]
+    assert list(_build_unit_data(units, {}, {})) == ["PLAYABLE"]
+
+
+def test_build_game_data_from_empty_raw_has_six_empty_sections():
+    assert GameDataBuilderBase._build_game_data({}) == {
+        "unitData": {},
+        "gearData": {},
+        "modSetData": {},
+        "crTables": {},
+        "gpTables": {},
+        "relicData": {},
+    }
