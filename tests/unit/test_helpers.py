@@ -7,6 +7,7 @@ import inspect
 import json
 import logging
 from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -3138,615 +3139,554 @@ class TestGetLogger:
 
 # ── _localization ──────────────────────────────────────────────────────
 
-
-class TestHexToAnsiTruecolor:
-    def test_basic_conversion(self):
-
-        result = _hex_to_ansi_truecolor("FF0000")
-        assert result == "\033[38;2;255;0;0m"
-
-    def test_with_hash_prefix(self):
-
-        result = _hex_to_ansi_truecolor("#00FF00")
-        assert result == "\033[38;2;0;255;0m"
-
-    def test_mixed_case(self):
-
-        result = _hex_to_ansi_truecolor("aaBBcc")
-        assert result == "\033[38;2;170;187;204m"
-
-
-class TestParseTokens:
-    def test_plain_text(self):
-
-        tokens = _parse_tokens("hello world")
-        assert len(tokens) == 1
-        assert tokens[0] == {"type": "text", "value": "hello world"}
-
-    def test_color_tags(self):
-
-        tokens = _parse_tokens("[c][FF0000]red[-][/c]")
-        types = [t["type"] for t in tokens]
-        assert "color_block_open" in types
-        assert "color" in types
-        assert "color_reset" in types
-        assert "color_end" in types
-
-    def test_bold_tags(self):
-
-        tokens = _parse_tokens("[b]bold[/b]")
-        types = [t["type"] for t in tokens]
-        assert types == ["bold_open", "text", "bold_close"]
-
-    def test_italic_tags(self):
-
-        tokens = _parse_tokens("[i]italic[/i]")
-        types = [t["type"] for t in tokens]
-        assert types == ["italic_open", "text", "italic_close"]
-
-    def test_newline_escape(self):
-
-        tokens = _parse_tokens("line1\\nline2")
-        types = [t["type"] for t in tokens]
-        assert types == ["text", "newline", "text"]
-
-    def test_color_end_dash_c(self):
-
-        tokens = _parse_tokens("[-c]")
-        assert tokens[0]["type"] == "color_end"
-
-    def test_hex_color_token(self):
-
-        tokens = _parse_tokens("[F0FF23]")
-        assert tokens[0]["type"] == "color"
-        assert tokens[0]["hex6"] == "F0FF23"
-        assert tokens[0]["hex8"] == "F0FF23FF"
-        assert tokens[0]["r"] == 0xF0
-        assert tokens[0]["g"] == 0xFF
-        assert tokens[0]["b"] == 0x23
-        assert tokens[0]["a"] == 0xFF
-
-    def test_empty_parts_skipped(self):
-
-        tokens = _parse_tokens("")
-        assert tokens == []
-
-
-class TestParseSwgohStringBare:
-    def test_plain_text(self):
-
-        assert parse_swgoh_string("hello world", output="bare") == "hello world"
-
-    def test_strips_color_markup(self):
-
-        result = parse_swgoh_string("[c][FFAA00]golden[-][/c]", output="bare")
-        assert result == "golden"
-
-    def test_strips_bold(self):
-
-        assert parse_swgoh_string("[b]bold[/b]", output="bare") == "bold"
-
-    def test_strips_italic(self):
-
-        assert parse_swgoh_string("[i]italic[/i]", output="bare") == "italic"
-
-    def test_newline(self):
-
-        assert parse_swgoh_string("a\\nb", output="bare") == "a\nb"
-
-    def test_default_is_bare(self):
-
-        assert parse_swgoh_string("[b]text[/b]") == "text"
-
-
-_RED = "\033[38;2;255;0;0m"  # [FF0000] as a 24-bit ANSI foreground color
-
-
-class TestParseSwgohStringTerminal:
-    def test_color_block(self):
-
-        result = parse_swgoh_string("[c][FF0000]red[/c]", output="terminal")
-        assert "\033[38;2;255;0;0m" in result
-        assert "red" in result
-        assert result.endswith(ANSI_RESET)
-
-    def test_bold(self):
-
-        result = parse_swgoh_string("[b]bold[/b]", output="terminal")
-        assert ANSI_BOLD in result
-        assert ANSI_RESET in result
-        assert "bold" in result
-
-    def test_italic(self):
-
-        result = parse_swgoh_string("[i]italic[/i]", output="terminal")
-        assert ANSI_ITALIC in result
-        assert ANSI_RESET in result
-
-    def test_color_reset_within_block(self):
-
-        # [-] ends the color immediately; text after it is uncolored.
-        result = parse_swgoh_string("[c][FF0000]red[-]plain[/c]", output="terminal")
-        assert result == f"{_RED}red{ANSI_RESET}plain{ANSI_RESET}"
-
-    @pytest.mark.parametrize(
-        ("tag", "style"),
-        [pytest.param("b", "\033[1m", id="bold"), pytest.param("i", "\033[3m", id="italic")],
-    )
-    def test_style_close_reapplies_active_color(self, tag, style):
-
-        # Closing the style resets the terminal, so the still-open color must be re-emitted.
-        result = parse_swgoh_string(f"[c][FF0000][{tag}]styled[/{tag}]text[/c]", output="terminal")
-        assert result == f"{_RED}{style}styled{ANSI_RESET}{_RED}text{ANSI_RESET}"
-
-    def test_bold_close_preserves_italic(self):
-
-        result = parse_swgoh_string("[i][b]both[/b]just_italic[/i]", output="terminal")
-        # After bold close, italic should be reapplied
-        parts = result.split("both")
-        assert ANSI_ITALIC in parts[1]
-
-    def test_italic_close_preserves_bold(self):
-
-        result = parse_swgoh_string("[b][i]both[/i]just_bold[/b]", output="terminal")
-        parts = result.split("both")
-        assert ANSI_BOLD in parts[1]
-
-    def test_color_end_reapplies_styles(self):
-
-        # Ending the color resets the terminal, so the still-open bold must be re-emitted.
-        result = parse_swgoh_string("[b][c][FF0000]red[/c]still_bold[/b]", output="terminal")
-        assert result == f"{ANSI_BOLD}{_RED}red{ANSI_RESET}{ANSI_BOLD}still_bold{ANSI_RESET}"
-
-    def test_finalize_resets_active_styles(self):
-
-        # Unclosed bold — finalize should add reset
-        result = parse_swgoh_string("[b]no close", output="terminal")
-        assert result.endswith(ANSI_RESET)
-
-
-class TestParseSwgohStringDiscord:
-    def test_bold(self):
-
-        result = parse_swgoh_string("[b]bold[/b]", output="discord")
-        assert result == "**bold**"
-
-    def test_italic(self):
-
-        result = parse_swgoh_string("[i]italic[/i]", output="discord")
-        assert result == "*italic*"
-
-    def test_color_ignored(self):
-
-        result = parse_swgoh_string("[c][FF0000]red[/c]", output="discord")
-        assert result == "red"
-
-    @pytest.mark.parametrize(
-        ("text", "expected"),
-        [
-            ("[b]no close", "**no close**"),
-            ("[b][i][u][s]x", "***__~~x~~__***"),
-            ("[c][FF0000][i][u][s]x[/c]y", "*__~~xy~~__*"),
-        ],
-        ids=["unclosed-bold", "unclosed-four-styles", "color-end-with-open-styles"],
-    )
-    def test_unclosed_styles_are_closed(self, text: str, expected: str):
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string(text, output="discord") == expected
-
-
-class TestParseSwgohStringWeb:
-    def test_color_span(self):
-
-        result = parse_swgoh_string("[c][FF0000]red[/c]", output="web")
-        assert '<span style="color:#FF0000">' in result
-        assert "</span>" in result
-        assert result.startswith("<p>")
-        assert result.endswith("</p>")
-
-    def test_bold(self):
-
-        result = parse_swgoh_string("[b]bold[/b]", output="web")
-        assert "<b>bold</b>" in result
-
-    def test_italic(self):
-
-        result = parse_swgoh_string("[i]italic[/i]", output="web")
-        assert "<em>italic</em>" in result
-
-    def test_color_reset_closes_span(self):
-
-        result = parse_swgoh_string("[c][FF0000]red[-]plain[/c]", output="web")
-        assert "</span>" in result
-        assert "red" in result
-        assert "plain" in result
-
-    def test_wraps_in_p_tag(self):
-
-        result = parse_swgoh_string("simple", output="web")
-        assert result == "<p>simple</p>"
-
-    @pytest.mark.parametrize(
-        ("text", "expected"),
-        [
-            (
-                "[c][FF0000][i][u][s]x[/c]y",
-                '<p><span style="color:#FF0000"><em><u><s>x</s></u></em></span><em><u><s>y</s></u></em></p>',
+_R, _B, _I, _U, _S = ANSI_RESET, ANSI_BOLD, ANSI_ITALIC, ANSI_UNDERLINE, ANSI_STRIKE
+
+
+def _fg(r: int, g: int, b: int) -> str:
+    """24-bit ANSI foreground color sequence."""
+    return f"\033[38;2;{r};{g};{b}m"
+
+
+@pytest.mark.parametrize(
+    ("hex_color", "expected"),
+    [
+        pytest.param("FF0000", "\033[38;2;255;0;0m", id="basic"),
+        pytest.param("#00FF00", "\033[38;2;0;255;0m", id="hash-prefix"),
+        pytest.param("aaBBcc", "\033[38;2;170;187;204m", id="mixed-case"),
+    ],
+)
+def test_hex_to_ansi_truecolor(hex_color, expected):
+    assert _hex_to_ansi_truecolor(hex_color) == expected
+
+
+def _text(value: str) -> dict[str, Any]:
+    return {"type": "text", "value": value}
+
+
+def _tok(kind: str, **fields: Any) -> dict[str, Any]:
+    return {"type": kind, **fields}
+
+
+def _color(r: int, g: int, b: int, a: int = 0xFF) -> dict[str, Any]:
+    hex6 = f"{r:02X}{g:02X}{b:02X}"
+    return {"type": "color", "r": r, "g": g, "b": b, "a": a, "hex6": hex6, "hex8": f"{hex6}{a:02X}"}
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        pytest.param("", [], id="empty"),
+        pytest.param("hello world", [_text("hello world")], id="plain"),
+        pytest.param("line1\\nline2", [_text("line1"), _tok("newline"), _text("line2")], id="newline-escape"),
+        pytest.param(
+            "[c][FF0000]red[-][/c]",
+            [_tok("color_block_open"), _color(255, 0, 0), _text("red"), _tok("color_reset"), _tok("color_end")],
+            id="color-block",
+        ),
+        pytest.param("[-c]", [_tok("color_end")], id="dash-c-ends-color"),
+        pytest.param("[FF0000]red", [_color(255, 0, 0), _text("red")], id="standalone-color"),
+        pytest.param("[F0FF23]", [_color(0xF0, 0xFF, 0x23)], id="hex6"),
+        pytest.param("[F0A]", [_color(0xFF, 0x00, 0xAA)], id="hex3-expands"),
+        pytest.param("[F0A8]", [_color(0xFF, 0x00, 0xAA, 0x88)], id="hex4-rgba"),
+        pytest.param("[12345678]", [_color(0x12, 0x34, 0x56, 0x78)], id="hex8-rgba"),
+        pytest.param("[F]", [_tok("alpha", a=0xFF)], id="hex1-alpha"),
+        pytest.param("[b]bold[/b]", [_tok("bold_open"), _text("bold"), _tok("bold_close")], id="bold"),
+        pytest.param("[i]italic[/i]", [_tok("italic_open"), _text("italic"), _tok("italic_close")], id="italic"),
+        pytest.param("[u]x[/u]", [_tok("underline_open"), _text("x"), _tok("underline_close")], id="underline"),
+        pytest.param("[s]x[/s]", [_tok("strike_open"), _text("x"), _tok("strike_close")], id="strike"),
+        pytest.param("[t]x[/t]", [_tok("sprite_open"), _text("x"), _tok("sprite_close")], id="sprite"),
+        pytest.param(
+            "[sub]a[/sub][sup]b[/sup]",
+            [
+                *(_tok("sub_open", scale=None), _text("a"), _tok("sub_close")),
+                *(_tok("sup_open", scale=None), _text("b"), _tok("sup_close")),
+            ],
+            id="sub-sup",
+        ),
+        pytest.param(
+            "[sub=1.5]a[/sub][sup=0.8]b[/sup]",
+            [
+                *(_tok("sub_open", scale=1.5), _text("a"), _tok("sub_close")),
+                *(_tok("sup_open", scale=0.8), _text("b"), _tok("sup_close")),
+            ],
+            id="sub-sup-scaled",
+        ),
+        pytest.param("[y=2]xx[/y]", [_tok("scale_open", scale=2.0), _text("xx"), _tok("scale_close")], id="scale"),
+        # Single-letter named tags must not be misread as a 1-digit alpha literal.
+        *(
+            pytest.param(f"[{tag}]", [_tok(kind)], id=f"named-tag-{tag}-not-alpha")
+            for tag, kind in [
+                ("b", "bold_open"),
+                ("c", "color_block_open"),
+                ("i", "italic_open"),
+                ("s", "strike_open"),
+                ("t", "sprite_open"),
+                ("u", "underline_open"),
+            ]
+        ),
+    ],
+)
+def test_parse_tokens(text, expected):
+    assert _parse_tokens(text) == expected
+
+
+# Every input rendered in every output format, compared exactly. A missing format means that
+# rendering is deliberately not pinned (see the comment on the row).
+_RENDERINGS: list[tuple[str, str, dict[str, str]]] = [
+    (
+        "plain",
+        "hello world",
+        {
+            "bare": "hello world",
+            "discord": "hello world",
+            "web": "<p>hello world</p>",
+            "terminal": "hello world",
+        },
+    ),
+    ("empty", "", {"bare": "", "discord": "", "web": "<p></p>", "terminal": ""}),
+    ("newline", "a\\nb", {"bare": "a\nb", "discord": "a\nb", "web": "<p>a\nb</p>", "terminal": "a\nb"}),
+    (
+        "bold",
+        "[b]bold[/b]",
+        {
+            "bare": "bold",
+            "discord": "**bold**",
+            "web": "<p><b>bold</b></p>",
+            "terminal": f"{_B}bold{_R}",
+        },
+    ),
+    (
+        "italic",
+        "[i]italic[/i]",
+        {
+            "bare": "italic",
+            "discord": "*italic*",
+            "web": "<p><em>italic</em></p>",
+            "terminal": f"{_I}italic{_R}",
+        },
+    ),
+    ("underline", "[u]x[/u]", {"bare": "x", "discord": "__x__", "web": "<p><u>x</u></p>", "terminal": f"{_U}x{_R}"}),
+    ("strike", "[s]x[/s]", {"bare": "x", "discord": "~~x~~", "web": "<p><s>x</s></p>", "terminal": f"{_S}x{_R}"}),
+    (
+        "color-block",
+        "[c][FF0000]red[/c]",
+        {
+            "bare": "red",
+            "discord": "red",
+            "web": '<p><span style="color:#FF0000">red</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}red{_R}",
+        },
+    ),
+    (
+        "color-reset-then-end",
+        "[c][FFAA00]golden[-][/c]",
+        {
+            "bare": "golden",
+            "discord": "golden",
+            "web": '<p><span style="color:#FFAA00">golden</span></p>',
+            "terminal": f"{_fg(255, 170, 0)}golden{_R}{_R}",
+        },
+    ),
+    (
+        "color-reset-within-block",
+        "[c][FF0000]red[-]plain[/c]",
+        {
+            "bare": "redplain",
+            "discord": "redplain",
+            "web": '<p><span style="color:#FF0000">red</span>plain</p>',
+            "terminal": f"{_fg(255, 0, 0)}red{_R}plain{_R}",
+        },
+    ),
+    (
+        "color-reset-outside-block",
+        "[FF0000]red[-]plain",
+        {
+            "bare": "redplain",
+            "discord": "redplain",
+            "web": '<p><span style="color:#FF0000">red</span>plain</p>',
+            "terminal": f"{_fg(255, 0, 0)}red{_R}plain",
+        },
+    ),
+    (
+        "standalone-color",
+        "[00FF00]green",
+        {
+            "bare": "green",
+            "discord": "green",
+            "web": '<p><span style="color:#00FF00">green</span></p>',
+            "terminal": f"{_fg(0, 255, 0)}green{_R}",
+        },
+    ),
+    (
+        "hex3",
+        "[F0A]x[/c]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><span style="color:#FF00AA">x</span></p>',
+            "terminal": f"{_fg(255, 0, 170)}x{_R}",
+        },
+    ),
+    # Terminal output cannot render alpha, but still emits the RGB channel.
+    (
+        "hex4-rgba",
+        "[F0A8]x[/c]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><span style="color:rgba(255,0,170,0.533)">x</span></p>',
+            "terminal": f"{_fg(255, 0, 170)}x{_R}",
+        },
+    ),
+    (
+        "hex8-rgba",
+        "[12345678]x[/c]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><span style="color:rgba(18,52,86,0.471)">x</span></p>',
+            "terminal": f"{_fg(18, 52, 86)}x{_R}",
+        },
+    ),
+    # An alpha literal with no prior color applies to the default white.
+    (
+        "alpha-without-color",
+        "hello[8]world",
+        {
+            "bare": "helloworld",
+            "discord": "helloworld",
+            "web": '<p>hello<span style="color:rgba(255,255,255,0.533)">world</span></p>',
+            "terminal": f"hello{_fg(255, 255, 255)}world{_R}",
+        },
+    ),
+    (
+        "alpha-reuses-color",
+        "[FF0000]r[8]still_red[/c]",
+        {
+            "bare": "rstill_red",
+            "discord": "rstill_red",
+            "web": '<p><span style="color:#FF0000">r</span><span style="color:rgba(255,0,0,0.533)">still_red</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}r{_fg(255, 0, 0)}still_red{_R}",
+        },
+    ),
+    (
+        "color-alpha-color",
+        "[FF0000]red[8]faded[00FF00]green[/c]",
+        {
+            "bare": "redfadedgreen",
+            "discord": "redfadedgreen",
+            "web": (
+                '<p><span style="color:#FF0000">red</span><span style="color:rgba(255,0,0,0.533)">faded</span>'
+                '<span style="color:#00FF00">green</span></p>'
             ),
-            (
-                "[b][FF0000][i]x[-]y[/i][/b]",
-                '<p><b><span style="color:#FF0000"><em>x</em></span><em>y</em></b></p>',
-            ),
-            (
-                "[FF0000][i]x[00FF00]y[/i]",
-                '<p><span style="color:#FF0000"><em>x</em></span><span style="color:#00FF00"><em>y</em></span></p>',
-            ),
-            (
-                "[FF0000][b]x[8]y[/b]",
-                '<p><span style="color:#FF0000"><b>x</b></span><span style="color:rgba(255,0,0,0.533)"><b>y</b></span></p>',
-            ),
-            ("[b][FF0000]x", '<p><b><span style="color:#FF0000">x</span></b></p>'),
-            ("[FF0000][b]x", '<p><span style="color:#FF0000"><b>x</b></span></p>'),
-        ],
-        ids=["color-end", "color-reset", "color-change", "alpha-change", "unclosed-outer", "unclosed-inner"],
-    )
-    def test_styles_opened_inside_a_span_stay_nested(self, text: str, expected: str):
-        """Closing a color span closes the styles opened inside it first, then reopens them after."""
-        from swgoh_comlink.helpers._localization import parse_swgoh_string
-
-        assert parse_swgoh_string(text, output="web") == expected
-
-
-class TestParseSwgohStringComplex:
-    def test_nested_bold_italic(self):
-
-        result = parse_swgoh_string("[b][i]bold-italic[/i][/b]", output="bare")
-        assert result == "bold-italic"
-
-    def test_mixed_markup(self):
-
-        text = "[b]Title[/b]\\n[c][FFAA00]Gold text[-][/c] and [i]italic[/i]"
-        result = parse_swgoh_string(text, output="bare")
-        assert "Title" in result
-        assert "\n" in result
-        assert "Gold text" in result
-        assert "italic" in result
-
-    def test_empty_string(self):
-
-        assert parse_swgoh_string("", output="bare") == ""
-        assert parse_swgoh_string("", output="web") == "<p></p>"
-
-
-class TestParseTokensExtendedTags:
-    """Tokenization coverage for tags added in response to issue #83."""
-
-    def test_underline_tokens(self):
-
-        tokens = _parse_tokens("[u]x[/u]")
-        types = [t["type"] for t in tokens]
-        assert types == ["underline_open", "text", "underline_close"]
-
-    def test_strike_tokens(self):
-
-        tokens = _parse_tokens("[s]x[/s]")
-        types = [t["type"] for t in tokens]
-        assert types == ["strike_open", "text", "strike_close"]
-
-    def test_sprite_tokens(self):
-
-        tokens = _parse_tokens("[t]x[/t]")
-        types = [t["type"] for t in tokens]
-        assert types == ["sprite_open", "text", "sprite_close"]
-
-    def test_sub_and_sup_tokens(self):
-
-        tokens = _parse_tokens("[sub]a[/sub][sup]b[/sup]")
-        types = [t["type"] for t in tokens]
-        assert types == ["sub_open", "text", "sub_close", "sup_open", "text", "sup_close"]
-
-    def test_sub_sup_with_scale(self):
-
-        tokens = _parse_tokens("[sub=1.5]a[/sub][sup=0.8]b[/sup]")
-        opens = [t for t in tokens if t["type"] in ("sub_open", "sup_open")]
-        assert opens[0] == {"type": "sub_open", "scale": 1.5}
-        assert opens[1] == {"type": "sup_open", "scale": 0.8}
-
-    def test_scale_tokens(self):
-
-        tokens = _parse_tokens("[y=2]xx[/y]")
-        types = [t["type"] for t in tokens]
-        assert types == ["scale_open", "text", "scale_close"]
-        assert tokens[0]["scale"] == 2.0
-
-    def test_three_digit_hex_expands(self):
-
-        tokens = _parse_tokens("[F0A]")
-        assert tokens[0]["type"] == "color"
-        assert tokens[0]["hex6"] == "FF00AA"
-        assert tokens[0]["a"] == 0xFF
-
-    def test_four_digit_hex_rgba(self):
-
-        tokens = _parse_tokens("[F0A8]")
-        assert tokens[0]["type"] == "color"
-        assert tokens[0]["hex8"] == "FF00AA88"
-        assert tokens[0]["a"] == 0x88
-
-    def test_eight_digit_hex_rgba(self):
-
-        tokens = _parse_tokens("[12345678]")
-        assert tokens[0]["type"] == "color"
-        assert tokens[0]["hex8"] == "12345678"
-
-    def test_single_hex_alpha_token(self):
-
-        tokens = _parse_tokens("[F]")
-        assert tokens[0] == {"type": "alpha", "a": 0xFF}
-
-    def test_standalone_color_without_block(self):
-
-        tokens = _parse_tokens("[FF0000]red")
-        types = [t["type"] for t in tokens]
-        assert types == ["color", "text"]
-
-    def test_named_tag_wins_over_hex(self):
-        """Single-letter named tags must not be misread as 1-digit alpha."""
-
-        assert _parse_tokens("[b]")[0]["type"] == "bold_open"
-        assert _parse_tokens("[c]")[0]["type"] == "color_block_open"
-        assert _parse_tokens("[i]")[0]["type"] == "italic_open"
-        assert _parse_tokens("[s]")[0]["type"] == "strike_open"
-        assert _parse_tokens("[t]")[0]["type"] == "sprite_open"
-        assert _parse_tokens("[u]")[0]["type"] == "underline_open"
-
-
-class TestParseSwgohStringBareExtended:
-    def test_strips_underline(self):
-
-        assert parse_swgoh_string("[u]under[/u]", output="bare") == "under"
-
-    def test_strips_strike(self):
-
-        assert parse_swgoh_string("[s]cross[/s]", output="bare") == "cross"
-
-    def test_strips_sub_sup_scale(self):
-
-        text = "[sub=0.8]x[/sub][sup]y[/sup][y=1.5]z[/y]"
-        assert parse_swgoh_string(text, output="bare") == "xyz"
-
-    def test_strips_sprite_and_short_color(self):
-
-        assert parse_swgoh_string("[t]icon[/t][F0A]red", output="bare") == "iconred"
-
-    def test_strips_alpha_literal(self):
-
-        assert parse_swgoh_string("hello[8]world", output="bare") == "helloworld"
-
-
-class TestParseSwgohStringTerminalExtended:
-    def test_underline_emits_ansi(self):
-
-        result = parse_swgoh_string("[u]x[/u]", output="terminal")
-        assert ANSI_UNDERLINE in result
-        assert "x" in result
-        assert result.endswith(ANSI_RESET)
-
-    def test_strike_emits_ansi(self):
-
-        result = parse_swgoh_string("[s]x[/s]", output="terminal")
-        assert ANSI_STRIKE in result
-        assert result.endswith(ANSI_RESET)
-
-    def test_underline_preserves_color(self):
-
-        result = parse_swgoh_string("[FF0000][u]red[/u]still", output="terminal")
-        # After closing underline, the red foreground should be reapplied.
-        after_close = result.split("red")[1]
-        assert "\033[38;2;255;0;0m" in after_close
-
-    def test_strike_close_reapplies_bold(self):
-
-        result = parse_swgoh_string("[b][s]x[/s]still_bold[/b]", output="terminal")
-        tail = result.split("x")[1]
-        assert ANSI_BOLD in tail
-
-    def test_short_rgb_expands(self):
-
-        result = parse_swgoh_string("[F0A]x", output="terminal")
-        assert "\033[38;2;255;0;170m" in result
-
-    def test_standalone_color_without_c_wrapper(self):
-        """A color literal without [c] should still colorize in terminal output."""
-
-        result = parse_swgoh_string("[00FF00]green", output="terminal")
-        assert "\033[38;2;0;255;0m" in result
-        assert "green" in result
-
-    def test_dash_resets_color_outside_block(self):
-
-        result = parse_swgoh_string("[FF0000]red[-]plain", output="terminal")
-        assert ANSI_RESET in result
-        assert "plain" in result
-
-
-class TestParseSwgohStringDiscordExtended:
-    def test_underline_markdown(self):
-
-        assert parse_swgoh_string("[u]x[/u]", output="discord") == "__x__"
-
-    def test_strike_markdown(self):
-
-        assert parse_swgoh_string("[s]x[/s]", output="discord") == "~~x~~"
-
-    def test_sub_sup_scale_stripped(self):
-
-        text = "[sub=0.8]a[/sub][sup]b[/sup][y=1.2]c[/y]"
-        assert parse_swgoh_string(text, output="discord") == "abc"
-
-
-class TestParseSwgohStringWebExtended:
-    def test_underline_html(self):
-
-        assert parse_swgoh_string("[u]x[/u]", output="web") == "<p><u>x</u></p>"
-
-    def test_strike_html(self):
-
-        assert parse_swgoh_string("[s]x[/s]", output="web") == "<p><s>x</s></p>"
-
-    def test_sub_default_no_scale(self):
-
-        assert parse_swgoh_string("[sub]x[/sub]", output="web") == "<p><sub>x</sub></p>"
-
-    def test_sub_with_scale(self):
-
-        result = parse_swgoh_string("[sub=0.8]x[/sub]", output="web")
-        assert '<sub style="font-size:0.8em">x</sub>' in result
-
-    def test_sup_with_scale(self):
-
-        result = parse_swgoh_string("[sup=1.25]x[/sup]", output="web")
-        assert '<sup style="font-size:1.25em">x</sup>' in result
-
-    def test_scale_integer_formatted_without_decimal(self):
-
-        result = parse_swgoh_string("[y=2]x[/y]", output="web")
-        assert '<span style="font-size:2em">x</span>' in result
-
-    def test_short_hex_color_span(self):
-
-        result = parse_swgoh_string("[F0A]x[/c]", output="web")
-        assert '<span style="color:#FF00AA">x</span>' in result
-
-    def test_rgba_color_uses_rgba_css(self):
-
-        # [F0A8] -> FF00AA with alpha 0x88 (136). 136/255 ≈ 0.533
-        result = parse_swgoh_string("[F0A8]x[/c]", output="web")
-        assert "rgba(255,0,170,0.533)" in result
-
-    def test_alpha_only_reuses_prior_rgb(self):
-
-        result = parse_swgoh_string("[FF0000]red[8]faded", output="web")
-        # First span opens with opaque red, then closes, then reopens at alpha 0x88.
-        assert '<span style="color:#FF0000">' in result
-        assert "rgba(255,0,0," in result
-
-    def test_sprite_tag_stripped(self):
-
-        assert parse_swgoh_string("[t]icon[/t]", output="web") == "<p>icon</p>"
-
-
-class TestParseSwgohStringComplexExtended:
-    def test_deep_nested_styles(self):
-
-        assert parse_swgoh_string("[b][u][i]x[/i][/u][/b]", output="bare") == "x"
-
-    def test_discord_nested_style_combo(self):
-
-        result = parse_swgoh_string("[b][u][s]x[/s][/u][/b]", output="discord")
-        assert result == "**__~~x~~__**"
-
-    def test_web_nested_preserves_tag_structure(self):
-
-        result = parse_swgoh_string("[b][u]x[/u][/b]", output="web")
-        assert result == "<p><b><u>x</u></b></p>"
-
-    def test_color_then_alpha_then_new_color(self):
-
-        text = "[FF0000]red[8]faded[00FF00]green[/c]"
-        result = parse_swgoh_string(text, output="web")
-        # One opening span for each color change; matching closes at [/c].
-        assert result.count('<span style="color:') == 3
-        # Must close every span opened.
-        assert result.count("</span>") == 3
-
-    def test_issue_83_golden_string(self):
-        """End-to-end smoke for all four outputs on a representative string."""
-
-        s = "[c][FF0000][b]Boss[/b][-] deals [u]2x[/u] damage[/c]"
-        assert parse_swgoh_string(s, output="bare") == "Boss deals 2x damage"
-        assert parse_swgoh_string(s, output="discord") == "**Boss** deals __2x__ damage"
-
-
-class TestParseSwgohStringIssue83Coverage:
-    """Round-trip coverage for every tag and color format named in issue #83.
-
-    For text-only outputs (bare/terminal/discord) the visual-only tags
-    ([t], [y=X], [sub], [sup]) are expected to be stripped without leaking
-    any markup characters into the rendered string.
-    """
-
-    # --- [t] / [/t] sprite color forcing ---------------------------------------
-    def test_sprite_terminal_strips(self):
-
-        assert parse_swgoh_string("[t]icon[/t]", output="terminal") == "icon"
-
-    def test_sprite_discord_strips(self):
-
-        assert parse_swgoh_string("[t]icon[/t]", output="discord") == "icon"
-
-    # --- [y=FLOAT] / [/y] font scaling -----------------------------------------
-    def test_scale_terminal_strips(self):
-
-        assert parse_swgoh_string("[y=1.5]big[/y]", output="terminal") == "big"
-
-    # --- [sub] / [sub=FLOAT] / [/sub] subscript --------------------------------
-    def test_sub_terminal_strips(self):
-
-        assert parse_swgoh_string("[sub]x[/sub]", output="terminal") == "x"
-        assert parse_swgoh_string("[sub=0.8]x[/sub]", output="terminal") == "x"
-
-    # --- [sup] / [sup=FLOAT] / [/sup] superscript ------------------------------
-    def test_sup_terminal_strips(self):
-
-        assert parse_swgoh_string("[sup]x[/sup]", output="terminal") == "x"
-        assert parse_swgoh_string("[sup=1.25]x[/sup]", output="terminal") == "x"
-
-    # --- 4-digit [RGBA] color --------------------------------------------------
-    def test_four_digit_rgba_bare(self):
-
-        assert parse_swgoh_string("[F0A8]x[/c]", output="bare") == "x"
-
-    def test_four_digit_rgba_terminal_uses_rgb_channel(self):
-        """Terminal can't render alpha, but it must still emit the RGB channel."""
-
-        result = parse_swgoh_string("[F0A8]x[/c]", output="terminal")
-        # F0A8 -> RGB FF00AA, alpha 88 -> ignored by ANSI but RGB still shown.
-        assert "\033[38;2;255;0;170m" in result
-        assert "x" in result
-
-    # --- 8-digit [RRGGBBAA] color ----------------------------------------------
-    def test_eight_digit_rgba_bare(self):
-
-        assert parse_swgoh_string("[12345678]x[/c]", output="bare") == "x"
-
-    def test_eight_digit_rgba_terminal(self):
-
-        result = parse_swgoh_string("[12345678]x[/c]", output="terminal")
-        # 0x12=18, 0x34=52, 0x56=86 (alpha 0x78 dropped by ANSI)
-        assert "\033[38;2;18;52;86m" in result
-        assert "x" in result
-
-    def test_eight_digit_rgba_web(self):
-
-        result = parse_swgoh_string("[12345678]x[/c]", output="web")
-        # alpha 0x78 = 120 -> 120/255 = 0.471
-        assert "rgba(18,52,86,0.471)" in result
-
-    # --- 1-digit [A] alpha-only ------------------------------------------------
-    def test_alpha_only_terminal_no_rgb_change(self):
-
-        result = parse_swgoh_string("[FF0000]r[8]still_red[/c]", output="terminal")
-        # The alpha tag re-emits the same RGB sequence in terminal output.
-        assert result.count("\033[38;2;255;0;0m") == 2
-        assert "still_red" in result
-
-    # --- [c] is optional: standalone color without wrapper ---------------------
-    def test_standalone_color_web_without_c_wrapper(self):
-
-        result = parse_swgoh_string("[00FF00]green", output="web")
-        assert '<span style="color:#00FF00">green</span>' in result
+            "terminal": f"{_fg(255, 0, 0)}red{_fg(255, 0, 0)}faded{_fg(0, 255, 0)}green{_R}",
+        },
+    ),
+    # Closing a style resets the terminal, so the still-open color must be re-emitted.
+    (
+        "bold-close-reapplies-color",
+        "[c][FF0000][b]styled[/b]text[/c]",
+        {
+            "bare": "styledtext",
+            "discord": "**styled**text",
+            "web": '<p><span style="color:#FF0000"><b>styled</b>text</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}{_B}styled{_R}{_fg(255, 0, 0)}text{_R}",
+        },
+    ),
+    (
+        "italic-close-reapplies-color",
+        "[c][FF0000][i]styled[/i]text[/c]",
+        {
+            "bare": "styledtext",
+            "discord": "*styled*text",
+            "web": '<p><span style="color:#FF0000"><em>styled</em>text</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}{_I}styled{_R}{_fg(255, 0, 0)}text{_R}",
+        },
+    ),
+    (
+        "underline-close-reapplies-color",
+        "[FF0000][u]red[/u]still",
+        {
+            "bare": "redstill",
+            "discord": "__red__still",
+            "web": '<p><span style="color:#FF0000"><u>red</u>still</span></p>',
+            "terminal": f"{_fg(255, 0, 0)}{_U}red{_R}{_fg(255, 0, 0)}still{_R}",
+        },
+    ),
+    # Ending the color resets the terminal, so the still-open bold must be re-emitted.
+    (
+        "color-end-reapplies-bold",
+        "[b][c][FF0000]red[/c]still_bold[/b]",
+        {
+            "bare": "redstill_bold",
+            "discord": "**redstill_bold**",
+            "web": '<p><b><span style="color:#FF0000">red</span>still_bold</b></p>',
+            "terminal": f"{_B}{_fg(255, 0, 0)}red{_R}{_B}still_bold{_R}",
+        },
+    ),
+    (
+        "bold-close-keeps-italic",
+        "[i][b]both[/b]just_italic[/i]",
+        {
+            "bare": "bothjust_italic",
+            "discord": "***both**just_italic*",
+            "web": "<p><em><b>both</b>just_italic</em></p>",
+            "terminal": f"{_I}{_B}both{_R}{_I}just_italic{_R}",
+        },
+    ),
+    (
+        "italic-close-keeps-bold",
+        "[b][i]both[/i]just_bold[/b]",
+        {
+            "bare": "bothjust_bold",
+            "discord": "***both*just_bold**",
+            "web": "<p><b><em>both</em>just_bold</b></p>",
+            "terminal": f"{_B}{_I}both{_R}{_B}just_bold{_R}",
+        },
+    ),
+    (
+        "strike-close-keeps-bold",
+        "[b][s]x[/s]still_bold[/b]",
+        {
+            "bare": "xstill_bold",
+            "discord": "**~~x~~still_bold**",
+            "web": "<p><b><s>x</s>still_bold</b></p>",
+            "terminal": f"{_B}{_S}x{_R}{_B}still_bold{_R}",
+        },
+    ),
+    (
+        "nested-bold-italic",
+        "[b][i]bold-italic[/i][/b]",
+        {
+            "bare": "bold-italic",
+            "discord": "***bold-italic***",
+            "web": "<p><b><em>bold-italic</em></b></p>",
+            "terminal": f"{_B}{_I}bold-italic{_R}{_B}{_R}",
+        },
+    ),
+    (
+        "nested-bold-underline",
+        "[b][u]x[/u][/b]",
+        {"bare": "x", "discord": "**__x__**", "web": "<p><b><u>x</u></b></p>", "terminal": f"{_B}{_U}x{_R}{_B}{_R}"},
+    ),
+    (
+        "nested-bold-underline-italic",
+        "[b][u][i]x[/i][/u][/b]",
+        {
+            "bare": "x",
+            "discord": "**__*x*__**",
+            "web": "<p><b><u><em>x</em></u></b></p>",
+            "terminal": f"{_B}{_U}{_I}x{_R}{_B}{_U}{_R}{_B}{_R}",
+        },
+    ),
+    (
+        "nested-bold-underline-strike",
+        "[b][u][s]x[/s][/u][/b]",
+        {
+            "bare": "x",
+            "discord": "**__~~x~~__**",
+            "web": "<p><b><u><s>x</s></u></b></p>",
+            "terminal": f"{_B}{_U}{_S}x{_R}{_B}{_U}{_R}{_B}{_R}",
+        },
+    ),
+    (
+        "styles-reapplied-after-inner-close",
+        "[u][s][b]x[/b]y[/s][/u]",
+        {
+            "bare": "xy",
+            "discord": "__~~**x**y~~__",
+            "web": "<p><u><s><b>x</b>y</s></u></p>",
+            "terminal": f"{_U}{_S}{_B}x{_R}{_U}{_S}y{_R}{_U}{_R}",
+        },
+    ),
+    # Unclosed styles: terminal and web close them at the end. Discord is not pinned: it leaves
+    # the markers open ("**no close"), which may or may not be intended.
+    (
+        "unclosed-bold",
+        "[b]no close",
+        {"bare": "no close", "web": "<p><b>no close</b></p>", "terminal": f"{_B}no close{_R}"},
+    ),
+    (
+        "unclosed-four-styles",
+        "[b][i][u][s]x",
+        {
+            "bare": "x",
+            "web": "<p><b><em><u><s>x</s></u></em></b></p>",
+            "terminal": f"{_B}{_I}{_U}{_S}x{_R}",
+        },
+    ),
+    # Closing a color span closes the styles opened inside it, then reopens them after it.
+    (
+        "color-end-with-open-styles",
+        "[c][FF0000][i][u][s]x[/c]y",
+        {
+            "bare": "xy",
+            "web": '<p><span style="color:#FF0000"><em><u><s>x</s></u></em></span><em><u><s>y</s></u></em></p>',
+            "terminal": f"{_fg(255, 0, 0)}{_I}{_U}{_S}x{_R}{_I}{_U}{_S}y{_R}",
+        },
+    ),
+    (
+        "color-reset-with-open-styles",
+        "[b][FF0000][i]x[-]y[/i][/b]",
+        {"bare": "xy", "web": '<p><b><span style="color:#FF0000"><em>x</em></span><em>y</em></b></p>'},
+    ),
+    (
+        "color-change-with-open-styles",
+        "[FF0000][i]x[00FF00]y[/i]",
+        {
+            "bare": "xy",
+            "web": '<p><span style="color:#FF0000"><em>x</em></span><span style="color:#00FF00"><em>y</em></span></p>',
+        },
+    ),
+    (
+        "alpha-change-with-open-styles",
+        "[FF0000][b]x[8]y[/b]",
+        {
+            "bare": "xy",
+            "web": '<p><span style="color:#FF0000"><b>x</b></span>'
+            '<span style="color:rgba(255,0,0,0.533)"><b>y</b></span></p>',
+        },
+    ),
+    (
+        "unclosed-style-around-color",
+        "[b][FF0000]x",
+        {"bare": "x", "web": '<p><b><span style="color:#FF0000">x</span></b></p>'},
+    ),
+    (
+        "unclosed-style-inside-color",
+        "[FF0000][b]x",
+        {"bare": "x", "web": '<p><span style="color:#FF0000"><b>x</b></span></p>'},
+    ),
+    # Visual-only tags: stripped from text outputs, kept as HTML on the web.
+    ("sprite", "[t]icon[/t]", {"bare": "icon", "discord": "icon", "web": "<p>icon</p>", "terminal": "icon"}),
+    (
+        "sprite-then-color",
+        "[t]icon[/t][F0A]red",
+        {
+            "bare": "iconred",
+            "discord": "iconred",
+            "web": '<p>icon<span style="color:#FF00AA">red</span></p>',
+            "terminal": f"icon{_fg(255, 0, 170)}red{_R}",
+        },
+    ),
+    ("sub", "[sub]x[/sub]", {"bare": "x", "discord": "x", "web": "<p><sub>x</sub></p>", "terminal": "x"}),
+    (
+        "sub-scaled",
+        "[sub=0.8]x[/sub]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><sub style="font-size:0.8em">x</sub></p>',
+            "terminal": "x",
+        },
+    ),
+    ("sup", "[sup]x[/sup]", {"bare": "x", "discord": "x", "web": "<p><sup>x</sup></p>", "terminal": "x"}),
+    (
+        "sup-scaled",
+        "[sup=1.25]x[/sup]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><sup style="font-size:1.25em">x</sup></p>',
+            "terminal": "x",
+        },
+    ),
+    ("scale-without-value", "[y]x[/y]", {"bare": "x", "discord": "x", "web": "<p><span>x</span></p>", "terminal": "x"}),
+    (
+        "scale-integer",
+        "[y=2]x[/y]",
+        {
+            "bare": "x",
+            "discord": "x",
+            "web": '<p><span style="font-size:2em">x</span></p>',
+            "terminal": "x",
+        },
+    ),
+    (
+        "scale-float",
+        "[y=1.5]big[/y]",
+        {
+            "bare": "big",
+            "discord": "big",
+            "web": '<p><span style="font-size:1.5em">big</span></p>',
+            "terminal": "big",
+        },
+    ),
+    (
+        "sub-sup-scale",
+        "[sub=0.8]a[/sub][sup]b[/sup][y=1.2]c[/y]",
+        {
+            "bare": "abc",
+            "discord": "abc",
+            "web": '<p><sub style="font-size:0.8em">a</sub><sup>b</sup><span style="font-size:1.2em">c</span></p>',
+            "terminal": "abc",
+        },
+    ),
+    (
+        "mixed-markup",
+        "[b]Title[/b]\\n[c][FFAA00]Gold text[-][/c] and [i]italic[/i]",
+        {
+            "bare": "Title\nGold text and italic",
+            "discord": "**Title**\nGold text and *italic*",
+            "web": '<p><b>Title</b>\n<span style="color:#FFAA00">Gold text</span> and <em>italic</em></p>',
+            "terminal": f"{_B}Title{_R}\n{_fg(255, 170, 0)}Gold text{_R}{_R} and {_I}italic{_R}",
+        },
+    ),
+    (
+        "issue-83-golden",
+        "[c][FF0000][b]Boss[/b][-] deals [u]2x[/u] damage[/c]",
+        {
+            "bare": "Boss deals 2x damage",
+            "discord": "**Boss** deals __2x__ damage",
+            "web": '<p><span style="color:#FF0000"><b>Boss</b></span> deals <u>2x</u> damage</p>',
+            "terminal": f"{_fg(255, 0, 0)}{_B}Boss{_R}{_fg(255, 0, 0)}{_R} deals {_U}2x{_R} damage{_R}",
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("text", "output", "expected"),
+    [
+        pytest.param(text, output, expected, id=f"{output}-{name}")
+        for name, text, rendered in _RENDERINGS
+        for output, expected in rendered.items()
+    ],
+)
+def test_parse_swgoh_string(text, output, expected):
+    assert parse_swgoh_string(text, output=output) == expected
+
+
+def test_parse_swgoh_string_defaults_to_bare():
+    assert parse_swgoh_string("[b]text[/b]") == "text"
+
+
+class _NestingChecker(HTMLParser):
+    """Record whether every end tag closes the most recently opened element."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.stack: list[str] = []
+        self.well_nested = True
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.stack.append(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        if not self.stack or self.stack.pop() != tag:
+            self.well_nested = False
+
+
+@pytest.mark.parametrize(
+    "text",
+    [pytest.param(text, id=name) for name, text, _ in _RENDERINGS],
+)
+def test_web_output_is_well_nested(text):
+    checker = _NestingChecker()
+    checker.feed(parse_swgoh_string(text, output="web"))
+    checker.close()
+    assert checker.well_nested
+    assert checker.stack == []
 
 
 # ── Additional quick-win helper tests ──────────────────────────────────
