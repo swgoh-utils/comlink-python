@@ -51,6 +51,8 @@ pip-delete-this-directory.txt
 # Exhaustive tests and support files (owner-only, not distributed)
 tests/exhaustive/
 scripts/
+# ...but not the workflow helpers (docs_version.py).
+!/.github/scripts/
 data/
 gameData.json
 .pythonrc.py
