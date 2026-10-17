@@ -23,9 +23,9 @@ from swgoh_comlink import SwgohComlink  # ← 7 ms total to import the SDK
 
 def main() -> int:
     allycode = int(sys.argv[1])
-    with SwgohComlink(url="http://comlink.local:3000", max_retries=0) as client:
-        # max_retries=0: fail fast for one-shot scripts (don't burn
-        # 30 seconds on a transient failure)
+    with SwgohComlink(url="http://comlink.local:3000") as client:
+        # No retry= argument: the default is one attempt and no waiting, so a
+        # one-shot script fails fast (don't burn 30 seconds on a transient failure)
         try:
             player = client.get_player(allycode=allycode)
         except Exception as e:
@@ -44,7 +44,7 @@ if __name__ == "__main__":
   single-shot script doesn't benefit.
 * **No `profile="bot"` / `"bulk"`** — default pool is fine for one call.
 * **No `healthcheck()`** — if comlink is down, the actual call fails
-  fast (with `max_retries=0`). A separate probe just doubles your
+  fast (the default is one attempt, no retries). A separate probe just doubles your
   latency.
 
 ## What v3 gives you for free
@@ -53,7 +53,8 @@ if __name__ == "__main__":
   dominates the wall time.
 * Typed return — `player.name`, `len(player.roster_unit)` work without
   type-narrowing dance.
-* `max_retries=0` is one kwarg; v2 had no equivalent.
+* Retries are opt-in (`retry=RetryPolicy(...)`), so this script fails fast by
+  default. Add a policy only if you expect to hit rate refusals.
 
 ## When to add complexity back
 

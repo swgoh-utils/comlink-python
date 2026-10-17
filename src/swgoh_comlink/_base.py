@@ -12,22 +12,31 @@ import hmac
 import os
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from json import dumps
-from typing import Any, Self, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 from urllib.parse import urlparse, urlunparse
 
 import httpx
 import msgspec
 
-from ._retry import RETRYABLE_STATUSES, RetryableStatusError
-from .exceptions import SwgohComlinkException
+from .exceptions import (
+    SwgohComlinkException,
+    SwgohComlinkHTTPError,
+    SwgohComlinkTypeError,
+    SwgohComlinkValueError,
+)
+from .retry import RetryPolicy, _no_release, _Pacer
+
+if TYPE_CHECKING:
+    from .helpers import DataItems
 
 __all__ = [
     "BOT_LIMITS",
     "BULK_LIMITS",
     "DEFAULT_LIMITS",
-    "DEFAULT_MAX_RETRIES",
     "DEFAULT_TIMEOUT",
+    "DEFAULT_VERSION_CACHE_TTL",
     "GAME_DATA_TIMEOUT",
     "NOT_GIVEN",
     "NotGiven",
@@ -43,7 +52,33 @@ _SENSITIVE_KEYS = frozenset({"secret_key", "access_key"})
 
 DEFAULT_TIMEOUT: float = 120.0
 GAME_DATA_TIMEOUT: float = 300.0
-DEFAULT_MAX_RETRIES: int = 3
+DEFAULT_VERSION_CACHE_TTL: float = 3600.0
+
+# Indirection over the monotonic clock so tests can control cache expiry.
+_now: Callable[[], float] = time.monotonic
+
+
+@dataclass(frozen=True)
+class _CachedVersions:
+    """Game data and localization bundle versions cached from a /metadata response.
+
+    Fields are optional because mocked or unusual /metadata responses may omit
+    either key; accessors raise only when the missing value is actually needed.
+    """
+
+    game: str | None
+    language: str | None
+    expires_at: float
+
+    def require_game(self) -> str:
+        if self.game is None:
+            raise SwgohComlinkException("'latestGamedataVersion' was missing from the /metadata response.")
+        return self.game
+
+    def require_language(self) -> str:
+        if self.language is None:
+            raise SwgohComlinkException("'latestLocalizationBundleVersion' was missing from the /metadata response.")
+        return self.language
 
 
 # ── NOT_GIVEN sentinel ──────────────────────────────────────────────────────
@@ -201,6 +236,9 @@ class SwgohComlinkBase:
         port: int = 3000,
         stats_port: int = 3223,
         verify_ssl: bool = True,
+        version_cache_ttl: float = DEFAULT_VERSION_CACHE_TTL,
+        *,
+        retry: RetryPolicy | None = None,
     ):
         from swgoh_comlink import version
 
@@ -209,6 +247,18 @@ class SwgohComlinkBase:
         self.stats_url_base = sanitize_url(stats_url)
         self.hmac = False
         self.verify_ssl = verify_ssl
+        # NaN fails the >= comparison, so it is rejected here along with negatives.
+        if not version_cache_ttl >= 0:
+            raise SwgohComlinkValueError("version_cache_ttl must be a non-negative number of seconds.")
+        self.version_cache_ttl = version_cache_ttl
+        self._version_cache: _CachedVersions | None = None
+        # The last get_enums() response and the game data version it was fetched under.
+        self.enums: dict[str, Any] | None = None
+        self.enums_version: str | None = None
+        if retry is not None and not isinstance(retry, RetryPolicy):
+            raise SwgohComlinkTypeError(f"retry must be a RetryPolicy or None, got {type(retry).__name__}.")
+        self.retry_policy = retry
+        self._pacer = _Pacer(retry.min_interval, retry.unpaced_endpoints) if retry is not None else None
 
         # host and port parameters override defaults
         if host:
@@ -220,6 +270,27 @@ class SwgohComlinkBase:
         self.secret_key = secret_key or os.environ.get("SECRET_KEY")
         if self.access_key and self.secret_key:
             self.hmac = True
+
+    def _pace_delay(self, endpoint: str, stats: bool) -> float:
+        """Reserve the next call slot for *endpoint* and return the seconds to wait for it.
+
+        Always ``0.0`` unless the client's retry policy sets ``min_interval``.
+        """
+        return self._pace_slot(endpoint, stats)[0]
+
+    def _pace_slot(self, endpoint: str, stats: bool) -> tuple[float, Callable[[], None]]:
+        """Like :meth:`_pace_delay`, also returning a callable that gives the slot back if it goes unused."""
+        if self._pacer is None:
+            return 0.0, _no_release
+        name = endpoint.split("?", 1)[0]
+        return self._pacer.reserve_slot(f"{'stats' if stats else 'comlink'}:{name}", name)
+
+    def _hold_endpoint(self, endpoint: str, stats: bool, seconds: float) -> bool:
+        """Hold back calls to *endpoint* for *seconds*; return ``False`` when the caller must wait it out itself."""
+        if self._pacer is None:
+            return False
+        name = endpoint.split("?", 1)[0]
+        return self._pacer.hold(f"{'stats' if stats else 'comlink'}:{name}", name, seconds)
 
     def _construct_request_headers(
         self, method: str, endpoint: str, payload: dict[str, Any] | list[Any] | None = None
@@ -245,7 +316,13 @@ class SwgohComlinkBase:
             hmac_obj.update(f"/{endpoint}".encode())
             # json dumps separators needed for compact string formatting required for compatibility with
             # comlink since it is written with javascript as the primary object model
-            if payload:
+            #
+            # The digest has to cover exactly the bytes that go on the wire. A POST sends
+            # `json=payload`, so an empty dict is transmitted as `{}` — testing truthiness
+            # here hashed `""` instead and every empty-payload signed POST (get_game_metadata
+            # with no client_specs) was rejected with HTTP 403 HMACValidationError. Only a
+            # bodiless request (GET, payload=None) hashes the empty string.
+            if payload is not None:
                 payload_string = dumps(payload, separators=(",", ":"))
             else:
                 payload_string = dumps("")
@@ -256,6 +333,41 @@ class SwgohComlinkBase:
             hmac_digest = hmac_obj.hexdigest()
             req_headers["Authorization"] = f"HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}"
         return req_headers
+
+    # ── Version cache ────────────────────────────────────────────────────
+
+    def invalidate_version_cache(self) -> None:
+        """Discard the cached game/localization versions so the next lookup re-fetches /metadata."""
+        self._version_cache = None
+
+    def _cached_versions(self) -> _CachedVersions | None:
+        """Return the cached version entry when caching is enabled and the entry is fresh."""
+        cached = self._version_cache
+        if cached is None or _now() >= cached.expires_at:
+            return None
+        return cached
+
+    def _store_versions(self, game: str | None, language: str | None) -> _CachedVersions:
+        """Build a version entry from *game* and *language* and cache it when caching applies."""
+        entry = _CachedVersions(game=game, language=language, expires_at=_now() + self.version_cache_ttl)
+        if self.version_cache_ttl > 0 and (game is not None or language is not None):
+            self._version_cache = entry
+        return entry
+
+    @staticmethod
+    def _versions_from_metadata(metadata: Any) -> tuple[str | None, str | None]:
+        """Extract the (game, language) version strings from a /metadata response, if present.
+
+        Accepts the v2 dict shape and the typed :class:`~swgoh_comlink._models.Metadata`
+        Struct; anything else yields ``(None, None)``.
+        """
+        if isinstance(metadata, dict):
+            game = metadata.get("latestGamedataVersion")
+            language = metadata.get("latestLocalizationBundleVersion")
+        else:
+            game = getattr(metadata, "latest_gamedata_version", None)
+            language = getattr(metadata, "latest_localization_bundle_version", None)
+        return str(game) if game else None, str(language) if language else None
 
     # ── Static payload builders (Phase 4: thin shims over _payloads.py) ───
     #
@@ -284,7 +396,7 @@ class SwgohComlinkBase:
         include_pve_units: bool = True,
         request_segment: int = 0,
         enums: bool = False,
-        items: str | int | None = None,
+        items: str | int | DataItems | None = None,
         device_platform: str = "Android",
     ) -> dict[str, Any]:
         """Shim — use :func:`swgoh_comlink._payloads.game_data_payload`."""
@@ -350,20 +462,18 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _classify_response(response: httpx.Response) -> None:
-        """Inspect *response* and raise the appropriate exception for the retry loop.
+        """Raise the typed HTTP error for an error *response*; return ``None`` otherwise.
 
-        * Retryable status (5xx, 408, 425, 429) → :class:`RetryableStatusError`
-        * Other 4xx/5xx → :class:`SwgohComlinkException` (non-retryable)
-        * 2xx/3xx → returns None (caller proceeds to decode)
+        * 4xx/5xx → the most specific :class:`SwgohComlinkHTTPError` subclass
+          (:meth:`SwgohComlinkHTTPError.from_response`). Whether it is retried is
+          decided by the client's :class:`~swgoh_comlink.retry.RetryPolicy`.
+        * 1xx/2xx/3xx → returns ``None`` (caller proceeds to decode).
         """
-        if response.status_code in RETRYABLE_STATUSES:
-            raise RetryableStatusError(response)
-        try:
-            response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            raise SwgohComlinkException(
-                f"HTTP {response.status_code}: {response.text}",
-            ) from e
+        if response.is_error:
+            try:
+                response.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                raise SwgohComlinkHTTPError.from_response(response) from e
 
     @staticmethod
     def _decode(response: httpx.Response) -> dict[str, Any] | list[Any]:
@@ -389,28 +499,29 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _map_error(exc: BaseException) -> SwgohComlinkException:
-        """Translate a transport-level exception into :class:`SwgohComlinkException`.
+        """Translate a transport-level exception (:class:`httpx.RequestError`) into :class:`SwgohComlinkException`.
 
-        Catches the retry loop's final raise for both transient flavors:
-
-        * :class:`httpx.RequestError` (connection failure, timeout, etc.)
-        * :class:`RetryableStatusError` (status exhausted retries)
+        Typed HTTP errors (:class:`SwgohComlinkHTTPError`) are passed through unchanged.
         """
-        if isinstance(exc, RetryableStatusError):
-            resp = exc.response
-            status = getattr(resp, "status_code", "?")
-            text = getattr(resp, "text", "")
-            return SwgohComlinkException(f"HTTP {status}: {text}")
+        if isinstance(exc, SwgohComlinkException):
+            return exc
         return SwgohComlinkException(str(exc))
 
-    def with_options(self, **overrides: Any) -> Self:
+    def with_options(self, *, retry: RetryPolicy | None | NotGiven = NOT_GIVEN, **overrides: Any) -> Self:
         """Return a shallow clone of this client with attribute *overrides* applied.
 
         Useful for one-off config tweaks without constructing a new SDK
         instance from scratch::
 
-            quick = client.with_options(max_retries=0)
+            quick = client.with_options(retry=None)  # one attempt, no waiting
             quick.get_player(allycode=...)
+
+        Args:
+            retry: A :class:`~swgoh_comlink.retry.RetryPolicy` for the clone, or
+                ``None`` to make exactly one attempt per call. Omit it to keep this
+                client's policy. A new policy gets its own pacing state; a kept
+                policy shares the pacing state (and endpoint holds) with this client.
+            **overrides: Other existing attributes to replace on the clone.
 
         **Lifetime semantics:** the clone *shares* the underlying httpx
         client(s) with the original — closing one closes both. This is
@@ -418,11 +529,19 @@ class SwgohComlinkBase:
         independent client (different timeout, different pool) construct
         a fresh instance instead.
 
-        Unknown attributes raise :class:`AttributeError` rather than
-        silently adding to the clone — typos shouldn't pass undetected.
+        Raises:
+            AttributeError: For an unknown option. Typos shouldn't pass undetected.
+            SwgohComlinkTypeError: If *retry* is neither a ``RetryPolicy`` nor ``None``.
         """
         clone = copy.copy(self)
+        if not isinstance(retry, NotGiven):
+            if retry is not None and not isinstance(retry, RetryPolicy):
+                raise SwgohComlinkTypeError(f"retry must be a RetryPolicy or None, got {type(retry).__name__}.")
+            clone.retry_policy = retry
+            clone._pacer = _Pacer(retry.min_interval, retry.unpaced_endpoints) if retry is not None else None
         for name, value in overrides.items():
+            if name in {"retry_policy", "_pacer"}:
+                raise AttributeError(f"set '{name}' through with_options(retry=...)")
             if not hasattr(clone, name):
                 raise AttributeError(
                     f"unknown option '{name}' for {type(self).__name__}",

@@ -9,7 +9,7 @@ Demonstrates:
   4. GameDataBuilder — fetches data dynamically from a running Comlink service
 """
 
-from swgoh_comlink import SwgohComlink, StatCalc, GameDataBuilder
+from swgoh_comlink import StatCalc
 
 # --- Example 1: Basic unit (no skills or mods) ---
 basic_unit = {

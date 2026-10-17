@@ -20,14 +20,9 @@ Unlike the basic streaming_guild_roster.py example, this version:
   - Provides colored terminal output for warnings and errors
   - Tracks per-fetch and aggregate timing statistics
 """
-import sys
-
-if sys.version_info < (3, 11):
-    sys.exit("This example requires Python 3.11+ (asyncio.TaskGroup support).")
 
 import argparse
 import asyncio
-import statistics
 import time
 
 from swgoh_comlink import SwgohComlinkAsync
@@ -52,40 +47,41 @@ _BACKOFF_BASE = 1.0
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Fetch all guild member profiles concurrently with retry logic."
-    )
+    parser = argparse.ArgumentParser(description="Fetch all guild member profiles concurrently with retry logic.")
     parser.add_argument(
         "identifier",
         help="Ally code (numeric) or guild ID (alphanumeric string)",
     )
     parser.add_argument(
-        "-r", "--retries",
+        "-r",
+        "--retries",
         type=int,
         default=3,
         help="Maximum retry attempts per member fetch (default: 3)",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Show per-fetch timing information",
     )
     parser.add_argument(
-        "-d", "--debug",
+        "-d",
+        "--debug",
         action="store_true",
         help="Show detailed debug output including retry delays and response validation",
     )
     parser.add_argument(
-            "--host",
-            default="localhost",
-            help="Comlink server host/IP (default: localhost)",
-            )
+        "--host",
+        default="localhost",
+        help="Comlink server host/IP (default: localhost)",
+    )
     parser.add_argument(
-            "--port",
-            type=int,
-            default=3200,
-            help="Comlink server port (default: 3000)",
-            )
+        "--port",
+        type=int,
+        default=3200,
+        help="Comlink server port (default: 3000)",
+    )
     return parser.parse_args()
 
 
@@ -121,7 +117,7 @@ async def fetch_member(
     player_id: str,
     index: int,
     total: int,
-    max_retries: int,
+    max_attempts: int,
     verbose: bool = False,
     debug: bool = False,
 ) -> dict | None:
@@ -132,7 +128,7 @@ async def fetch_member(
     Exceptions are caught internally so that asyncio.TaskGroup does not cancel
     sibling tasks.
     """
-    for attempt in range(max_retries):
+    for attempt in range(max_attempts):
         fetch_start = time.perf_counter()
         try:
             player = await comlink.get_player(player_id=player_id)
@@ -140,9 +136,7 @@ async def fetch_member(
 
             # Validate response structure
             if not validate_player_response(player, debug=debug):
-                raise ValueError(
-                    f"Invalid response structure for player_id={player_id}"
-                )
+                raise ValueError(f"Invalid response structure for player_id={player_id}")
 
             gp = extract_gp(player)
             timing_str = f" {DIM}({fetch_elapsed:.2f}s){RESET}" if verbose or debug else ""
@@ -151,13 +145,13 @@ async def fetch_member(
 
         except (SwgohComlinkException, ValueError, KeyError, Exception) as exc:
             fetch_elapsed = time.perf_counter() - fetch_start
-            remaining = max_retries - attempt - 1
+            remaining = max_attempts - attempt - 1
 
             if remaining > 0:
-                delay = _BACKOFF_BASE * (2 ** attempt)
+                delay = _BACKOFF_BASE * (2**attempt)
                 print(
                     f"  {YELLOW}{BOLD}⚠ WARNING{RESET}{YELLOW} "
-                    f"[{index}/{total}] Attempt {attempt + 1}/{max_retries} failed "
+                    f"[{index}/{total}] Attempt {attempt + 1}/{max_attempts} failed "
                     f"for player_id={player_id}: {exc}{RESET}"
                 )
                 if debug:
@@ -170,7 +164,7 @@ async def fetch_member(
             else:
                 print(
                     f"  {RED}{BOLD}✗ FAILED{RESET}{RED} "
-                    f"[{index}/{total}] All {max_retries} attempts exhausted "
+                    f"[{index}/{total}] All {max_attempts} attempts exhausted "
                     f"for player_id={player_id}: {exc}{RESET}"
                 )
                 return None
@@ -225,7 +219,6 @@ async def main():
         print(f"Fetching {total} member profiles (max {args.retries} retries each)...\n")
 
         # Step 3: Fetch all members concurrently using TaskGroup
-        fetch_times: list[float] = []
         results: list[dict | None] = []
         overall_start = time.perf_counter()
 
@@ -233,8 +226,11 @@ async def main():
             tasks = [
                 tg.create_task(
                     fetch_member(
-                        comlink, pid, i + 1, total,
-                        max_retries=args.retries,
+                        comlink,
+                        pid,
+                        i + 1,
+                        total,
+                        max_attempts=args.retries,
                         verbose=verbose,
                         debug=debug,
                     )

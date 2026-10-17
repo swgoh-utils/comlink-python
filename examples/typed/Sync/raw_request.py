@@ -6,7 +6,7 @@ Sometimes the typed surface doesn't cover an endpoint (new comlink
 endpoint, internal-only call, a request shape we haven't typed yet).
 ``client.raw_request(method, path, payload=None)`` is the escape
 hatch — direct HTTP via the underlying httpx client, with the same
-retry policy + auth handling as the typed methods.
+the `retry` policy (if set) + auth handling as the typed methods.
 
 Always returns a dict (typed decoding is opt-in per endpoint;
 ``raw_request`` bypasses that machinery).

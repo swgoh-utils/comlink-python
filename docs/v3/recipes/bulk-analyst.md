@@ -9,13 +9,15 @@ once), `[pydantic]` for the report's typed model.
 
 ```python
 import asyncio
-from swgoh_comlink import SwgohComlinkAsync
+from swgoh_comlink import RetryPolicy, SwgohComlinkAsync
 
 async def main():
     async with SwgohComlinkAsync(
         url="http://comlink.local:3000",
         profile="bulk",          # max_connections=500, keepalive 60s
-        max_retries=3,
+        # min_interval spaces calls to one endpoint; retries cover rate
+        # refusals and HTTP 503 (opt-in; default is a single attempt).
+        retry=RetryPolicy(attempts=5, min_interval=0.1),
     ) as client:
         if not await client.healthcheck(timeout=5.0):
             return 2

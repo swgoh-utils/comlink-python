@@ -3,7 +3,7 @@ get_events.py
 Sample script to get events from Comlink
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from swgoh_comlink import SwgohComlink
 
@@ -23,7 +23,7 @@ def convert_time(timestamp: int | float | str) -> str:
         timestamp = int(timestamp)
         timestamp /= 1000
 
-    return datetime.fromtimestamp(int(timestamp), tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.fromtimestamp(int(timestamp), tz=UTC).strftime("%Y-%m-%d %H:%M:%S")
 
 
 # Create instance of SwgohComlink using default localhost settings

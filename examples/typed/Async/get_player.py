@@ -19,7 +19,7 @@ from swgoh_comlink.typed import SwgohComlinkAsync
 
 async def main() -> None:
     # Construct once, reuse across awaits. Same kwargs as sync
-    # (`url`, `profile`, `max_retries`, …).
+    # (`url`, `profile`, `retry`, …).
     async with SwgohComlinkAsync() as comlink:
         # await returns a typed `Player` Struct.
         player = await comlink.get_player(allycode=314927874)

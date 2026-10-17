@@ -1,8 +1,82 @@
 # CHANGELOG
 
 <!-- insertion marker -->
+## [3.0.0a2](https://github.com/MarTrepodi/comlink-python/releases/tag/v3.0.0a2) - Unreleased
 
-## [3.0.0a1](https://github.com/MarTrepodi/comlink-python/releases/tag/v3.0.0a1) - 2026-05-19
+Second v3 alpha. Brings the alpha up to date with upstream
+v2.3.0–v2.5.0 and replaces the alpha's retry loop with upstream's
+opt-in `RetryPolicy`. Distributed via GitHub Releases on the maintainer
+fork, like 3.0.0a1 (ADR-0008). Release notes:
+[docs/v3/releases/v3.0.0a2.md](docs/v3/releases/v3.0.0a2.md).
+
+### Breaking changes (vs 3.0.0a1)
+
+- **Retries are off by default.** The `max_retries=` constructor
+  keyword, `client.max_retries`, `with_options(max_retries=...)`,
+  `DEFAULT_MAX_RETRIES` and the private `swgoh_comlink._retry` module
+  are removed. Pass `retry=RetryPolicy(...)` (keyword-only, all four
+  clients; `from swgoh_comlink import RetryPolicy`) to retry rate
+  refusals and HTTP 503 and, optionally, pace calls per endpoint.
+  Other 5xx statuses, 408/425 and transport errors are no longer
+  retried. `with_options(retry=...)` overrides the policy per call;
+  `with_options(retry=None)` turns it off.
+- **Typed HTTP errors.** Error statuses raise `SwgohComlinkHTTPError`
+  or its subclasses `SwgohComlinkRateLimitError`,
+  `SwgohComlinkUnavailableError` and `SwgohComlinkClientError`
+  (all still `SwgohComlinkException`), including from the typed
+  clients and `stream_game_data()` / `stream_localization()`.
+- **`get_enums()` is cached** per game data version
+  (`client.enums`, `client.enums_version`; `refresh=True` bypasses
+  it). A cold cache now makes a `/metadata` request first.
+
+### Added
+
+- Everything from upstream v2.3.0–v2.5.0 (see those sections below),
+  including:
+  - Version cache for `/metadata` (`version_cache_ttl=`, default
+    3600 s; `invalidate_version_cache()`;
+    `get_latest_game_data_version(refresh=)`), used by
+    `get_game_data()` / `get_localization()` when no version is given.
+  - Helpers: unit abilities and named effects, item/currency names and
+    catalogs, Territory Battle definitions, unit upgrade costs, event
+    schedule, game config, guild activity, Conquest feats and stamina
+    timing, and readers for loosely typed wire values. Helpers taking a
+    client accept async clients too.
+  - `items=` on `get_game_data()` accepts `DataItems` and `int`.
+  - PEP 561 `py.typed` marker, so type checkers use the typed client's
+    annotations.
+- The typed clients get the same retry, typed-error, version-cache
+  and enums-cache behavior as the dict clients.
+
+### Fixed
+
+- HMAC signing covers the bytes actually sent, so signed POSTs with an
+  empty payload (`get_game_metadata()`) no longer fail with HTTP 403.
+- `get_game_metadata(client_specs=...)` sends the `clientSpecs` key the
+  service expects.
+- StatCalc: a mod with no set keeps its stats; `purchasedAbilityId`
+  (ultimate GP) is kept on both the dict and the typed `Player`
+  input paths; slot-less equipment resolves its gear slot; a ship with
+  incomplete crew is skipped instead of aborting the roster; the game
+  data builder reads bools and non-finite numbers as 0. Galactic
+  Legends with an ultimate now report higher GP than in 3.0.0a1.
+- Exception constructors no longer log tracebacks.
+- All helper fixes from upstream v2.2.0–v2.5.0 (arena payout in UTC,
+  relic tier offset, `_NAME_V2` unit name keys, terminal/Discord style
+  closing, and others).
+
+### Development
+
+- CI adopts upstream's hygiene (ruff from `uv.lock`, pinned commitlint,
+  examples linted and formatted, Dependabot groups) while keeping the
+  v3 gates: Python 3.11–3.14, extras installed for tests, coverage ≥ 95 %,
+  and a new `make generate-check` codegen job.
+- Packaging metadata: PEP 639 license, keywords, classifiers
+  (`Development Status :: 3 - Alpha`, `Typing :: Typed`), docs/changelog
+  URLs; `git-changelog` tooling; mkdocs pinned below 2.0.
+- Retry benchmarks rewritten for `RetryPolicy`.
+
+## [3.0.0a1](https://github.com/MarTrepodi/comlink-python/releases/tag/v3.0.0a1) - 2026-07-12
 
 First v3 alpha. Distributed via **GitHub Releases only** (the
 PyPI `swgoh_comlink` package remains at v2.x; `--pre` does NOT pick
@@ -43,9 +117,16 @@ for governance.
   probe; returns `bool`.
 - **`stream=True`** on `get_game_data()` and `get_localization()` —
   iterator-of-chunks for memory-constrained callers.
-- **`stamina`-based retry policy** with `profile=` kwarg (`"bot"`,
-  `"cli"`, etc.) selecting transient-error retry behavior +
-  back-off curves. Default `max_retries=3`.
+- **Retry loop** on both client classes: honors `Retry-After`, falls
+  back to exponential backoff with full jitter, and retries HTTP
+  408/425/429/500/502/503/504. `max_retries=3` by default.
+  *(Replaced by the opt-in `RetryPolicy` in 3.0.0a2.)*
+- **`profile=` connection-pool presets** (`"default"`, `"bot"`,
+  `"bulk"`), **`http_client=` injection**, and `with_options()` for
+  per-call overrides.
+- **`get_localization_dictionary` / `async_get_localization_dictionary`**
+  helpers — fetch a localization bundle and parse it into a flat
+  `dict[str, str]` (upstream #108).
 - **Optional extras** in `pyproject.toml`:
   - `[cache]` — `diskcache>=5.6` + `cachetools>=5.3` (GameDataCache)
   - `[pydantic]` — `pydantic>=2.5` (compat adapter)
@@ -71,10 +152,18 @@ for governance.
 - **Test coverage ratchet** raised to **≥ 95 %** (was 92 %).
 - **Default `Python>=3.11`** (was 3.10).
 
-### Removed
+### Fixed
 
-- **`click`** from core dependencies — moved behind the
-  `[migrate]` extra. Only the `swgoh-migrate` CLI command needs it.
+- `from swgoh_comlink import StatCalc` no longer returns the
+  `StatCalc` *subpackage* after any `swgoh_comlink.StatCalc.*` module
+  has been imported (lazy-import shadowing).
+- `SwgohComlinkBase.__new__` is typed to return `Self` (upstream #98).
+
+### Development
+
+- Type checking moved from mypy to ty (upstream #107).
+- CI test matrix covers Python 3.11–3.14 (3.10 dropped with the new
+  `>=3.11` floor).
 
 ### Migration
 
@@ -82,6 +171,137 @@ See [docs/v3/migration.md](docs/v3/migration.md) for v2 → v3 patterns,
 [docs/v3/recipes/](docs/v3/recipes/) for common-task templates, and
 [docs/v3/benchmark-report.md](docs/v3/benchmark-report.md) for the
 full performance characterization across all four research phases.
+
+<a name="v2.5.0"></a>
+
+## [v2.5.0](https://github.com/swgoh-utils/comlink-python/compare/v2.4.0...v2.5.0) (2026-10-13)
+
+### Features
+
+- **typing:** ship a PEP 561 py.typed marker ([86c890b](https://github.com/swgoh-utils/comlink-python/commit/86c890bc8d88048271718d842a113725fb68f1dd))
+
+### Bug Fixes
+
+- **helpers:** close terminal styles with their own SGR off codes ([0e97e02](https://github.com/swgoh-utils/comlink-python/commit/0e97e027f222cebd1c6a0d5ca38e416d9589fd13))
+- **helpers:** give get_unit_from_skill a typed NamedTuple result ([159f4b6](https://github.com/swgoh-utils/comlink-python/commit/159f4b65d0f7da59607f6b36eda2b760ad827f7b))
+- **statcalc:** keep the stats of a mod that has no set ([b0c6c68](https://github.com/swgoh-utils/comlink-python/commit/b0c6c681e572e4c87b2e67c9361fda030b390afb))
+- **statcalc:** read bools and non-finite numbers as 0 in the game data builder ([8e4fb02](https://github.com/swgoh-utils/comlink-python/commit/8e4fb025b88b1119898b3d8e05d0072f539dc4a3))
+- **helpers:** document that get_gac_brackets raises when no GAC event runs ([49b5620](https://github.com/swgoh-utils/comlink-python/commit/49b562037932e4f644ef14c3f01c3f09a4c322ec))
+- **migrate:** make scan excludes additive, glob-aware and root-relative ([2426ecf](https://github.com/swgoh-utils/comlink-python/commit/2426ecfb41c62c561b013d7ef1802450d8025415))
+- **helpers:** read payload ints with as_int so non-finite numbers are rejected ([f43f717](https://github.com/swgoh-utils/comlink-python/commit/f43f71758c12fddadea1e7be5ca781965199ab1a))
+- **helpers:** close open styles in Discord and nest web color spans ([63a811a](https://github.com/swgoh-utils/comlink-python/commit/63a811a88b4d349b22e1f5589471f843e957cfee))
+
+### Code Refactoring
+
+- delete unreachable branches ([1d28f95](https://github.com/swgoh-utils/comlink-python/commit/1d28f952bc8768db037a82023fc34fc3ebcdee89))
+
+### Docs
+
+- use absolute links in the README so they work on PyPI ([92eece1](https://github.com/swgoh-utils/comlink-python/commit/92eece151432b37d35e9d99735279c7e5c5b1558))
+- bring the contributor docs up to date and add SUPPORT and CITATION ([32039aa](https://github.com/swgoh-utils/comlink-python/commit/32039aac666764db4e5bd2961d46d62df2eacf9e))
+- add code of conduct and security policy, refresh issue/PR templates ([78d0c8c](https://github.com/swgoh-utils/comlink-python/commit/78d0c8cbf89d2be4bb4cef7074d70d0e92c4623b))
+
+<a name="v2.4.0"></a>
+
+## [v2.4.0](https://github.com/swgoh-utils/comlink-python/compare/v2.3.1...v2.4.0) (2026-10-09)
+
+### Features
+
+- **helpers:** give events a title and subtitle and keep the game's case ([d6366ce](https://github.com/swgoh-utils/comlink-python/commit/d6366ce36209300fe902150c17b09e5bf77f7e40))
+- **client:** cache get_enums() per game data version ([6077166](https://github.com/swgoh-utils/comlink-python/commit/60771668da7ca5ef501becc885085e79612e7a80))
+- **helpers:** read item and currency types from get_enums() ([f614e8d](https://github.com/swgoh-utils/comlink-python/commit/f614e8d3ce75ebd2ddd1b1393b5c745cffdecd52))
+- **helpers:** accept async clients in sync-named helpers ([8c43c6e](https://github.com/swgoh-utils/comlink-python/commit/8c43c6e9d76b1a2f8ab0480deb2b6787c802cb41))
+- **helpers:** add get_game_config and get_game_config_int ([a8db628](https://github.com/swgoh-utils/comlink-python/commit/a8db628140d50b5642d427792cde9d12c7c85dd9))
+- **helpers:** add get_guild_activity summary of a guild's recent activity ([ca8a14e](https://github.com/swgoh-utils/comlink-python/commit/ca8a14eca8959f02477c7700785675c71e6cb327))
+- **helpers:** add get_event_schedule for live and upcoming events ([8a91f9a](https://github.com/swgoh-utils/comlink-python/commit/8a91f9ae6875a5c559f190a050c6e47ab00c848b))
+- **helpers:** add calc_stamina_full_time for Conquest stamina ([1e70512](https://github.com/swgoh-utils/comlink-python/commit/1e705126044e7dabe4fbee820a65ecd0c79034ab))
+- **helpers:** name game items, reward previews and id catalogs ([9be7920](https://github.com/swgoh-utils/comlink-python/commit/9be79208d91f341e244f0329e28c3679a8acdc19))
+- **helpers:** add ItemType and CurrencyType constant tables ([88568ed](https://github.com/swgoh-utils/comlink-python/commit/88568edb73c4c84cad1f345b88df2d2fb1f7608b))
+- **helpers:** add Territory Battle definition helpers ([aa71a71](https://github.com/swgoh-utils/comlink-python/commit/aa71a712425df502444e7b944c82db092b936ee4))
+- **helpers:** add unit upgrade cost helpers ([c675d2c](https://github.com/swgoh-utils/comlink-python/commit/c675d2c5a3c03c4bc4011c789249e981f2465ffe))
+- **helpers:** add readers for loosely typed wire values ([06de8a3](https://github.com/swgoh-utils/comlink-python/commit/06de8a3847e1600e8e193e6ea6d4a0ca32f99c3b))
+- **client:** raise typed HTTP errors and add opt-in retry and pacing ([f9e4341](https://github.com/swgoh-utils/comlink-python/commit/f9e4341c122f8bb1973698369d3942ad05d210c9))
+- **exceptions:** add typed HTTP errors carrying status, code, detail and Retry-After ([49919f1](https://github.com/swgoh-utils/comlink-python/commit/49919f165dd7eac67befa86b5fd22add1b42715f))
+- **helpers:** add get_unit_abilities and get_named_effects ([8610d57](https://github.com/swgoh-utils/comlink-python/commit/8610d5703ec4cf6c58e3046193f4f82a04a6e590))
+- **helpers:** add get_conquest_feats for listing Conquest feats ([6625872](https://github.com/swgoh-utils/comlink-python/commit/6625872f75d9992758a1f738252f896b9f652f0d))
+
+### Bug Fixes
+
+- **client:** make retry pacing safe for concurrent async callers ([d3735e0](https://github.com/swgoh-utils/comlink-python/commit/d3735e0c78d9bed8381aef5856a5b1561a7f52db))
+- **helpers:** name GALACTIC_BUNDLE_CURRENCY as the Hyperdrive Token ([dafdc69](https://github.com/swgoh-utils/comlink-python/commit/dafdc692b313f706889770c5ba0952aedcd87cd5))
+- **helpers:** harden item helpers against odd records and enum values ([f52f184](https://github.com/swgoh-utils/comlink-python/commit/f52f184f577ed1f7d8fb38a9748ecc5d3cd8bbf9))
+- **helpers:** reject TB collections whose entries are not dictionaries ([4f51cd1](https://github.com/swgoh-utils/comlink-python/commit/4f51cd1a847f90457eb76a555bc2ea454755ec6e))
+- **helpers:** read type-prefixed enum names in the TB helpers ([55878f8](https://github.com/swgoh-utils/comlink-python/commit/55878f836e6928eb02644d5349c25458e1f5fe56))
+- **helpers:** accept partial costs and check collections first in sum_upgrade_costs ([c15ddb6](https://github.com/swgoh-utils/comlink-python/commit/c15ddb6a9103816902b6fcb43f241ae61186fb6c))
+- **helpers:** read UnitTier enum names in the gear upgrade helpers ([857b472](https://github.com/swgoh-utils/comlink-python/commit/857b472fcc4ed568be0a162ecf543612420e4bdc))
+- **helpers:** read only upper-case text as a decoder-style enum name ([f2e253c](https://github.com/swgoh-utils/comlink-python/commit/f2e253c1aed4a974e5c6b8a098c289fea04b5af0))
+- **client:** log when a retrying call gives up ([e078c92](https://github.com/swgoh-utils/comlink-python/commit/e078c9244a7e5e92bd0dc0ae8494191ab8297b82))
+- **client:** give back a pacing slot when an async wait is cancelled ([de782f5](https://github.com/swgoh-utils/comlink-python/commit/de782f5d9cec48494f6010644fd93f3c601273c7))
+- **client:** reject mistyped RetryPolicy fields with SwgohComlinkTypeError ([105a202](https://github.com/swgoh-utils/comlink-python/commit/105a202b86d6a7b3de9b059fbd68d2436a2eb06e))
+- **exceptions:** make typed HTTP errors picklable and copyable ([244e84c](https://github.com/swgoh-utils/comlink-python/commit/244e84c657e276358b9e385914a6f088475b8e85))
+- **helpers:** include conquest feats whose id has no kind token ([4fe8819](https://github.com/swgoh-utils/comlink-python/commit/4fe8819e2f9207644667629af09a8c478781d737))
+- **helpers:** tolerate missing fields and enum rarity in get_playable_units ([f1c1fdc](https://github.com/swgoh-utils/comlink-python/commit/f1c1fdc9a8143069afa0de0ac204852d2227ae73))
+- **helpers:** request guild activity info in get_guild_members ([b7cc896](https://github.com/swgoh-utils/comlink-python/commit/b7cc896f9c927ac3a7a7f121de74717941a7ab45))
+- **helpers:** compute get_arena_payout in UTC and return an aware datetime ([cd2c772](https://github.com/swgoh-utils/comlink-python/commit/cd2c772ade2616a90ab9f0e0c5f713c6db59e634))
+- **helpers:** use the game's relic offset of 2 in convert_relic_tier ([83c9abb](https://github.com/swgoh-utils/comlink-python/commit/83c9abba8261266d3226ce9d061d5192002f3b03))
+
+### Code Refactoring
+
+- **helpers:** move _localize into _localization for reuse ([70b9c41](https://github.com/swgoh-utils/comlink-python/commit/70b9c418dac39844a9c16bde032afb027ab3684f))
+
+### Performance Improvements
+
+- **helpers:** stop walking the stack on valid item helper calls ([95bcdc3](https://github.com/swgoh-utils/comlink-python/commit/95bcdc35fd8626b68a5af5cd4ea1c7fb98dbd444))
+
+### Docs
+
+- **helpers:** describe hidden_reason as a heuristic ([81d5b21](https://github.com/swgoh-utils/comlink-python/commit/81d5b21da87054618f7599c98adf6167c2339fce))
+- **helpers:** pass the client's cached enums to ItemNames in examples ([32cc8d1](https://github.com/swgoh-utils/comlink-python/commit/32cc8d138607ad3818a243532feb2bbb16911c09))
+- **readme:** describe the get_enums() cache ([6bd073b](https://github.com/swgoh-utils/comlink-python/commit/6bd073b7244e1f82f6b08cbfc1118d64d2b9bd03))
+- **helpers:** show ItemNames reading live enums ([bb38391](https://github.com/swgoh-utils/comlink-python/commit/bb38391b16142a7974d46926bcd8e415045cf082))
+- **api:** describe retry jitter, endpoint holds and cancelled waits ([3db84e6](https://github.com/swgoh-utils/comlink-python/commit/3db84e6ad2cf01177bb7030adee8a1b794aefa75))
+- **helpers:** explain sync and async client handling ([737e128](https://github.com/swgoh-utils/comlink-python/commit/737e128249c71d37fc1ccabb9f5a2c7334c309eb))
+- **helpers:** print the mission scores in the TB example ([12dd359](https://github.com/swgoh-utils/comlink-python/commit/12dd35939fa761fe50a5ef5766cfc44591e98220))
+- **helpers:** describe wire readers with public payload examples ([1c976f6](https://github.com/swgoh-utils/comlink-python/commit/1c976f6cf36c7e076667f3d29969d04565ba0bf8))
+- **api:** match the retries heading case across client pages ([83cc59c](https://github.com/swgoh-utils/comlink-python/commit/83cc59c4dfc14a0bf621bbaaa4e37ca76e363032))
+- **helpers:** document item, reward and catalog helpers ([8d7edf3](https://github.com/swgoh-utils/comlink-python/commit/8d7edf31527fb705e32dbcabcf70222a4769518f))
+- **helpers:** document the Territory Battle definition helpers ([6622a3a](https://github.com/swgoh-utils/comlink-python/commit/6622a3a85b476ca83708078aa82ee14ac9abe9d0))
+- **helpers:** document upgrade cost helpers and the DataItems bit for 'table' ([32394a8](https://github.com/swgoh-utils/comlink-python/commit/32394a8851e64e9ac5ba5a18d2981ebdcfac38be))
+- **helpers:** add Wire Value Helpers section ([ed23e07](https://github.com/swgoh-utils/comlink-python/commit/ed23e07b41e246ac579c6ac751e2b91c6828b795))
+- **api:** document typed HTTP errors and the retry policy ([4db0261](https://github.com/swgoh-utils/comlink-python/commit/4db0261f35eb21d92357c72f887762f24f6ae18d))
+- **helpers:** clarify create_localized_unit_name_dictionary is keyed by nameKey ([4782fdd](https://github.com/swgoh-utils/comlink-python/commit/4782fdd0addb60f7da804414f2eef1a45e2cc1e6))
+- **helpers:** document single-collection DataItems requests and | combining ([b99bcb3](https://github.com/swgoh-utils/comlink-python/commit/b99bcb3ea2e3dc87a27ff69547e43b47f97f7a49))
+
+<a name="v2.3.1"></a>
+
+## [v2.3.1](https://github.com/swgoh-utils/comlink-python/compare/v2.3.0...v2.3.1) (2026-10-05)
+
+### Bug Fixes
+
+- **statcalc:** resolve gear slot for slot-less equipment entries ([8bd7e73](https://github.com/swgoh-utils/comlink-python/commit/8bd7e735a8545d4d688dcfca4ae184219c3bd10b))
+- **statcalc:** skip ships with incomplete crew instead of aborting roster ([2e5d514](https://github.com/swgoh-utils/comlink-python/commit/2e5d5140e7e63cd695bbdcb3bcbbf2897970f9a1))
+- **statcalc:** carry purchasedAbilityId through raw unit normalization ([bc3e0e8](https://github.com/swgoh-utils/comlink-python/commit/bc3e0e8ee64869f4622640431262369e373f48f0))
+- **helpers:** include unit name keys with variant suffixes like _NAME_V2 ([bfe109a](https://github.com/swgoh-utils/comlink-python/commit/bfe109ad8669a7657d2f9d8e55c2d78fa5f20e39))
+
+<a name="v2.3.0"></a>
+
+## [v2.3.0](https://github.com/swgoh-utils/comlink-python/compare/v2.2.0...v2.3.0) (2026-08-03)
+
+### Features
+
+- **cache:** cache game/localization versions from /metadata with configurable TTL (#117) ([d351759](https://github.com/swgoh-utils/comlink-python/commit/d35175900932c79e5836f383fb6b3ce8dd39f6d9))
+- **cache:** cache game/localization versions from /metadata with configurable TTL ([8cdd771](https://github.com/swgoh-utils/comlink-python/commit/8cdd7719619ac7b83ceb66c069825572e17d018a))
+
+### Bug Fixes
+
+- **hmac:** sign the bytes actually sent so empty-payload POSTs validate ([943fd7f](https://github.com/swgoh-utils/comlink-python/commit/943fd7ff490813a74ad50d7c4e4c35ef76b3e79d))
+- **tests:** call get_game_data with items= instead of the rejected request_segment ([60c19bf](https://github.com/swgoh-utils/comlink-python/commit/60c19bf390818d0610802a1cd3a3ca7f1cb59829))
+- **client:** send clientSpecs key expected by /metadata endpoint ([1909912](https://github.com/swgoh-utils/comlink-python/commit/1909912fc10b1deb822b816b46a0e7577da7e422))
+- **exceptions:** stop logging tracebacks from exception constructors ([f841fa8](https://github.com/swgoh-utils/comlink-python/commit/f841fa88bd64abc6a66326ee0654e367976733ce))
+
+### Docs
+
+- **changelog:** update for v2.2.0 ([7b917de](https://github.com/swgoh-utils/comlink-python/commit/7b917dea5ce146c2cce9bbd90b436ba010f01207))
 
 <a name="v2.2.0"></a>
 
@@ -112,6 +332,7 @@ full performance characterization across all four research phases.
 ### Bug Fixes
 
 - update `sanitize_url` to handle HTTPS URLs without ports, update tests for improved coverage ([577951a](https://github.com/swgoh-utils/comlink-python/commit/577951a6877f47a62c7bf062399fcca6611c9caf))
+
 
 ## [v2.0.6](https://github.com/swgoh-utils/comlink-python/releases/tag/v2.0.6) - 2026-03-29
 

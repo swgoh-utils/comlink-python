@@ -11,14 +11,34 @@ authors = [
 description = "Python 3 interface library for swgoh-comlink (https://github.com/swgoh-utils/swgoh-comlink)"
 readme = "README.md"
 requires-python = ">=3.11"
+# PEP 639 license expression — do not also add a "License ::" classifier.
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = [
+    "swgoh",
+    "galaxy of heroes",
+    "star wars",
+    "comlink",
+    "api-client",
+    "async",
+    "httpx",
+]
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Framework :: AsyncIO",
+    "Topic :: Games/Entertainment",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 dependencies = [
     "httpx>=0.28",
@@ -59,6 +79,9 @@ swgoh-migrate = "swgoh_comlink.migrate:main"
 "Homepage" = "https://github.com/MarTrepodi/comlink-python"
 "Bug Tracker" = "https://github.com/MarTrepodi/comlink-python/issues"
 "Upstream (v2.x)" = "https://github.com/swgoh-utils/comlink-python"
+Documentation = "https://swgoh-utils.github.io/comlink-python/"
+Changelog = "https://github.com/MarTrepodi/comlink-python/blob/release/v3.0.0a1/CHANGELOG.md"
+Discord = "https://discord.gg/6PBfG5MzR3"
 
 [tool.pytest.ini_options]
 addopts = [
@@ -83,6 +106,8 @@ markers = [
     "cat_stress: load endurance and connection pool tests",
 ]
 
+# Version is derived from the Git tag (e.g. v3.0.0a2) at build time.
+# No version string is committed to the repo.
 [tool.hatch.version]
 source = "vcs"
 
@@ -127,14 +152,24 @@ typecheck = [
 codegen = [
     "jinja2>=3.1",
 ]
+lint = [
+    "ruff>=0.8",
+]
+changelog = [
+    "git-changelog>=2.9,<3",
+]
 dev = [
     {include-group = "test"},
     {include-group = "typecheck"},
     {include-group = "bench"},
     {include-group = "codegen"},
-    "ruff>=0.8",
+    {include-group = "changelog"},
+    {include-group = "lint"},
 ]
 docs = [
+    # MkDocs 2.0 removes the plugin system (mkdocstrings) and theme overrides that this
+    # site depends on, with no migration path — stay on 1.x until the ecosystem settles.
+    "mkdocs>=1.6,<2",
     "mkdocs-material>=9.5.0",
     "mkdocstrings[python]>=0.28.0",
 ]
@@ -169,8 +204,9 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # Existing violations to address incrementally — do not add new suppressions
 "src/swgoh_comlink/__init__.py" = ["UP036"]   # outdated version block (sys.exit check)
-"src/swgoh_comlink/exceptions.py" = ["B904"]  # raise-without-from (tracked in issue backlog)
 "src/swgoh_comlink/helpers/*.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
+# Examples assign results to named variables to show what each call returns
+"examples/**" = ["F841"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["swgoh_comlink"]
@@ -182,6 +218,21 @@ quote-style = "double"
 
 [tool.ty.environment]
 python-version = "3.11"
+
+# ── git-changelog ────────────────────────────────────────────────────────
+
+[tool.git-changelog]
+convention = "angular"
+template = "angular"
+provider = "github"
+versioning = "pep440"
+in-place = true
+output = "CHANGELOG.md"
+marker-line = "<!-- insertion marker -->"
+bump = "auto"
+# The angular convention renders only feat/fix/revert/refactor/perf by default.
+# Listing them explicitly is what lets `docs` join them.
+sections = ["feat", "fix", "revert", "refactor", "perf", "docs"]
 
 # ── Coverage ─────────────────────────────────────────────────────────────
 
@@ -199,29 +250,3 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "if __name__ == .__main__.",
 ]
-
-# ── Semantic Release ─────────────────────────────────────────────────────
-
-[tool.semantic_release]
-version_variable = [
-    "src/swgoh_comlink/version.py"
-]
-version_pattern = "src/swgoh_comlink/version.py:__version__ = '{version}'"
-version_source = "commit"
-branch = "main"
-changelog_file = "CHANGELOG.md"
-build_command = "uv build"
-dist_path = "dist/"
-upload_to_release = true
-upload_to_pypi = false
-remove_dist = true
-patch_without_tag = true
-
-[tool.semantic_release.branches.main]
-match = "main"
-prerelease = false
-
-[tool.semantic_release.branches.tools]
-match = "tools"
-prerelease = true
-prerelease_token = "rc"

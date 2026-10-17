@@ -2,19 +2,21 @@
 
 A bot that lives for the process lifetime, makes many calls per minute,
 and needs to survive transient comlink hiccups. The v3 features that
-matter here are: `profile="bot"`, retries on by default, `healthcheck`
+matter here are: `profile="bot"`, an opt-in `RetryPolicy`, `healthcheck`
 for startup, and `GameDataCache` for `/data`/`/localization`.
 
 ## Setup
 
 ```python
-from swgoh_comlink import SwgohComlink
+from swgoh_comlink import RetryPolicy, SwgohComlink
 from swgoh_comlink._cache import GameDataCache  # requires [cache] extra
 
 client = SwgohComlink(
     url="http://comlink.local:3000",
     profile="bot",          # keepalive 120s, larger pool
-    max_retries=3,           # default; 1 + 3 retries on transient errors
+    # Opt-in (default None = one attempt): retry rate refusals and HTTP 503,
+    # honour Retry-After, and space calls to one endpoint at least 0.4 s apart.
+    retry=RetryPolicy(attempts=5, min_interval=0.4),
 )
 
 # Startup probe — fail fast if comlink is down
@@ -39,7 +41,8 @@ while True:
         try:
             player = client.get_player(allycode=ally)
         except SwgohComlinkException:
-            # Already retried 3 times under the hood; just log and skip
+            # Rate refusals / 503 were already retried per the RetryPolicy;
+            # just log and skip
             log.exception("get_player failed for %s", ally)
             continue
         process(player, game_data)  # attribute access throughout
@@ -55,11 +58,15 @@ while True:
   on a schedule (e.g. daily) to clean up stale game-data versions.
   Diskcache won't grow unbounded — the `_inmem` dict resets after each
   evict.
-* **Retry envelopes.** Default 3 retries with full-jitter exponential
-  backoff. `Retry-After` headers are honored on 429. A 4-attempt total
-  failure raises `SwgohComlinkException` after ~30s in the worst case.
-  Adjust with `client.with_options(max_retries=5)` if your operator
-  network is flaky.
+* **Retry policy.** Retries are opt-in. With `RetryPolicy(attempts=5)`
+  a rate refusal (HTTP 429 / `Rate exceeded!`) or HTTP 503 is retried,
+  waiting for `Retry-After` (capped at `max_retry_after`) or the next
+  `backoff` step (5, 10, 20, 40 s) plus jitter. Any other error is
+  raised at once as a typed `SwgohComlinkHTTPError`. A rate refusal also
+  holds back that endpoint on the whole client, so concurrent tasks back
+  off together. Adjust per call site with
+  `client.with_options(retry=RetryPolicy(attempts=8))`. See
+  [Retries and pacing](../../api/comlink.md#retries-and-pacing).
 * **Connection pool.** `profile="bot"` is tuned for low-frequency,
   long-lived patterns: `keepalive_expiry=120s`, `max_connections=200`,
   `max_keepalive_connections=50`. Default would also work; this preset
@@ -75,7 +82,7 @@ warmup script can populate the cache an async bot reads.
 
 ```python
 import asyncio
-from swgoh_comlink import SwgohComlinkAsync
+from swgoh_comlink import RetryPolicy, SwgohComlinkAsync
 from swgoh_comlink._cache import GameDataCache
 
 async def main():
@@ -83,7 +90,7 @@ async def main():
         SwgohComlinkAsync(
             url="http://comlink.local:3000",
             profile="bot",
-            max_retries=3,
+            retry=RetryPolicy(attempts=5, min_interval=0.4),
         ) as client,
         GameDataCache() as cache,
     ):

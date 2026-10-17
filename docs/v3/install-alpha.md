@@ -21,21 +21,21 @@ Create a virtual environment used only for the alpha:
 # with uv (recommended)
 uv venv .venv-swgoh-v3
 source .venv-swgoh-v3/bin/activate    # Windows: .venv-swgoh-v3\Scripts\activate
-uv pip install https://github.com/MarTrepodi/comlink-python/releases/download/v3.0.0a1/swgoh_comlink-3.0.0a1-py3-none-any.whl
+uv pip install https://github.com/MarTrepodi/comlink-python/releases/download/v3.0.0a2/swgoh_comlink-3.0.0a2-py3-none-any.whl
 ```
 
 ```bash
 # stdlib equivalent
 python3.11 -m venv .venv-swgoh-v3
 source .venv-swgoh-v3/bin/activate
-pip install https://github.com/MarTrepodi/comlink-python/releases/download/v3.0.0a1/swgoh_comlink-3.0.0a1-py3-none-any.whl
+pip install https://github.com/MarTrepodi/comlink-python/releases/download/v3.0.0a2/swgoh_comlink-3.0.0a2-py3-none-any.whl
 ```
 
 Verify what you got:
 
 ```bash
 python -c "import swgoh_comlink; print(swgoh_comlink.version)"
-# -> 3.0.0a1
+# -> 3.0.0a2
 ```
 
 Your existing v2 environments are untouched — the alpha lives only
@@ -51,7 +51,7 @@ silently downgrading you:
 
 ```text
 # constraints.txt
-swgoh_comlink==3.0.0a1
+swgoh_comlink==3.0.0a2
 ```
 
 ```bash
@@ -60,12 +60,12 @@ pip install -c constraints.txt <anything-else-you-add-to-this-env>
 
 With the pin in place, a resolver that tries to fetch `swgoh_comlink`
 from PyPI errors out ("no matching distribution for
-swgoh_comlink==3.0.0a1") rather than replacing your alpha with v2.x.
+swgoh_comlink==3.0.0a2") rather than replacing your alpha with v2.x.
 
 Notes on specific commands:
 
 - `pip install -U swgoh_comlink` will **not** downgrade you — pip sees
-  the installed `3.0.0a1` as newer than anything on PyPI and keeps it.
+  the installed `3.0.0a2` as newer than anything on PyPI and keeps it.
 - `pip install --force-reinstall swgoh_comlink` (or uninstall +
   reinstall by name) **will** land you on v2.x, because by-name
   installs resolve against PyPI. Reinstall from the wheel URL instead.
@@ -76,7 +76,7 @@ If the consuming project is uv-managed, pin the alpha as a direct-URL
 source so the lockfile records exactly this artifact:
 
 ```bash
-uv add "swgoh_comlink @ https://github.com/MarTrepodi/comlink-python/releases/download/v3.0.0a1/swgoh_comlink-3.0.0a1-py3-none-any.whl"
+uv add "swgoh_comlink @ https://github.com/MarTrepodi/comlink-python/releases/download/v3.0.0a2/swgoh_comlink-3.0.0a2-py3-none-any.whl"
 ```
 
 `uv.lock` then holds the URL + hash; `uv sync` reproduces the alpha
@@ -117,4 +117,4 @@ pip install "swgoh_comlink==2.*"
 Open issues at
 [MarTrepodi/comlink-python/issues](https://github.com/MarTrepodi/comlink-python/issues)
 with the `v3` label — see the
-[release notes](releases/v3.0.0a1.md) for what to include.
+[release notes](releases/v3.0.0a2.md) for what to include.

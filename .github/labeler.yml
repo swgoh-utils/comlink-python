@@ -41,7 +41,7 @@ v3:
           - "src/swgoh_comlink/_codegen/**"
           - "src/swgoh_comlink/_models.py"
           - "src/swgoh_comlink/_payloads.py"
-          - "src/swgoh_comlink/_retry.py"
+          - "src/swgoh_comlink/retry.py"
           - "src/swgoh_comlink/compat.py"
           - "examples/typed/**"
           - "benchmarks/v3/**"

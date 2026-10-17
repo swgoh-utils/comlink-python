@@ -2,6 +2,29 @@ name: Feature Request
 description: Suggest a new feature or enhancement
 labels: ["enhancement"]
 body:
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have searched [existing issues](https://github.com/swgoh-utils/comlink-python/issues?q=is%3Aissue) and this has not been requested yet.
+          required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the library would this affect?
+      options:
+        - SwgohComlink / SwgohComlinkAsync (clients)
+        - StatCalc / GameDataBuilder
+        - Helpers
+        - swgoh-migrate tool
+        - Documentation / examples
+        - Other / not sure
+    validations:
+      required: true
+
   - type: dropdown
     id: version-line
     attributes:
@@ -28,7 +51,7 @@ body:
     id: solution
     attributes:
       label: Proposed Solution
-      description: Describe the API or behavior you'd like to see.
+      description: Describe the API or behavior you'd like to see. A code sketch of how you'd call it helps a lot.
     validations:
       required: true
 
@@ -37,3 +60,10 @@ body:
     attributes:
       label: Alternatives Considered
       description: Any alternative approaches you've considered.
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd be willing to open a pull request for this (see [CONTRIBUTING.md](https://github.com/swgoh-utils/comlink-python/blob/main/CONTRIBUTING.md)).

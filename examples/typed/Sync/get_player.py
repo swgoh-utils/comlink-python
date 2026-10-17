@@ -17,7 +17,7 @@ v2 PyPI package's ``swgoh_comlink`` import does NOT expose the
 from swgoh_comlink.typed import SwgohComlink
 
 # Construct the client. Same kwargs as the dict client — `url`,
-# `profile`, `max_retries`, etc.
+# `profile`, `retry`, etc.
 comlink = SwgohComlink()
 
 # get_player() returns a typed `Player` Struct, not a dict.

@@ -30,7 +30,7 @@ tight per-tick loop and the +10 % bimorphic overhead compounds.
 | [`Sync/get_player.py`](Sync/get_player.py) | Typed `Player` Struct — attribute access; converting back to dict via `msgspec.to_builtins` when needed. Mirrors `examples/Sync/get_player.py`. |
 | [`Sync/get_game_data.py`](Sync/get_game_data.py) | Typed `/data` segments via `compat.decode_segment` + the `STOCK_SEGMENT_TYPES` registry. Mirrors `examples/Sync/get_game_data.py`. |
 | [`Sync/calc_stats_local.py`](Sync/calc_stats_local.py) | Bimorphic `StatCalc.calc_player_stats(player_struct)` + `get_statcalc_game_data(client, cache=cache)` cold-start cache. Mirrors `examples/Sync/calc_stats_local.py`. |
-| [`Sync/healthcheck_and_retry.py`](Sync/healthcheck_and_retry.py) | **v3-only:** `client.healthcheck(timeout=5.0)` startup probe + `profile="bot"` + `max_retries=`. |
+| [`Sync/healthcheck_and_retry.py`](Sync/healthcheck_and_retry.py) | **v3-only:** `client.healthcheck(timeout=5.0)` startup probe + `profile="bot"` + opt-in `retry=RetryPolicy(...)`. |
 | [`Sync/raw_request.py`](Sync/raw_request.py) | **v3-only:** `client.raw_request(method, path, payload=)` escape hatch for endpoints the typed surface doesn't cover. |
 
 ## Async examples

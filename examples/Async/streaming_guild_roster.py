@@ -13,11 +13,6 @@ structured concurrency — if any single fetch fails, the entire group is cancel
 and the exception is raised cleanly.
 """
 
-import sys
-
-if sys.version_info < (3, 11):
-    sys.exit("This example requires Python 3.11+ (asyncio.TaskGroup support).")
-
 import asyncio
 import time
 
@@ -34,9 +29,9 @@ async def fetch_member(comlink: SwgohComlinkAsync, player_id: str, index: int, t
     """Fetch a single guild member's profile and print progress."""
     player = await comlink.get_player(player_id=player_id)
     gp = 0
-    for stat in player.get('profileStat', []):
-        if stat.get('nameKey') == 'STAT_GALACTIC_POWER_ACQUIRED_NAME':
-            gp = int(stat.get('value', 0))
+    for stat in player.get("profileStat", []):
+        if stat.get("nameKey") == "STAT_GALACTIC_POWER_ACQUIRED_NAME":
+            gp = int(stat.get("value", 0))
             break
     print(f"  [{index}/{total}] {player['name']} — GP: {gp:,}")
     return player
@@ -46,7 +41,7 @@ async def main():
     async with SwgohComlinkAsync(host=COMLINK_HOST, port=COMLINK_PORT) as comlink:
         # Step 1: Get the guild ID from a player's profile
         player = await comlink.get_player(allycode=ALLY_CODE)
-        guild_id = player.get('guildId')
+        guild_id = player.get("guildId")
         if not guild_id:
             print(f"Player {player['name']} is not in a guild.")
             return
@@ -56,8 +51,8 @@ async def main():
 
         # Step 2: Get guild data to extract member IDs
         guild = await comlink.get_guild(guild_id)
-        members = guild.get('member', [])
-        member_ids = [m['playerId'] for m in members]
+        members = guild.get("member", [])
+        member_ids = [m["playerId"] for m in members]
         total = len(member_ids)
         print(f"Fetching {total} guild member profiles concurrently...\n")
 
@@ -66,10 +61,7 @@ async def main():
         results = []
 
         async with asyncio.TaskGroup() as tg:
-            tasks = [
-                tg.create_task(fetch_member(comlink, pid, i + 1, total))
-                for i, pid in enumerate(member_ids)
-            ]
+            tasks = [tg.create_task(fetch_member(comlink, pid, i + 1, total)) for i, pid in enumerate(member_ids)]
 
         # TaskGroup ensures all tasks have completed (or all are cancelled on error)
         results = [task.result() for task in tasks]
@@ -79,9 +71,9 @@ async def main():
         print(f"\nFetched {len(results)} member profiles in {elapsed:.2f}s")
         total_gp = 0
         for p in results:
-            for stat in p.get('profileStat', []):
-                if stat.get('nameKey') == 'STAT_GALACTIC_POWER_ACQUIRED_NAME':
-                    total_gp += int(stat.get('value', 0))
+            for stat in p.get("profileStat", []):
+                if stat.get("nameKey") == "STAT_GALACTIC_POWER_ACQUIRED_NAME":
+                    total_gp += int(stat.get("value", 0))
                     break
         print(f"Combined Guild GP: {total_gp:,}")
 

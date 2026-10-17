@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
+import msgspec
 import pytest
 
 from swgoh_comlink._cache import GameDataCache
@@ -142,7 +143,7 @@ def test_bimorphic_list_of_player_structs(sc_baseline: StatCalc) -> None:
     dict_payload = [json.loads(body), json.loads(body)]
     sc_baseline.calc_player_stats(dict_payload)
 
-    struct_payload = [PLAYER_DECODER.decode(body), PLAYER_DECODER.decode(body)]
+    struct_payload: list[msgspec.Struct] = [PLAYER_DECODER.decode(body), PLAYER_DECODER.decode(body)]
     result = sc_baseline.calc_player_stats(struct_payload)
 
     assert isinstance(result, list)

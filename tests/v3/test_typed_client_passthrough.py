@@ -20,7 +20,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from swgoh_comlink.exceptions import SwgohComlinkException
+from swgoh_comlink.exceptions import SwgohComlinkException, SwgohComlinkUnavailableError
 from swgoh_comlink.typed import SwgohComlink, SwgohComlinkAsync
 
 from .conftest import CassetteServer
@@ -100,19 +100,20 @@ def test_sync_injected_client_is_not_closed() -> None:
 def test_sync_http_error_maps_to_exception(cassette_server: CassetteServer) -> None:
     cassette_server.fail("enums", status_code=503)
     with (
-        SwgohComlink(url="http://comlink.test", max_retries=0) as client,
-        pytest.raises(SwgohComlinkException, match=r"HTTP 503"),
+        SwgohComlink(url="http://comlink.test") as client,
+        pytest.raises(SwgohComlinkUnavailableError, match=r"HTTP 503"),
     ):
         client.get_enums()
 
 
 def test_sync_decode_failure_raises(httpx_mock: HTTPXMock) -> None:
+    # get_events: a single request (get_enums would first look up the version via /metadata).
     httpx_mock.add_response(content=b"{not json")
     with (
         SwgohComlink(url="http://comlink.test") as client,
         pytest.raises(SwgohComlinkException, match="failed to decode"),
     ):
-        client.get_enums()
+        client.get_events()
 
 
 # ── Async client ─────────────────────────────────────────────────────────────
@@ -172,8 +173,8 @@ async def test_async_injected_client_is_not_closed() -> None:
 
 async def test_async_http_error_maps_to_exception(cassette_server: CassetteServer) -> None:
     cassette_server.fail("enums", status_code=503)
-    async with SwgohComlinkAsync(url="http://comlink.test", max_retries=0) as client:
-        with pytest.raises(SwgohComlinkException, match=r"HTTP 503"):
+    async with SwgohComlinkAsync(url="http://comlink.test") as client:
+        with pytest.raises(SwgohComlinkUnavailableError, match=r"HTTP 503"):
             await client.get_enums()
 
 
@@ -181,4 +182,4 @@ async def test_async_decode_failure_raises(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(content=b"{not json")
     async with SwgohComlinkAsync(url="http://comlink.test") as client:
         with pytest.raises(SwgohComlinkException, match="failed to decode"):
-            await client.get_enums()
+            await client.get_events()

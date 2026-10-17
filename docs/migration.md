@@ -162,14 +162,14 @@ Constants.get("UNITS")            # -> '137438953472' (DataItems name)
 Constants.get("Segment1")         # -> '2097151' (class attribute)
 ```
 
-**Recommendation:** Prefer using `DataItems` enum values directly for type safety, and
-use the segment aggregates (`SEGMENT1`–`SEGMENT4`) when calling `get_game_data()` — see
+**Recommendation:** Prefer using `DataItems` enum values directly for type safety, request
+only the collections you need, and combine members with `|` — see
 [GameDataItems server alignment](#9-gamedataitems-server-alignment) below:
 
 ```python
 from swgoh_comlink.helpers import DataItems
 
-items = DataItems.SEGMENT1 + DataItems.SEGMENT2
+items = DataItems.SKILL | DataItems.EQUIPMENT
 data = comlink.get_game_data(items=items)
 ```
 
@@ -283,18 +283,17 @@ in your own code (rather than referencing the constants by name), update them:
 Code that references the constant by name (`DataItems.SEGMENT2`, `Constants.Segment2`,
 `Constants.get("Segment2")`) picks up the new values automatically.
 
-**`get_game_data(items=...)` now requires server-accepted values.** Comlink servers
-validate `items` against the server-side `GameDataItemsEnum` and may reject raw
-single-collection bit values with an HTTP 400. Prefer the `SEGMENT1`–`SEGMENT4`
-aggregates and `DataItems.ALL`:
+**`get_game_data(items=...)` accepts any in-range bitmask.** Comlink accepts any
+`items` value from 1 to 2<sup>52</sup> − 1, or `-1` (`DataItems.ALL`) for everything,
+so single collections (e.g. `DataItems.UNITS`), custom combinations and the
+`SEGMENT1`–`SEGMENT4` aggregates all work. Out-of-range values are rejected with an
+HTTP 400. Earlier versions of this guide advised against single-collection values;
+the failures behind that advice were most likely caused by a since-fixed Comlink bug
+in how CDN URLs were built, so upgrade Comlink if you still see them.
 
-```diff
-- comlink.get_game_data(items=DataItems.UNITS)
-+ comlink.get_game_data(items=DataItems.SEGMENT1)
-```
-
-The single-bit `DataItems` members (e.g. `UNITS`, `SKILL`, `EQUIPMENT`) remain useful
-for inspecting / composing custom bitfields and for `Constants.get()` lookups.
+Combine members with `|` rather than `+`. Aliased members (e.g. `CONQUEST_DEFINITION`
+and `ARTIFACT_DEFINITION`, which are both the `CONQUEST` bit) set a different bit when
+added together.
 
 **New members added** (from the live `GameDataItemsEnum`): `ABILITY_DECISION_TREE`,
 `ERA_DEFINITION`, `UBS_UPDATE`. New legacy-name aliases: `AbilityDecisionTrees`,
@@ -320,4 +319,4 @@ for inspecting / composing custom bitfields and for `Constants.get()` lookups.
 | Migration checker | Not available | `swgoh-migrate` CLI / `python -m swgoh_comlink.migrate` |
 | `DataItems.SEGMENT2` value | `68717379584` | `1125968624222208` (server-aligned) |
 | `DataItems.SEGMENT4` value | `281200098803712` | `3377424842620928` (server-aligned) |
-| `get_game_data(items=)` single-bit values | Accepted | Rejected (HTTP 400); use segment aggregates |
+| `get_game_data(items=)` values | Any bitmask | Any bitmask from 1 to 2<sup>52</sup> − 1, or `-1`; out of range → HTTP 400 |

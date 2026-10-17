@@ -20,13 +20,21 @@ repos:
       - id: debug-statements
 
   # ── Ruff linter & formatter (mirrors CI lint job) ─────────────────────
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
+  # Run via local uv so the version comes from uv.lock, same as CI.
+  - repo: local
     hooks:
       - id: ruff
-        args: [--fix]
-        exclude: ^examples/
+        name: ruff check
+        entry: uv run ruff check --fix --force-exclude
+        language: system
+        types: [python]
+        require_serial: true
       - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types: [python]
+        require_serial: true
 
   # ── ty type checking (Astral, run via local uv) ───────────────────────
   - repo: local
@@ -51,10 +59,21 @@ repos:
         pass_filenames: false
         files: ^src/swgoh_comlink/(_codegen/|_escape_hatches_(sync|async)\.py|swgoh_comlink(_async)?\.py|typed/swgoh_comlink(_async)?\.py)
 
-  # ── Commitlint (mirrors CI commitlint job) ────────────────────────────
-  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-    rev: v9.21.0
+  # ── Commitlint (CI's Commit Lint job runs this exact hook) ────────────
+  # Every version is pinned here and nowhere else: .github/workflows/commitlint.yml
+  # invokes this hook through pre-commit, so local and CI linting cannot drift. A
+  # third-party hook rev would only pin a caret range (its lockfile is not honoured),
+  # and commitlint changes rule behaviour across majors. Bump cli and
+  # config-conventional together; language_version makes pre-commit fetch its own Node
+  # (commitlint 21 needs >= 22.12) instead of depending on whatever is installed.
+  - repo: local
     hooks:
       - id: commitlint
+        name: commitlint
+        entry: commitlint --edit
+        language: node
+        language_version: "24.21.0"
         stages: [commit-msg]
-        additional_dependencies: ["@commitlint/config-conventional"]
+        additional_dependencies:
+          - "@commitlint/cli@21.2.3"
+          - "@commitlint/config-conventional@21.2.3"

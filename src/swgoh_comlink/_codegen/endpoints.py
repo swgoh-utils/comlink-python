@@ -20,6 +20,8 @@ Conventions
 - ``pre_fetch_version=True`` emits the ``version or self._get_game_version()``
   prologue (sync) / ``version or await self._get_game_version()`` (async).
 - ``pre_fetch_locale_bundle=True`` emits the localization-id fallback.
+- ``cached_enums`` / ``refresh_version_cache`` wire an endpoint into the
+  instance caches (``enums`` and the /metadata version cache).
 """
 
 from __future__ import annotations
@@ -118,6 +120,14 @@ class Endpoint:
     list_wrap_single_dict: bool = False
     """If True (only ``get_unit_stats``): wrap a single-dict payload in a list."""
 
+    cached_enums: bool = False
+    """If True (only ``get_enums``): serve the response from the per-game-data-version
+    ``enums`` cache. The endpoint must declare a ``refresh`` parameter."""
+
+    refresh_version_cache: bool = False
+    """If True (only ``get_game_metadata``): store the versions from a non-enums
+    response in the instance version cache."""
+
     # ── API surface ────────────────────────────────────────────────────
     aliases: tuple[str, ...] = ()
     """camelCase / convenience shims emitted as ``alias = method_name``."""
@@ -147,7 +157,18 @@ ENDPOINTS: tuple[Endpoint, ...] = (
         name="get_enums",
         http_method="GET",
         path="enums",
-        docstring="Get the game data enums. Uses GET (not POST).",
+        docstring=(
+            "Get the game data enums. Uses GET (not POST).\n\n"
+            "        The response is cached on the instance as ``enums``, with the game data version it was\n"
+            "        fetched under as ``enums_version``. Later calls return the cached response while the game\n"
+            "        data version (read through the version cache, see ``version_cache_ttl``) is unchanged.\n"
+            "        When the version cannot be determined, the enums are fetched and returned uncached.\n"
+            "        ``refresh=True`` fetches the version and the enums again. A cached response is the same\n"
+            "        object as ``enums``: copy it before changing it.\n"
+            "        "
+        ),
+        params=(Param("refresh", "bool", default="False"),),
+        cached_enums=True,
         aliases=("getEnums",),
     ),
     Endpoint(
@@ -163,13 +184,13 @@ ENDPOINTS: tuple[Endpoint, ...] = (
         name="get_game_data",
         http_method="POST",
         path="data",
-        docstring='Get game data. ``version=""`` triggers a metadata fetch for the latest version.',
+        docstring='Get game data. ``version=""`` uses the latest version from the version cache (see ``version_cache_ttl``).',
         params=(
             Param("version", "str", default='""'),
             Param("include_pve_units", "bool", default="True"),
             Param("request_segment", "int", default="0"),
             Param("enums", "bool", default="False"),
-            Param("items", "str | None", default="None"),
+            Param("items", "str | DataItems | int | None", default="None"),
             Param("device_platform", "str", default='"Android"'),
         ),
         payload_builder="game_data_payload",
@@ -182,7 +203,7 @@ ENDPOINTS: tuple[Endpoint, ...] = (
         name="get_localization",
         http_method="POST",
         path="localization",
-        docstring="Get localization bundle. ``localization_id=None`` resolves from current metadata.",
+        docstring="Get localization bundle. ``localization_id=None`` uses the latest bundle version from the version cache.",
         params=(
             Param("localization_id", "str | None", default="None"),
             Param("locale", "str | None", default="None"),
@@ -204,6 +225,7 @@ ENDPOINTS: tuple[Endpoint, ...] = (
             Param("enums", "bool", default="False"),
         ),
         payload_builder="game_metadata_payload",
+        refresh_version_cache=True,
         typed_decoder="METADATA_DECODER",
         typed_return="Metadata",
         aliases=("getGameMetaData", "getMetaData", "get_metadata"),

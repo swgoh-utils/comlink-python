@@ -718,3 +718,167 @@ OMICRON_MODE: dict[int, str] = {
     14: "GAC (3v3)",
     15: "GAC (5v5)",
 }
+
+# ---------------------------------------------------------------------------
+# Item and currency types
+# ---------------------------------------------------------------------------
+
+ITEM_TYPES: dict[int, str] = {
+    1: "EMPTY",
+    2: "UNIT",
+    3: "CURRENCY",
+    4: "BUCKET",
+    6: "XP",
+    7: "MATERIAL",
+    8: "ENERGY",
+    11: "EQUIPMENT",
+    12: "EVENT_KEYCARD",
+    13: "POWERUP_BUNDLE",
+    14: "MYSTERY_BOX",
+    15: "STAT_MOD",
+    16: "MYSTERY_STAT_MOD",
+    17: "PLAYER_TITLE",
+    18: "STAT_MOD_PARAMETERIZED",
+    19: "PLAYER_PORTRAIT",
+    20: "SEASON_POINT",
+    21: "GALACTIC_BUNDLE",
+    22: "CONQUEST_POINT",
+    23: "ARTIFACT",
+    24: "CONQUEST_CONSUMABLE",
+    25: "BATTLE_PASS",
+    26: "LOGIN_CALENDAR",
+    27: "CONQUEST_STAMINA_REGEN_REDUCE",
+    28: "CONQUEST_ENERGY_REGEN_REDUCE",
+    29: "CONQUEST_ARTIFACT_FREE_SWAP_BONUS",
+    30: "DATACRON",
+    31: "EPISODE_XP",
+    32: "EPISODE_PASS",
+    33: "EPISODE_PASS_PLUS",
+    34: "LIGHTSPEED_TOKEN",
+    35: "LOANED_UNIT_ERA_LEVEL_INCREASE",
+}
+"""``ItemType`` number to enum member name: the ``type`` of a reward, preview or inventory item.
+
+A snapshot of ``get_enums()["ItemType"]`` at game data 0.40.6, without ``ItemType_DEFAULT``. The game adds
+members over time: pass the live ``get_enums()`` response to :class:`ItemNames` to read the current table.
+"""
+
+CURRENCY_TYPES: dict[int, str] = {
+    1: "GRIND",
+    2: "PREMIUM",
+    3: "REAL_MONEY",
+    4: "SOCIAL",
+    8: "IGC_EVENT_KEYCARD",
+    9: "XP_EVENT_KEYCARD",
+    10: "PVP_CURRENCY",
+    11: "FORCE_POINT",
+    12: "PVP_SHIP_CURRENCY",
+    13: "FREE",
+    14: "WAR_SHIP_CURRENCY",
+    15: "GRIND_TICKET",
+    16: "SHARD_CURRENCY",
+    17: "GUILD_CURRENCY",
+    18: "GUILD_BANK_CURRENCY",
+    19: "SHIP_GRIND",
+    20: "GUILD_RAID_CURRENCY_01",
+    21: "GUILD_RAID_CURRENCY_02",
+    22: "GUILD_RAID_CURRENCY_03",
+    23: "GUILD_RAID_CURRENCY_04",
+    24: "GUILD_RAID_CURRENCY_05",
+    25: "GUILD_RAID_CURRENCY_06",
+    26: "GUILD_RAID_CURRENCY_07",
+    27: "GUILD_RAID_CURRENCY_08",
+    28: "GUILD_RAID_CURRENCY_09",
+    29: "GUILD_RAID_CURRENCY_10",
+    30: "GUILD_RAID_CURRENCY_11",
+    31: "GUILD_RAID_CURRENCY_12",
+    32: "TERRITORY_BATTLE_CURRENCY",
+    33: "SEASONS_CURRENCY",
+    34: "TERRITORY_BATTLE_CURRENCY_02",
+    35: "GALACTIC_BUNDLE_CURRENCY",
+    36: "LIGHT_SIDE_CURRENCY",
+    37: "DARK_SIDE_CURRENCY",
+    38: "GALACTIC_CHALLENGE_CURRENCY",
+    39: "CONQUEST_CURRENCY",
+    40: "DATACRON_CURRENCY",
+    41: "MOD_REROLL_CURRENCY",
+    42: "TERRITORY_BATTLE_CURRENCY_03",
+    43: "RAID_REWARD_CURRENCY_01",
+    44: "RAID_REWARD_CURRENCY_02",
+    45: "RAID_REWARD_CURRENCY_03",
+    46: "RAID_REWARD_CURRENCY_04",
+    47: "GL_EVENT_CURRENCY",
+    48: "EPISODE_CURRENCY",
+    49: "ERA_CURRENCY",
+    50: "ERA_UPGRADE_CURRENCY",
+}
+"""``CurrencyType`` number to enum member name.
+
+An inventory's ``currencyItem[].currency`` carries the number; a reward of ``ItemType`` ``CURRENCY``
+carries the member name as its ``id``.
+
+A snapshot of ``get_enums()["CurrencyType"]`` at game data 0.40.6, without ``CurrencyType_DEFAULT``. The
+game adds currencies over time: pass the live ``get_enums()`` response to :class:`ItemNames` to read the
+current table.
+"""
+
+# No game data collection names a currency. These are the in-game English names, taken from the
+# localization bundle's Shared_Currency_* (and SHARED_LIGHT/DARK_SIDE_CURRENCY) strings where one
+# matches the member, and spelled out from the member name otherwise. GALACTIC_BUNDLE_CURRENCY is the
+# Hyperdrive Token (Shared_Currency_Hyperdrive_Bundle): game metadata names it the
+# galactic-bundle-exchange-currency, and the exchange screen reads "You have received a Hyperdrive Token".
+CURRENCY_NAMES: dict[str, str] = {
+    "GRIND": "Credits",
+    "PREMIUM": "Crystals",
+    "REAL_MONEY": "Real Money",
+    "SOCIAL": "Ally Points",
+    "IGC_EVENT_KEYCARD": "IGC Event Keycards",
+    "XP_EVENT_KEYCARD": "XP Event Keycards",
+    "PVP_CURRENCY": "Squad Arena Tokens",
+    "FORCE_POINT": "Cantina Battle Tokens",
+    "PVP_SHIP_CURRENCY": "Fleet Arena Tokens",
+    "FREE": "Free",
+    "WAR_SHIP_CURRENCY": "Galactic War Tokens",
+    "GRIND_TICKET": "Sim Tickets",
+    "SHARD_CURRENCY": "Shard Store Tokens",
+    "GUILD_CURRENCY": "Guild Tokens",
+    "GUILD_BANK_CURRENCY": "Guild Bank Coins",
+    "SHIP_GRIND": "Ship Building Materials",
+    "GUILD_RAID_CURRENCY_01": "The Pit Tickets",
+    "GUILD_RAID_CURRENCY_02": "Tank Takedown Tickets",
+    "GUILD_RAID_CURRENCY_03": "The Sith Triumvirate Tickets",
+    "GUILD_RAID_CURRENCY_04": "The Pit (Challenge) Tickets",
+    "GUILD_RAID_CURRENCY_05": "Guild Raid Tickets",
+    "GUILD_RAID_CURRENCY_06": "Guild Raid Currency 06",
+    "GUILD_RAID_CURRENCY_07": "Guild Raid Currency 07",
+    "GUILD_RAID_CURRENCY_08": "Guild Raid Currency 08",
+    "GUILD_RAID_CURRENCY_09": "Guild Raid Currency 09",
+    "GUILD_RAID_CURRENCY_10": "Guild Raid Currency 10",
+    "GUILD_RAID_CURRENCY_11": "Guild Raid Currency 11",
+    "GUILD_RAID_CURRENCY_12": "Guild Raid Currency 12",
+    "TERRITORY_BATTLE_CURRENCY": "Mk I Guild Event Tokens",
+    "SEASONS_CURRENCY": "Championship Tokens",
+    "TERRITORY_BATTLE_CURRENCY_02": "Mk II Guild Event Tokens",
+    "GALACTIC_BUNDLE_CURRENCY": "Hyperdrive Token",
+    "LIGHT_SIDE_CURRENCY": "Light Side Currency",
+    "DARK_SIDE_CURRENCY": "Dark Side Currency",
+    "GALACTIC_CHALLENGE_CURRENCY": "Galactic Challenge Tickets",
+    "CONQUEST_CURRENCY": "Conquest Credits",
+    "DATACRON_CURRENCY": "Data-caches",
+    "MOD_REROLL_CURRENCY": "Micro Attenuators",
+    "TERRITORY_BATTLE_CURRENCY_03": "Mk III Guild Event Tokens",
+    "RAID_REWARD_CURRENCY_01": "Mk I Raid Tokens",
+    "RAID_REWARD_CURRENCY_02": "Mk II Raid Tokens",
+    "RAID_REWARD_CURRENCY_03": "Mk III Raid Tokens",
+    "RAID_REWARD_CURRENCY_04": "Mk IV Raid Tokens",
+    "GL_EVENT_CURRENCY": "Legend Tokens",
+    "EPISODE_CURRENCY": "Episode Currency",
+    "ERA_CURRENCY": "Era Currency",
+    "ERA_UPGRADE_CURRENCY": "Era Level Currency",
+}
+"""``CurrencyType`` member name to its English display name (see ``CURRENCY_TYPES``).
+
+Curated by hand: ``get_enums()`` names the members but not the currencies. :class:`ItemNames` spells out a
+``CurrencyType`` member missing from this table from its name, so a ``GUILD_RAID_CURRENCY_13`` listed by the
+live ``get_enums()`` reads "Guild Raid Currency 13".
+"""

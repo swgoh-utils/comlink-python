@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -30,7 +31,7 @@ class TestMigrationRule:
 
         rule = MigrationRule(id="T", pattern="p", severity="INFO", message="m", suggestion="s")
         with pytest.raises(FrozenInstanceError):
-            rule.id = "NEW"
+            cast(Any, rule).id = "NEW"
 
     def test_rules_list_not_empty(self):
         from swgoh_comlink.migrate._rules import RULES
@@ -118,6 +119,37 @@ class TestScanDirectory:
         findings = scan_directory(tmp_path)
         assert all(".venv" not in f.file for f in findings)
 
+    @pytest.mark.parametrize(
+        ("rel_path", "exclude_patterns"),
+        [
+            (".venv/b.py", ["vendor"]),
+            ("pkg.egg-info/c.py", None),
+            ("src/vendor/d.py", ["vend*"]),
+            ("old.py", ["old.py"]),
+        ],
+        ids=["extra-exclude-keeps-defaults", "egg-info-glob", "user-glob", "file-name"],
+    )
+    def test_skips_excluded_paths(self, tmp_path: Path, rel_path: str, exclude_patterns: list[str] | None):
+        from swgoh_comlink.migrate._scanner import scan_directory
+
+        skipped = tmp_path / rel_path
+        skipped.parent.mkdir(parents=True, exist_ok=True)
+        skipped.write_text("import requests\n")
+        (tmp_path / "main.py").write_text("import requests\n")
+
+        findings = scan_directory(tmp_path, exclude_patterns=exclude_patterns)
+        assert {f.file for f in findings} == {str(tmp_path / "main.py")}
+
+    def test_excluded_name_above_the_root_is_ignored(self, tmp_path: Path):
+        from swgoh_comlink.migrate._scanner import scan_directory
+
+        project = tmp_path / "build" / "proj"
+        project.mkdir(parents=True)
+        (project / "a.py").write_text("import requests\n")
+
+        findings = scan_directory(project)
+        assert {f.file for f in findings} == {str(project / "a.py")}
+
 
 # ── format_findings ────────────────────────────────────────────────────
 
@@ -128,28 +160,21 @@ class TestFormatFindings:
 
         assert format_findings([]) == "No migration issues found."
 
-    def test_with_findings(self, tmp_path: Path):
+    @pytest.mark.parametrize("use_color", [True, False], ids=["color", "no-color"])
+    def test_with_findings(self, tmp_path: Path, use_color: bool):
         from swgoh_comlink.migrate._reporter import format_findings
         from swgoh_comlink.migrate._scanner import scan_file
 
         f = tmp_path / "test.py"
         f.write_text("import requests\n")
-        findings = scan_file(f)
-        report = format_findings(findings, use_color=True)
-        assert "migration issue" in report
-        assert "WARNING" in report
+        report = format_findings(scan_file(f), use_color=use_color)
 
-    def test_no_color_mode(self, tmp_path: Path):
-        from swgoh_comlink.migrate._reporter import format_findings
-        from swgoh_comlink.migrate._scanner import scan_file
-
-        f = tmp_path / "test.py"
-        f.write_text("import requests\n")
-        findings = scan_file(f)
-        report = format_findings(findings, use_color=False)
-        # No ANSI escape codes
-        assert "\033[" not in report
-        assert "WARNING" in report
+        assert "Found 1 migration issue(s) in 1 file(s):" in report
+        assert "DEP002" in report
+        # Severity is wrapped in yellow ANSI codes only when color is on.
+        assert ("[\033[93mWARNING\033[0m]" in report) is use_color
+        assert ("\033[" in report) is use_color
+        assert ("[WARNING]" in report) is not use_color
 
 
 # ── main CLI ───────────────────────────────────────────────────────────
@@ -177,23 +202,38 @@ class TestMain:
         exit_code = main([str(tmp_path / "nonexistent")])
         assert exit_code == 1
 
-    def test_severity_filter(self, tmp_path: Path):
+    @pytest.mark.parametrize(
+        ("severity", "info_reported", "warning_reported"),
+        [("INFO", True, True), ("WARNING", False, True), ("ERROR", False, False)],
+    )
+    def test_severity_filter(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        severity: str,
+        info_reported: bool,
+        warning_reported: bool,
+    ):
         from swgoh_comlink.migrate.__main__ import main
 
         f = tmp_path / "code.py"
-        # DEP005 is INFO severity
+        # DEP005 is INFO severity; the same line also trips the v3 rule V3005 (WARNING)
         f.write_text("from swgoh_comlink.globals import get_logger\n")
-        # With INFO filter, should find it
-        exit_code = main([str(f), "--severity", "INFO"])
-        assert exit_code == 0
-        # With WARNING filter, should filter it out
-        exit_code = main([str(f), "--severity", "WARNING"])
-        assert exit_code == 0
 
-    def test_no_color_flag(self, tmp_path: Path):
+        assert main([str(f), "--severity", severity, "--no-color"]) == 0
+        out = capsys.readouterr().out
+        assert ("DEP005" in out) is info_reported
+        assert ("V3005" in out) is warning_reported
+        assert ("No migration issues found." in out) is not warning_reported
+
+    @pytest.mark.parametrize("no_color", [True, False], ids=["no-color", "color"])
+    def test_no_color_flag(self, tmp_path: Path, capsys: pytest.CaptureFixture[str], no_color: bool):
         from swgoh_comlink.migrate.__main__ import main
 
         f = tmp_path / "code.py"
         f.write_text("import requests\n")
-        exit_code = main([str(f), "--no-color"])
-        assert exit_code == 0
+
+        assert main([str(f), *(["--no-color"] if no_color else [])]) == 0
+        out = capsys.readouterr().out
+        assert "DEP002" in out
+        assert ("\033[" in out) is not no_color

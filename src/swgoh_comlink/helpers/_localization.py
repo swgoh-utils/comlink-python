@@ -14,6 +14,12 @@ ANSI_BOLD = "\033[1m"
 ANSI_ITALIC = "\033[3m"
 ANSI_UNDERLINE = "\033[4m"
 ANSI_STRIKE = "\033[9m"
+# SGR codes that turn off one attribute, so closing a style never needs a full reset.
+ANSI_BOLD_OFF = "\033[22m"
+ANSI_ITALIC_OFF = "\033[23m"
+ANSI_UNDERLINE_OFF = "\033[24m"
+ANSI_STRIKE_OFF = "\033[29m"
+ANSI_DEFAULT_FG = "\033[39m"
 
 
 # ANSI color support: convert hex to nearest 256-color or use truecolor if available
@@ -211,14 +217,19 @@ def _parse_tokens(text: str) -> list[dict[str, Any]]:
 
 def _emit_text_segment(tokens: list[dict[str, Any]], segment: str) -> None:
     """Emit text segment(s), splitting on literal '\\n' escapes into newline tokens."""
-    if not segment:
-        return
     parts = segment.split("\\n")
     for idx, part in enumerate(parts):
         if part:
             tokens.append({"type": "text", "value": part})
         if idx < len(parts) - 1:
             tokens.append({"type": "newline"})
+
+
+def _localize(localization: dict[str, str] | None, key: str | None, default: str) -> str:
+    """Return the markup-free localized string for ``key``, or ``default`` when it cannot be resolved."""
+    if not key or localization is None or (raw := localization.get(key)) is None:
+        return default
+    return parse_swgoh_string(raw).strip() or default
 
 
 def parse_swgoh_string(text: str, output: OutputFormat = "bare") -> str:
@@ -324,9 +335,54 @@ class _FormattingState:
         self.italic_depth = 0
         self.underline_depth = 0
         self.strike_depth = 0
+        # Style depths when the active web color span opened; deeper styles were opened inside it.
+        self.span_styles: tuple[int, int, int, int] = (0, 0, 0, 0)
 
     def any_style_active(self) -> bool:
         return bool(self.bold_depth or self.italic_depth or self.underline_depth or self.strike_depth)
+
+    def style_depths(self) -> tuple[int, int, int, int]:
+        return (self.bold_depth, self.italic_depth, self.underline_depth, self.strike_depth)
+
+
+# Web style tags, outermost first, in the order ``style_depths`` reports them.
+_WEB_STYLE_TAGS = ("b", "em", "u", "s")
+
+
+def _web_open_tags(depths: tuple[int, ...]) -> list[str]:
+    """Opening tags for the given style depths, outermost first."""
+    return [f"<{tag}>" for tag, depth in zip(_WEB_STYLE_TAGS, depths, strict=True) for _ in range(depth)]
+
+
+def _web_close_tags(depths: tuple[int, ...]) -> list[str]:
+    """Closing tags for the given style depths, innermost first."""
+    return [
+        f"</{tag}>" for tag, depth in reversed(list(zip(_WEB_STYLE_TAGS, depths, strict=True))) for _ in range(depth)
+    ]
+
+
+def _web_span_inner_styles(state: _FormattingState) -> tuple[int, ...]:
+    """Style depths opened inside the active color span."""
+    return tuple(max(0, now - then) for now, then in zip(state.style_depths(), state.span_styles, strict=True))
+
+
+def _set_web_color(color: tuple[int, int, int, int] | None, state: _FormattingState, result: list[str]) -> None:
+    """Close the active color span, if any, and open one for ``color``, if given.
+
+    Styles opened inside the old span are closed before its ``</span>`` and reopened afterwards, inside
+    the new span when there is one, so the HTML stays well nested.
+    """
+    if state.active_color is None:
+        if color is not None:
+            state.span_styles = state.style_depths()
+            result.append(f'<span style="{_web_color_style(color)}">')
+        return
+    inner = _web_span_inner_styles(state)
+    result.extend(_web_close_tags(inner))
+    result.append("</span>")
+    if color is not None:
+        result.append(f'<span style="{_web_color_style(color)}">')
+    result.extend(_web_open_tags(inner))
 
 
 def _web_color_style(color: tuple[int, int, int, int]) -> str:
@@ -346,14 +402,11 @@ def _handle_color(token: dict[str, Any], output: OutputFormat, state: _Formattin
         int(token["b"]),
         int(token["a"]),
     )
-    if output == "web" and state.active_color is not None:
-        # Close the previous span before opening a new one.
-        result.append("</span>")
+    if output == "web":
+        _set_web_color(new_color, state, result)
     state.active_color = new_color
     if output == "terminal":
         result.append(_hex_to_ansi_truecolor(f"{new_color[0]:02X}{new_color[1]:02X}{new_color[2]:02X}"))
-    elif output == "web":
-        result.append(f'<span style="{_web_color_style(new_color)}">')
 
 
 def _handle_alpha(token: dict[str, Any], output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
@@ -364,36 +417,31 @@ def _handle_alpha(token: dict[str, Any], output: OutputFormat, state: _Formattin
     else:
         r, g, b, _ = state.active_color
         new_color = (r, g, b, alpha)
-    if output == "web" and state.active_color is not None:
-        result.append("</span>")
+    if output == "web":
+        _set_web_color(new_color, state, result)
     state.active_color = new_color
     if output == "terminal":
         # ANSI truecolor foreground has no alpha channel; the RGB stays the same,
         # so only re-emit the sequence if the RGB actually changed.
         result.append(_hex_to_ansi_truecolor(f"{new_color[0]:02X}{new_color[1]:02X}{new_color[2]:02X}"))
-    elif output == "web":
-        result.append(f'<span style="{_web_color_style(new_color)}">')
 
 
 def _handle_color_reset(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     """Handle color reset token [-]."""
-    if output == "terminal":
-        # Reset covers both active color and all SGR styles; reapply the styles after.
-        result.append(ANSI_RESET)
-        _reapply_terminal_styles(state, result)
+    if output == "terminal" and state.active_color is not None:
+        result.append(ANSI_DEFAULT_FG)
     elif output == "web" and state.active_color is not None:
-        result.append("</span>")
+        _set_web_color(None, state, result)
     state.active_color = None
 
 
 def _handle_color_end(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     """Handle color end token [/c]."""
     state.in_color_block = False
-    if output == "terminal":
-        result.append(ANSI_RESET)
-        _reapply_terminal_styles(state, result)
+    if output == "terminal" and state.active_color is not None:
+        result.append(ANSI_DEFAULT_FG)
     elif output == "web" and state.active_color is not None:
-        result.append("</span>")
+        _set_web_color(None, state, result)
     state.active_color = None
 
 
@@ -410,7 +458,7 @@ def _handle_bold_open(output: OutputFormat, state: _FormattingState, result: lis
 def _handle_bold_close(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     state.bold_depth = max(0, state.bold_depth - 1)
     if output == "terminal" and state.bold_depth == 0:
-        _reset_and_reapply_terminal(state, result, drop_bold=True)
+        result.append(ANSI_BOLD_OFF)
     elif output == "discord":
         result.append("**")
     elif output == "web":
@@ -430,7 +478,7 @@ def _handle_italic_open(output: OutputFormat, state: _FormattingState, result: l
 def _handle_italic_close(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     state.italic_depth = max(0, state.italic_depth - 1)
     if output == "terminal" and state.italic_depth == 0:
-        _reset_and_reapply_terminal(state, result, drop_italic=True)
+        result.append(ANSI_ITALIC_OFF)
     elif output == "discord":
         result.append("*")
     elif output == "web":
@@ -450,7 +498,7 @@ def _handle_underline_open(output: OutputFormat, state: _FormattingState, result
 def _handle_underline_close(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     state.underline_depth = max(0, state.underline_depth - 1)
     if output == "terminal" and state.underline_depth == 0:
-        _reset_and_reapply_terminal(state, result, drop_underline=True)
+        result.append(ANSI_UNDERLINE_OFF)
     elif output == "discord":
         result.append("__")
     elif output == "web":
@@ -470,7 +518,7 @@ def _handle_strike_open(output: OutputFormat, state: _FormattingState, result: l
 def _handle_strike_close(output: OutputFormat, state: _FormattingState, result: list[str]) -> None:
     state.strike_depth = max(0, state.strike_depth - 1)
     if output == "terminal" and state.strike_depth == 0:
-        _reset_and_reapply_terminal(state, result, drop_strike=True)
+        result.append(ANSI_STRIKE_OFF)
     elif output == "discord":
         result.append("~~")
     elif output == "web":
@@ -529,63 +577,28 @@ def _fmt_scale(value: float) -> str:
     return f"{value:g}"
 
 
-def _reset_and_reapply_terminal(
-    state: _FormattingState,
-    result: list[str],
-    *,
-    drop_bold: bool = False,
-    drop_italic: bool = False,
-    drop_underline: bool = False,
-    drop_strike: bool = False,
-) -> None:
-    """Emit ANSI_RESET and reapply remaining active color/styles (minus any dropped ones)."""
-    if not (
-        state.active_color or state.any_style_active() or drop_bold or drop_italic or drop_underline or drop_strike
-    ):
-        return
-    result.append(ANSI_RESET)
-    if state.active_color is not None:
-        r, g, b, _ = state.active_color
-        result.append(_hex_to_ansi_truecolor(f"{r:02X}{g:02X}{b:02X}"))
-    if not drop_bold and state.bold_depth > 0:
-        result.append(ANSI_BOLD)
-    if not drop_italic and state.italic_depth > 0:
-        result.append(ANSI_ITALIC)
-    if not drop_underline and state.underline_depth > 0:
-        result.append(ANSI_UNDERLINE)
-    if not drop_strike and state.strike_depth > 0:
-        result.append(ANSI_STRIKE)
-
-
-def _reapply_terminal_styles(state: _FormattingState, result: list[str]) -> None:
-    """Re-apply active bold/italic/underline/strike styles after ANSI reset."""
-    if state.bold_depth > 0:
-        result.append(ANSI_BOLD)
-    if state.italic_depth > 0:
-        result.append(ANSI_ITALIC)
-    if state.underline_depth > 0:
-        result.append(ANSI_UNDERLINE)
-    if state.strike_depth > 0:
-        result.append(ANSI_STRIKE)
-
-
 def _finalize_output(output: OutputFormat, state: _FormattingState, result: list[str]) -> str:
     """Finalize and return the formatted output, balancing any unclosed markup."""
     if output == "terminal" and (state.active_color or state.any_style_active()):
         result.append(ANSI_RESET)
+    elif output == "discord":
+        # Close any styles the source string left open, inner-most first.
+        result.append(
+            "~~" * state.strike_depth
+            + "__" * state.underline_depth
+            + "*" * state.italic_depth
+            + "**" * state.bold_depth
+        )
     elif output == "web":
-        # Close any tags the source string left dangling so the HTML stays well-formed.
-        # Inner-most first: styles, then color span.
-        for _ in range(state.strike_depth):
-            result.append("</s>")
-        for _ in range(state.underline_depth):
-            result.append("</u>")
-        for _ in range(state.italic_depth):
-            result.append("</em>")
-        for _ in range(state.bold_depth):
-            result.append("</b>")
+        # Close any tags the source string left dangling so the HTML stays well-formed, inner-most
+        # first: styles opened inside the color span, the span, then the styles around it.
+        outer = state.style_depths()
         if state.active_color is not None:
+            inner = _web_span_inner_styles(state)
+            result.extend(_web_close_tags(inner))
             result.append("</span>")
+            outer = tuple(now - extra for now, extra in zip(outer, inner, strict=True))
+        result.extend(_web_close_tags(outer))
 
     formatted = "".join(result)
 

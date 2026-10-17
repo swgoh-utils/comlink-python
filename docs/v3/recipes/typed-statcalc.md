@@ -147,6 +147,6 @@ Full audit, measurements, and decision rationale in
 ## See also
 
 - [`docs/v3/recipes/long-running-bot.md`](long-running-bot.md) —
-  pairs `GameDataCache` with retries and a startup `healthcheck`.
+  pairs `GameDataCache` with an opt-in `RetryPolicy` and a startup `healthcheck`.
 - [`docs/v3/migration.md`](../migration.md) — v2 → v3 upgrade path.
 - [`docs/v3/codegen.md`](../codegen.md) — the typed/dict client split.

@@ -11,15 +11,34 @@ requires ``version=`` explicitly and ``stream_localization`` requires
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+import contextlib
+from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from ._base import GAME_DATA_TIMEOUT
 from ._payloads import game_data_payload, localization_payload
+from .exceptions import SwgohComlinkException, SwgohComlinkHTTPError
 
 if TYPE_CHECKING:
-    from ._models import Metadata
+    from ._base import _CachedVersions
+    from .helpers import DataItems
+
+
+@contextlib.asynccontextmanager
+async def _checked_stream(
+    stream: contextlib.AbstractAsyncContextManager[httpx.Response],
+) -> AsyncGenerator[httpx.Response, None]:
+    """Async twin of :func:`swgoh_comlink._escape_hatches_sync._checked_stream`."""
+    try:
+        async with stream as response:
+            if response.is_error:
+                await response.aread()
+                raise SwgohComlinkHTTPError.from_response(response)
+            yield response
+    except httpx.RequestError as e:
+        raise SwgohComlinkException(str(e)) from e
 
 
 class _AsyncEscapeHatchMixin:
@@ -39,7 +58,7 @@ class _AsyncEscapeHatchMixin:
             timeout: float | None,
         ) -> tuple[str, dict[str, Any]]: ...
 
-        async def get_game_metadata(self, *args: Any, **kwargs: Any) -> Any: ...
+        async def _get_versions(self, refresh: bool = False) -> _CachedVersions: ...
 
     async def healthcheck(self, *, timeout: float = 5.0) -> bool:
         """Async mirror of :meth:`_SyncEscapeHatchMixin.healthcheck`."""
@@ -72,13 +91,15 @@ class _AsyncEscapeHatchMixin:
         include_pve_units: bool = True,
         request_segment: int = 0,
         enums: bool = False,
-        items: str | None = None,
+        items: str | DataItems | int | None = None,
         device_platform: str = "Android",
     ) -> Any:
         """Return an ``httpx.AsyncClient.stream`` context manager for ``/data``.
 
         ``async with client.stream_game_data(version=v) as r:`` — caller
-        uses ``response.aiter_bytes()``. Bypasses retry.
+        uses ``response.aiter_bytes()``. Bypasses retry. An HTTP error
+        status raises :class:`~swgoh_comlink.exceptions.SwgohComlinkHTTPError`
+        (or a subclass) when the context manager is entered.
 
         Note: this method is synchronous and returns the async context
         manager. Pass ``version=`` explicitly — the metadata fallback
@@ -99,7 +120,7 @@ class _AsyncEscapeHatchMixin:
             device_platform=device_platform,
         )
         full_path, request_kwargs = self._build_request_kwargs("POST", "data", payload, GAME_DATA_TIMEOUT)
-        return self.client.stream("POST", full_path, **request_kwargs)
+        return _checked_stream(self.client.stream("POST", full_path, **request_kwargs))
 
     def stream_localization(
         self,
@@ -115,20 +136,21 @@ class _AsyncEscapeHatchMixin:
         """
         payload = localization_payload(localization_id, locale, unzip, enums)
         full_path, request_kwargs = self._build_request_kwargs("POST", "localization", payload, None)
-        return self.client.stream("POST", full_path, **request_kwargs)
+        return _checked_stream(self.client.stream("POST", full_path, **request_kwargs))
 
-    async def get_latest_game_data_version(self) -> dict[str, Any]:
-        """Get the latest game data + language bundle versions."""
-        md: Any = await self.get_game_metadata()
-        if hasattr(md, "latest_gamedata_version"):
-            md_struct = cast("Metadata", md)
-            return {
-                "game": md_struct.latest_gamedata_version,
-                "language": md_struct.latest_localization_bundle_version,
-            }
-        return {
-            "game": md["latestGamedataVersion"],
-            "language": md["latestLocalizationBundleVersion"],
-        }
+    async def get_latest_game_data_version(self, refresh: bool = False) -> dict[str, Any]:
+        """Get the latest game data + language bundle versions.
 
+        Results are served from the instance version cache (see ``version_cache_ttl``).
+
+        Args:
+            refresh: When True, bypass the cache and fetch fresh values from /metadata.
+
+        Returns:
+            Dictionary with ``"game"`` and ``"language"`` version strings.
+        """
+        versions = await self._get_versions(refresh=refresh)
+        return {"game": versions.require_game(), "language": versions.require_language()}
+
+    # alias for shorthand call
     getVersion = get_latest_game_data_version

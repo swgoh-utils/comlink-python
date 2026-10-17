@@ -175,7 +175,9 @@ class StatCalc:
                 legacy dict keyed by unit id.
 
         Returns:
-            Input object with `stats` and `gp` fields added for each unit.
+            Input object with `stats` and `gp` fields added for each unit. Ships
+            whose crew is not fully present in a list-format roster are skipped
+            (no `stats` or `gp` added) and a warning is logged.
         """
         self._require_game_data()
         assert self._unit_data is not None
@@ -196,7 +198,7 @@ class StatCalc:
                 units = [msgspec.to_builtins(u) for u in units]
 
         if isinstance(units, list):
-            ships: list[dict[str, Any]] = []
+            ships: list[tuple[dict[str, Any], str, dict[str, Any]]] = []
             crew: dict[str, dict[str, Any]] = {}
 
             for unit in units:
@@ -207,19 +209,22 @@ class StatCalc:
                 if not meta:
                     continue
                 if meta["combatType"] == 2:
-                    ships.append(unit)
+                    ships.append((unit, def_id, meta))
                 else:
                     crew[def_id] = unit
                     unit = self.calc_char_stats(unit)
 
-            for ship in ships:
-                def_id = self._get_def_id(ship)
-                if not def_id:
-                    continue
-                meta = self._unit_data.get(def_id)
-                if not meta:
-                    continue
+            for ship, def_id, meta in ships:
                 crw = [crew[cid] for cid in meta["crew"] if cid in crew]
+                if len(crw) != len(meta["crew"]):
+                    # Ship stats and GP are derived from the full crew, so neither can be computed
+                    self._LOGGER.warning(
+                        "Skipping ship %s: %d of %d crew members found in roster",
+                        def_id,
+                        len(crw),
+                        len(meta["crew"]),
+                    )
+                    continue
                 unit = self.calc_ship_stats(ship, crw)
 
         elif isinstance(units, dict):
@@ -301,13 +306,10 @@ class StatCalc:
             for player in normalized:
                 self.calc_roster_stats(player.get("rosterUnit"))
             return normalized
-        elif isinstance(normalized, dict):
-            if "rosterUnit" not in normalized:
-                raise RuntimeError("Expected a dict with a 'rosterUnit' key")
-            self.calc_roster_stats(normalized["rosterUnit"])
-            return normalized
-        else:
-            raise TypeError("Expected a list or dict of players")
+        if "rosterUnit" not in normalized:
+            raise RuntimeError("Expected a dict with a 'rosterUnit' key")
+        self.calc_roster_stats(normalized["rosterUnit"])
+        return normalized
 
     def calc_char_gp(self, char: dict[str, Any]) -> int:
         """Calculate GP for a character.
@@ -419,6 +421,7 @@ class StatCalc:
                 "equippedStatMod": char.get("equippedStatMod"),
                 "relic": char.get("relic"),
                 "skills": [{"id": skill["id"], "tier": skill["tier"] + 2} for skill in char.get("skill", [])],
+                "purchasedAbilityId": char.get("purchasedAbilityId", []),
             }
         else:
             normalized = copy.deepcopy(char)
@@ -452,6 +455,7 @@ class StatCalc:
                         "mods": c.get("mods"),
                         "relic": c.get("relic"),
                         "skills": [{"id": s["id"], "tier": s["tier"] + 2} for s in c.get("skill", [])],
+                        "purchasedAbilityId": c.get("purchasedAbilityId", []),
                         "gp": c.get("gp"),
                     }
                 )
@@ -679,19 +683,18 @@ class StatCalc:
 
         if char.get("mods"):
             for mod in char["mods"]:
-                if not mod.get("set"):
-                    continue
-
-                set_id = int(mod["set"])
-                if set_id in set_bonuses:
-                    set_bonuses[set_id]["count"] += 1
-                    if mod.get("level") == 15:
-                        set_bonuses[set_id]["maxLevel"] += 1
-                else:
-                    set_bonuses[set_id] = {
-                        "count": 1,
-                        "maxLevel": 1 if mod.get("level") == 15 else 0,
-                    }
+                # A mod without a set still adds its stats; it only counts toward no set bonus.
+                if mod.get("set"):
+                    set_id = int(mod["set"])
+                    if set_id in set_bonuses:
+                        set_bonuses[set_id]["count"] += 1
+                        if mod.get("level") == 15:
+                            set_bonuses[set_id]["maxLevel"] += 1
+                    else:
+                        set_bonuses[set_id] = {
+                            "count": 1,
+                            "maxLevel": 1 if mod.get("level") == 15 else 0,
+                        }
 
                 if mod.get("stat"):
                     for stat in mod["stat"]:
@@ -905,12 +908,8 @@ class StatCalc:
         gp += self._table_get(self._gp_tables["unitRarityGP"], char["rarity"])
         gp += self._table_get(self._gp_tables["gearLevelGP"], char["gear"])
 
-        for piece in char.get("equipped", []):
-            slot = piece.get("slot") if isinstance(piece, dict) else None
-            gp += self._table_get(
-                self._table_get(self._gp_tables["gearPieceGP"], char["gear"]),
-                slot,
-            )
+        piece_gp = self._table_get(self._gp_tables["gearPieceGP"], char["gear"])
+        gp += sum(self._table_get(piece_gp, slot) for slot in self._resolve_gear_slots(char) if slot is not None)
 
         for skill in char.get("skills", []):
             gp += self._get_skill_gp(char["defId"], skill)
@@ -950,6 +949,38 @@ class StatCalc:
             gp += char["level"] * self._table_get(self._gp_tables["relicTierLevelFactor"], tier)
 
         return int(self._floor(gp * 1.5))
+
+    def _resolve_gear_slots(self, char: dict[str, Any]) -> list[Any]:
+        """Return the 0-based `gearPieceGP` slot for each equipped piece.
+
+        Comlink equipment entries carry a `slot`. Entries without one (bare gear IDs, or the
+        legacy dict roster's `{"equipmentId": ...}`) are matched against the unit's gear set
+        for its current tier, taking the first unclaimed matching slot so duplicate pieces
+        map to distinct slots. Unmatched pieces resolve to None and add no GP.
+        """
+        assert self._unit_data is not None
+        pieces = char.get("equipped", [])
+        slots = [piece.get("slot") if isinstance(piece, dict) else None for piece in pieces]
+        if None not in slots:
+            return slots
+
+        gear_set = [
+            str(g) for g in self._table_get(self._unit_data[char["defId"]]["gearLvl"], char["gear"], {}).get("gear", [])
+        ]
+        claimed = {int(slot) for slot in slots if slot is not None}
+        for idx, piece in enumerate(pieces):
+            if slots[idx] is not None:
+                continue
+            gear_id = str(piece.get("equipmentId") if isinstance(piece, dict) else piece)
+            slot = next((i for i, g in enumerate(gear_set) if g == gear_id and i not in claimed), None)
+            if slot is None:
+                self._LOGGER.warning(
+                    "Gear %s not found in %s's gear tier %s set; no GP added", gear_id, char["defId"], char["gear"]
+                )
+                continue
+            claimed.add(slot)
+            slots[idx] = slot
+        return slots
 
     def _get_skill_gp(self, unit_id: str, skill: dict[str, Any]) -> float:
         assert self._unit_data is not None

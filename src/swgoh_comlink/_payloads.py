@@ -21,10 +21,13 @@ to call them keeps working. Mark for removal in v3.2.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .exceptions import SwgohComlinkValueError
 from .helpers import Constants
+
+if TYPE_CHECKING:
+    from .helpers import DataItems
 
 __all__ = [
     "game_data_payload",
@@ -148,10 +151,13 @@ def game_metadata_payload(
     client_specs: dict[str, Any] | None = None,
     enums: bool = False,
 ) -> dict[str, Any]:
-    """Build payload for ``get_game_metadata``. Empty when ``client_specs`` is None."""
+    """Build payload for ``get_game_metadata``. Empty when ``client_specs`` is None.
+
+    comlink reads the camelCase ``clientSpecs`` key; a snake_case key is ignored.
+    """
     if not client_specs:
         return {}
-    return {"payload": {"client_specs": client_specs}, "enums": enums}
+    return {"payload": {"clientSpecs": client_specs}, "enums": enums}
 
 
 # ── /data ───────────────────────────────────────────────────────────────────
@@ -162,10 +168,13 @@ def game_data_payload(
     include_pve_units: bool = True,
     request_segment: int = 0,
     enums: bool = False,
-    items: str | int | None = None,
+    items: str | int | DataItems | None = None,
     device_platform: str = "Android",
 ) -> dict[str, Any]:
     """Build payload for ``get_game_data``.
+
+    ``items`` may be a :class:`~swgoh_comlink.helpers.DataItems` flag (or any
+    int), a numeric string, or a named ``Constants`` collection.
 
     Raises:
         SwgohComlinkValueError: If ``request_segment`` is out of range

@@ -29,7 +29,8 @@ v2→v3 rule ids start with `V3*` (vs `DEP*` for the v1→v2 rules).
 | `get_player(...)` from `swgoh_comlink.typed` | n/a | `Player` (msgspec.Struct) |
 | Same pattern for `get_guild`, `get_game_metadata`, `get_leaderboard` | `dict` | dict OR typed Struct per import path |
 | Other endpoints (`get_game_data`, `get_localization`, `get_enums`, …) | `dict` | `dict` (both import paths) |
-| Retry on transient errors | none | **on by default** (3 retries) |
+| Retry on transient errors | none (v2.3+: opt-in `retry=RetryPolicy(...)`) | **opt-in** `retry=RetryPolicy(...)`; default is one attempt |
+| HTTP errors | `SwgohComlinkException` (v2.3+: typed `SwgohComlinkHTTPError` subclasses) | typed `SwgohComlinkHTTPError` subclasses |
 | HMAC auth | unchanged | unchanged |
 | Connection pool | httpx defaults | `profile="default"` preset |
 | HTTP client injection | n/a | `http_client=` kwarg |
@@ -118,11 +119,13 @@ access or `raw=True`.
 client = SwgohComlink(url="http://localhost:3000")
 
 # v3 — new optional kwargs
+from swgoh_comlink import RetryPolicy
+
 client = SwgohComlink(
     url="http://localhost:3000",
     http_client=my_httpx_client,   # inject your own; SDK won't close it
     profile="bot",                  # connection pool preset
-    max_retries=3,                  # set to 0 to disable retries entirely
+    retry=RetryPolicy(attempts=3),  # opt-in; default None = one attempt
 )
 ```
 
@@ -130,39 +133,49 @@ client = SwgohComlink(
   When supplied, the SDK does NOT auto-close it.
 * `profile="default" | "bot" | "bulk"` selects a connection-pool preset
   (keepalive 30s / 120s / 60s; pool sizes tuned for each use case).
-* `max_retries=3` is the new default. Set to `0` for v2-equivalent
-  no-retry behavior.
+* `retry=RetryPolicy(...)` opts in to retrying rate refusals and HTTP 503
+  (see [Retry semantics](#retry-semantics)). The default, `retry=None`,
+  makes exactly one attempt per call, as in v2.
 
 ## Retry semantics
 
-v3 retries on transient errors by default (429, 5xx, connection drops).
-`Retry-After` headers are honored verbatim; non-retryable status (4xx
-other than 408/425/429) passes through after one attempt.
+Retries are **opt-in** and use the same `RetryPolicy` as the v2.3+ line.
+By default (`retry=None`) a call makes exactly one attempt, with no waiting,
+and raises a typed HTTP error on failure. Pass a
+[`RetryPolicy`](../api/comlink.md#retries-and-pacing) to retry the failures
+that mean the call was not carried out: rate refusals
+(`SwgohComlinkRateLimitError`: HTTP 429 or the game's `Rate exceeded!`) and
+HTTP 503 (`SwgohComlinkUnavailableError`). `Retry-After` is honoured (capped
+at `max_retry_after`), otherwise the client waits for the next `backoff` value
+plus jitter. Other errors, including connection drops and other 4xx/5xx
+statuses, are raised at once. A policy can also pace calls per endpoint
+(`min_interval`), and a rate refusal holds back the endpoint it came from so
+concurrent callers back off together.
 
 ```python
-# v2 — no retry
+from swgoh_comlink import RetryPolicy
+
+# v2 / v3 default — one attempt, then raise
 try:
     player = client.get_player(allycode=...)
-except SwgohComlinkException:
-    # connection error or 5xx → one attempt, then raise
+except SwgohComlinkRateLimitError:
     ...
 
-# v3 — retried 3 times by default
-try:
-    player = client.get_player(allycode=...)
-except SwgohComlinkException:
-    # connection error or 5xx → 4 attempts (1 + 3 retries), then raise
-    ...
-
-# v3 with v2-equivalent semantics:
-client = SwgohComlink(url=..., max_retries=0)
+# v3 with retries on rate refusals and 503
+client = SwgohComlink(url=..., retry=RetryPolicy(attempts=3, min_interval=0.4))
 ```
+
+> **Alpha note.** `3.0.0a1` retried 408/425/429/5xx three times by default via
+> a `max_retries=` keyword. That keyword and the default retrying were
+> removed in `3.0.0a2` in favour of the opt-in `retry=` policy above.
 
 ## `with_options(...)` for one-off tweaks
 
 ```python
 # v3 — shallow clone with overrides; underlying httpx client is SHARED
-no_retry = client.with_options(max_retries=0)
+patient = client.with_options(retry=RetryPolicy(attempts=5))
+patient.get_player(allycode=...)  # retried per the new policy
+no_retry = client.with_options(retry=None)
 no_retry.get_player(allycode=...)  # one attempt, then raise
 ```
 
@@ -273,7 +286,7 @@ gate.
 | Removed | Replacement |
 |---|---|
 | Python 3.10 support | Bump to 3.11+ |
-| Implicit retry-off behavior | Pass `max_retries=0` explicitly |
+| `max_retries=` keyword and `_retry.py` (alpha 1 only; never in v2) | `retry=RetryPolicy(...)`, opt-in |
 | (none) | (no public API was actually removed in v3.0) |
 
 | Deprecated | Removed in |
@@ -299,13 +312,12 @@ gate.
 The fastest path:
 
 ```python
-client = SwgohComlink(url="...", max_retries=0)
+client = SwgohComlink(url="...")
 player = client.get_player(allycode=..., raw=True)
 # `player` is dict; index it like v2.
 ```
 
-You lose typed Structs (the headline v3 win) and the retry safety net,
-but you don't have to change a single line of dict-indexing code.
+You lose typed Structs (the headline v3 win), but you don't have to change a single line of dict-indexing code.
 
 ## Need help?
 

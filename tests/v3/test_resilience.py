@@ -6,9 +6,12 @@ Covers everything the Phase 2 plan added to the client surface:
 * ``with_options(**overrides)`` clone semantics.
 * ``http_client=`` injection + the SDK leaving caller-owned clients alone.
 * ``profile="default"|"bot"|"bulk"`` preset application + bad-name rejection.
-* ``max_retries=`` behavior: ``0`` disables; retries succeed on recovery;
-  ``Retry-After`` is honored; non-retryable statuses pass through after
-  one attempt.
+* ``retry=`` integration with the v3 client surface: off by default (one
+  attempt); a :class:`~swgoh_comlink.retry.RetryPolicy` retries 503 / rate
+  refusals and honors ``Retry-After``; other statuses and transport errors
+  pass through after one attempt; ``with_options(retry=...)`` and
+  ``healthcheck()`` never retrying. The policy itself is unit-tested in
+  ``tests/unit/test_retry.py`` / ``test_retry_mocked.py``.
 
 These tests exercise the *new* Phase 2 contract. The Phase 1 golden +
 shape tests already cover that *existing* endpoint behavior survived the
@@ -17,15 +20,15 @@ refactor — together they form the regression net.
 
 from __future__ import annotations
 
-import time
-from collections.abc import Iterator
-from typing import Any
+from collections.abc import AsyncIterator
+from typing import Any, cast
 
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
+from swgoh_comlink import RetryPolicy, SwgohComlink, SwgohComlinkAsync
+from swgoh_comlink import retry as retry_module
 from swgoh_comlink._base import (
     BOT_LIMITS,
     BULK_LIMITS,
@@ -34,14 +37,32 @@ from swgoh_comlink._base import (
     NotGiven,
     resolve_profile,
 )
-from swgoh_comlink._retry import (
-    RETRYABLE_STATUSES,
-    RetryableStatusError,
-    compute_backoff,
-    parse_retry_after,
-    should_retry,
+from swgoh_comlink.exceptions import (
+    SwgohComlinkClientError,
+    SwgohComlinkException,
+    SwgohComlinkHTTPError,
+    SwgohComlinkTypeError,
+    SwgohComlinkUnavailableError,
 )
-from swgoh_comlink.exceptions import SwgohComlinkException
+
+#: Retry quickly in tests: no backoff schedule, no jitter.
+FAST_RETRY = RetryPolicy(attempts=4, backoff=(), jitter=0.0)
+
+
+@pytest.fixture
+def waits(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    """Record every sleep the clients ask for instead of sleeping, on a frozen clock and without jitter."""
+    recorded: list[float] = []
+
+    async def async_sleep(seconds: float) -> None:
+        recorded.append(seconds)
+
+    monkeypatch.setattr(retry_module, "_sleep", recorded.append)
+    monkeypatch.setattr(retry_module, "_async_sleep", async_sleep)
+    monkeypatch.setattr(retry_module, "_clock", lambda: 1000.0)
+    monkeypatch.setattr(retry_module, "_random", lambda: 0.0)
+    return recorded
+
 
 # ── NOT_GIVEN sentinel ──────────────────────────────────────────────────────
 
@@ -106,7 +127,7 @@ def test_http_client_injection_skips_close(httpx_mock: HTTPXMock) -> None:
     assert sdk._owns_client is False
     sdk.close()
     # If close() had closed it, this next call would fail.
-    user_client.get("/anything")  # type: ignore[arg-type]
+    user_client.get("/anything")
     user_client.close()
 
 
@@ -125,16 +146,16 @@ def test_auto_constructed_client_is_owned() -> None:
 
 def test_with_options_overrides_attribute() -> None:
     base = SwgohComlink(url="http://comlink.test")
-    derived = base.with_options(max_retries=0)
-    assert base.max_retries == 3
-    assert derived.max_retries == 0
+    derived = base.with_options(verify_ssl=False)
+    assert base.verify_ssl is True
+    assert derived.verify_ssl is False
     base.close()
 
 
 def test_with_options_shares_underlying_client() -> None:
     """Documented contract: clone shares the httpx client with the original."""
     base = SwgohComlink(url="http://comlink.test")
-    derived = base.with_options(max_retries=0)
+    derived = base.with_options(retry=None)
     assert derived.client is base.client
     base.close()
 
@@ -148,61 +169,69 @@ def test_with_options_rejects_unknown_attribute() -> None:
         base.close()
 
 
-# ── Retry classification & helpers ──────────────────────────────────────────
+def test_with_options_max_retries_removed() -> None:
+    """``max_retries`` (v3.0.0a1) is gone; ``retry=`` replaces it."""
+    base = SwgohComlink(url="http://comlink.test")
+    try:
+        with pytest.raises(AttributeError, match="unknown option 'max_retries'"):
+            base.with_options(max_retries=0)
+        with pytest.raises(TypeError):
+            SwgohComlink(url="http://comlink.test", max_retries=0)
+    finally:
+        base.close()
 
 
-@pytest.mark.parametrize("status", sorted(RETRYABLE_STATUSES))
-def test_should_retry_yes_for_retryable_statuses(status: int) -> None:
-    assert should_retry(status)
+def test_with_options_retry_sets_policy_and_pacer() -> None:
+    base = SwgohComlink(url="http://comlink.test")
+    try:
+        assert base.retry_policy is None
+        policy = RetryPolicy(min_interval=0.4)
+        derived = base.with_options(retry=policy)
+        assert derived.retry_policy is policy
+        assert derived._pacer is not None
+        assert base.retry_policy is None
+        assert base._pacer is None
+    finally:
+        base.close()
 
 
-@pytest.mark.parametrize("status", [200, 201, 204, 301, 400, 401, 403, 404, 422])
-def test_should_retry_no_for_other_statuses(status: int) -> None:
-    assert not should_retry(status)
+def test_with_options_retry_none_disables_and_not_given_keeps() -> None:
+    base = SwgohComlink(url="http://comlink.test", retry=RetryPolicy(min_interval=0.4))
+    try:
+        disabled = base.with_options(retry=None)
+        assert disabled.retry_policy is None
+        assert disabled._pacer is None
+        kept = base.with_options()
+        assert kept.retry_policy is base.retry_policy
+        # A kept policy shares the pacing state (and endpoint holds) with the original.
+        assert kept._pacer is base._pacer
+    finally:
+        base.close()
 
 
-def test_parse_retry_after_numeric_seconds() -> None:
-    assert parse_retry_after({"Retry-After": "5"}) == 5.0
-    assert parse_retry_after({"retry-after": "0"}) == 0.0
-    assert parse_retry_after({"Retry-After": "0.5"}) == 0.5
+@pytest.mark.parametrize("bad", [3, "fast", object()])
+def test_with_options_rejects_non_policy_retry(bad: object) -> None:
+    base = SwgohComlink(url="http://comlink.test")
+    try:
+        with pytest.raises(SwgohComlinkTypeError, match="retry must be a RetryPolicy or None"):
+            base.with_options(retry=cast(Any, bad))
+    finally:
+        base.close()
 
 
-def test_parse_retry_after_negative_returns_none() -> None:
-    assert parse_retry_after({"Retry-After": "-1"}) is None
-
-
-def test_parse_retry_after_capped() -> None:
-    """1-hour-from-server-misconfig is clamped to the cap."""
-    assert parse_retry_after({"Retry-After": "3600"}, cap_seconds=120.0) == 120.0
-
-
-def test_parse_retry_after_absent_returns_none() -> None:
-    assert parse_retry_after({}) is None
-    assert parse_retry_after({"Retry-After": ""}) is None
-
-
-def test_parse_retry_after_http_date() -> None:
-    """HTTP-date form is parsed and returns seconds-from-now (≥ 0)."""
-    # 30 seconds from now, in HTTP-date format.
-    from email.utils import formatdate
-
-    target = time.time() + 30
-    after = parse_retry_after({"Retry-After": formatdate(target, usegmt=True)})
-    assert after is not None
-    assert 25 <= after <= 31
-
-
-def test_compute_backoff_monotonic_mean() -> None:
-    """Each attempt's *cap* doubles; the mean of the uniform jitter doubles too."""
-    # Sample enough to smooth out the jitter.
-    means = [sum(compute_backoff(i) for _ in range(200)) / 200 for i in range(5)]
-    for a, b in zip(means, means[1:], strict=False):
-        # Each subsequent attempt's mean should be roughly 2× the previous
-        # (down to ~1.3× given small samples).
-        assert b > a * 1.3, f"backoff didn't grow: {means}"
+def test_with_options_rejects_internal_retry_attributes() -> None:
+    base = SwgohComlink(url="http://comlink.test")
+    try:
+        with pytest.raises(AttributeError, match="with_options\\(retry="):
+            base.with_options(retry_policy=RetryPolicy())
+    finally:
+        base.close()
 
 
 # ── Retry loop end-to-end ───────────────────────────────────────────────────
+#
+# ``get_events`` is the probe: a single POST with no version lookup, so the
+# registered mock responses map 1:1 onto attempts.
 
 
 def _two_503s_then_ok(httpx_mock: HTTPXMock, ok_body: Any) -> None:
@@ -211,108 +240,136 @@ def _two_503s_then_ok(httpx_mock: HTTPXMock, ok_body: Any) -> None:
     httpx_mock.add_response(json=ok_body)
 
 
-def test_max_retries_zero_disables(httpx_mock: HTTPXMock) -> None:
-    """max_retries=0 makes exactly one attempt — and the test mock only
-    has one response registered."""
+def test_default_makes_one_attempt(httpx_mock: HTTPXMock) -> None:
+    """Retries are opt-in: without ``retry=`` a 503 raises after exactly one attempt."""
     httpx_mock.add_response(status_code=503)
-    client = SwgohComlink(url="http://comlink.test", max_retries=0)
+    client = SwgohComlink(url="http://comlink.test")
     try:
-        with pytest.raises(SwgohComlinkException, match=r"HTTP 503"):
-            client.get_enums()
+        with pytest.raises(SwgohComlinkUnavailableError, match=r"HTTP 503"):
+            client.get_events()
     finally:
         client.close()
+    assert len(httpx_mock.get_requests()) == 1
 
 
-def test_retry_succeeds_on_recovery(httpx_mock: HTTPXMock) -> None:
-    """503 → 503 → 200 with max_retries=3 returns the OK payload."""
-    _two_503s_then_ok(httpx_mock, {"CombatType": 1})
-    client = SwgohComlink(url="http://comlink.test", max_retries=3)
+def test_retry_succeeds_on_recovery(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    """503 → 503 → 200 with a RetryPolicy returns the OK payload."""
+    _two_503s_then_ok(httpx_mock, {"events": []})
+    client = SwgohComlink(url="http://comlink.test", retry=FAST_RETRY)
     try:
-        result = client.get_enums()
+        result = client.get_events()
     finally:
         client.close()
-    assert result == {"CombatType": 1}
+    assert result == {"events": []}
+    assert len(httpx_mock.get_requests()) == 3
 
 
-def test_retry_exhausted_raises(httpx_mock: HTTPXMock) -> None:
-    """503 × 4 attempts (1 + 3 retries) — final raise is HTTP 503."""
+def test_retry_exhausted_raises(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    """503 × 4 attempts — final raise is the typed 503 error."""
     for _ in range(4):
         httpx_mock.add_response(status_code=503)
-    client = SwgohComlink(url="http://comlink.test", max_retries=3)
+    client = SwgohComlink(url="http://comlink.test", retry=FAST_RETRY)
     try:
-        with pytest.raises(SwgohComlinkException, match=r"HTTP 503"):
-            client.get_enums()
+        with pytest.raises(SwgohComlinkUnavailableError, match=r"HTTP 503"):
+            client.get_events()
     finally:
         client.close()
+    assert len(httpx_mock.get_requests()) == 4
 
 
-def test_non_retryable_4xx_passes_through(httpx_mock: HTTPXMock) -> None:
-    """400 is not retried — one attempt, raise."""
-    httpx_mock.add_response(status_code=400, json={"detail": "bad request"})
-    client = SwgohComlink(url="http://comlink.test", max_retries=3)
+@pytest.mark.parametrize(("status", "expected"), [(400, SwgohComlinkClientError), (500, SwgohComlinkHTTPError)])
+def test_non_retryable_status_passes_through(
+    httpx_mock: HTTPXMock, waits: list[float], status: int, expected: type[SwgohComlinkHTTPError]
+) -> None:
+    """4xx and non-503 5xx are not retried — one attempt, typed raise."""
+    httpx_mock.add_response(status_code=status, json={"code": "X", "message": "nope"})
+    client = SwgohComlink(url="http://comlink.test", retry=FAST_RETRY)
     try:
-        with pytest.raises(SwgohComlinkException, match=r"HTTP 400"):
-            client.get_enums()
+        with pytest.raises(expected, match=rf"HTTP {status}"):
+            client.get_events()
     finally:
         client.close()
+    assert len(httpx_mock.get_requests()) == 1
+    assert waits == []
 
 
-def test_retry_after_honored_on_429(httpx_mock: HTTPXMock) -> None:
-    """429 + Retry-After: 1 → 200 takes at least 1 second wall-clock."""
+def test_retry_after_honored_on_429(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    """429 + Retry-After: 1 → 200 waits the server's Retry-After before retrying."""
     httpx_mock.add_response(status_code=429, headers={"Retry-After": "1"})
-    httpx_mock.add_response(json={"CombatType": 1})
-    client = SwgohComlink(url="http://comlink.test", max_retries=3)
+    httpx_mock.add_response(json={"events": []})
+    client = SwgohComlink(url="http://comlink.test", retry=RetryPolicy(jitter=0.0))
     try:
-        start = time.perf_counter()
-        result = client.get_enums()
-        elapsed = time.perf_counter() - start
+        result = client.get_events()
     finally:
         client.close()
-    assert result == {"CombatType": 1}
-    # Allow generous upper bound for CI / scheduler noise; lower bound is the contract.
-    assert 0.95 < elapsed < 5.0, f"expected ~1s wait, got {elapsed:.3f}s"
+    assert result == {"events": []}
+    assert waits == [1.0]
 
 
-def test_connection_error_is_retryable(httpx_mock: HTTPXMock) -> None:
-    """httpx.RequestError (e.g. connection refused) is retried."""
+def test_connection_error_is_not_retried(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    """Transport failures are raised at once, even with a policy (only 429/503 are retried)."""
     httpx_mock.add_exception(httpx.ConnectError("refused"))
-    httpx_mock.add_exception(httpx.ConnectError("refused"))
-    httpx_mock.add_response(json={"CombatType": 1})
-    client = SwgohComlink(url="http://comlink.test", max_retries=3)
+    client = SwgohComlink(url="http://comlink.test", retry=FAST_RETRY)
     try:
-        result = client.get_enums()
+        with pytest.raises(SwgohComlinkException, match="refused"):
+            client.get_events()
     finally:
         client.close()
-    assert result == {"CombatType": 1}
+    assert len(httpx_mock.get_requests()) == 1
+
+
+def test_typed_client_retries(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    """The typed client shares the retry pipeline."""
+    from swgoh_comlink.typed import SwgohComlink as TypedSwgohComlink
+
+    _two_503s_then_ok(httpx_mock, {"events": []})
+    client = TypedSwgohComlink(url="http://comlink.test", retry=FAST_RETRY)
+    try:
+        assert client.get_events() == {"events": []}
+    finally:
+        client.close()
+
+
+def test_healthcheck_never_retries(httpx_mock: HTTPXMock, waits: list[float]) -> None:
+    """``healthcheck`` reports False on a 503 after one probe, whatever the policy."""
+    httpx_mock.add_response(status_code=503)
+    client = SwgohComlink(url="http://comlink.test", retry=FAST_RETRY)
+    try:
+        assert client.healthcheck() is False
+    finally:
+        client.close()
+    assert len(httpx_mock.get_requests()) == 1
+    assert waits == []
 
 
 # ── Async parity ────────────────────────────────────────────────────────────
 
 
 @pytest.fixture
-async def async_recovery_client(httpx_mock: HTTPXMock) -> Iterator[SwgohComlinkAsync]:
+async def async_recovery_client(httpx_mock: HTTPXMock, waits: list[float]) -> AsyncIterator[SwgohComlinkAsync]:
     """503 → 503 → 200 setup for the async retry path."""
     httpx_mock.add_response(status_code=503)
     httpx_mock.add_response(status_code=503)
-    httpx_mock.add_response(json={"CombatType": 1})
-    c = SwgohComlinkAsync(url="http://comlink.test", max_retries=3)
+    httpx_mock.add_response(json={"events": []})
+    c = SwgohComlinkAsync(url="http://comlink.test", retry=FAST_RETRY)
     yield c
     await c.aclose()
 
 
 async def test_async_retry_succeeds_on_recovery(async_recovery_client: SwgohComlinkAsync) -> None:
-    result = await async_recovery_client.get_enums()
-    assert result == {"CombatType": 1}
+    result = await async_recovery_client.get_events()
+    assert result == {"events": []}
 
 
-async def test_async_max_retries_zero_disables(httpx_mock: HTTPXMock) -> None:
+async def test_async_default_makes_one_attempt(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(status_code=503)
-    client = SwgohComlinkAsync(url="http://comlink.test", max_retries=0)
+    client = SwgohComlinkAsync(url="http://comlink.test")
     try:
-        with pytest.raises(SwgohComlinkException, match=r"HTTP 503"):
-            await client.get_enums()
+        with pytest.raises(SwgohComlinkUnavailableError, match=r"HTTP 503"):
+            await client.get_events()
     finally:
         await client.aclose()
+    assert len(httpx_mock.get_requests()) == 1
 
 
 async def test_async_http_client_injection_skips_close(httpx_mock: HTTPXMock) -> None:
@@ -324,14 +381,3 @@ async def test_async_http_client_injection_skips_close(httpx_mock: HTTPXMock) ->
     # Should still be usable.
     await user_client.get("/anything")
     await user_client.aclose()
-
-
-# ── RetryableStatusError carries the response ───────────────────────────────
-
-
-def test_retryable_status_error_carries_response() -> None:
-    """The retry loop needs ``exc.response`` to read Retry-After."""
-    fake_response = type("R", (), {"status_code": 503, "headers": {}, "text": "down"})()
-    exc = RetryableStatusError(fake_response)
-    assert exc.response is fake_response
-    assert "503" in str(exc)

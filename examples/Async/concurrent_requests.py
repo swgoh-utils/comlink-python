@@ -9,7 +9,6 @@ import time
 
 from swgoh_comlink import SwgohComlinkAsync
 
-
 # Example ally codes to fetch concurrently
 ALLY_CODES = [
     314927874,
@@ -30,9 +29,7 @@ async def main():
 
         # --- Concurrent approach using asyncio.gather ---
         start = time.perf_counter()
-        concurrent_results = await asyncio.gather(
-            *[comlink.get_player(allycode=ac) for ac in ALLY_CODES]
-        )
+        concurrent_results = await asyncio.gather(*[comlink.get_player(allycode=ac) for ac in ALLY_CODES])
         concurrent_time = time.perf_counter() - start
         print(f"Concurrent fetch of {len(ALLY_CODES)} player(s): {concurrent_time:.2f}s")
 
@@ -41,7 +38,7 @@ async def main():
             print(f"  Player: {player['name']}, Guild: {player.get('guildName', 'N/A')}")
 
         if len(ALLY_CODES) > 1:
-            speedup = sequential_time / concurrent_time if concurrent_time > 0 else float('inf')
+            speedup = sequential_time / concurrent_time if concurrent_time > 0 else float("inf")
             print(f"\nSpeedup: {speedup:.1f}x faster with concurrent requests")
 
 

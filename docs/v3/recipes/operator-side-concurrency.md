@@ -11,8 +11,9 @@ zero v3.0 dependencies.
   guild-wide /player pulls).
 * Comlink's documented limits: ~80 req/s on `/player`, ~18 req/s on
   most other endpoints.
-* Hitting the limit returns HTTP 429 with `Retry-After` — v3 honors
-  the header automatically, but you'd rather not be relying on retry
+* Hitting the limit returns HTTP 429 (or the game's `Rate exceeded!`
+  refusal) with `Retry-After`. Pass `retry=RetryPolicy(...)` and the
+  client honors the header, but you'd rather not be relying on retry
   for normal traffic.
 
 ## Pattern 1: `asyncio.Semaphore`

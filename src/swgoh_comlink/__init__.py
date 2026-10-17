@@ -14,6 +14,7 @@ Public surface (still importable as ``from swgoh_comlink import X``):
 * :class:`SwgohComlink`, :class:`SwgohComlinkAsync` — clients
 * :class:`StatCalc`, :class:`StatCalcAsync` — stat calculation
 * :class:`GameDataBuilder`, :class:`GameDataBuilderAsync` — data shaping
+* :class:`RetryPolicy` — opt-in retry/pacing policy for the clients
 * ``compat`` — the v2→v3 migration helper module (lazy)
 * ``version`` — string version constant
 """
@@ -38,6 +39,7 @@ from .version import __version__ as version
 # are not executed at runtime — TYPE_CHECKING is False.
 if TYPE_CHECKING:
     from . import compat
+    from .retry import RetryPolicy
     from .StatCalc import GameDataBuilder, GameDataBuilderAsync, StatCalc, StatCalcAsync
     from .swgoh_comlink import SwgohComlink
     from .swgoh_comlink_async import SwgohComlinkAsync
@@ -57,6 +59,7 @@ _LAZY: dict[str, str] = {
     "StatCalcAsync": "swgoh_comlink.StatCalc",
     "GameDataBuilder": "swgoh_comlink.StatCalc",
     "GameDataBuilderAsync": "swgoh_comlink.StatCalc",
+    "RetryPolicy": "swgoh_comlink.retry",
 }
 
 # Names that resolve to the submodule itself rather than an attribute on it.
@@ -68,6 +71,7 @@ _LAZY_MODULES: dict[str, str] = {
 __all__ = [
     "GameDataBuilder",
     "GameDataBuilderAsync",
+    "RetryPolicy",
     "StatCalc",
     "StatCalcAsync",
     "SwgohComlink",

@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: "comlink-python (swgoh_comlink)"
+abstract: >-
+  Python interface library for swgoh-comlink, with synchronous and asynchronous
+  clients and a local unit stat calculator.
+authors:
+  - name: "Mar Trepodi"
+repository-code: "https://github.com/swgoh-utils/comlink-python"
+url: "https://swgoh-utils.github.io/comlink-python/"
+license: MIT
+keywords:
+  - swgoh
+  - galaxy of heroes
+  - comlink
+  - api-client

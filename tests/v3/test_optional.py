@@ -13,7 +13,7 @@ Covers:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -101,4 +101,4 @@ def test_to_pydantic_friendly_error_without_extra() -> None:
 
     with pytest.raises(ImportError, match=r"pip install swgoh-comlink\[pydantic\]"):
         # The first arg can be anything; require() raises before touching it.
-        compat.to_pydantic(object(), object)  # type: ignore[arg-type]
+        compat.to_pydantic(object(), cast(Any, object))

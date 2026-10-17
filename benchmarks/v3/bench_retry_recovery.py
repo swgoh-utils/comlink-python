@@ -9,11 +9,12 @@ Two scenarios:
    header verbatim and the second call is fast).
 
 2. **503 (no Retry-After) → 200.** First call returns 503 with no
-   header; second returns 200. Total wall time should be roughly
-   ``compute_backoff(0)`` worth of exponential-jitter wait — for
-   default backoff (``base=0.5``) the expected mean is ~0.25 s
-   (uniform ``[0, 0.5)``). Test asserts the wait is bounded below
-   the next-bucket cap.
+   header; second returns 200. The client waits the policy's first
+   ``backoff`` value, here ``0.25 s``.
+
+Both scenarios use ``RetryPolicy(backoff=(0.25,), jitter=0.0)`` so the
+waits are deterministic (the default policy backs off 5 s and adds up to
+20 % jitter).
 
 Writes results to ``benchmarks/v3/results/phase-2-retry-recovery.json``.
 """
@@ -66,10 +67,10 @@ def _scenario_mock(scenario: str) -> Callable[[httpx.Request], httpx.Response]:
 
 def _fresh_sdk(handler: Callable[[httpx.Request], httpx.Response]) -> Any:
     """SwgohComlink wired to *handler*."""
-    from swgoh_comlink import SwgohComlink
+    from swgoh_comlink import RetryPolicy, SwgohComlink
 
     transport = httpx.MockTransport(handler)
-    sdk = SwgohComlink(url="http://bench.local", max_retries=3)
+    sdk = SwgohComlink(url="http://bench.local", retry=RetryPolicy(backoff=(0.25,), jitter=0.0))
     sdk.client.close()
     sdk.client = httpx.Client(base_url=sdk.url_base, transport=transport)
     return sdk
@@ -107,23 +108,23 @@ def main() -> int:
     sys.stderr.write(f"  median: {median_1s:.3f}s  (expected ~1.0–1.3s)\n")
 
     # ── Scenario 2: 503 (no header) → backoff → 200 ──
-    sys.stderr.write("[2/2] 503 (no Retry-After) → backoff → 200 ...\n")
+    sys.stderr.write("[2/2] 503 (no Retry-After) → 0.25 s backoff → 200 ...\n")
     samples_bo = [_time_one("503_backoff") for _ in range(10)]
     median_bo = sorted(samples_bo)[len(samples_bo) // 2]
     rep.add(
-        "exponential_backoff_first_retry",
+        "backoff_first_retry",
         value=median_bo,
         unit="s",
         samples=samples_bo,
-        scenario="503 -> exp jitter wait -> 200",
-        expected_range_s=[0.0, 0.6],  # uniform [0, 0.5) + tiny overhead
+        scenario="503 -> 0.25 s backoff -> 200",
+        expected_range_s=[0.24, 0.5],
     )
-    sys.stderr.write(f"  median: {median_bo:.3f}s  (expected ~0.1–0.4s, uniform in [0,0.5))\n")
+    sys.stderr.write(f"  median: {median_bo:.3f}s  (expected ~0.25–0.3s)\n")
 
     dest = rep.write()
     sys.stderr.write(f"\nWrote {dest}\n")
-    # Loose health check (pass/fail isn't useful for jitter-based timing).
-    ok = 0.95 <= median_1s <= 1.5 and 0.0 <= median_bo <= 0.6
+    # Loose health check on wall-clock timing.
+    ok = 0.95 <= median_1s <= 1.5 and 0.24 <= median_bo <= 0.5
     return 0 if ok else 1
 
 

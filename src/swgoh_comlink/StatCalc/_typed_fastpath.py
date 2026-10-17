@@ -34,6 +34,7 @@ dispatcher internally; external behaviour stays.
 - ``equipped_stat_mod`` — full Mod data, see below
 - ``relic`` — only ``current_tier`` matters
 - ``skill[]`` — ``id`` + ``tier`` (with the v2-style ``tier + 2`` shift)
+- ``purchased_ability_id`` — each purchased ultimate adds ``abilitySpecialGP["ultimate"]`` GP
 
 **What StatCalc actually reads from a Mod** (per
 ``_calculate_mod_stats`` source):
@@ -101,8 +102,9 @@ def _roster_unit_to_calc_dict(unit: RosterUnit) -> dict[str, Any]:
 
     Direct attribute reads only — no ``msgspec.to_builtins`` walk.
     Skips ``id``, ``current_xp``, ``promotion_recipe_reference``,
-    ``purchased_ability_id``, ``unit_stat``, ``equipped_stat_mod_old``
-    (all unused by StatCalc).
+    ``unit_stat``, ``equipped_stat_mod_old`` (all unused by StatCalc).
+    ``purchased_ability_id`` is carried through as ``purchasedAbilityId``
+    because purchased ultimates contribute to character GP.
     """
     mods = unit.equipped_stat_mod
     relic = unit.relic
@@ -124,6 +126,7 @@ def _roster_unit_to_calc_dict(unit: RosterUnit) -> dict[str, Any]:
         "equippedStatMod": [_mod_to_calc_dict(m) for m in mods] if mods else None,
         "relic": ({"currentTier": relic.current_tier} if relic is not None else None),
         "skill": [{"id": s.id, "tier": s.tier} for s in skills],
+        "purchasedAbilityId": list(unit.purchased_ability_id),
     }
 
 

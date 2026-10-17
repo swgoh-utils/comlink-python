@@ -4,6 +4,7 @@
 [![PyPI version](https://badge.fury.io/py/swgoh-comlink.svg)](https://pypi.org/project/swgoh-comlink/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://swgoh-utils.github.io/comlink-python/)
 [![Coverage](https://img.shields.io/badge/coverage-95%25%2B-brightgreen.svg)](https://github.com/MarTrepodi/comlink-python)
 
 ## Description
@@ -23,21 +24,21 @@ package `swgoh_comlink` is still v2.x; passing `--pre` to pip will
 The alpha is hosted on the maintainer fork
 [MarTrepodi/comlink-python](https://github.com/MarTrepodi/comlink-python)
 (the upstream repo stays on v2.x until reintegration). Install the
-v3.0.0a1 wheel directly:
+v3.0.0a2 wheel directly:
 
 ```bash
-pip install https://github.com/MarTrepodi/comlink-python/releases/download/v3.0.0a1/swgoh_comlink-3.0.0a1-py3-none-any.whl
+pip install https://github.com/MarTrepodi/comlink-python/releases/download/v3.0.0a2/swgoh_comlink-3.0.0a2-py3-none-any.whl
 ```
 
 Or install from a git ref:
 
 ```bash
-pip install git+https://github.com/MarTrepodi/comlink-python.git@v3.0.0a1
+pip install git+https://github.com/MarTrepodi/comlink-python.git@v3.0.0a2
 ```
 
 **Strongly recommended:** install the alpha in a dedicated virtual
 environment with a rollback path to the public v2.x release — see
-[`docs/v3/install-alpha.md`](docs/v3/install-alpha.md).
+[`docs/v3/install-alpha.md`](https://github.com/MarTrepodi/comlink-python/blob/release/v3.0.0a2/docs/v3/install-alpha.md).
 
 **What this gives you:**
 - Typed client at `from swgoh_comlink.typed import SwgohComlink`
@@ -45,26 +46,34 @@ environment with a rollback path to the public v2.x release — see
 - `GameDataCache` — disk-persisted `/data` + `/localization`
 - Bimorphic `StatCalc.calc_player_stats(player_struct)` (no
   `msgspec.to_builtins(...)` boilerplate required)
-- `healthcheck()`, `raw_request()`, retries via `profile="bot"`
+- `healthcheck()`, `raw_request()`, connection-pool presets via `profile="bot"` / `"bulk"`, and
+  opt-in retries via `retry=RetryPolicy(...)`
 
-See [`docs/v3/migration.md`](docs/v3/migration.md) for v2 → v3
-patterns and [`examples/typed/`](examples/typed/) for ready-to-run
+See [`docs/v3/migration.md`](https://github.com/MarTrepodi/comlink-python/blob/release/v3.0.0a2/docs/v3/migration.md) for v2 → v3
+patterns and [`examples/typed/`](https://github.com/MarTrepodi/comlink-python/blob/release/v3.0.0a2/examples/typed/) for ready-to-run
 examples of the typed surface.
 
 **What it does NOT promise:** API stability across alphas. Breaking
 changes between `aN` and `a(N+1)` are allowed. See
-[ADR-0008](docs/adr/0008-pre-release-distribution-via-github-releases.md)
+[ADR-0008](https://github.com/MarTrepodi/comlink-python/blob/release/v3.0.0a2/docs/adr/0008-pre-release-distribution-via-github-releases.md)
 for the policy. **Report bugs against the `v3` label.**
 
 ## Installation (stable v2)
 
-Install from [PyPi package repository](https://pypi.org/project/swgoh-comlink/) using the following shell command.
+Install from [PyPI](https://pypi.org/project/swgoh-comlink/):
 
 ```bash
-uv pip install swgoh_comlink
+# Add to a uv-managed project
+uv add swgoh_comlink
+
+# Or install with pip
+pip install swgoh_comlink
 ```
 
 The PyPI release tracks v2.x. For the v3 alpha see "Alpha (v3) install" above.
+
+Full documentation, including the API reference, is at
+[swgoh-utils.github.io/comlink-python](https://swgoh-utils.github.io/comlink-python/).
 
 ## Synchronous Usage
 
@@ -258,6 +267,53 @@ Constructor parameters for `SwgohComlink` and `SwgohComlinkAsync`:
 | `port` | `int` | `3000` | Comlink TCP port (used with `host`) |
 | `stats_port` | `int` | `3223` | Stats service TCP port (used with `host`) |
 | `verify_ssl` | `bool` | `True` | Enable TLS certificate verification |
+| `version_cache_ttl` | `float` | `3600` | Seconds to cache game/localization versions from `/metadata` (see below) |
+| `retry` | `RetryPolicy \| None` | `None` | Opt-in retry and pacing policy (see below). `None` makes one attempt per call |
+
+### Retries and pacing
+
+By default a client makes exactly one attempt per call and raises a typed HTTP error
+(`SwgohComlinkHTTPError` and its subclasses) on failure. Pass a `RetryPolicy` as the keyword-only
+`retry` argument to retry rate refusals and HTTP 503, honour `Retry-After`, and space calls to the
+same endpoint:
+
+```python
+from swgoh_comlink import RetryPolicy, SwgohComlink
+
+comlink = SwgohComlink(retry=RetryPolicy(attempts=3, min_interval=0.4))
+```
+
+`with_options(retry=...)` derives a client with a different policy. See the
+[client documentation](https://swgoh-utils.github.io/comlink-python/api/comlink/#retries-and-pacing)
+for the full behaviour.
+
+### Version caching
+
+Calls to `/data` and `/localization` require the current `latestGamedataVersion` /
+`latestLocalizationBundleVersion` values from the `/metadata` endpoint. When you call
+`get_game_data()`, `get_localization()`, or `get_latest_game_data_version()` without an explicit
+version, the client fetches these values once and caches them on the instance for
+`version_cache_ttl` seconds (default: 1 hour), instead of making a fresh `/metadata` request every
+time.
+
+- Pass `version_cache_ttl=0` to disable caching (the pre-v2.3 behavior), or `math.inf` to cache
+  for the client's lifetime.
+- Explicit `version=` / `localization_id=` arguments always bypass the cache.
+- Call `invalidate_version_cache()` or `get_latest_game_data_version(refresh=True)` to force a
+  re-fetch, e.g. right after a game update lands.
+- A successful `get_game_metadata()` call also refreshes the cache opportunistically.
+
+### Enums caching
+
+`get_enums()` caches its response on the instance as `enums`, together with the game data version
+it was fetched under as `enums_version`. Later calls return the cached response while that version
+is unchanged, and fetch the enums again once it changes. The version check goes through the version
+cache above, so it usually makes no request.
+
+- `get_enums(refresh=True)` fetches the version and the enums again.
+- When the version cannot be determined (for example `/metadata` fails), the enums are fetched and
+  returned without being cached.
+- The cached response is shared: copy it before changing it.
 
 ## Available Methods
 
@@ -270,56 +326,57 @@ Methods available on both `SwgohComlink` and `SwgohComlinkAsync` (async methods 
 | `get_guild(guild_id, include_recent_guild_activity_info, enums)` | Get guild data by guild ID |
 | `get_guilds_by_name(name, start_index, count, enums)` | Search guilds by name |
 | `get_guilds_by_criteria(search_criteria, start_index, count, enums)` | Search guilds by criteria |
-| `get_game_data(version, include_pve_units, request_segment, enums)` | Get game data collections |
+| `get_game_data(version, include_pve_units, request_segment, enums, items, device_platform)` | Get game data collections (select them with `items=DataItems...`) |
 | `get_game_metadata(client_specs, enums)` | Get current game and localization versions |
 | `get_localization(localization_id, locale, unzip, enums)` | Get localization bundles |
-| `get_enums()` | Get game data enums |
+| `get_enums(refresh)` | Get game data enums (cached per game data version) |
 | `get_events(enums)` | Get current game events |
 | `get_leaderboard(leaderboard_type, league, division, ...)` | Get GAC leaderboard data |
 | `get_guild_leaderboard(leaderboard_id, count, enums)` | Get guild leaderboard data |
 | `get_unit_stats(request_payload, flags, language)` | Calculate unit stats via swgoh-stats |
-| `get_latest_game_data_version()` | Get latest game data and language versions |
+| `get_latest_game_data_version(refresh)` | Get latest game data and language versions (cached) |
+| `invalidate_version_cache()` | Discard cached versions so the next lookup re-fetches `/metadata` |
 | `get_name_spaces(only_compatible, enums)` | Get available namespaces |
 | `get_segmented_content(content_name_space, accept_language, enums)` | Retrieve segmented content |
 
 ## Examples
 
-The [`examples/`](examples/) directory contains runnable scripts for common tasks using both the sync and async clients.
+The [`examples/`](https://github.com/swgoh-utils/comlink-python/tree/main/examples) directory contains runnable scripts for common tasks using both the sync and async clients.
 
-### Synchronous ([`examples/Sync/`](examples/Sync/))
-
-| Script | Description |
-|--------|-------------|
-| [`get_player.py`](examples/Sync/get_player.py) | Get a player's full profile including roster |
-| [`get_guild.py`](examples/Sync/get_guild.py) | Look up guild info from a player's ally code |
-| [`get_events.py`](examples/Sync/get_events.py) | Retrieve current game events with timestamps |
-| [`get_game_data.py`](examples/Sync/get_game_data.py) | Retrieve game data collections |
-| [`get_gac_leaderboard.py`](examples/Sync/get_gac_leaderboard.py) | Get GAC leaderboard data |
-| [`get_gac_brackets.py`](examples/Sync/get_gac_brackets.py) | Scan GAC brackets and search for a player |
-| [`calc_stats_local.py`](examples/Sync/calc_stats_local.py) | Calculate character stats locally with `StatCalc` |
-| [`search_for_guilds.py`](examples/Sync/search_for_guilds.py) | Search for guilds by name or criteria |
-
-### Asynchronous ([`examples/Async/`](examples/Async/))
+### Synchronous ([`examples/Sync/`](https://github.com/swgoh-utils/comlink-python/tree/main/examples/Sync))
 
 | Script | Description |
 |--------|-------------|
-| [`get_player.py`](examples/Async/get_player.py) | Get a player's full profile using `await` |
-| [`concurrent_requests.py`](examples/Async/concurrent_requests.py) | Fetch multiple players in parallel with `asyncio.gather()` |
-| [`streaming_guild_roster.py`](examples/Async/streaming_guild_roster.py) | Fetch all guild members concurrently with `asyncio.TaskGroup` |
-| [`streaming_guild_roster_advanced.py`](examples/Async/streaming_guild_roster_advanced.py) | Production-quality guild roster fetch with CLI args and retry logic |
-| [`calc_stats_local.py`](examples/Async/calc_stats_local.py) | Calculate character stats locally with `StatCalcAsync` |
+| [`get_player.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_player.py) | Get a player's full profile including roster |
+| [`get_guild.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_guild.py) | Look up guild info from a player's ally code |
+| [`get_events.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_events.py) | Retrieve current game events with timestamps |
+| [`get_game_data.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_game_data.py) | Retrieve game data collections |
+| [`get_gac_leaderboard.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_gac_leaderboard.py) | Get GAC leaderboard data |
+| [`get_gac_brackets.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_gac_brackets.py) | Scan GAC brackets and search for a player |
+| [`calc_stats_local.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/calc_stats_local.py) | Calculate character stats locally with `StatCalc` |
+| [`search_for_guilds.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/search_for_guilds.py) | Search for guilds by name or criteria |
 
-See the [full examples listing](examples/README.md) for all available scripts and usage details.
+### Asynchronous ([`examples/Async/`](https://github.com/swgoh-utils/comlink-python/tree/main/examples/Async))
+
+| Script | Description |
+|--------|-------------|
+| [`get_player.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/get_player.py) | Get a player's full profile using `await` |
+| [`concurrent_requests.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/concurrent_requests.py) | Fetch multiple players in parallel with `asyncio.gather()` |
+| [`streaming_guild_roster.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/streaming_guild_roster.py) | Fetch all guild members concurrently with `asyncio.TaskGroup` |
+| [`streaming_guild_roster_advanced.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/streaming_guild_roster_advanced.py) | Production-quality guild roster fetch with CLI args and retry logic |
+| [`calc_stats_local.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/calc_stats_local.py) | Calculate character stats locally with `StatCalcAsync` |
+
+See the [full examples listing](https://github.com/swgoh-utils/comlink-python/blob/main/examples/README.md) for all available scripts and usage details.
 
 ## Logging
 
 Logging is handled by the [python logging module](https://docs.python.org/3/library/logging.html). The library follows Python best practice by attaching only a `NullHandler` — no output is produced unless your application configures logging.
 
-For details on enabling and customizing log output, see [docs/logging.md](docs/logging.md).
+For details on enabling and customizing log output, see [docs/logging.md](https://github.com/swgoh-utils/comlink-python/blob/main/docs/logging.md).
 
 ## Migrating from v1.x
 
-This release replaces `requests` with `httpx` and changes how logging is configured. If you are upgrading from a previous version, see the [Migration Guide](docs/migration.md) for a walkthrough of required changes:
+This release replaces `requests` with `httpx` and changes how logging is configured. If you are upgrading from a previous version, see the [Migration Guide](https://github.com/swgoh-utils/comlink-python/blob/main/docs/migration.md) for a walkthrough of required changes:
 
 - Replace `requests` with `httpx` in your dependencies
 - Update `except requests.RequestException` to `except httpx.RequestError` (or catch `SwgohComlinkException`)
@@ -347,4 +404,19 @@ See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for mor
 
 Issues for the **v3 alpha** can be reported at [MarTrepodi/comlink-python](https://github.com/MarTrepodi/comlink-python/issues) (use the `v3` label). Issues for the stable v2.x PyPI release belong upstream at [swgoh-utils/comlink-python](https://github.com/swgoh-utils/comlink-python/issues).
 
-Join the [discord server](https://discord.gg/6PBfG5MzR3)
+Usage questions are best asked in the [Discord server](https://discord.gg/6PBfG5MzR3). Bugs and feature requests
+go in [GitHub issues](https://github.com/swgoh-utils/comlink-python/issues/new/choose). See [SUPPORT.md](https://github.com/swgoh-utils/comlink-python/blob/main/SUPPORT.md)
+for where to report what.
+
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](https://github.com/swgoh-utils/comlink-python/blob/main/CONTRIBUTING.md) for the development setup, workflow, and
+conventions. This project follows a [Code of Conduct](https://github.com/swgoh-utils/comlink-python/blob/main/CODE_OF_CONDUCT.md).
+
+## Security
+
+Please report security vulnerabilities privately as described in [SECURITY.md](https://github.com/swgoh-utils/comlink-python/blob/main/SECURITY.md), not in public issues.
+
+## License
+
+Released under the [MIT License](https://github.com/swgoh-utils/comlink-python/blob/main/LICENSE).

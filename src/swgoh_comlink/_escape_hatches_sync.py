@@ -21,15 +21,37 @@ twin) to compose the full public surface.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+import contextlib
+from collections.abc import Generator
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from ._base import GAME_DATA_TIMEOUT
 from ._payloads import game_data_payload, localization_payload
+from .exceptions import SwgohComlinkException, SwgohComlinkHTTPError
 
 if TYPE_CHECKING:
-    from ._models import Metadata
+    from ._base import _CachedVersions
+    from .helpers import DataItems
+
+
+@contextlib.contextmanager
+def _checked_stream(stream: contextlib.AbstractContextManager[httpx.Response]) -> Generator[httpx.Response, None, None]:
+    """Enter an ``httpx`` stream and raise the typed HTTP error for an error status.
+
+    The body of an error response is read (it is small) so the raised
+    :class:`SwgohComlinkHTTPError` carries the comlink error message. Transport
+    failures while opening the stream raise :class:`SwgohComlinkException`.
+    """
+    try:
+        with stream as response:
+            if response.is_error:
+                response.read()
+                raise SwgohComlinkHTTPError.from_response(response)
+            yield response
+    except httpx.RequestError as e:
+        raise SwgohComlinkException(str(e)) from e
 
 
 class _SyncEscapeHatchMixin:
@@ -51,7 +73,7 @@ class _SyncEscapeHatchMixin:
 
         def _get_game_version(self) -> str: ...
 
-        def get_game_metadata(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _get_versions(self, refresh: bool = False) -> _CachedVersions: ...
 
     def healthcheck(self, *, timeout: float = 5.0) -> bool:
         """Probe ``/enums`` and report reachability.
@@ -101,7 +123,7 @@ class _SyncEscapeHatchMixin:
         include_pve_units: bool = True,
         request_segment: int = 0,
         enums: bool = False,
-        items: str | None = None,
+        items: str | DataItems | int | None = None,
         device_platform: str = "Android",
     ) -> Any:
         """Return an ``httpx.Client.stream`` context manager for ``/data``.
@@ -112,7 +134,9 @@ class _SyncEscapeHatchMixin:
         ``.iter_lines()`` / ``.iter_raw()``).
 
         Bypasses the retry loop (streaming + retry doesn't compose
-        cleanly — a half-streamed response can't be replayed).
+        cleanly — a half-streamed response can't be replayed). An HTTP
+        error status raises :class:`~swgoh_comlink.exceptions.SwgohComlinkHTTPError`
+        (or a subclass) when the context manager is entered.
         """
         game_version = version or self._get_game_version()
         payload = game_data_payload(
@@ -124,7 +148,7 @@ class _SyncEscapeHatchMixin:
             device_platform=device_platform,
         )
         full_path, request_kwargs = self._build_request_kwargs("POST", "data", payload, GAME_DATA_TIMEOUT)
-        return self.client.stream("POST", full_path, **request_kwargs)
+        return _checked_stream(self.client.stream("POST", full_path, **request_kwargs))
 
     def stream_localization(
         self,
@@ -138,28 +162,21 @@ class _SyncEscapeHatchMixin:
             localization_id = self.get_latest_game_data_version()["language"]
         payload = localization_payload(localization_id, locale, unzip, enums)
         full_path, request_kwargs = self._build_request_kwargs("POST", "localization", payload, None)
-        return self.client.stream("POST", full_path, **request_kwargs)
+        return _checked_stream(self.client.stream("POST", full_path, **request_kwargs))
 
-    def get_latest_game_data_version(self) -> dict[str, Any]:
+    def get_latest_game_data_version(self, refresh: bool = False) -> dict[str, Any]:
         """Get the latest game data + language bundle versions.
+
+        Results are served from the instance version cache (see ``version_cache_ttl``).
+
+        Args:
+            refresh: When True, bypass the cache and fetch fresh values from /metadata.
 
         Returns:
             Dictionary with ``"game"`` and ``"language"`` version strings.
         """
-        # Both typed and dict variants of the client expose get_game_metadata.
-        # On the typed variant it returns a Metadata Struct; on the dict
-        # variant it returns the raw v2 dict. Handle both.
-        md: Any = self.get_game_metadata()
-        if hasattr(md, "latest_gamedata_version"):
-            md_struct = cast("Metadata", md)
-            return {
-                "game": md_struct.latest_gamedata_version,
-                "language": md_struct.latest_localization_bundle_version,
-            }
-        return {
-            "game": md["latestGamedataVersion"],
-            "language": md["latestLocalizationBundleVersion"],
-        }
+        versions = self._get_versions(refresh=refresh)
+        return {"game": versions.require_game(), "language": versions.require_language()}
 
     # alias for shorthand call
     getVersion = get_latest_game_data_version

@@ -2,12 +2,19 @@
   "extends": ["@commitlint/config-conventional"],
   "rules": {
     "type-enum": [2, "always", [
-      "feat", "fix", "refactor", "build", "deps",
-      "chore", "docs", "test", "style", "ci", "perf"
+      "feat", "fix", "perf", "refactor", "revert", "docs",
+      "build", "deps", "chore", "ci", "style", "test", "tests", "bug"
     ]],
     "scope-enum": [1, "always", [
-      "core", "helpers", "deps", "release", "ci"
+      "core", "client", "async", "auth", "hmac", "cache", "defaults",
+      "exceptions", "typing", "helpers", "statcalc", "parity",
+      "version", "release", "changelog", "deps", "ci",
+      "docs", "examples", "tests"
     ]],
-    "subject-max-length": [1, "always", 100]
+    "subject-exclamation-mark": [2, "never"],
+    "subject-max-length": [1, "always", 100],
+    "header-max-length": [0, "always"],
+    "body-max-line-length": [0, "always"],
+    "footer-max-line-length": [0, "always"]
   }
 }

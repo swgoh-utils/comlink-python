@@ -14,9 +14,7 @@ from swgoh_comlink import StatCalc
 ROOT = Path(__file__).resolve().parents[2]
 
 
-DEFAULT_GAMEDATA_URL = (
-    "https://raw.githubusercontent.com/swgoh-utils/gamedata/main/gameData.json"
-)
+DEFAULT_GAMEDATA_URL = "https://raw.githubusercontent.com/swgoh-utils/gamedata/main/gameData.json"
 DEFAULT_PLAYER = ROOT / "tests" / "resources" / "example-player.json"
 JS_RUNNER = ROOT / "parity" / "scripts" / "run_js_player_parity.js"
 
@@ -41,11 +39,7 @@ def _run_js(player_path: Path, game_data_path: Path) -> dict[str, Any]:
 def _normalize_game_data(payload: dict[str, Any]) -> dict[str, Any]:
     if "unitData" in payload:
         return payload
-    if (
-        "data" in payload
-        and isinstance(payload["data"], dict)
-        and "unitData" in payload["data"]
-    ):
+    if "data" in payload and isinstance(payload["data"], dict) and "unitData" in payload["data"]:
         return payload["data"]
     raise ValueError("Unsupported gameData payload format")
 
@@ -59,9 +53,7 @@ def _compare(lhs: Any, rhs: Any, path: str = "$", tol: float = 1e-9) -> list[str
         return errors
 
     if not isinstance(lhs, type(rhs)):
-        errors.append(
-            f"{path}: type mismatch {type(lhs).__name__} != {type(rhs).__name__}"
-        )
+        errors.append(f"{path}: type mismatch {type(lhs).__name__} != {type(rhs).__name__}")
         return errors
 
     if isinstance(lhs, dict):
@@ -79,7 +71,7 @@ def _compare(lhs: Any, rhs: Any, path: str = "$", tol: float = 1e-9) -> list[str
         if len(lhs) != len(rhs):
             errors.append(f"{path}: list length mismatch {len(lhs)} != {len(rhs)}")
             return errors
-        for idx, (lv, rv) in enumerate(zip(lhs, rhs)):
+        for idx, (lv, rv) in enumerate(zip(lhs, rhs, strict=True)):
             errors.extend(_compare(lv, rv, f"{path}[{idx}]", tol))
         return errors
 
@@ -117,10 +109,7 @@ def run(player_path: Path, gamedata: str = DEFAULT_GAMEDATA_URL) -> int:
             print(f"... and {len(diffs) - 50} more", file=sys.stderr)
         return 1
 
-    print(
-        "Player parity OK: Python output matches JS baseline for "
-        "example player rosterUnit payload."
-    )
+    print("Player parity OK: Python output matches JS baseline for example player rosterUnit payload.")
     return 0
 
 
@@ -149,9 +138,7 @@ def _table_get(table: Any, key: Any, default: Any = None) -> Any:
     return table.get(ikey, default)
 
 
-def _sanitize_player(
-    player: dict[str, Any], game_data: dict[str, Any]
-) -> dict[str, Any]:
+def _sanitize_player(player: dict[str, Any], game_data: dict[str, Any]) -> dict[str, Any]:
     payload = copy.deepcopy(player)
     roster = payload.get("rosterUnit", [])
     if not isinstance(roster, list):
@@ -207,9 +194,7 @@ def _sanitize_player(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Run JS vs Python parity for example player"
-    )
+    parser = argparse.ArgumentParser(description="Run JS vs Python parity for example player")
     parser.add_argument("--gamedata", default=DEFAULT_GAMEDATA_URL)
     parser.add_argument("--player", type=Path, default=DEFAULT_PLAYER)
     args = parser.parse_args()

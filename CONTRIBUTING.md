@@ -7,7 +7,7 @@ Thanks for your interest in contributing to comlink-python! This guide covers ev
 - [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
-  - [Setting Up Your Development Environment](#setting-up-your-development-environment)
+  - [Setting Up Your Development Environment](#setting-up-your-development-environment-recommended)
   - [Running a Local Comlink Service](#running-a-local-comlink-service)
 - [Project Structure](#project-structure)
 - [Making Changes](#making-changes)
@@ -26,16 +26,21 @@ Thanks for your interest in contributing to comlink-python! This guide covers ev
 
 Be respectful, constructive, and patient. We're all here because we enjoy the game and want to build useful tools for the community. Harassment, insults, and unconstructive negativity won't be tolerated.
 
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold it.
+
+> **Found a security vulnerability?** Please don't open a public issue — follow the private reporting process in [SECURITY.md](SECURITY.md).
+
 ---
 
 ## Getting Started
 
 ### Prerequisites
 
-- **Python 3.10+** (3.11 or 3.12 recommended)
-- **[uv](https://docs.astral.sh/uv/)** — used for dependency management and virtual environments
+- **Python 3.11+** (CI tests 3.11 through 3.14)
+- **[uv](https://docs.astral.sh/uv/)** — used for dependency management, virtual environments, and running tools
 - **Git**
 - **Docker** (optional) — for running a local [swgoh-comlink](https://github.com/swgoh-utils/swgoh-comlink) service for integration tests
+- **Node.js** (optional) — only for the StatCalc parity tests against the JavaScript reference implementation
 
 #### Optional:
 - **GitHub CLI** : https://cli.github.com/
@@ -46,20 +51,25 @@ Be respectful, constructive, and patient. We're all here because we enjoy the ga
 
    ```bash
    gh auth login
-   gh repo fork swgoh-utils/comlink-python
+   gh repo fork swgoh-utils/comlink-python --clone
+   cd comlink-python
    ```
+
+   Or, without the GitHub CLI:
 
    ```bash
    git clone https://github.com/<your-username>/comlink-python.git
    cd comlink-python
    ```
+
     #### Configure upstream remote (optional, but highly recommended)
 
     ```bash
     git remote add upstream https://github.com/swgoh-utils/comlink-python.git
-    git config --local branch.main.remote upstream
-    git remote set-url --push upstream github@github.com:<your-username>/comlink-python.git
-   ```
+    git config --local branch.develop.remote upstream
+    # Safety net: pushes to "upstream" go to your fork instead
+    git remote set-url --push upstream git@github.com:<your-username>/comlink-python.git
+    ```
 
 2. **Install uv** (if you don't have it)
 
@@ -71,17 +81,23 @@ Be respectful, constructive, and patient. We're all here because we enjoy the ga
    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
    ```
 
-3. **Create a virtual environment and install dependencies**
+3. **Install dependencies**
+
+   `uv sync` creates the `.venv` virtual environment automatically:
 
    ```bash
-   uv venv
-   source .venv/bin/activate    # Linux/macOS
-   # .venv\Scripts\activate     # Windows
-
    uv sync --group dev
    ```
 
-4. **Verify the installation**
+   Run tools with `uv run <command>` — there is no need to activate the virtual environment.
+
+4. **Install the pre-commit hooks** (runs Ruff, ty, and commitlint before each commit)
+
+   ```bash
+   uvx pre-commit install --hook-type pre-commit --hook-type commit-msg
+   ```
+
+5. **Verify the installation**
 
    ```bash
    uv run python -c "from swgoh_comlink import SwgohComlink; print('OK')"
@@ -92,10 +108,12 @@ Be respectful, constructive, and patient. We're all here because we enjoy the ga
 Some tests (integration tests) require a running swgoh-comlink instance. The easiest way is Docker:
 
 ```bash
-docker run -d --name swgoh-comlink -p 3000:3000 ghcr.io/swgoh-utils/swgoh-comlink:latest
+docker run -d --name swgoh-comlink -p 3000:3000 \
+  -e APP_NAME=comlink-python-dev \
+  ghcr.io/swgoh-utils/swgoh-comlink:4.5.0
 ```
 
-This starts comlink on `http://localhost:3000`, which is the default URL the library connects to.
+This starts comlink on `http://localhost:3000`, which is the default URL the library connects to. CI pins the same image tag (see `.github/workflows/integration.yml`).
 
 > **Note:** Unit tests should use mocks and never require a running comlink service. See [Writing Tests](#writing-tests) below.
 
@@ -108,76 +126,76 @@ comlink-python/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.yml          # Bug report template
+│   │   ├── config.yml              # Issue chooser links (security, upstream comlink, Discord)
+│   │   ├── documentation.yml       # Documentation issue template
 │   │   └── feature_request.yml     # Feature request template
+│   ├── release-pr/                 # Release PR bodies written by prepare-release.yml
+│   ├── tools/                      # Python helpers the workflows run (release + issue bookkeeping)
 │   ├── workflows/
-│   │   ├── ci.yml                  # CI pipeline (lint, type-check, test, docs, build)
-│   │   ├── commitlint.yml          # Commit message validation (npm-based)
+│   │   ├── alpha-release.yml       # v3 pre-release: gates, build, Sigstore signing, GitHub Release (ADR-0008)
+│   │   ├── backmerge.yml           # Stages the main → develop back-merge after a release
+│   │   ├── ci.yml                  # CI pipeline (lint, type-check, codegen drift, test, docs, build)
+│   │   ├── commitlint.yml          # Commit message validation (runs the pre-commit hook)
+│   │   ├── docs.yml                # Publishes the docs site to GitHub Pages from main
 │   │   ├── integration.yml         # Integration tests against live comlink services
+│   │   ├── issue-fixed-in-develop.yml # Comments on issues a merge into develop resolves
+│   │   ├── label-sync.yml          # Applies .github/labels.yml to the repo labels
 │   │   ├── labeler.yml             # Auto-label PRs by file path
-│   │   ├── release.yml             # Semantic release → PyPI publish
-│   │   └── test.yml                # Quick test + docs build
+│   │   ├── prepare-release.yml     # Regenerates CHANGELOG.md and stages a release branch
+│   │   └── release.yml             # Build → PyPI → tag + GitHub Release (version via hatch-vcs)
 │   ├── CODEOWNERS                  # Code ownership
 │   ├── dependabot.yml              # Automated dependency updates
 │   ├── labeler.yml                 # Label-to-path configuration
+│   ├── labels.yml                  # Canonical label catalog (synced by label-sync.yml)
 │   └── pull_request_template.md    # PR checklist template
-├── docs/
-│   ├── api/
-│   │   ├── async.md                # SwgohComlinkAsync API reference
-│   │   ├── comlink.md              # SwgohComlink API reference
-│   │   ├── exceptions.md           # Exception classes reference
-│   │   ├── helpers.md              # Helper functions reference
-│   │   └── statcalc.md             # StatCalc API reference
+├── docs/                           # MkDocs site (guides + API reference)
+│   ├── api/                        # API reference pages (rendered from docstrings)
+│   ├── adr/                        # Architecture decision records
+│   ├── v3/                         # v3 alpha docs: install, migration, recipes, codegen, phase reports
+│   ├── examples.md                 # Examples overview
 │   ├── index.md                    # Documentation home
 │   ├── logging.md                  # Logging configuration guide
 │   └── migration.md                # v1.x → v2.x migration guide
-├── examples/                       # Usage examples for each endpoint
+├── benchmarks/v3/                  # v3 benchmark harness and fixtures
+├── examples/                       # Runnable usage examples (Sync/, Async/, and typed/)
+├── parity/                         # StatCalc parity harness against the JS reference implementation
 ├── src/
 │   └── swgoh_comlink/
 │       ├── StatCalc/
-│       │   ├── data_builder/
-│       │   │   ├── _builder_base.py  # Shared game data transformation logic
-│       │   │   ├── builder.py        # Sync GameDataBuilder
-│       │   │   └── builder_async.py  # Async GameDataBuilderAsync
-│       │   ├── __init__.py           # StatCalc package exports
-│       │   ├── calculator.py         # Local stat/GP calculator (sync)
-│       │   └── calculator_async.py   # Async StatCalcAsync
-│       ├── helpers/
-│       │   ├── __init__.py           # Helpers package exports
-│       │   ├── _arena.py             # Arena payout time calculations
-│       │   ├── _constants.py         # Game constants and enum lookups
-│       │   ├── _data_items.py        # DataItems IntFlag for game data collections
-│       │   ├── _decorators.py        # Timing and debug logging decorators
-│       │   ├── _gac.py               # Grand Arena Championship bracket helpers
-│       │   ├── _game_data.py         # Raid IDs, datacrons, localization, units
-│       │   ├── _guild.py             # Guild member extraction helpers
-│       │   ├── _localization.py      # SWGOH string parsing and localization utilities
-│       │   ├── _omicron.py           # Omicron ability detection
-│       │   ├── _sentinels.py         # Sentinel values (REQUIRED, MISSING)
-│       │   ├── _stat_data.py         # Stat name/ID mapping tables
-│       │   └── _utils.py             # Enum lookup, file I/O, path utilities
-│       ├── migrate/
-│       │   ├── __init__.py           # Migration tool entry point
-│       │   └── ...                   # v1 → v2 migration scanner and rules
-│       ├── __init__.py               # Package entry point, public exports
-│       ├── _base.py                  # SwgohComlinkBase (shared sync/async logic)
-│       ├── exceptions.py             # Custom exception classes
-│       ├── globals.py                # Logging configuration
-│       ├── swgoh_comlink.py          # SwgohComlink (sync client)
-│       ├── swgoh_comlink_async.py    # SwgohComlinkAsync (async client)
-│       └── version.py                # Package version (managed by hatch)
+│       │   ├── data_builder/       # GameDataBuilder / GameDataBuilderAsync (game data transformation)
+│       │   ├── calculator.py       # StatCalc — local stat/GP calculator (sync)
+│       │   └── calculator_async.py # StatCalcAsync
+│       ├── _codegen/               # Endpoint manifest + Jinja templates that generate the client files
+│       ├── helpers/                # Public helper functions, Constants, DataItems (focused private submodules)
+│       ├── migrate/                # swgoh-migrate: v1 → v2 migration scanner and rules
+│       ├── __init__.py             # Package entry point, public exports
+│       ├── _base.py                # SwgohComlinkBase (shared sync/async logic, HMAC signing)
+│       ├── exceptions.py           # Custom exception classes
+│       ├── globals.py              # Logging configuration
+│       ├── py.typed                # PEP 561 marker: the package ships inline type hints
+│       ├── retry.py                # RetryPolicy — opt-in retry/pacing configuration
+│       ├── swgoh_comlink.py        # SwgohComlink (sync client) — GENERATED, do not hand-edit
+│       ├── swgoh_comlink_async.py  # SwgohComlinkAsync (async client) — GENERATED, do not hand-edit
+│       ├── typed/                  # Typed (msgspec) client variants — GENERATED
+│       └── version.py              # Exposes __version__ (derived from the Git tag via hatch-vcs)
 ├── tests/
-│   ├── integration/                  # Tests requiring a running comlink service
-│   ├── resources/                    # Test fixture data (example-player.json, etc.)
-│   ├── statcalc/                     # StatCalc-specific tests (import, parity, offline)
-│   ├── unit/                         # Mocked unit tests for sync/async clients
-│   ├── conftest.py                   # Shared pytest fixtures and markers
-│   └── test_*.py                     # Additional test modules
-├── pyproject.toml                    # Project metadata, build config, tool settings
-├── uv.lock                           # Locked dependency versions
-├── CHANGELOG.md                      # Auto-generated from commit history
-├── CONTRIBUTING.md                   # This file
-├── LICENSE                           # MIT License
-└── README.md
+│   ├── examples/                   # Tests for the scripts in examples/
+│   ├── integration/                # Tests requiring a running comlink service (opt-in)
+│   ├── resources/                  # Test fixture data (example-player.json, gameData.json, ...)
+│   ├── statcalc/                   # StatCalc parity tests (opt-in, need Node.js)
+│   ├── unit/                       # Mocked unit tests — the bulk of the suite
+│   └── conftest.py                 # Shared fixtures and opt-in marker handling
+├── CHANGELOG.md                    # Auto-generated from commit history
+├── CITATION.cff                    # Citation metadata
+├── CODE_OF_CONDUCT.md              # Contributor Covenant code of conduct
+├── CONTRIBUTING.md                 # This file
+├── LICENSE                         # MIT License
+├── README.md
+├── SECURITY.md                     # Supported versions and vulnerability reporting
+├── SUPPORT.md                      # Where to get help / report what
+├── mkdocs.yml                      # Docs site configuration
+├── pyproject.toml                  # Project metadata, build config, tool settings
+└── uv.lock                         # Locked dependency versions
 ```
 
 ### Key modules at a glance
@@ -187,11 +205,13 @@ comlink-python/
 | `_base.py` | `SwgohComlinkBase` — shared payload construction, HMAC signing, and config for both clients |
 | `swgoh_comlink.py` | `SwgohComlink` — synchronous HTTP client (all endpoint methods) |
 | `swgoh_comlink_async.py` | `SwgohComlinkAsync` — asynchronous HTTP client (mirrors sync API) |
+| `retry.py` | `RetryPolicy` — opt-in retry, pacing and per-endpoint holds (`retry=` keyword) |
+| `_codegen/` | `endpoints.py` manifest + templates that generate the four client files (`make generate`) |
 | `StatCalc/calculator.py` | `StatCalc` — local stat and GP calculation for game units |
-| `helpers/` | `DataItems` IntFlag enum, `Constants` class, 25+ utility functions split across focused submodules |
-| `exceptions.py` | `SwgohComlinkException`, `SwgohComlinkValueError`, and `SwgohComlinkTypeError` |
+| `helpers/` | `DataItems` IntFlag enum, `Constants` class, and utility functions split across focused submodules |
+| `exceptions.py` | `SwgohComlinkException`, `SwgohComlinkValueError`, `SwgohComlinkTypeError`, and the typed `SwgohComlinkHTTPError` hierarchy |
 | `globals.py` | Shared logging setup (`get_logger()`) |
-| `version.py` | Single `__version__` string, managed by hatch during releases |
+| `version.py` | Exposes `__version__`, derived from the Git tag at build time via hatch-vcs |
 
 ---
 
@@ -201,15 +221,19 @@ comlink-python/
 
 | Branch | Purpose |
 |--------|---------|
-| `main` | Stable release branch. All PRs target this branch. |
-| `feature/async` | v2.x development branch (async support, httpx migration, architectural work) |
-| `1.0-maintenance` | Legacy v1.x maintenance branch |
+| `develop` | Integration branch. **All contribution PRs target this branch.** |
+| `main` | Released code. Only release PRs (from `develop`) and back-merges touch it. |
+| `release/v3.*` | The v3 alpha line (maintainer fork). Changes land via PRs against the active `release/v3.*` branch; see [Release Process](#release-process). |
+
+> **Generated client files.** `swgoh_comlink.py`, `swgoh_comlink_async.py` and `typed/*.py` are generated from
+> `src/swgoh_comlink/_codegen/endpoints.py` and its templates. Edit the manifest or template, then run
+> `make generate`; `make generate-check` (CI + pre-commit) fails if the committed output is stale.
 
 **For most contributions:**
 
 ```bash
-git checkout main
-git pull upstream main
+git checkout develop
+git pull upstream develop
 git checkout -b <type>/<short-description>
 ```
 
@@ -224,14 +248,14 @@ docs/contributing-guide
 
 ### Code Style
 
-This project follows standard Python conventions. Please keep these in mind:
+This project follows standard Python conventions, enforced by [Ruff](https://docs.astral.sh/ruff/) (lint + format) and [ty](https://docs.astral.sh/ty/) (type checking). Please keep these in mind:
 
 **General principles:**
 
-- Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting
-- Use **complete type annotations** on all functions, parameters, and return values — the project enforces `ty check`
+- Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting — `uv run ruff format` handles this for you
+- Use **complete type annotations** on all functions, parameters, and return values — the package ships a `py.typed` marker, so downstream users' type checkers rely on them
 - Use `from __future__ import annotations` at the top of each module for modern annotation syntax
-- Use docstrings (Google style) on all public classes and methods
+- Use docstrings (Google style) on all public classes and methods — they are rendered into the API reference
 - Keep lines to 120 characters max (the project doesn't enforce 79)
 
 **Naming:**
@@ -265,65 +289,59 @@ def get_player(
 
 **Imports:**
 
-- Standard library imports first, then third-party, then local — separated by blank lines
+- Standard library imports first, then third-party, then local — separated by blank lines (Ruff sorts them)
 - Use `from __future__ import annotations` at the top of each module
 - Prefer specific imports over wildcard: `from json import dumps, loads`
 
 ### Writing Tests
 
-Tests live in the `tests/` directory and use `pytest` (configured in `pyproject.toml`). Both sync and async tests are supported via `pytest-asyncio`. Run tests with:
+Tests live in the `tests/` directory and use `pytest` (configured in `pyproject.toml`), with [pytest-httpx](https://colin-b.github.io/pytest_httpx/) for mocking HTTP and `pytest-asyncio` (in `auto` mode) for async tests. Run tests with:
 
 ```bash
-# Run all tests
+# Run the default (mocked) suite
 uv run pytest tests/
 
 # Run a specific test file
-uv run pytest tests/test_get_player.py
+uv run pytest tests/unit/test_client_requests.py
 
-# Run with verbose output
-uv run pytest tests/ -v
+# Run with verbose output and coverage
+uv run pytest tests/ -v --cov=swgoh_comlink --cov-report=term-missing
 ```
 
-**Unit tests vs integration tests:**
+**Test categories:**
 
-| Type | Requires comlink? | Mocking | When to use |
-|------|-------------------|---------|-------------|
-| Unit test | No | Mock `_post()` | All new code should have unit tests |
-| Integration test | Yes | None | Optional; validates real API behavior |
+| Type | Location | Requires | How to run |
+|------|----------|----------|------------|
+| Unit | `tests/unit/` | Nothing | Runs by default |
+| Integration | `tests/integration/` | Comlink on `localhost:3000` (and `3001` for HMAC) | `RUN_INTEGRATION_TESTS=1 uv run pytest tests/integration/` |
+| Parity | `tests/statcalc/` | Node.js | `RUN_PARITY_TESTS=1 uv run pytest tests/statcalc/` |
+
+All new code should have unit tests. Opt-in categories are skipped automatically unless their environment variable is set.
 
 **Writing a unit test (preferred):**
 
-New tests should mock the `_post()` method so they can run anywhere without a comlink service:
+Mock the HTTP layer with the `httpx_mock` fixture so tests run anywhere without a comlink service. The `comlink` and `call` fixtures in `tests/unit/conftest.py` are parametrized over both `SwgohComlink` and `SwgohComlinkAsync`, so one test body covers both clients:
 
 ```python
-from unittest import TestCase, mock
-from swgoh_comlink import SwgohComlink
+import json
+
+from pytest_httpx import HTTPXMock
 
 
-class TestGetPlayer(TestCase):
-    @mock.patch.object(SwgohComlink, '_post')
-    def test_get_player_by_allycode(self, mock_post):
-        """Test that get_player() builds correct payload for allycode lookup"""
-        mock_post.return_value = {
-            'name': 'TestPlayer',
-            'allyCode': '123456789',
-            'level': 85
-        }
-        comlink = SwgohComlink()
-        result = comlink.get_player(allycode=123456789)
+async def test_get_player_by_allycode(comlink, call, httpx_mock: HTTPXMock) -> None:
+    """get_player() builds the correct payload for an allycode lookup."""
+    httpx_mock.add_response(json={"name": "TestPlayer"})
 
-        # Verify the method was called with expected payload
-        mock_post.assert_called_once_with(
-            endpoint='player',
-            payload={
-                'payload': {'allyCode': '123456789'},
-                'enums': False
-            }
-        )
-        self.assertEqual(result['name'], 'TestPlayer')
+    result = await call(comlink, "get_player", allycode=123456789)
+
+    request = httpx_mock.get_request()
+    assert request is not None
+    assert str(request.url) == "http://localhost:3000/player"
+    assert json.loads(request.content) == {"payload": {"allyCode": "123456789"}, "enums": False}
+    assert result == {"name": "TestPlayer"}
 ```
 
-**Test file naming:** `test_<feature_or_method>.py`
+**Test file naming:** `test_<feature_or_module>.py`
 
 **What to test:**
 
@@ -331,35 +349,46 @@ class TestGetPlayer(TestCase):
 - Parameter validation — edge cases, invalid inputs, boundary values
 - Error handling — how the client handles HTTP errors, bad JSON, connection failures
 - Helper functions — each utility function in the `helpers/` package should have its own tests
+- Sync/async parity — new client behavior should be exercised against both clients
 
 ### Commit Messages
 
-This project uses the [Angular commit convention](https://www.conventionalcommits.org/) with [git-changelog](https://pawamoy.github.io/git-changelog/) to auto-generate `CHANGELOG.md`. Your commit messages directly become release notes, so please follow this format:
+This project uses the [Conventional Commits](https://www.conventionalcommits.org/) / Angular convention with [git-changelog](https://pawamoy.github.io/git-changelog/) to auto-generate `CHANGELOG.md`. Your commit messages directly become release notes, so please follow this format:
 
 ```
 <type>(<scope>): <short description>
 ```
 
-**Types** (recognized by the changelog generator):
+**Types that appear in the CHANGELOG:**
 
 | Type | Use for | CHANGELOG section |
 |------|---------|-------------------|
 | `feat` | New features or capabilities | Features |
 | `fix` | Bug fixes | Bug Fixes |
+| `perf` | Performance improvements | Performance Improvements |
 | `refactor` | Code restructuring (no behavior change) | Code Refactoring |
-| `build` | Build system or dependency changes | Build |
-| `deps` | Dependency updates | Dependencies |
-| `chore` | Routine maintenance, config changes, version bumps | Chores |
-| `docs` | Documentation additions or updates | Documentation |
+| `revert` | Reverting an earlier change (`revert: <original subject>`) | Reverts |
+| `docs` | Documentation additions or updates | Docs |
 
-Other types (`test`, `style`, `ci`) are valid conventional commits but are **not included** in the generated changelog.
+Other accepted types — `build`, `deps`, `chore`, `test`, `style`, `ci` — are valid but **not included** in the generated changelog.
+
+> **Changelog.** `CHANGELOG.md` is generated by `git-changelog` from Conventional Commit
+> messages — do not edit it by hand. Preview locally with `uv run git-changelog --bumped-version`
+> and `uv run git-changelog`. See [Release Process](#release-process) for how releases are cut.
 
 **Scope** is optional but encouraged. Common scopes:
 
 - `core` — changes to the client classes (`swgoh_comlink.py`, `swgoh_comlink_async.py`, `_base.py`)
 - `helpers` — changes to the `helpers/` package
 - `statcalc` — changes to the `StatCalc/` package
-- `deps` — dependency updates
+- `hmac`, `async`, `exceptions`, `typing` — focused areas of the clients
+- `deps`, `ci`, `docs`, `tests`, `examples`, `release`
+
+Types and scopes are defined in [`.commitlintrc.json`](.commitlintrc.json), the single config used by both the
+pre-commit `commit-msg` hook and the CI **Commit Lint** check. Unknown scopes produce a warning, not a failure.
+The commitlint, preset and Node versions are pinned once, on the `commitlint` hook in
+[`.pre-commit-config.yaml`](.pre-commit-config.yaml); CI runs that same hook, so a message that passes locally
+passes in CI.
 
 **Examples:**
 
@@ -369,8 +398,7 @@ feat(core): add verify_ssl parameter to SwgohComlink constructor
 fix(helpers): remove debug print statement from human_time()
 refactor(core): generalize _post() into _request() for GET/POST support
 fix: correct param_alias decorator to handle falsy values
-chore(deps): update requests to version 2.32.4
-chore(release): bump version to 1.18.0 and update workflow
+chore(deps): bump httpx to 0.28.1
 docs: add contributing guide
 test: add mocked unit tests for get_player and get_guild
 
@@ -391,6 +419,30 @@ Extracts shared payload construction into _ComlinkBase mixin.
 Closes #12
 ```
 
+Mark breaking changes with a `BREAKING CHANGE: <description>` footer — this drives the major version bump.
+**Don't use the `feat!:` shorthand:** the changelog generator's Angular convention doesn't recognize it, so the
+commit would be left out of the changelog entirely. Commit Lint rejects `!` before the colon for this reason.
+
+> **Gotcha — accidental major bumps.** git-changelog decides a commit is breaking by matching
+> `^break(s|ing changes?)?[ :].+$` against **every line** of the message, case-insensitively. So any
+> body line that *starts* with `break`, `breaks`, `breaking change` or `breaking changes` followed by a
+> space or colon bumps the major version — even mid-paragraph prose that just happened to wrap there:
+>
+> ```
+> docs: explain the changelog conventions
+>
+> Commits must use the
+> BREAKING CHANGE footer (the angular convention ignores "feat!:").   <- bumps to 3.0.0!
+> ```
+>
+> Never start a body line with those words unless it is the intentional `BREAKING CHANGE: <description>`
+> footer — reflow the text so the word lands mid-line instead (`Commits must use the BREAKING CHANGE`
+> / `footer ...`). Upper-case `BREAKING CHANGE:` with a colon is the only form to use; `BREAKING-CHANGE:`
+> is not recognized at all. As a backstop, the **prepare release** workflow lists every line that
+> triggered a major in its job summary, and with `bump=auto` it stops unless one of them is the exact
+> `BREAKING CHANGE: ` footer. Check before pushing with
+> `uv run python .github/tools/breaking_changes.py --bump auto --next-tag "$(uv run git-changelog --bumped-version)"`.
+
 ---
 
 ## Submitting a Pull Request
@@ -399,22 +451,26 @@ Closes #12
 
    ```bash
    git fetch upstream
-   git rebase upstream/main
+   git rebase upstream/develop
    ```
 
    If you have merge conflicts, resolve them locally before pushing.
 
-2. **Run the checks locally:**
+2. **Run the checks locally** (the pre-commit hooks cover most of this):
 
    ```bash
-   # Lint
-   uvx ruff check src/ tests/
+   # Lint and format
+   uv run ruff check src/ tests/
+   uv run ruff format --check src/ tests/
 
    # Type check
    uv run ty check src/swgoh_comlink/
 
+   # Generated clients are up to date with the endpoint manifest
+   make generate-check
+
    # Tests
-   uv run pytest tests/ -v
+   uv run pytest tests/
    ```
 
 3. **Push your branch to your fork:**
@@ -423,38 +479,33 @@ Closes #12
    git push origin <your-branch-name>
    ```
 
-4. **Open a pull request:**
+4. **Open a pull request against `develop`:**
 
    Using GitHub CLI:
 
    ```bash
-   gh pr create --repo swgoh-utils/comlink-python --base main --fill
+   gh pr create --repo swgoh-utils/comlink-python --base develop --fill
    ```
 
    Or go to [github.com/swgoh-utils/comlink-python/pulls](https://github.com/swgoh-utils/comlink-python/pulls)
-   and click **"New pull request"** → **"compare across forks"** → select your fork and branch.
+   and click **"New pull request"** → **"compare across forks"** → select `develop` as the base and your fork and branch as the head.
 
-5. **PR description should include:**
+5. **Fill in the PR template.** It asks for:
    - What the change does and why
    - Which issue it addresses (e.g., "Closes #51")
    - Any breaking changes or migration notes
    - How you tested the change
+   - A short checklist mirroring the CI checks
 
-6. **PR checklist:**
+   **Linking issues:** use a closing keyword (`Closes #51`, `Fixes #51`, `Resolves #51`), with one
+   keyword per issue — `Closes #1, #2` only closes #1. Because PRs merge into `develop` rather than
+   the default branch, GitHub won't close the issue at merge time. Instead, a bot comment on the
+   issue notes that the fix is in `develop`, and the issue closes automatically when the next
+   release merges into `main`.
 
-   - [ ] Code follows the project's style conventions
-   - [ ] All new public methods have docstrings with type hints
-   - [ ] New functionality includes unit tests (mocked, not requiring live comlink)
-   - [ ] Existing tests still pass (`uv run pytest tests/`)
-   - [ ] Commit messages follow Angular convention
-   - [ ] Ruff linter passes (`uvx ruff check src/ tests/`)
-   - [ ] Ruff formatter passes (`uvx ruff format --check src/ tests/`)
-   - [ ] Type check passes (`uv run ty check src/swgoh_comlink/`)
-   - [ ] No unrelated changes bundled in
+6. **After submitting:**
 
-7. **After submitting:**
-
-   CI checks (lint, tests, commit message validation, build) will run automatically.
+   CI checks (lint, type check, tests on Python 3.11–3.14, docs build, package build, commit message validation, and integration tests) run automatically.
    Address any failures before requesting review — the maintainer is automatically
    assigned via CODEOWNERS when a PR is opened.
 
@@ -472,16 +523,18 @@ Closes #12
 
 ## Issue Guidelines
 
-Before opening an issue, check the [existing issues](https://github.com/swgoh-utils/comlink-python/issues) to avoid duplicates.
+Before opening an issue, check the [existing issues](https://github.com/swgoh-utils/comlink-python/issues) to avoid duplicates. Usage questions are better asked on [Discord](https://discord.gg/6PBfG5MzR3) — see [SUPPORT.md](SUPPORT.md).
 
 **Bug reports** should include:
 
 - Python version (`python --version`)
-- Package version (`python -c "from swgoh_comlink import version; print(version)"`)
-- Comlink version (if relevant)
+- Package version (`python -c "import swgoh_comlink; print(swgoh_comlink.version)"`)
+- Comlink service version (if relevant)
 - Minimal code to reproduce the issue
 - Expected vs actual behavior
 - Full traceback (if applicable)
+
+Never paste your comlink `access_key` / `secret_key` into an issue.
 
 **Feature requests** should include:
 
@@ -499,7 +552,6 @@ change to that file (or via manual `workflow_dispatch`).
 | Label | Meaning |
 |-------|---------|
 | `bug` | Something isn't working correctly |
-| `security` | Security-related issue |
 | `enhancement` | New feature or capability |
 | `feature request` | Community-requested feature |
 | `v2` | Pertains to v2 (the PyPI-stable surface) |
@@ -544,26 +596,27 @@ The operator-facing checklist lives at
 
 ### v2 stable releases (PyPI)
 
-Stable releases are handled by the maintainer through the GitHub Actions `release.yml` workflow. Contributors don't need to manage versioning or releases, but here's how it works for reference:
+Stable releases are handled by the maintainer through GitHub Actions. Contributors don't need to manage versioning or releases, but here's how it works for reference:
 
-1. The release workflow is triggered manually (`workflow_dispatch`)
-2. [Hatch](https://hatch.pypa.io/) bumps the version in `src/swgoh_comlink/version.py`
-3. [git-changelog](https://pawamoy.github.io/git-changelog/) regenerates `CHANGELOG.md` from commit history
-4. The new version is tagged and pushed
-5. The package is built with `hatch build` and published to [PyPI](https://pypi.org/project/swgoh-comlink/)
+1. **prepare release** (`prepare-release.yml`) is dispatched on `develop`. It computes the next version from the Conventional Commits since the last tag (or a chosen `patch`/`minor`/`major` bump), regenerates `CHANGELOG.md`, and pushes a `release/vX.Y.Z` branch. If the computed version is a major, the job summary lists the commit lines that triggered it, and an `auto` bump stops unless one is a real `BREAKING CHANGE:` footer (see [Commit Messages](#commit-messages)).
+2. The maintainer opens the release PR from that branch into `main` (a link is in the workflow summary). Its body restates every `Closes #N` from the PRs merged since the last release, so GitHub closes those issues when it merges. CI runs as normal and the PR is merged.
+3. **comlink-python release** (`release.yml`) is dispatched on `main`. It reads the version from `CHANGELOG.md`, builds the package — [hatch-vcs](https://github.com/ofek/hatch-vcs) stamps that version, so **no version string is committed to the repo** — and publishes to [PyPI](https://pypi.org/project/swgoh-comlink/) via trusted publishing.
+4. Only after a successful publish is the Git tag created and a GitHub Release cut, with release notes auto-generated from the PR history.
+5. **back-merge main into develop** (`backmerge.yml`) then stages a branch so `main` can be merged back into `develop`.
 
-This is why conventional commit messages matter — they become the release notes automatically.
+This is why conventional commit messages matter — they become the changelog and drive the version bump.
 
 **Version scheme:** [Semantic Versioning](https://semver.org/)
 
-- **Patch** (1.17.x): Bug fixes, documentation
-- **Minor** (1.x.0): New features, backward-compatible changes
+- **Patch** (2.4.x): Bug fixes, documentation
+- **Minor** (2.x.0): New features, backward-compatible changes
 - **Major** (x.0.0): Breaking API changes
 
 ---
 
 ## Getting Help
 
+- **Docs:** [swgoh-utils.github.io/comlink-python](https://swgoh-utils.github.io/comlink-python/)
 - **Issues:** [github.com/swgoh-utils/comlink-python/issues](https://github.com/swgoh-utils/comlink-python/issues)
 - **Discord:** [Join the server](https://discord.gg/6PBfG5MzR3) for real-time discussion
 - **Wiki:** [swgoh-comlink wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for general comlink documentation

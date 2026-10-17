@@ -1,6 +1,9 @@
 site_name: swgoh_comlink
 site_description: Python interfaces for swgoh-comlink and built-in StatCalc
-repo_name: comlink-python
+site_url: https://swgoh-utils.github.io/comlink-python/
+repo_name: swgoh-utils/comlink-python
+repo_url: https://github.com/swgoh-utils/comlink-python
+edit_uri: edit/develop/docs/
 
 theme:
   name: material
@@ -30,10 +33,6 @@ nav:
       - "StatCalc": api/statcalc.md
       - "Helpers": api/helpers.md
       - "Exceptions": api/exceptions.md
-
-extra:
-  version:
-    provider: mike
 
 extra_css:
   - stylesheets/extra.css

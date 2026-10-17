@@ -4,8 +4,7 @@ Sample script to get events from Comlink using the async client
 """
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Union
+from datetime import UTC, datetime
 
 from swgoh_comlink import SwgohComlinkAsync
 
@@ -25,7 +24,7 @@ def convert_time(timestamp: int | float | str) -> str:
         timestamp = int(timestamp)
         timestamp /= 1000
 
-    return datetime.fromtimestamp(int(timestamp), tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.fromtimestamp(int(timestamp), tz=UTC).strftime("%Y-%m-%d %H:%M:%S")
 
 
 async def main():

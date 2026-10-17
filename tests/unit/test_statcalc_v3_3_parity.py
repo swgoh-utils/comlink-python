@@ -104,7 +104,10 @@ _EXPECTED_CHECKSUMS: dict[str, str] = {
     # _regen() script in this module ONLY after a deliberate,
     # approved behaviour change.
     "player_small": "83d043b120b0bf19b2c38f55f6f89fd75841e2630c444f9d2cecbadde4997ede",
-    "player_large": "47deaaa8678830103d37389de99e3333176dc4ebbcffb327bc6c63702f79548f",
+    # player_large re-pinned for develop's bc3e0e8 (raw units keep purchasedAbilityId): its 10
+    # Galactic Legends gain the ultimate's GP (+7467 each). With purchasedAbilityId stripped the
+    # roster still hashes to the ef7a542 value 47deaaa8678830103d37389de99e3333176dc4ebbcffb327bc6c63702f79548f.
+    "player_large": "701bb82052d15db313d731f0778ada7335fa743452245237efcb7e30627134a3",
 }
 
 

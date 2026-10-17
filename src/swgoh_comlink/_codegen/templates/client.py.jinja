@@ -20,16 +20,23 @@
 {% endif %}
 from __future__ import annotations
 
+{% if is_async %}
+import asyncio
+{% else %}
+import threading
+{% endif %}
+import logging
 from collections.abc import Callable
 from typing import Any, cast
 
 import httpx
 
+from {{ rel }} import retry as _retry
 from {{ rel }}_base import (
-    DEFAULT_MAX_RETRIES,
     DEFAULT_TIMEOUT,
     GAME_DATA_TIMEOUT,
     SwgohComlinkBase,
+    _CachedVersions,
     param_alias,
     resolve_profile,
 )
@@ -62,15 +69,16 @@ from {{ rel }}_payloads import (
     unit_stats_endpoint,
 )
 {% if is_async %}
-from {{ rel }}_retry import RetryableStatusError, retrying_async
 from {{ rel }}_escape_hatches_async import _AsyncEscapeHatchMixin
 {% else %}
-from {{ rel }}_retry import RetryableStatusError, retrying_sync
 from {{ rel }}_escape_hatches_sync import _SyncEscapeHatchMixin
 {% endif %}
-from {{ rel }}exceptions import SwgohComlinkException
+from {{ rel }}exceptions import SwgohComlinkException, SwgohComlinkHTTPError, SwgohComlinkRateLimitError
+from {{ rel }}helpers import DataItems
 
 __all__ = ["{{ client_self }}"]
+
+logger = logging.getLogger(__name__)
 
 
 {% if is_async %}
@@ -98,9 +106,23 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         host (str): IP/DNS of the host where swgoh-comlink is running.
         port (int): The port number where the comlink service is listening.
         stats_url (str): URL of the swgoh-stats sub-service if different from *url*.
+        stats_port (int): The port number where the swgoh-stats sub-service is listening.
+        verify_ssl (bool): Whether to verify TLS certificates. [Default: True]
+        version_cache_ttl (float): Seconds to cache the game/localization versions fetched from
+            /metadata. 0 disables caching; ``math.inf`` caches for the client lifetime. [Default: 3600]
+        retry (RetryPolicy | None): Retry rate refusals and HTTP 503 responses, and optionally
+            space calls to the same endpoint, as described by a
+            :class:`~swgoh_comlink.retry.RetryPolicy`. [Default: None, one attempt per call and no waiting]
         http_client: A pre-built ``{{ http_client_class }}``. SDK won't close it; caller owns its lifecycle.
         profile: Connection pool preset (``"default"`` / ``"bot"`` / ``"bulk"``).
-        max_retries: Additional retry attempts after the first failure (default 3; 0 disables).
+
+    All arguments are keyword-only.
+
+    Raises:
+        SwgohComlinkHTTPError: From every endpoint method when the service answers with an
+            HTTP error status (after any retries the ``retry`` policy allows). Subclasses
+            identify rate refusals, HTTP 503 and other 4xx statuses.
+        SwgohComlinkException: On transport and decoding errors.
     """
 
     # Identifies the class to helper functions (helpers/_guild.py / _gac.py
@@ -112,11 +134,16 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         *,
         http_client: {{ http_client_class }} | None = None,
         profile: str = "default",
-        max_retries: int = DEFAULT_MAX_RETRIES,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.max_retries = max_retries
+{% if is_async %}
+        self._version_lock = asyncio.Lock()
+        self._enums_lock = asyncio.Lock()
+{% else %}
+        self._version_lock = threading.Lock()
+        self._enums_lock = threading.Lock()
+{% endif %}
 
         if http_client is not None:
             self.client = http_client
@@ -176,30 +203,78 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         *,
         decoder: Callable[[bytes], Any] | None = None,
     ) -> Any:
-        """Send an HTTP request with retry + decode dispatch."""
+        """Send an HTTP request to the comlink service, applying the client's retry policy.
+
+        This is the single gateway for all endpoint calls, so HMAC signing, TLS
+        verification, pacing, retries and error mapping apply consistently.
+
+        Raises:
+            SwgohComlinkHTTPError: When the service answers with an HTTP error status, after any retries
+                allowed by the client's retry policy. Subclasses identify rate refusals, HTTP 503 and 4xx.
+            SwgohComlinkException: On any network or decoding error.
+        """
+        policy = self.retry_policy
+        attempt = 1
+        extra = 0.0  # retry wait carried into the next pass, on top of its pacing slot
+        while True:
+{% if is_async %}
+            wait, release = self._pace_slot(endpoint, stats)
+            wait += extra
+{% else %}
+            wait = self._pace_delay(endpoint, stats) + extra
+{% endif %}
+            extra = 0.0
+            if wait > 0:
+                logger.debug("Pacing %s for %.2fs", endpoint, wait)
+{% if is_async %}
+                try:
+                    await _retry._async_sleep(wait)
+                except asyncio.CancelledError:
+                    # Hand the unused slot back so later callers do not wait for a call that never happens.
+                    release()
+                    raise
+{% else %}
+                _retry._sleep(wait)
+{% endif %}
+            try:
+                return {{ await_kw }}self._send(method, endpoint, payload, stats, timeout, decoder=decoder)
+            except SwgohComlinkHTTPError as exc:
+                delay = None if policy is None else policy.retry_delay(exc, attempt)
+                if policy is None or delay is None:
+                    if policy is not None and attempt > 1:
+                        logger.info("%s on %s; giving up after %d attempts", type(exc).__name__, endpoint, attempt)
+                    raise
+                logger.info(
+                    "%s on %s (attempt %d of %d); retrying in %.1fs",
+                    type(exc).__name__,
+                    endpoint,
+                    attempt,
+                    policy.attempts,
+                    delay,
+                )
+                held = isinstance(exc, SwgohComlinkRateLimitError) and self._hold_endpoint(endpoint, stats, delay)
+                extra = policy.jitter_extra(delay) + (0.0 if held else delay)
+                attempt += 1
+
+    {{ async_kw }}def _send(
+        self,
+        method: str,
+        endpoint: str,
+        payload: dict[str, Any] | list[Any] | None,
+        stats: bool,
+        timeout: float | None,
+        *,
+        decoder: Callable[[bytes], Any] | None = None,
+    ) -> Any:
+        """Make one attempt at a request. Headers, including the HMAC signature, are rebuilt per attempt."""
         method_u = method.upper()
         full_path, request_kwargs = self._build_request_kwargs(method_u, endpoint, payload, timeout)
         client = self.stats_client if stats else self.client
-
-        {{ async_kw }}def attempt() -> httpx.Response:
-            r = {{ await_kw }}client.request(method_u, full_path, **request_kwargs)
-            self._classify_response(r)
-            return r
-
         try:
-{% if is_async %}
-            response = await retrying_async(
-{% else %}
-            response = retrying_sync(
-{% endif %}
-                attempt,
-                attempts=self.max_retries + 1,
-                on=httpx.RequestError,
-            )
-        except (httpx.RequestError, RetryableStatusError) as e:
+            response = {{ await_kw }}client.request(method_u, full_path, **request_kwargs)
+        except httpx.RequestError as e:
             raise self._map_error(e) from e
-        except SwgohComlinkException:
-            raise
+        self._classify_response(response)
 
         decode = decoder if decoder is not None else UNTYPED_DECODER.decode
         try:
@@ -226,15 +301,29 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
             decoder=decoder,
         )
 
+    {{ async_kw }}def _get_versions(self, refresh: bool = False) -> _CachedVersions:
+        """Return the current game/localization versions, served from the instance cache.
+
+        Args:
+            refresh: When True, bypass the cache and fetch fresh values from /metadata.
+        """
+        if not refresh:
+            cached = self._cached_versions()
+            if cached is not None:
+                return cached
+        {{ async_kw }}with self._version_lock:
+            # Double-check inside the lock so concurrent cold-cache callers
+            # coalesce into a single /metadata request.
+            if not refresh:
+                cached = self._cached_versions()
+                if cached is not None:
+                    return cached
+            metadata = {{ await_kw }}self.get_game_metadata(raw=True)
+            return self._store_versions(*self._versions_from_metadata(metadata))
+
     {{ async_kw }}def _get_game_version(self) -> str:
-        """Helper: fetch the current game version string."""
-{% if is_typed %}
-        md = cast(Metadata, {{ await_kw }}self.get_game_metadata())
-        return str(md.latest_gamedata_version)
-{% else %}
-        md = {{ await_kw }}self.get_game_metadata()
-        return str(md["latestGamedataVersion"])
-{% endif %}
+        """Helper: the current game data version, served from the version cache."""
+        return ({{ await_kw }}self._get_versions()).require_game()
 
     # ── Public API methods ───────────────────────────────────────────────
 {% for ep in endpoints %}
@@ -269,12 +358,21 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
 {% endif %}
 {% if ep.pre_fetch_locale_bundle %}
         if not localization_id:
-{% if is_async %}
-            localization_id = (await self.get_latest_game_data_version())["language"]
+            localization_id = ({{ await_kw }}self._get_versions()).require_language()
+{% endif %}
+{% if ep.cached_enums %}
+        {{ async_kw }}with self._enums_lock:
+            try:
+                game_version = ({{ await_kw }}self._get_versions(refresh=refresh)).require_game()
+            except SwgohComlinkException:
+                # Version unknown: fetch and return the enums without caching them.
+                return cast("dict[str, Any]", {{ await_kw }}self._request(method="GET", endpoint="{{ ep.path }}"))
+            if not refresh and self.enums is not None and self.enums_version == game_version:
+                return self.enums
+            enums = cast("dict[str, Any]", {{ await_kw }}self._request(method="GET", endpoint="{{ ep.path }}"))
+            self.enums, self.enums_version = enums, game_version
+            return enums
 {% else %}
-            localization_id = self.get_latest_game_data_version()["language"]
-{% endif %}
-{% endif %}
 {% if ep.list_wrap_single_dict %}
         if isinstance(request_payload, dict):
             request_payload = [request_payload]
@@ -302,7 +400,11 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
 {% elif not is_typed and ep.dict_decoder_callable %}
         decoder = {{ ep.dict_decoder_callable }}
 {% endif %}
+{% if ep.refresh_version_cache %}
+        metadata = cast(
+{% else %}
         return cast(
+{% endif %}
             "{% if has_typed %}{{ ep.typed_return }} | dict[str, Any]{% elif ep.name == "get_unit_stats" %}list[Any] | dict[str, Any]{% elif ep.name == "get_events" %}dict[str, list[Any]]{% else %}dict[str, Any]{% endif %}",
 {% if ep.http_method == "GET" %}
             {{ await_kw }}self._request(method="GET", endpoint="{{ ep.path }}"),
@@ -326,6 +428,16 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
             ),
 {% endif %}
         )
+{% if ep.refresh_version_cache %}
+        # Opportunistically refresh the version cache; enums=True responses are
+        # skipped since their values may be translated.
+        if not enums:
+            game, language = self._versions_from_metadata(metadata)
+            if game is not None and language is not None:
+                self._store_versions(game, language)
+        return metadata
+{% endif %}
+{% endif %}
 {% for alias in ep.aliases %}
 
     {{ alias }} = {{ ep.name }}
