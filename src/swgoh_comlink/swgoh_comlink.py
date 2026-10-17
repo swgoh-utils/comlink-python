@@ -375,7 +375,7 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         *,
         raw: bool = True,
     ) -> dict[str, Any]:
-        """Get game metadata. Returns :class:`Metadata` by default (typed surface); ``raw=True`` for the v2 dict."""
+        """Get game metadata. Returns the v2 dict; ``raw`` is accepted for portability with :mod:`swgoh_comlink.typed` and ignored."""
         payload = game_metadata_payload(
             client_specs=client_specs,
             enums=enums,
@@ -409,7 +409,7 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         *,
         raw: bool = True,
     ) -> dict[str, Any]:
-        """Get player info. Returns :class:`Player` by default (typed surface); ``raw=True`` for the v2 dict."""
+        """Get player info. Returns the v2 dict; ``raw`` is accepted for portability with :mod:`swgoh_comlink.typed` and ignored."""
         payload = player_payload(
             allycode=allycode,
             player_id=player_id,
@@ -465,7 +465,7 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         *,
         raw: bool = True,
     ) -> dict[str, Any]:
-        """Get guild info. Returns :class:`Guild` by default (typed surface); ``raw=True`` unwraps the ``"guild"`` envelope into a v2-shaped dict."""
+        """Get guild info. The dict form unwraps the ``"guild"`` envelope into the v2 shape. Returns the v2 dict; ``raw`` is accepted for portability with :mod:`swgoh_comlink.typed` and ignored."""
         payload = guild_payload(
             guild_id=guild_id,
             include_recent_guild_activity_info=include_recent_guild_activity_info,
@@ -542,7 +542,7 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         enums: bool = False,
         raw: bool = True,
     ) -> dict[str, Any]:
-        """Get GAC leaderboard (type 4) or global leaderboard (type 6)."""
+        """Get GAC leaderboard (type 4) or global leaderboard (type 6). Returns the v2 dict; ``raw`` is accepted for portability with :mod:`swgoh_comlink.typed` and ignored."""
         payload = leaderboard_payload(
             leaderboard_type=leaderboard_type,
             league=league,

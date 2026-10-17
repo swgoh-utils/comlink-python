@@ -379,7 +379,13 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
         raw: bool = True,
 {% endif %}
     ) -> {% if has_typed %}{{ ep.typed_return }} | dict[str, Any]{% elif ep.name == "get_unit_stats" %}list[Any] | dict[str, Any]{% elif ep.name == "get_events" %}dict[str, list[Any]]{% else %}dict[str, Any]{% endif %}:
+{% if has_typed %}
+        """{{ ep.docstring }} Returns :class:`{{ ep.typed_return }}`; pass ``raw=True`` for the v2 dict."""
+{% elif not is_typed and ep.typed_return %}
+        """{{ ep.docstring }} Returns the v2 dict; ``raw`` is accepted for portability with :mod:`swgoh_comlink.typed` and ignored."""
+{% else %}
         """{{ ep.docstring }}"""
+{% endif %}
 {% if ep.pre_fetch_version %}
         game_version = version or {{ await_kw }}self._get_game_version()
 {% endif %}

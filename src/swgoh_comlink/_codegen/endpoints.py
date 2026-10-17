@@ -61,7 +61,11 @@ class Endpoint:
     """Comlink endpoint path (no leading slash)."""
 
     docstring: str
-    """One-line method docstring."""
+    """One-line method docstring, worded for both surfaces.
+
+    For endpoints with a ``typed_return``, the template appends the return-type
+    sentence, which differs between the typed and the dict-default surface.
+    """
 
     params: tuple[Param, ...] = ()
     """Positional + keyword parameters."""
@@ -219,7 +223,7 @@ ENDPOINTS: tuple[Endpoint, ...] = (
         name="get_game_metadata",
         http_method="POST",
         path="metadata",
-        docstring="Get game metadata. Returns :class:`Metadata` by default (typed surface); ``raw=True`` for the v2 dict.",
+        docstring="Get game metadata.",
         params=(
             Param("client_specs", "dict[str, Any] | None", default="None"),
             Param("enums", "bool", default="False"),
@@ -234,7 +238,7 @@ ENDPOINTS: tuple[Endpoint, ...] = (
         name="get_player",
         http_method="POST",
         path="player",
-        docstring="Get player info. Returns :class:`Player` by default (typed surface); ``raw=True`` for the v2 dict.",
+        docstring="Get player info.",
         params=(
             Param("allycode", "str | int | None", default="None"),
             Param("player_id", "str | None", default="None"),
@@ -264,7 +268,7 @@ ENDPOINTS: tuple[Endpoint, ...] = (
         name="get_guild",
         http_method="POST",
         path="guild",
-        docstring='Get guild info. Returns :class:`Guild` by default (typed surface); ``raw=True`` unwraps the ``"guild"`` envelope into a v2-shaped dict.',
+        docstring='Get guild info. The dict form unwraps the ``"guild"`` envelope into the v2 shape.',
         params=(
             Param("guild_id", "str"),
             Param("include_recent_guild_activity_info", "bool", default="False"),
