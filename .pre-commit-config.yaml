@@ -10,6 +10,9 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        # mkdocs.yml uses MkDocs' `!ENV` tag, which the safe loader rejects;
+        # `mkdocs build --strict` (CI's docs job) validates it instead.
+        exclude: ^mkdocs\.yml$
       - id: check-toml
       - id: check-added-large-files
       - id: debug-statements

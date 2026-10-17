@@ -2,11 +2,12 @@
 
 {#
   Version banners for the mike-versioned site (see "Publishing the docs" in
-  CONTRIBUTING.md). Each published version is built from its own branch, so a
-  branch decides its own banner through `extra.prerelease` in mkdocs.yml:
+  CONTRIBUTING.md). Every version is built from its release/* branch, and
+  `extra.prerelease` (set by the deploy from the branch's version) decides its
+  banner:
 
-  - pre-release lines (extra.prerelease: true) always show the announce banner;
-  - release lines show Material's "outdated" banner, which its JavaScript
+  - pre-release builds (extra.prerelease: true) always show the announce banner;
+  - release builds show Material's "outdated" banner, which its JavaScript
     reveals only when the version being viewed is not the default (`latest`).
 
   The `-` whitespace control matters: Material renders a banner whenever the
