@@ -3,17 +3,25 @@
 
 from __future__ import annotations
 
-from typing import Any, overload
+from typing import TYPE_CHECKING, Any, overload
 
 from ..exceptions import SwgohComlinkValueError
 from ._utils import get_function_name
+from ._wire import struct_to_wire
+
+if TYPE_CHECKING:
+    from .._models import Metadata
 
 
-def _config_rows(metadata: dict[str, Any] | list[dict[str, Any]], function_name: str) -> list[dict[str, Any]]:
+def _config_rows(
+    metadata: dict[str, Any] | list[dict[str, Any]] | Metadata, function_name: str
+) -> list[dict[str, Any]]:
+    metadata = struct_to_wire(metadata)
     rows = metadata.get("config") if isinstance(metadata, dict) else metadata
     if not isinstance(rows, list):
         raise SwgohComlinkValueError(
-            f"{function_name}: 'metadata' must be a get_game_metadata() response or its 'config' list, "
+            f"{function_name}: 'metadata' must be a get_game_metadata() response (dict or typed Metadata) "
+            "or its 'config' list, "
             f"not {type(metadata)}"
         )
     return [row for row in rows if isinstance(row, dict)]
@@ -25,15 +33,15 @@ def _config_value(rows: list[dict[str, Any]], key: str) -> Any:
 
 
 @overload
-def get_game_config(metadata: dict[str, Any] | list[dict[str, Any]], key: None = None) -> dict[str, str]: ...
+def get_game_config(metadata: dict[str, Any] | list[dict[str, Any]] | Metadata, key: None = None) -> dict[str, str]: ...
 
 
 @overload
-def get_game_config(metadata: dict[str, Any] | list[dict[str, Any]], key: str) -> str | None: ...
+def get_game_config(metadata: dict[str, Any] | list[dict[str, Any]] | Metadata, key: str) -> str | None: ...
 
 
 def get_game_config(
-    metadata: dict[str, Any] | list[dict[str, Any]], key: str | None = None
+    metadata: dict[str, Any] | list[dict[str, Any]] | Metadata, key: str | None = None
 ) -> dict[str, str] | str | None:
     """Read the game's own configuration values from the game metadata.
 
@@ -44,7 +52,9 @@ def get_game_config(
     :func:`get_game_config_int` to read one as an integer.
 
     Args:
-        metadata: The response from ``SwgohComlink.get_game_metadata()``, or its ``config`` list.
+        metadata: The response from ``get_game_metadata()``, or its ``config`` list. Both the dict
+            client's response and the typed client's :class:`~swgoh_comlink._models.Metadata` (from
+            ``swgoh_comlink.typed``, no ``raw=True`` needed) are accepted.
         key: A single configuration key to return. [Default: all of them]
 
     Returns:
@@ -75,7 +85,7 @@ def get_game_config(
 
 
 def get_game_config_int(
-    metadata: dict[str, Any] | list[dict[str, Any]], key: str, default: int | None = None
+    metadata: dict[str, Any] | list[dict[str, Any]] | Metadata, key: str, default: int | None = None
 ) -> int | None:
     """Read one numeric configuration value from the game metadata as an integer.
 
@@ -84,7 +94,9 @@ def get_game_config_int(
     "not known" apart from a real value of zero.
 
     Args:
-        metadata: The response from ``SwgohComlink.get_game_metadata()``, or its ``config`` list.
+        metadata: The response from ``get_game_metadata()``, or its ``config`` list. Both the dict
+            client's response and the typed client's :class:`~swgoh_comlink._models.Metadata` (from
+            ``swgoh_comlink.typed``, no ``raw=True`` needed) are accepted.
         key: The configuration key, e.g. ``"stat-mod-max-storage"``.
         default: The value to return when the key is missing or not an integer. [Default: None]
 

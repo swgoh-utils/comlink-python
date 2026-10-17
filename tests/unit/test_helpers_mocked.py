@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import httpx
+import msgspec
 import pytest
 from pytest_httpx import HTTPXMock
 
@@ -26,6 +27,8 @@ import swgoh_comlink.helpers as helpers
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 from swgoh_comlink.exceptions import SwgohComlinkValueError
 from swgoh_comlink.helpers import get_event_schedule, get_game_config, get_game_config_int, get_guild_activity
+from swgoh_comlink.typed import SwgohComlink as TypedSwgohComlink
+from swgoh_comlink.typed import SwgohComlinkAsync as TypedSwgohComlinkAsync
 
 URL = "http://localhost:3000"
 LEADERBOARD_URL = f"{URL}/getLeaderboard"
@@ -406,3 +409,52 @@ async def test_pure_helpers_accept_client_responses(
     httpx_mock.add_response(json=response)
 
     assert summarize(await call(comlink, method, **kwargs)) == expected
+
+
+@pytest.fixture(params=[TypedSwgohComlink, TypedSwgohComlinkAsync], ids=["typed-sync", "typed-async"])
+async def typed_comlink(request: pytest.FixtureRequest) -> AsyncIterator[TypedSwgohComlink | TypedSwgohComlinkAsync]:
+    client = request.param(url=URL)
+    yield client
+    if isinstance(client, TypedSwgohComlinkAsync):
+        await client.aclose()
+    else:
+        client.close()
+
+
+@pytest.mark.parametrize(
+    ("method", "kwargs", "response", "summarize"),
+    [
+        pytest.param(
+            "get_guild",
+            {"guild_id": "guild_abc", "include_recent_guild_activity_info": True},
+            _ACTIVITY_GUILD,
+            _guild_summary,
+            id="guild-activity",
+        ),
+        pytest.param(
+            "get_game_metadata",
+            {},
+            {"config": [{"key": "max-datacron-currency", "value": "100000000"}], **_METADATA},
+            _config_summary,
+            id="game-config",
+        ),
+    ],
+)
+async def test_pure_helpers_accept_typed_client_structs(
+    typed_comlink: TypedSwgohComlink | TypedSwgohComlinkAsync,
+    call: Callable[..., Awaitable[Any]],
+    httpx_mock: HTTPXMock,
+    method: str,
+    kwargs: dict[str, Any],
+    response: dict[str, Any],
+    summarize: Callable[[Any], Any],
+):
+    """The typed clients' default Struct returns read the same as their ``raw=True`` dicts."""
+    httpx_mock.add_response(json=response, is_reusable=True)
+
+    struct = await call(typed_comlink, method, **kwargs)
+    raw = await call(typed_comlink, method, **kwargs, raw=True)
+
+    assert isinstance(struct, msgspec.Struct)
+    assert isinstance(raw, dict)
+    assert summarize(struct) == summarize(raw)

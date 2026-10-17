@@ -13,6 +13,8 @@ from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import msgspec
+
 from ..exceptions import SwgohComlinkValueError
 from ._utils import get_function_name
 
@@ -21,6 +23,17 @@ from ._utils import get_function_name
 # year 5138 while 1e11 milliseconds is March 1973, so the two ranges cannot meet in real data.
 _MILLISECONDS_FROM = 100_000_000_000
 _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+
+
+def struct_to_wire(value: Any) -> Any:
+    """Return a typed-client Struct as the wire-shaped dict tree; any other value unchanged.
+
+    The typed clients (``swgoh_comlink.typed``) decode responses into :class:`msgspec.Struct` models
+    declared with ``rename="camel"``, so :func:`msgspec.to_builtins` restores the camelCase keys the
+    dict-reading helpers expect. Fields the payload omitted come back as the model's empty defaults
+    (``""``, ``0``, ``[]``), which the readers in this module already treat as missing.
+    """
+    return msgspec.to_builtins(value) if isinstance(value, msgspec.Struct) else value
 
 
 def as_int(value: Any, default: int = 0) -> int:

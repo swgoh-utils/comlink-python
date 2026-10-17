@@ -423,6 +423,12 @@ for member in activity["members"]:
     `guildJoinTime` is in epoch seconds while `lastActivityTime` is in epoch
     milliseconds; both are returned as timezone-aware UTC datetimes.
 
+!!! tip "Typed clients"
+    The typed clients (`from swgoh_comlink.typed import SwgohComlink`) return a
+    `Guild` Struct from `get_guild()`. `get_guild_activity` accepts it as-is and
+    converts it to the wire-shaped dictionary internally, so `raw=True` is not
+    needed. Passing `raw=True` skips that conversion.
+
 ::: swgoh_comlink.helpers._guild.get_guild_activity
     options:
       show_root_heading: true
@@ -732,6 +738,11 @@ get_game_config_int(metadata, "max-datacron-currency")   # 100000000
     Every configuration value is a string, including the numeric ones, and some keys
     hold text such as `"true"` or `"SPEED"`. `get_game_config_int` returns its
     `default` (`None` unless given) for a missing key or a value that is not an integer.
+
+!!! tip "Typed clients"
+    The typed clients (`from swgoh_comlink.typed import SwgohComlink`) return a
+    `Metadata` Struct from `get_game_metadata()`. `get_game_config` and
+    `get_game_config_int` accept it as-is, so `raw=True` is not needed.
 
 ::: swgoh_comlink.helpers._game_config.get_game_config
     options:

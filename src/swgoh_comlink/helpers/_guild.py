@@ -9,10 +9,11 @@ from typing import TYPE_CHECKING, Any, Literal, TypedDict, overload
 
 from ..exceptions import SwgohComlinkValueError
 from ._utils import _client_kind, get_function_name, sanitize_allycode
-from ._wire import as_int
+from ._wire import as_int, struct_to_wire
 
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
+    from swgoh_comlink._models import Guild
 
 # memberLevel (GuildMemberLevel), looked up as text: an integer (enums=False) or its enum name (enums=True)
 _MEMBER_ROLES: dict[str, tuple[int, str]] = {
@@ -203,7 +204,7 @@ def _dicts(value: Any) -> list[dict[str, Any]]:
     return [item for item in value if isinstance(item, dict)] if isinstance(value, list) else []
 
 
-def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
+def get_guild_activity(guild: dict[str, Any] | Guild) -> GuildActivity:
     """Summarize a guild's recent Territory Battles, Territory Wars and raid, and its members.
 
     The recent results are only present when the guild was requested with
@@ -216,8 +217,9 @@ def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
     or as its ``GuildMemberLevel`` enum name (``enums=True``).
 
     Args:
-        guild: The response from ``SwgohComlink.get_guild(..., include_recent_guild_activity_info=True)``.
-            A response still wrapped as ``{"guild": {...}}`` is accepted.
+        guild: The response from ``get_guild(..., include_recent_guild_activity_info=True)``. A response
+            still wrapped as ``{"guild": {...}}`` is accepted, as is the typed client's
+            :class:`~swgoh_comlink._models.Guild` (from ``swgoh_comlink.typed``, no ``raw=True`` needed).
 
     Returns:
         A :class:`GuildActivity` dictionary. ``best_territory_battle`` is the recent battle with the most
@@ -226,7 +228,7 @@ def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
         Members are in payload order.
 
     Raises:
-        SwgohComlinkValueError: If ``guild`` is not a dictionary.
+        SwgohComlinkValueError: If ``guild`` is neither a dictionary nor a typed ``Guild``.
 
     Examples:
         >>> guild = comlink.get_guild(guild_id, include_recent_guild_activity_info=True)  # doctest: +SKIP
@@ -234,8 +236,11 @@ def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
         >>> activity["territory_war_wins"], activity["territory_war_losses"]  # doctest: +SKIP
         (6, 2)
     """
+    guild = struct_to_wire(guild)
     if not isinstance(guild, dict):
-        raise SwgohComlinkValueError(f"{get_function_name()}: 'guild' must be a dictionary, not {type(guild)}")
+        raise SwgohComlinkValueError(
+            f"{get_function_name()}: 'guild' must be a dictionary or a typed Guild, not {type(guild)}"
+        )
     if isinstance(guild.get("guild"), dict):
         guild = guild["guild"]
     profile: dict[str, Any] = raw if isinstance(raw := guild.get("profile"), dict) else {}
