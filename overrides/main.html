@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{#
+  Version banners for the mike-versioned site (see "Publishing the docs" in
+  CONTRIBUTING.md). Each published version is built from its own branch, so a
+  branch decides its own banner through `extra.prerelease` in mkdocs.yml:
+
+  - pre-release lines (extra.prerelease: true) always show the announce banner;
+  - release lines show Material's "outdated" banner, which its JavaScript
+    reveals only when the version being viewed is not the default (`latest`).
+
+  The `-` whitespace control matters: Material renders a banner whenever the
+  block's output is non-empty, so stray whitespace would draw an empty one.
+#}
+
+{% block announce -%}
+  {%- if config.extra.prerelease %}
+    You are viewing the docs for a <strong>pre-release</strong> of swgoh_comlink.
+    APIs may change before the final release.
+    <a href="{{ '../' ~ base_url }}">Go to the docs for the latest stable release.</a>
+  {% endif -%}
+{%- endblock %}
+
+{% block outdated -%}
+  {%- if not config.extra.prerelease %}
+    You are viewing the docs for an older release of swgoh_comlink.
+    <a href="{{ '../' ~ base_url }}">
+      <strong>Go to the docs for the latest release.</strong>
+    </a>
+  {% endif -%}
+{%- endblock %}
