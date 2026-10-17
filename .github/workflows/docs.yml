@@ -1,22 +1,28 @@
 name: Deploy docs
 
 # Publishes the versioned MkDocs site (https://swgoh-utils.github.io/comlink-python/)
-# with mike. Every release line deploys its own folder to the `gh-pages` branch, and
-# Material's version picker reads the versions.json that mike keeps there:
+# with mike. Every `release/*` branch publishes its own folder on the `gh-pages`
+# branch, named after the PEP 440 version in the branch name, and Material's version
+# picker reads the versions.json that mike keeps there.
 #
-#   ref                                   CHANGELOG/tag version   docs version   alias
-#   main                                  X.Y.Z                   X.Y            latest
-#   release/v* carrying a pre-release     X.Y.ZaN / bN / rcN      X.Y            dev     (titled "X.Y (pre-release)")
-#   v* tag (manual run only)              the tag                 X.Y            latest or dev, as above
+# .github/scripts/docs_version.py picks the alias from what is already deployed:
 #
-# Branches take their version from the first release heading in CHANGELOG.md, the
-# same source release.yml uses (release tags only appear after the PyPI publish, so
-# `git describe` would still name the previous release). Stable `release/vX.Y.Z`
-# branches staged by prepare-release.yml are skipped: their docs go live when the
-# release PR merges into main.
+#   branch               version     alias              title
+#   release/v2.5.0       2.5.0       latest (default)   2.5.0              newest stable so far
+#   release/v2.4.2       2.4.2       (none)             2.4.2              older than a deployed stable
+#   release/v3.0.0a2     3.0.0a2     alpha              3.0.0a2 (alpha)
+#   release/v3.0.0b1     3.0.0b1     beta               3.0.0b1 (beta)
+#   release/v3.0.0rc1    3.0.0rc1    rc                 3.0.0rc1 (rc)
+#   release/v3.0.0.dev1  3.0.0.dev1  dev                3.0.0.dev1 (dev)
 #
-# The root URL redirects to `latest` (`mike set-default latest`), so it always shows
-# the newest stable release. CI's `docs` job still build-checks every PR.
+# A stable version takes `latest` only if it is at least as new as every deployed
+# stable version; a pre-release takes its kind's alias only if it is at least as new
+# as every deployed version of that kind, and never touches `latest`. The root URL
+# redirects to `latest`. main, develop and tags do not deploy; CI's `docs` job
+# build-checks every PR.
+#
+# Pushes made with GITHUB_TOKEN (such as prepare-release.yml's) do not start this
+# workflow; run it by hand on that release branch instead.
 #
 # One-time setup: Settings -> Pages -> Build and deployment -> Source:
 # "Deploy from a branch", branch `gh-pages`, folder `/ (root)`.
@@ -24,7 +30,7 @@ name: Deploy docs
 
 on:
   push:
-    branches: [main, "release/v*"]
+    branches: ["release/**"]
     paths:
       - "docs/**"
       - "overrides/**"
@@ -33,15 +39,16 @@ on:
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/docs.yml"
-  # Run by hand on main, a release/v* branch or a v* tag, e.g. to publish the first
-  # version or to rebuild an older one.
+      - ".github/scripts/docs_version.py"
+  # Run by hand on a release/* branch, e.g. after prepare-release.yml pushed it.
+  # Runs started on any other ref are skipped by the job condition below.
   workflow_dispatch:
 
 permissions:
   contents: write
 
-# Every line pushes to the same gh-pages branch, so deploys from all branches and
-# tags queue behind one another instead of racing.
+# Deploys push to the gh-pages branch, so they queue behind one another instead
+# of racing.
 concurrency:
   group: gh-pages
   cancel-in-progress: false
@@ -49,9 +56,9 @@ concurrency:
 jobs:
   deploy:
     name: Deploy versioned docs
-    # Forks (including a maintainer fork carrying release/v* branches) must not
-    # publish their own gh-pages.
-    if: github.repository == 'swgoh-utils/comlink-python'
+    # Only release branches of the upstream repository publish; forks and runs on
+    # other refs never touch gh-pages.
+    if: github.repository == 'swgoh-utils/comlink-python' && startsWith(github.ref, 'refs/heads/release/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -59,9 +66,16 @@ jobs:
           # Full history: hatch-vcs needs the tags, and mike builds on top of the
           # existing origin/gh-pages history.
           fetch-depth: 0
+          # `mike deploy --push` pushes gh-pages with the token checkout stores.
+          # No artifacts are uploaded, so it never leaves the runner.
+          persist-credentials: true
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
+        with:
+          # This job publishes the site, so it must not restore a cache that
+          # other workflows (e.g. PR runs) can write.
+          enable-cache: false
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -74,67 +88,39 @@ jobs:
       - name: Pick docs version
         id: version
         env:
-          REF: ${{ github.ref }}
           REF_NAME: ${{ github.ref_name }}
         run: |
-          case "$REF" in
-            refs/tags/v*)
-              release="${REF_NAME#v}" ;;
-            refs/heads/main | refs/heads/release/v*)
-              release="$(grep -m1 -oE '^## \[v?[0-9]+\.[0-9]+\.[0-9]+[^]]*\]' CHANGELOG.md \
-                         | sed -E 's/^## \[v?([0-9][^]]*)\]$/\1/')" ;;
-            *)
-              echo "::error::Docs deploy from $REF is not supported; run it on main, release/v* or a v* tag."
-              exit 1 ;;
-          esac
-
-          if [[ ! "$release" =~ ^([0-9]+)\.([0-9]+) ]]; then
-            echo "::error::Cannot read a MAJOR.MINOR version from '$release'."
-            exit 1
-          fi
-          version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
-
-          # PEP 440 pre-release markers: 3.0.0a2, 3.0.0b1, 3.0.0rc1, 3.0.0.dev1.
-          if [[ "$release" =~ (a|b|rc|\.dev)[0-9]+$ ]]; then
-            alias="dev"
-            title="$version (pre-release)"
-          elif [[ "$REF" == refs/heads/release/v* ]]; then
-            echo "::notice::$REF_NAME stages a stable release; its docs deploy from main once it merges."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          else
-            alias="latest"
-            title="$version"
-          fi
-
-          echo "Deploying $REF as version=$version alias=$alias title='$title'"
-          {
-            echo "version=$version"
-            echo "alias=$alias"
-            echo "title=$title"
-          } >> "$GITHUB_OUTPUT"
+          # `[]` when gh-pages does not exist yet.
+          deployed="$(uv run mike list --json)"
+          uv run --with packaging python .github/scripts/docs_version.py "$REF_NAME" "$deployed"
 
       - name: Build docs (strict)
-        if: steps.version.outputs.skip != 'true'
+        env:
+          DOCS_PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: uv run mkdocs build --strict
 
       - name: Configure git identity
-        if: steps.version.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Deploy with mike
-        if: steps.version.outputs.skip != 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
           ALIAS: ${{ steps.version.outputs.alias }}
           TITLE: ${{ steps.version.outputs.title }}
+          SET_DEFAULT: ${{ steps.version.outputs.set_default }}
+          # Shows the pre-release banner (mkdocs.yml extra.prerelease).
+          DOCS_PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: |
-          uv run mike deploy --push --update-aliases --title "$TITLE" "$VERSION" "$ALIAS"
+          if [[ -n "$ALIAS" ]]; then
+            uv run mike deploy --push --update-aliases --title "$TITLE" "$VERSION" "$ALIAS"
+          else
+            uv run mike deploy --push --title "$TITLE" "$VERSION"
+          fi
 
-          # The first stable deploy also points the root URL at `latest`. Later
-          # deploys leave the default alone (moving `latest` is enough).
-          if [[ "$ALIAS" == "latest" ]] && ! git cat-file -e gh-pages:index.html 2>/dev/null; then
+          # Only the newest stable version gets here. Re-running it when the root
+          # already redirects to `latest` is a no-op (mike skips the empty commit).
+          if [[ "$SET_DEFAULT" == "true" ]]; then
             uv run mike set-default --push latest
           fi
