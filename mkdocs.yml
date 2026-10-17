@@ -25,15 +25,38 @@ theme:
 nav:
   - "Home": index.md
   - "Guides":
-      - "Migration Guide": migration.md
+      - "Install the v3 Alpha": v3/install-alpha.md
+      - "Migrating from v2 to v3": v3/migration.md
+      - "Migrating from v1.x": migration.md
       - "Logging": logging.md
       - "Examples": examples.md
+  - "Recipes":
+      - "Long-running Bot": v3/recipes/long-running-bot.md
+      - "Bulk Analyst": v3/recipes/bulk-analyst.md
+      - "Short-lived CLI Script": v3/recipes/cli-script.md
+      - "Operator-side Concurrency": v3/recipes/operator-side-concurrency.md
+      - "Typed StatCalc": v3/recipes/typed-statcalc.md
+      - "Typed /data Segments": v3/recipes/typed-game-data-segments.md
   - "API":
       - "SwgohComlink": api/comlink.md
       - "SwgohComlinkAsync": api/async.md
+      - "Typed Clients": api/typed.md
       - "StatCalc": api/statcalc.md
       - "Helpers": api/helpers.md
       - "Exceptions": api/exceptions.md
+  - "Release Notes":
+      - "v3.0.0a2": v3/releases/v3.0.0a2.md
+      - "v3.0.0a1": v3/releases/v3.0.0a1.md
+
+# Published but unlisted: the design records and v3 research notes that the
+# guides link to. Listing them here keeps `mkdocs build` from reporting them.
+not_in_nav: |
+  /adr/
+  /v3/README.md
+  /v3/benchmark-report.md
+  /v3/codegen.md
+  /v3/phase-*.md
+  /v3/releases/runbook-*.md
 
 extra:
   # Versioned with mike: each release line publishes its own folder on the

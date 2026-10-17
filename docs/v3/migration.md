@@ -7,9 +7,9 @@ SwgohComlink` returns dicts exactly like v2. Opt into the typed
 `msgspec.Struct` surface by switching to `from swgoh_comlink.typed
 import SwgohComlink`.
 
-If you ever did rely on `raw=True` on the typed surface (a v3-early
-intermediate state), it still works — and the dict-default surface
-accepts the same kwarg as a no-op so library code remains portable
+On the typed surface, `raw=True` returns the v2 dict for a single call
+(see [Soft migration](#soft-migration-rawtrue)). The dict-default surface
+accepts the same keyword and ignores it, so library code stays portable
 across both surfaces.
 
 For automated detection of patterns that need updating, run::
@@ -40,7 +40,7 @@ v2→v3 rule ids start with `V3*` (vs `DEP*` for the v1→v2 rules).
 
 ## Two import paths: dict-default vs typed
 
-`v3.1-research` ships two parallel client surfaces. Pick by import path;
+v3 ships two parallel client surfaces. Pick by import path;
 the underlying transport, retry, and caching are shared.
 
 ```python
@@ -179,17 +179,19 @@ no_retry = client.with_options(retry=None)
 no_retry.get_player(allycode=...)  # one attempt, then raise
 ```
 
-## Internal `_get_game_version` / `get_latest_game_data_version`
+## Reading game metadata
 
-These helpers now use attribute access internally — if you ever shadowed
-them in your own code, switch to the same pattern:
+`get_game_metadata()` keeps the v2 dict on the default import, and the SDK's
+own version lookups (`_get_game_version`, `get_latest_game_data_version`)
+request the dict form on both surfaces, so code that shadows them needs no
+change. Only the typed client returns a `Metadata` Struct:
 
 ```python
-# v2
+# Default import: unchanged from v2
 md = client.get_game_metadata()
 version = md["latestGamedataVersion"]
 
-# v3
+# Typed surface (from swgoh_comlink.typed import SwgohComlink)
 md = client.get_game_metadata()
 version = md.latest_gamedata_version
 ```
@@ -309,15 +311,19 @@ gate.
 
 ## Want the v2 behavior in v3?
 
-The fastest path:
+You already have it: `from swgoh_comlink import SwgohComlink` returns dicts
+exactly like v2, so dict-indexing code needs no change.
+
+If you have moved to the typed surface and need the dict for one call, pass
+`raw=True`:
 
 ```python
+from swgoh_comlink.typed import SwgohComlink
+
 client = SwgohComlink(url="...")
 player = client.get_player(allycode=..., raw=True)
-# `player` is dict; index it like v2.
+# `player` is a dict; index it like v2.
 ```
-
-You lose typed Structs (the headline v3 win), but you don't have to change a single line of dict-indexing code.
 
 ## Need help?
 

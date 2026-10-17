@@ -19,7 +19,7 @@ that don't use the full SDK surface.
 """Print a player's roster size from the command line."""
 from __future__ import annotations
 import sys
-from swgoh_comlink import SwgohComlink  # ← 7 ms total to import the SDK
+from swgoh_comlink.typed import SwgohComlink  # typed surface: get_player returns a Player Struct
 
 def main() -> int:
     allycode = int(sys.argv[1])

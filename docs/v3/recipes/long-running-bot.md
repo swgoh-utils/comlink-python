@@ -8,8 +8,10 @@ for startup, and `GameDataCache` for `/data`/`/localization`.
 ## Setup
 
 ```python
-from swgoh_comlink import RetryPolicy, SwgohComlink
+from swgoh_comlink import RetryPolicy
 from swgoh_comlink._cache import GameDataCache  # requires [cache] extra
+from swgoh_comlink.exceptions import SwgohComlinkException
+from swgoh_comlink.typed import SwgohComlink  # Struct returns
 
 client = SwgohComlink(
     url="http://comlink.local:3000",
@@ -82,8 +84,9 @@ warmup script can populate the cache an async bot reads.
 
 ```python
 import asyncio
-from swgoh_comlink import RetryPolicy, SwgohComlinkAsync
+from swgoh_comlink import RetryPolicy
 from swgoh_comlink._cache import GameDataCache
+from swgoh_comlink.typed import SwgohComlinkAsync
 
 async def main():
     async with (

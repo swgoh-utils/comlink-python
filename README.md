@@ -38,7 +38,7 @@ pip install git+https://github.com/MarTrepodi/comlink-python.git@v3.0.0a2
 
 **Strongly recommended:** install the alpha in a dedicated virtual
 environment with a rollback path to the public v2.x release — see
-[`docs/v3/install-alpha.md`](https://github.com/MarTrepodi/comlink-python/blob/release/v3.0.0a2/docs/v3/install-alpha.md).
+[`docs/v3/install-alpha.md`](docs/v3/install-alpha.md).
 
 **What this gives you:**
 - Typed client at `from swgoh_comlink.typed import SwgohComlink`
@@ -49,13 +49,13 @@ environment with a rollback path to the public v2.x release — see
 - `healthcheck()`, `raw_request()`, connection-pool presets via `profile="bot"` / `"bulk"`, and
   opt-in retries via `retry=RetryPolicy(...)`
 
-See [`docs/v3/migration.md`](https://github.com/MarTrepodi/comlink-python/blob/release/v3.0.0a2/docs/v3/migration.md) for v2 → v3
-patterns and [`examples/typed/`](https://github.com/MarTrepodi/comlink-python/blob/release/v3.0.0a2/examples/typed/) for ready-to-run
+See [`docs/v3/migration.md`](docs/v3/migration.md) for v2 → v3
+patterns and [`examples/typed/`](examples/typed/) for ready-to-run
 examples of the typed surface.
 
 **What it does NOT promise:** API stability across alphas. Breaking
 changes between `aN` and `a(N+1)` are allowed. See
-[ADR-0008](https://github.com/MarTrepodi/comlink-python/blob/release/v3.0.0a2/docs/adr/0008-pre-release-distribution-via-github-releases.md)
+[ADR-0008](docs/adr/0008-pre-release-distribution-via-github-releases.md)
 for the policy. **Report bugs against the `v3` label.**
 
 ## Installation (stable v2)
@@ -74,6 +74,8 @@ The PyPI release tracks v2.x. For the v3 alpha see "Alpha (v3) install" above.
 
 Full documentation, including the API reference, is at
 [swgoh-utils.github.io/comlink-python](https://swgoh-utils.github.io/comlink-python/).
+It opens on the stable 2.x docs; the v3 alpha docs are under **3.0 (pre-release)** in
+the version picker ([swgoh-utils.github.io/comlink-python/dev/](https://swgoh-utils.github.io/comlink-python/dev/)).
 
 ## Synchronous Usage
 
@@ -284,7 +286,7 @@ comlink = SwgohComlink(retry=RetryPolicy(attempts=3, min_interval=0.4))
 ```
 
 `with_options(retry=...)` derives a client with a different policy. See the
-[client documentation](https://swgoh-utils.github.io/comlink-python/api/comlink/#retries-and-pacing)
+[client documentation](https://swgoh-utils.github.io/comlink-python/dev/api/comlink/#retries-and-pacing)
 for the full behaviour.
 
 ### Version caching
@@ -379,7 +381,7 @@ For details on enabling and customizing log output, see [docs/logging.md](https:
 This release replaces `requests` with `httpx` and changes how logging is configured. If you are upgrading from a previous version, see the [Migration Guide](https://github.com/swgoh-utils/comlink-python/blob/main/docs/migration.md) for a walkthrough of required changes:
 
 - Replace `requests` with `httpx` in your dependencies
-- Update `except requests.RequestException` to `except httpx.RequestError` (or catch `SwgohComlinkException`)
+- Update `except requests.RequestException` to `except SwgohComlinkException` (network errors are wrapped in it)
 - Update any `get_logger(log_level=...)` calls — configure logging via the standard `logging` module instead
 - Use a context manager (`with SwgohComlink() ...`) or call `close()` to release connections
 

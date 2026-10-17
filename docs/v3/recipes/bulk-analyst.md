@@ -9,7 +9,8 @@ once), `[pydantic]` for the report's typed model.
 
 ```python
 import asyncio
-from swgoh_comlink import RetryPolicy, SwgohComlinkAsync
+from swgoh_comlink import RetryPolicy
+from swgoh_comlink.typed import SwgohComlinkAsync  # Struct returns
 
 async def main():
     async with SwgohComlinkAsync(
@@ -36,7 +37,7 @@ async def run_analysis(client):
     # concurrent calls is a comfortable headroom)
     sem = asyncio.Semaphore(10)
 
-    async def one(ally: int) -> Player:
+    async def one(ally: int):  # returns a Player Struct
         async with sem:
             return await client.get_player(allycode=ally)
 

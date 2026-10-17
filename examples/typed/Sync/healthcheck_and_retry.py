@@ -47,7 +47,7 @@ print("comlink healthcheck OK")
 # 0.4 s apart. Any other error is raised at once.
 #
 # Connection-pool profiles available today:
-#   - "default" — httpx defaults; suits CLI / scripts
+#   - "default" — 100 connections, 30 s keepalive; suits CLI / scripts
 #   - "bot"     — recommended for long-lived bots / services
 #   - "bulk"    — large pool for high-fanout batch jobs
 client = SwgohComlink(

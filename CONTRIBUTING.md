@@ -168,7 +168,7 @@ comlink-python/
 │       │   └── calculator_async.py # StatCalcAsync
 │       ├── _codegen/               # Endpoint manifest + Jinja templates that generate the client files
 │       ├── helpers/                # Public helper functions, Constants, DataItems (focused private submodules)
-│       ├── migrate/                # swgoh-migrate: v1 → v2 migration scanner and rules
+│       ├── migrate/                # swgoh-migrate: v1 → v2 and v2 → v3 migration scanner and rules
 │       ├── __init__.py             # Package entry point, public exports
 │       ├── _base.py                # SwgohComlinkBase (shared sync/async logic, HMAC signing)
 │       ├── exceptions.py           # Custom exception classes
@@ -204,7 +204,7 @@ comlink-python/
 
 | Module | Purpose |
 |--------|---------|
-| `_base.py` | `SwgohComlinkBase` — shared payload construction, HMAC signing, and config for both clients |
+| `_base.py` | `SwgohComlinkBase` — shared request building, HMAC signing, error mapping, and config for both clients (endpoint payloads live in `_payloads.py`) |
 | `swgoh_comlink.py` | `SwgohComlink` — synchronous HTTP client (all endpoint methods) |
 | `swgoh_comlink_async.py` | `SwgohComlinkAsync` — asynchronous HTTP client (mirrors sync API) |
 | `retry.py` | `RetryPolicy` — opt-in retry, pacing and per-endpoint holds (`retry=` keyword) |
