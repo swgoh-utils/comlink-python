@@ -316,7 +316,7 @@ For details on enabling and customizing log output, see [docs/logging.md](https:
 This release replaces `requests` with `httpx` and changes how logging is configured. If you are upgrading from a previous version, see the [Migration Guide](https://github.com/swgoh-utils/comlink-python/blob/main/docs/migration.md) for a walkthrough of required changes:
 
 - Replace `requests` with `httpx` in your dependencies
-- Update `except requests.RequestException` to `except httpx.RequestError` (or catch `SwgohComlinkException`)
+- Update `except requests.RequestException` to `except SwgohComlinkException` (network errors are wrapped in it)
 - Update any `get_logger(log_level=...)` calls — configure logging via the standard `logging` module instead
 - Use a context manager (`with SwgohComlink() ...`) or call `close()` to release connections
 

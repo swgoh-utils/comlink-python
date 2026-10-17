@@ -27,25 +27,27 @@ you only need to upgrade the package itself.
 
 ## 2. Update exception handling
 
-The exception raised on HTTP errors changed from `requests.RequestException` to
-`httpx.RequestError`. The library still wraps transport errors in its own
-`SwgohComlinkException`, so if you catch that you are already covered.
+v1.x let `requests.RequestException` escape on network failures. The client now
+catches the transport errors raised by `httpx` (`httpx.RequestError`: connection
+refused, timeouts, DNS failures) and re-raises them as `SwgohComlinkException`, so
+code that caught the `requests` exception must catch `SwgohComlinkException`
+instead. Do not switch it to `httpx.RequestError`; that exception never reaches
+your code.
 
 ```diff
   from swgoh_comlink import SwgohComlink
 - import requests
-+ import httpx
++ from swgoh_comlink.exceptions import SwgohComlinkException
 
   comlink = SwgohComlink()
   try:
       player = comlink.get_player(allycode=245866537)
 - except requests.RequestException as e:
-+ except httpx.RequestError as e:
++ except SwgohComlinkException as e:
       print(f"Network error: {e}")
 ```
 
-**Recommended:** Catch `SwgohComlinkException` instead of transport-level errors — this
-insulates your code from future HTTP library changes:
+To tell argument errors apart from service and network errors, catch the subclasses first:
 
 ```python
 from swgoh_comlink import SwgohComlink
@@ -71,6 +73,12 @@ The exception hierarchy is:
 - `SwgohComlinkException` — base for all library errors
     - `SwgohComlinkValueError` (also inherits `ValueError`) — invalid argument values
     - `SwgohComlinkTypeError` (also inherits `TypeError`) — invalid argument types
+    - `SwgohComlinkHTTPError` — comlink answered with an HTTP error status (v2.3+)
+        - `SwgohComlinkRateLimitError` — HTTP 429 or the game's `Rate exceeded!`
+        - `SwgohComlinkUnavailableError` — HTTP 503
+        - `SwgohComlinkClientError` — any other 4xx
+
+See [Exceptions](api/exceptions.md) for details.
 
 ## 3. Update logging configuration
 
@@ -304,7 +312,7 @@ added together.
 | Area | Before (v1.x) | After |
 |------|---------------|-------|
 | HTTP library | `requests` | `httpx` |
-| Transport exception | `requests.RequestException` | `httpx.RequestError` |
+| Transport exception | `requests.RequestException` | `SwgohComlinkException` (wraps `httpx.RequestError`) |
 | Exception hierarchy | `SwgohComlinkException`, `SwgohComlinkValueError` | Added `SwgohComlinkTypeError` |
 | `get_logger(log_level=)` | Accepted `log_level`, auto-configured handlers | No `log_level` param, no auto-configuration |
 | Default log output | Console output at INFO level | Silent (NullHandler only) |
