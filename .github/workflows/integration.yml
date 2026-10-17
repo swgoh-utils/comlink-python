@@ -2,9 +2,9 @@ name: Integration Tests
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, "release/v*"]
   push:
-    branches: [main, develop]
+    branches: [main, develop, "release/v*"]
   workflow_dispatch:
 
 permissions:
