@@ -18,6 +18,7 @@ Thanks for your interest in contributing to comlink-python! This guide covers ev
 - [Submitting a Pull Request](#submitting-a-pull-request)
 - [Issue Guidelines](#issue-guidelines)
 - [Release Process](#release-process)
+  - [Publishing the docs](#publishing-the-docs)
 - [Getting Help](#getting-help)
 
 ---
@@ -135,7 +136,7 @@ comlink-python/
 │   │   ├── backmerge.yml           # Stages the main → develop back-merge after a release
 │   │   ├── ci.yml                  # CI pipeline (lint, type-check, test, docs, build)
 │   │   ├── commitlint.yml          # Commit message validation (runs the pre-commit hook)
-│   │   ├── docs.yml                # Publishes the docs site to GitHub Pages from main
+│   │   ├── docs.yml                # Publishes the versioned docs site (mike → gh-pages)
 │   │   ├── integration.yml         # Integration tests against live comlink services
 │   │   ├── issue-fixed-in-develop.yml # Comments on issues a merge into develop resolves
 │   │   ├── labeler.yml             # Auto-label PRs by file path
@@ -186,6 +187,7 @@ comlink-python/
 ├── SECURITY.md                     # Supported versions and vulnerability reporting
 ├── SUPPORT.md                      # Where to get help / report what
 ├── mkdocs.yml                      # Docs site configuration
+├── overrides/                      # MkDocs Material theme overrides (version banners)
 ├── pyproject.toml                  # Project metadata, build config, tool settings
 └── uv.lock                         # Locked dependency versions
 ```
@@ -558,6 +560,60 @@ This is why conventional commit messages matter — they become the changelog an
 - **Patch** (2.4.x): Bug fixes, documentation
 - **Minor** (2.x.0): New features, backward-compatible changes
 - **Major** (x.0.0): Breaking API changes
+
+### Publishing the docs
+
+The docs site at [swgoh-utils.github.io/comlink-python](https://swgoh-utils.github.io/comlink-python/) is versioned with [mike](https://github.com/jimporter/mike). Each release line builds its own copy of the site into a folder on the `gh-pages` branch, and the version picker in the header (Material for MkDocs, `extra.version.provider: mike`) switches between them. [`docs.yml`](.github/workflows/docs.yml) runs the deploy after every push that touches the docs:
+
+| Pushed ref | Version | Alias | Picker title |
+|---|---|---|---|
+| `main` | `X.Y` of the first release in `CHANGELOG.md` (today `2.5`) | `latest` | `2.5` |
+| `release/v*` whose `CHANGELOG.md` names a pre-release (`3.0.0a2`, `3.0.0rc1`, …) | `3.0` | `dev` | `3.0 (pre-release)` |
+| `release/vX.Y.Z` for a stable release (from `prepare-release.yml`) | skipped; its docs deploy from `main` once the release PR merges | | |
+| a `v*` tag, when the workflow is run by hand on it | from the tag | `latest` or `dev`, as above | |
+
+- The root URL redirects to `latest`, so it always opens the newest stable release. Patch releases redeploy their minor version (`2.5.1` replaces the `2.5` folder).
+- Pre-release builds set `extra.prerelease: true` in `mkdocs.yml`, which shows a "pre-release" banner on every page ([`overrides/main.html`](overrides/main.html)). Release builds leave it unset and instead get Material's "older version" banner once a newer line becomes `latest`.
+- Every deploy queues in the `gh-pages` concurrency group, so runs from different lines never race.
+- `mkdocs.yml`, `overrides/` and `docs.yml` must stay the same on every line, except for `extra.prerelease` and the nav.
+
+**Preview the versioned site locally** without touching the remote (the deploy commits to a local `gh-pages` branch only):
+
+```bash
+uv sync --group docs
+uv run mike deploy --title "2.5" 2.5 latest   # or: --title "3.0 (pre-release)" 3.0 dev
+uv run mike set-default latest
+uv run mike serve                             # http://localhost:8000/
+git branch -D gh-pages                        # throw the local preview away
+```
+
+For a quick single-version preview, `uv run mkdocs serve` is still enough; the version picker only appears under `mike serve`.
+
+#### One-time cutover (maintainer)
+
+The site used to be deployed by `actions/deploy-pages` from `main` only. To switch to the versioned layout:
+
+1. **Merge the versioned docs setup into `main`** (through `develop` and the normal release PR, or a docs-only PR). The deploy that runs on that push creates the `gh-pages` branch with `2.5/`, the `latest` alias and the root redirect (`mike set-default latest` runs automatically on the first stable deploy). The old site stays live while the Pages source is still "GitHub Actions".
+2. **Check the first version.** If the merge did not touch any docs path, run **Actions → Deploy docs → Run workflow** on `main`. Deploy `2.5` before any pre-release: until a stable version exists there is no root redirect. To do it by hand instead:
+
+   ```bash
+   git switch main && git pull
+   uv sync --group docs
+   uv run mike deploy --push --update-aliases --title "2.5" 2.5 latest
+   uv run mike set-default --push latest
+   ```
+
+3. **Switch the Pages source.** In **Settings → Pages → Build and deployment**, change **Source** from "GitHub Actions" to **"Deploy from a branch"**, branch **`gh-pages`**, folder **`/ (root)`**. Check that the root URL opens the 2.5 docs.
+4. **Publish the pre-release line.** Once the active `release/v3.*` branch lives in this repository, push to it (or run the workflow on it) to add `3.0` with the `dev` alias. The job runs only in `swgoh-utils/comlink-python`, so forks never publish their own `gh-pages`.
+5. **Protect `gh-pages`** (optional, recommended). Add a ruleset or branch protection rule for `gh-pages` that blocks force pushes and deletion. Leave direct pushes allowed for GitHub Actions: the deploy pushes with the workflow's `GITHUB_TOKEN`, so a rule that requires pull requests or status checks would block it (or add "GitHub Actions" to the bypass list).
+6. **Clean up.** The old `github-pages` environment created by `deploy-pages` can be deleted, or kept for history.
+
+#### Maintaining versions
+
+- **Remove a version** (for example an abandoned pre-release): `uv run mike delete --push 3.0`.
+- **Retitle** a version: `uv run mike retitle --push 3.0 "3.0 (beta)"`.
+- **When 3.0.0 is released**, `main` deploys `3.0` as `latest` and `--update-aliases` moves `latest` off `2.5`, which then shows the "older version" banner. Drop the leftover `dev` alias with `uv run mike alias --push --update-aliases <next pre-release> dev`, or delete it, and remove `extra.prerelease` from `mkdocs.yml` on `main`.
+- **Rebuild an older line** by running the workflow by hand on its tag (for example `v2.5.0`). A stable tag also moves `latest`, so only do this for the newest stable line.
 
 ---
 
