@@ -21,8 +21,10 @@ from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 
 Client = SwgohComlink | SwgohComlinkAsync
 
-COMLINK_URL = "http://localhost:3000"
-COMLINK_HMAC_URL = "http://localhost:3001"
+# Override to run against another Comlink, e.g. COMLINK_URL=http://comlink.lab:3200.
+# Unset or empty falls back to the local services CI starts.
+COMLINK_URL = os.environ.get("COMLINK_URL") or "http://localhost:3000"
+COMLINK_HMAC_URL = os.environ.get("COMLINK_HMAC_URL") or "http://localhost:3001"
 HMAC_ACCESS_KEY = os.environ.get("HMAC_ACCESS_KEY", "")
 HMAC_SECRET_KEY = os.environ.get("HMAC_SECRET_KEY", "")
 

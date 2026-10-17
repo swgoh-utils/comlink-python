@@ -113,7 +113,7 @@ docker run -d --name swgoh-comlink -p 3000:3000 \
   ghcr.io/swgoh-utils/swgoh-comlink:4.5.0
 ```
 
-This starts comlink on `http://localhost:3000`, which is the default URL the library connects to. CI pins the same image tag (see `.github/workflows/integration.yml`).
+This starts comlink on `http://localhost:3000`, which is the default URL the library connects to. CI pins the same image tag (see `.github/workflows/integration.yml`). To run the integration tests against a comlink running elsewhere, set `COMLINK_URL` (and `COMLINK_HMAC_URL` for the HMAC tests), e.g. `COMLINK_URL=http://comlink.example:3200`.
 
 > **Note:** Unit tests should use mocks and never require a running comlink service. See [Writing Tests](#writing-tests) below.
 
@@ -313,7 +313,7 @@ uv run pytest tests/ -v --cov=swgoh_comlink --cov-report=term-missing
 | Type | Location | Requires | How to run |
 |------|----------|----------|------------|
 | Unit | `tests/unit/` | Nothing | Runs by default |
-| Integration | `tests/integration/` | Comlink on `localhost:3000` (and `3001` for HMAC) | `RUN_INTEGRATION_TESTS=1 uv run pytest tests/integration/` |
+| Integration | `tests/integration/` | Comlink on `localhost:3000` (and `3001` for HMAC); override with `COMLINK_URL` / `COMLINK_HMAC_URL` | `RUN_INTEGRATION_TESTS=1 uv run pytest tests/integration/` |
 | Parity | `tests/statcalc/` | Node.js | `RUN_PARITY_TESTS=1 uv run pytest tests/statcalc/` |
 
 All new code should have unit tests. Opt-in categories are skipped automatically unless their environment variable is set.

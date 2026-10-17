@@ -394,9 +394,14 @@ RUN_INTEGRATION_TESTS=1 uv run pytest tests/integration/ -v
 # Run with HMAC tests (requires comlink-hmac on localhost:3001)
 HMAC_ACCESS_KEY=your_key HMAC_SECRET_KEY=your_secret \
   RUN_INTEGRATION_TESTS=1 uv run pytest tests/integration/ -v
+
+# Run against another comlink instance instead of localhost
+COMLINK_URL=http://comlink.example:3200 \
+  RUN_INTEGRATION_TESTS=1 uv run pytest tests/integration/ -v
 ```
 
 HMAC tests are automatically skipped when `HMAC_ACCESS_KEY` and `HMAC_SECRET_KEY` environment variables are not set.
+`COMLINK_URL` and `COMLINK_HMAC_URL` override the default `http://localhost:3000` and `http://localhost:3001`.
 
 See the online [wiki](https://github.com/swgoh-utils/swgoh-comlink/wiki) for more information.
 
