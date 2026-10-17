@@ -51,6 +51,8 @@ from ._optional import require
 if TYPE_CHECKING:
     from .swgoh_comlink import SwgohComlink
     from .swgoh_comlink_async import SwgohComlinkAsync
+    from .typed import SwgohComlink as TypedSwgohComlink
+    from .typed import SwgohComlinkAsync as TypedSwgohComlinkAsync
 
 __all__ = [
     "DEFAULT_VERSION_TTL_SECONDS",
@@ -178,7 +180,7 @@ class GameDataCache:
 
     # ── Metadata version (memoized) ────────────────────────────────────────
 
-    def current_version(self, client: SwgohComlink) -> str:
+    def current_version(self, client: SwgohComlink | TypedSwgohComlink) -> str:
         """Return the current game version, refreshing every ``version_ttl_seconds``.
 
         Caches in an in-memory :class:`cachetools.TTLCache` so tight
@@ -194,7 +196,7 @@ class GameDataCache:
         self._memo_version(version)
         return version
 
-    async def acurrent_version(self, client: SwgohComlinkAsync) -> str:
+    async def acurrent_version(self, client: SwgohComlinkAsync | TypedSwgohComlinkAsync) -> str:
         """Async twin of :meth:`current_version`. Shares the same TTLCache."""
         try:
             return str(self._metadata_cache["v"])
@@ -208,7 +210,7 @@ class GameDataCache:
 
     def get_game_data(
         self,
-        client: SwgohComlink,
+        client: SwgohComlink | TypedSwgohComlink,
         *,
         request_segment: int = 0,
         include_pve_units: bool = True,
@@ -251,7 +253,7 @@ class GameDataCache:
 
     async def aget_game_data(
         self,
-        client: SwgohComlinkAsync,
+        client: SwgohComlinkAsync | TypedSwgohComlinkAsync,
         *,
         request_segment: int = 0,
         include_pve_units: bool = True,
@@ -293,7 +295,7 @@ class GameDataCache:
 
     def get_localization(
         self,
-        client: SwgohComlink,
+        client: SwgohComlink | TypedSwgohComlink,
         *,
         locale: str | None = None,
         unzip: bool = True,
@@ -322,7 +324,7 @@ class GameDataCache:
 
     async def aget_localization(
         self,
-        client: SwgohComlinkAsync,
+        client: SwgohComlinkAsync | TypedSwgohComlinkAsync,
         *,
         locale: str | None = None,
         unzip: bool = True,

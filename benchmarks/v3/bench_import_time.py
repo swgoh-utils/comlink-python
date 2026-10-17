@@ -19,6 +19,7 @@ Writes results to ``benchmarks/v3/results/phase-5-import-time.json``.
 from __future__ import annotations
 
 import sys
+from typing import TypedDict
 
 from benchmarks.v3._harness import (
     Reporter,
@@ -27,7 +28,15 @@ from benchmarks.v3._harness import (
 )
 
 
-def _measure_import_time_ms(iters: int = 20) -> dict[str, float | bool | list[float]]:
+class _ImportTimeResult(TypedDict):
+    median_ms: float
+    p95_ms: float
+    iters: int
+    httpx_loaded: bool
+    all_totals_ms: list[float]
+
+
+def _measure_import_time_ms(iters: int = 20) -> _ImportTimeResult:
     """Median + p95 cold import in milliseconds; httpx-presence flag."""
     result = track_import_time("swgoh_comlink", iters=iters)
     httpx_loaded = any(t["name"] == "httpx" for t in result["top_imports"])

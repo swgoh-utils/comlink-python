@@ -27,7 +27,11 @@ import threading
 {% endif %}
 import logging
 from collections.abc import Callable
+{% if is_typed %}
+from typing import Any, Literal, cast, overload
+{% else %}
 from typing import Any, cast
+{% endif %}
 
 import httpx
 
@@ -330,6 +334,29 @@ class SwgohComlink(SwgohComlinkBase, _SyncEscapeHatchMixin):
 {% set has_typed = is_typed and (ep.typed_return is not none) %}
 {% set positional = ep.params | rejectattr("keyword_only") | list %}
 {% set keyword = ep.params | selectattr("keyword_only") | list %}
+{% if has_typed %}
+{#- Overloads narrow the return type on ``raw`` so callers get the Struct
+    (or the dict) without isinstance checks. Legacy camelCase aliases from
+    ``@param_alias`` are declared keyword-only so they keep type-checking. -#}
+{% for raw_decl, ret in (("raw: Literal[False] = False", ep.typed_return), ("raw: Literal[True]", "dict[str, Any]"), ("raw: bool = False", ep.typed_return ~ " | dict[str, Any]")) %}
+    @overload
+    {{ async_kw }}def {{ ep.name }}(
+        self,
+{% for p in positional %}
+        {{ p.name }}: {{ p.type }}{% if p.default %} = {{ p.default }}{% endif %},
+{% endfor %}
+        *,
+{% for p in keyword %}
+        {{ p.name }}: {{ p.type }}{% if p.default %} = {{ p.default }}{% endif %},
+{% endfor %}
+{% for py_name, wire_name in ep.param_aliases.items() %}
+        {{ wire_name }}: {{ (positional + keyword) | selectattr("name", "equalto", py_name) | map(attribute="type") | first }} | None = None,
+{% endfor %}
+        {{ raw_decl }},
+    ) -> {{ ret }}: ...
+
+{% endfor %}
+{% endif %}
 {% if ep.param_aliases %}
 {% for py_name, wire_name in ep.param_aliases.items() %}
     @param_alias(param="{{ py_name }}", alias="{{ wire_name }}")

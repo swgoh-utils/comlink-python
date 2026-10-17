@@ -21,6 +21,7 @@ Plus two end-to-end parity tests confirming the surface split:
 from __future__ import annotations
 
 import inspect
+import typing
 from typing import Any
 
 import pytest
@@ -121,6 +122,35 @@ def test_dict_vs_typed_signature_diff_only_in_raw_default(ep: Any) -> None:
         dict_raw_default = next(p.default for p in dict_params if p.name == "raw")
         assert typed_raw_default is False
         assert dict_raw_default is True
+
+
+_TYPED_ENDPOINTS = [ep for ep in ENDPOINTS if ep.typed_return is not None]
+
+
+@pytest.mark.parametrize("ep", _TYPED_ENDPOINTS, ids=[ep.name for ep in _TYPED_ENDPOINTS])
+@pytest.mark.parametrize("client_cls", [TypedSyncClient, TypedAsyncClient], ids=["typed-sync", "typed-async"])
+def test_typed_overloads_narrow_on_raw(ep: Any, client_cls: type) -> None:
+    """Typed methods overload on ``raw`` so checkers see the Struct or the dict, not their union.
+
+    Each overload must accept the implementation's parameters (plus the legacy
+    ``@param_alias`` spellings) so the overloads never reject a call that works.
+    """
+    impl = getattr(client_cls, ep.name)
+    overloads = typing.get_overloads(impl)
+    assert [o.__annotations__["raw"] for o in overloads] == ["Literal[False]", "Literal[True]", "bool"]
+    assert [o.__annotations__["return"] for o in overloads] == [
+        ep.typed_return,
+        "dict[str, Any]",
+        f"{ep.typed_return} | dict[str, Any]",
+    ]
+
+    impl_params = {p.name: p.default for p in inspect.signature(impl).parameters.values() if p.name != "raw"}
+    for overload_fn in overloads:
+        params = inspect.signature(overload_fn).parameters
+        aliases = {name: params[name].default for name in ep.param_aliases.values()}
+        assert aliases == dict.fromkeys(ep.param_aliases.values())
+        own = {name: p.default for name, p in params.items() if name != "raw" and name not in aliases}
+        assert own == impl_params, f"{ep.name!r}: overload params drifted from the implementation"
 
 
 # ── End-to-end parity: shapes match the surface ─────────────────────────────

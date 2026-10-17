@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, Literal, cast, overload
 
 import httpx
 
@@ -385,6 +385,33 @@ class SwgohComlinkAsync(SwgohComlinkBase, _AsyncEscapeHatchMixin):
 
     get_localization_bundle = get_localization
 
+    @overload
+    async def get_game_metadata(
+        self,
+        client_specs: dict[str, Any] | None = None,
+        enums: bool = False,
+        *,
+        raw: Literal[False] = False,
+    ) -> Metadata: ...
+
+    @overload
+    async def get_game_metadata(
+        self,
+        client_specs: dict[str, Any] | None = None,
+        enums: bool = False,
+        *,
+        raw: Literal[True],
+    ) -> dict[str, Any]: ...
+
+    @overload
+    async def get_game_metadata(
+        self,
+        client_specs: dict[str, Any] | None = None,
+        enums: bool = False,
+        *,
+        raw: bool = False,
+    ) -> Metadata | dict[str, Any]: ...
+
     async def get_game_metadata(
         self,
         client_specs: dict[str, Any] | None = None,
@@ -419,6 +446,36 @@ class SwgohComlinkAsync(SwgohComlinkBase, _AsyncEscapeHatchMixin):
     getMetaData = get_game_metadata
 
     get_metadata = get_game_metadata
+
+    @overload
+    async def get_player(
+        self,
+        allycode: str | int | None = None,
+        player_id: str | None = None,
+        enums: bool = False,
+        *,
+        raw: Literal[False] = False,
+    ) -> Player: ...
+
+    @overload
+    async def get_player(
+        self,
+        allycode: str | int | None = None,
+        player_id: str | None = None,
+        enums: bool = False,
+        *,
+        raw: Literal[True],
+    ) -> dict[str, Any]: ...
+
+    @overload
+    async def get_player(
+        self,
+        allycode: str | int | None = None,
+        player_id: str | None = None,
+        enums: bool = False,
+        *,
+        raw: bool = False,
+    ) -> Player | dict[str, Any]: ...
 
     async def get_player(
         self,
@@ -476,6 +533,39 @@ class SwgohComlinkAsync(SwgohComlinkBase, _AsyncEscapeHatchMixin):
     getPlayerArena = get_player_arena
 
     getPlayerArenaProfile = get_player_arena
+
+    @overload
+    async def get_guild(
+        self,
+        guild_id: str,
+        include_recent_guild_activity_info: bool = False,
+        enums: bool = False,
+        *,
+        includeRecent: bool | None = None,
+        raw: Literal[False] = False,
+    ) -> Guild: ...
+
+    @overload
+    async def get_guild(
+        self,
+        guild_id: str,
+        include_recent_guild_activity_info: bool = False,
+        enums: bool = False,
+        *,
+        includeRecent: bool | None = None,
+        raw: Literal[True],
+    ) -> dict[str, Any]: ...
+
+    @overload
+    async def get_guild(
+        self,
+        guild_id: str,
+        include_recent_guild_activity_info: bool = False,
+        enums: bool = False,
+        *,
+        includeRecent: bool | None = None,
+        raw: bool = False,
+    ) -> Guild | dict[str, Any]: ...
 
     @param_alias(param="include_recent_guild_activity_info", alias="includeRecent")
     async def get_guild(
@@ -551,6 +641,45 @@ class SwgohComlinkAsync(SwgohComlinkBase, _AsyncEscapeHatchMixin):
         )
 
     getGuildByCriteria = get_guilds_by_criteria
+
+    @overload
+    async def get_leaderboard(
+        self,
+        leaderboard_type: int,
+        *,
+        league: int | str | None = None,
+        division: int | str | None = None,
+        event_instance_id: str | None = None,
+        group_id: str | None = None,
+        enums: bool = False,
+        raw: Literal[False] = False,
+    ) -> LeaderboardResponse: ...
+
+    @overload
+    async def get_leaderboard(
+        self,
+        leaderboard_type: int,
+        *,
+        league: int | str | None = None,
+        division: int | str | None = None,
+        event_instance_id: str | None = None,
+        group_id: str | None = None,
+        enums: bool = False,
+        raw: Literal[True],
+    ) -> dict[str, Any]: ...
+
+    @overload
+    async def get_leaderboard(
+        self,
+        leaderboard_type: int,
+        *,
+        league: int | str | None = None,
+        division: int | str | None = None,
+        event_instance_id: str | None = None,
+        group_id: str | None = None,
+        enums: bool = False,
+        raw: bool = False,
+    ) -> LeaderboardResponse | dict[str, Any]: ...
 
     async def get_leaderboard(
         self,

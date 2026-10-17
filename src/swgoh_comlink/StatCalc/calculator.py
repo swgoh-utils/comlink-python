@@ -5,7 +5,7 @@ import json
 import logging
 import math
 import urllib.request
-from typing import Any
+from typing import Any, overload
 
 import msgspec
 
@@ -249,6 +249,18 @@ class StatCalc:
                         unit["gp"] = temp_unit["gp"]
 
         return units
+
+    @overload
+    def calc_player_stats(self, players: dict[str, Any] | msgspec.Struct) -> dict[str, Any]: ...
+
+    @overload
+    def calc_player_stats(self, players: list[dict[str, Any]] | list[msgspec.Struct]) -> list[dict[str, Any]]: ...
+
+    @overload
+    def calc_player_stats(
+        self,
+        players: dict[str, Any] | list[dict[str, Any]] | msgspec.Struct | list[msgspec.Struct],
+    ) -> dict[str, Any] | list[dict[str, Any]]: ...
 
     def calc_player_stats(
         self,

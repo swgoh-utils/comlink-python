@@ -12,6 +12,7 @@ Writes results to ``benchmarks/v3/results/phase-3-decode-memory.json``.
 from __future__ import annotations
 
 import gc
+import importlib
 import json
 import sys
 import tracemalloc
@@ -32,12 +33,12 @@ from swgoh_comlink._models import (
     decode_guild,
 )
 
+# orjson is an optional comparator (not a project dependency), so it is
+# loaded dynamically rather than imported statically.
 try:
-    import orjson  # type: ignore[import-untyped]
-
-    _HAS_ORJSON = True
+    _orjson_loads: Callable[[bytes], Any] | None = importlib.import_module("orjson").loads
 except ImportError:
-    _HAS_ORJSON = False
+    _orjson_loads = None
 
 
 _TYPED_DECODER_FOR: dict[str, Callable[[bytes], Any]] = {
@@ -80,8 +81,8 @@ def main() -> int:
         ]
         if cassette in _TYPED_DECODER_FOR:
             parsers.append(("msgspec_typed", _TYPED_DECODER_FOR[cassette]))
-        if _HAS_ORJSON:
-            parsers.append(("orjson", orjson.loads))
+        if _orjson_loads is not None:
+            parsers.append(("orjson", _orjson_loads))
 
         baseline: int | None = None
         for label, fn in parsers:

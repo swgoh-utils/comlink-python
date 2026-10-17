@@ -6,10 +6,11 @@ Sometimes the typed surface doesn't cover an endpoint (new comlink
 endpoint, internal-only call, a request shape we haven't typed yet).
 ``client.raw_request(method, path, payload=None)`` is the escape
 hatch — direct HTTP via the underlying httpx client, with the same
-the `retry` policy (if set) + auth handling as the typed methods.
+HMAC auth headers as the typed methods.
 
-Always returns a dict (typed decoding is opt-in per endpoint;
-``raw_request`` bypasses that machinery).
+Returns the raw :class:`httpx.Response` — no retry loop, status
+classification or msgspec decoding is applied, so check the status and
+call ``.json()`` yourself.
 
 Available on both the typed and dict clients with identical
 signature. This example uses the typed import for consistency with
@@ -22,16 +23,20 @@ client = SwgohComlink(url="http://localhost:3200")
 
 # ── 1. GET via raw_request ──────────────────────────────────────────────────
 # Equivalent to client.get_enums() but expressed manually:
-enums = client.raw_request("GET", "/enums")
+enums_response = client.raw_request("GET", "/enums")
+enums_response.raise_for_status()
+enums = enums_response.json()
 print(f"/enums top-level keys: {list(enums.keys())[:5]}...")
 
 # ── 2. POST with a payload ──────────────────────────────────────────────────
 # Equivalent to client.get_player(allycode=314927874):
-player_dict = client.raw_request(
+player_response = client.raw_request(
     "POST",
     "/player",
     payload={"payload": {"allyCode": "314927874"}, "enums": False},
 )
+player_response.raise_for_status()
+player_dict = player_response.json()
 print(f"\n/player returned dict with {len(player_dict.get('rosterUnit', []))} units")
 
 # ── 3. When to NOT use raw_request ──────────────────────────────────────────

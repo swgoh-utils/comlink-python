@@ -42,6 +42,7 @@ import gc
 import gzip
 import json
 import sys
+from types import GenericAlias
 from typing import Any
 
 import msgspec
@@ -83,7 +84,8 @@ def _bench_one(
     # Encode the segment to JSON bytes once; both decoders consume bytes.
     blob = msgspec.json.encode(items)
     dict_decoder = msgspec.json.Decoder()
-    typed_decoder = msgspec.json.Decoder(list[target])
+    # ``list[target]`` built at runtime: *target* is a value, not a static type.
+    typed_decoder = msgspec.json.Decoder(GenericAlias(list, (target,)))
 
     # decode speed (bytes -> result, both sides)
     dict_speed = measure(

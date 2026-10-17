@@ -53,6 +53,7 @@ from swgoh_comlink.StatCalc.data_builder._builder_base import GameDataBuilderBas
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink
     from swgoh_comlink._cache import GameDataCache
+    from swgoh_comlink.typed import SwgohComlink as TypedSwgohComlink
 
 
 # Cache-key namespace — bumping the second tuple element invalidates
@@ -74,7 +75,7 @@ def _statcalc_cache_key(version: str) -> tuple[str, str, str]:
 
 
 def get_statcalc_game_data(
-    client: SwgohComlink,
+    client: SwgohComlink | TypedSwgohComlink,
     *,
     cache: GameDataCache,
 ) -> dict[str, Any]:
