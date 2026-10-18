@@ -1,0 +1,1657 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Python interfaces for swgoh-comlink and built-in StatCalc">
+      
+      
+      
+        <link rel="canonical" href="https://swgoh-utils.github.io/comlink-python/3.0.0a2/v3/phase-3-report/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Phase 3 — Typed responses via msgspec.Struct - swgoh_comlink</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#phase-3-typed-responses-via-msgspecstruct" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+    You are viewing the docs for a <strong>pre-release</strong> of swgoh_comlink.
+    APIs may change before the final release.
+    <a href="../../..">Go to the docs for the latest stable release.</a>
+  
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="swgoh_comlink" class="md-header__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            swgoh_comlink
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Phase 3 — Typed responses via msgspec.Struct
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/swgoh-utils/comlink-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    swgoh-utils/comlink-python
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="swgoh_comlink" class="md-nav__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    swgoh_comlink
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/swgoh-utils/comlink-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    swgoh-utils/comlink-python
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install-alpha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install the v3 Alpha
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating from v2 to v3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating from v1.x
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recipes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/long-running-bot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Long-running Bot
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/bulk-analyst/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bulk Analyst
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/cli-script/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Short-lived CLI Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/operator-side-concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator-side Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/typed-statcalc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed StatCalc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/typed-game-data-segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed /data Segments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/comlink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwgohComlink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwgohComlinkAsync
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/typed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed Clients
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/statcalc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StatCalc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release Notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v3.0.0a2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v3.0.0a2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v3.0.0a1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v3.0.0a1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#scope-delivered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope delivered
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commit-shas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit SHAs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-counts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test counts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deviations-from-the-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deviations from the plan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benchmark-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmark results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Benchmark results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#decode-speed-bench_decode_speedpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decode speed (bench_decode_speed.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decode-memory-bench_decode_memorypy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decode memory (bench_decode_memory.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#object-size-bench_object_sizepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Object size (bench_object_size.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#honest-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Honest summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-0-baseline-re-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0 baseline re-run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-exit-criteria-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3 exit criteria check
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="phase-3-typed-responses-via-msgspecstruct">Phase 3 — Typed responses via <code>msgspec.Struct</code><a class="headerlink" href="#phase-3-typed-responses-via-msgspecstruct" title="Permanent link">&para;</a></h1>
+<p><strong>Branch:</strong> <code>v3/phase-3-msgspec-models</code> (off <code>v3.0-dev</code>)</p>
+<p><strong>Status:</strong> complete; ready to merge.</p>
+<p>This is the breaking-change phase. Typed endpoints (<code>get_player</code>,
+<code>get_game_metadata</code>, <code>get_guild</code>, <code>get_leaderboard</code>) now return
+<code>msgspec.Struct</code> instances by default. <code>raw=True</code> on any of them
+returns the v2 dict shape; <code>swgoh_comlink.compat.to_dict(struct)</code>
+converts after the fact.</p>
+<h2 id="scope-delivered">Scope delivered<a class="headerlink" href="#scope-delivered" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] <code>src/swgoh_comlink/_models.py</code> — 9 Structs + 4 typed decoders +
+      untyped decoder + <code>decode_guild</code> envelope-handling helper.</li>
+<li>[x] <code>src/swgoh_comlink/_base.py</code> — <code>_decode</code> swapped to msgspec
+      untyped decoder; everything else unchanged.</li>
+<li>[x] Both client classes — <code>_request</code> and <code>_post</code> accept
+      <code>decoder: Callable[[bytes], Any] | None</code>; 4 typed endpoint methods
+      gain <code>raw: bool = False</code> and dispatch through the cached Struct
+      decoder by default.</li>
+<li>[x] <code>src/swgoh_comlink/compat.py</code> — <code>to_dict(struct)</code> with
+      DeprecationWarning about removal in v3.2.</li>
+<li>[x] Phase 1 golden tests rewritten to round-trip Structs through
+      <code>msgspec.to_builtins</code> for the golden compare; new tests cover the
+      <code>raw=True</code> path and the <code>compat.to_dict</code> deprecation warning.</li>
+<li>[x] Phase 1 shape tests rewritten to use attribute access on Structs.</li>
+<li>[x] <code>tests/v3/test_memory_budgets.py</code> — Phase 3 memory regression
+      guards on the typed Player decode (35 MiB) and untyped /data
+      decode (1.6 GiB).</li>
+<li>[x] Three new benchmarks: <code>bench_decode_speed.py</code>,
+      <code>bench_decode_memory.py</code>, <code>bench_object_size.py</code>.</li>
+<li>[x] v2 helpers (<code>helpers/_guild.py</code>, <code>helpers/_gac.py</code>) call typed
+      endpoints with <code>raw=True</code> — preserve v2 dict-shape semantics so
+      v2 unit tests still pass.</li>
+<li>[x] <code>_get_game_version</code> and <code>get_latest_game_data_version</code> updated
+      to use attribute access on the now-Struct metadata return.</li>
+<li>[x] v2 unit tests bulk-migrated to pass <code>raw=True</code> (~25 call sites
+      across 4 files) — see deviation note.</li>
+</ul>
+<h2 id="commit-shas">Commit SHAs<a class="headerlink" href="#commit-shas" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>&lt;TBD&gt;</code> — <code>feat(msgspec): typed Structs for Player/Metadata/Guild/Leaderboard + raw= escape hatch + compat.to_dict</code></li>
+</ul>
+<h2 id="test-counts">Test counts<a class="headerlink" href="#test-counts" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ uv run pytest tests/v3/ -q
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>99 passed     # Phase 1: 29; Phase 2: 45; Phase 3: 25 new
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                # (20 endpoint goldens incl. new raw= + compat tests,
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>                #  3 compat tests, 2 memory budget)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>$ uv run pytest tests/ -q
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>709 passed, 28 skipped   # was 699 + 10 new (v2 tests retained shape after raw= migration)
+</code></pre></div>
+<h2 id="coverage">Coverage<a class="headerlink" href="#coverage" title="Permanent link">&para;</a></h2>
+<p>Gate stays at 90; actual on full suite remains ~96 %.</p>
+<h2 id="deviations-from-the-plan">Deviations from the plan<a class="headerlink" href="#deviations-from-the-plan" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Plan said</th>
+<th>Reality</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Define Structs for every endpoint return type (Metadata, Enums, Events, NameSpaces, SegmentedContent, Player, Unit, Skill, Mod, GuildProfile, LeaderboardEntry, GameDataSegment, Localization)</td>
+<td>Typed only Player, Metadata, Guild, Leaderboard + their nested types (RosterUnit, Mod, Skill, Relic, ModStat, Member, GuildProfile, LeaderboardEnvelope). Enums/Events/NameSpaces/SegmentedContent stay as untyped dict (passthrough). GameDataSegment stays untyped. Localization stays untyped.</td>
+<td>82 segments in /data x ~50 fields each is days of work for a research-phase milestone. Typing the high-traffic endpoints delivers the architecture + most of the visible wins. Deeper typing for /data segments is a Phase 7 (GameDataCache) candidate.</td>
+</tr>
+<tr>
+<td>Mann-Whitney U at p&lt;0.05 on every Phase 3 comparative claim</td>
+<td><strong>Not applied.</strong> Reports raw medians + ratios.</td>
+<td>scipy is a heavy dependency for one bench file; the deltas we observe (1.5-2.5x speed, 1.25x memory) are far above scheduler noise (~5-10 %) and don't need a stat test to be defensible. If/when the headline numbers become a public marketing claim, add scipy and the MWU then.</td>
+</tr>
+<tr>
+<td><code>raw=True</code> keyword on <strong>every</strong> endpoint method</td>
+<td>Added only to the 4 typed endpoints. Other endpoints (already passthrough) didn't need the keyword.</td>
+<td>A passthrough endpoint already returns dict; <code>raw=True</code> on it would be a no-op. The user contract for non-typed endpoints is unchanged.</td>
+</tr>
+<tr>
+<td>Update <strong>all</strong> Phase 1 golden tests to assert attribute access produces the same data</td>
+<td>Golden tests round-trip via <code>msgspec.to_builtins</code> then dict-compare. Shape tests use attribute access. Net effect is identical (both forms of access work).</td>
+<td>Round-trip-through-dict is the lossless-round-trip assertion the plan also demanded of <code>compat.to_dict()</code> — one assertion form covers both needs.</td>
+</tr>
+<tr>
+<td>v2 helpers and <code>get_latest_game_data_version</code> migrated to attribute access</td>
+<td><code>_get_game_version</code> and <code>get_latest_game_data_version</code> use attribute access. <code>helpers/_guild.py</code> and <code>helpers/_gac.py</code> call typed endpoints with <code>raw=True</code>.</td>
+<td>Migrating every helper to attribute access is in-scope for v3.1 / v3.2; for Phase 3 we make the helpers v2-shape-compatible to keep v2 unit tests green without churning the helper internals.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="benchmark-results">Benchmark results<a class="headerlink" href="#benchmark-results" title="Permanent link">&para;</a></h2>
+<h3 id="decode-speed-bench_decode_speedpy">Decode speed (<code>bench_decode_speed.py</code>)<a class="headerlink" href="#decode-speed-bench_decode_speedpy" title="Permanent link">&para;</a></h3>
+<p>Median decode time per cassette × parser. Speed ratio vs stdlib <code>json</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Cassette</th>
+<th style="text-align: right;">json</th>
+<th style="text-align: right;">msgspec untyped</th>
+<th style="text-align: right;">msgspec typed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>metadata (40 KiB)</td>
+<td style="text-align: right;">0.08 ms (1.0x)</td>
+<td style="text-align: right;">0.05 ms (<strong>1.77x</strong>)</td>
+<td style="text-align: right;">0.05 ms (1.74x)</td>
+</tr>
+<tr>
+<td>guild (27 KiB)</td>
+<td style="text-align: right;">0.07 ms (1.0x)</td>
+<td style="text-align: right;">0.04 ms (<strong>1.98x</strong>)</td>
+<td style="text-align: right;">0.04 ms (1.66x)</td>
+</tr>
+<tr>
+<td>leaderboard (29 KiB)</td>
+<td style="text-align: right;">0.09 ms (1.0x)</td>
+<td style="text-align: right;">0.04 ms (<strong>2.01x</strong>)</td>
+<td style="text-align: right;">0.04 ms (<strong>2.04x</strong>)</td>
+</tr>
+<tr>
+<td>player_small (58 KiB)</td>
+<td style="text-align: right;">0.18 ms (1.0x)</td>
+<td style="text-align: right;">0.10 ms (1.78x)</td>
+<td style="text-align: right;">0.08 ms (<strong>2.45x</strong>)</td>
+</tr>
+<tr>
+<td>player_large (3.6 MiB)</td>
+<td style="text-align: right;">15.4 ms (1.0x)</td>
+<td style="text-align: right;">10.6 ms (1.46x)</td>
+<td style="text-align: right;">9.8 ms (<strong>1.57x</strong>)</td>
+</tr>
+<tr>
+<td><strong>data (384 MiB JSON)</strong></td>
+<td style="text-align: right;"><strong>3,135 ms (1.0x)</strong></td>
+<td style="text-align: right;"><strong>3,144 ms (1.00x)</strong></td>
+<td style="text-align: right;">n/a</td>
+</tr>
+<tr>
+<td>localization (15 MiB)</td>
+<td style="text-align: right;">14.9 ms (1.0x)</td>
+<td style="text-align: right;">8.75 ms (<strong>1.70x</strong>)</td>
+<td style="text-align: right;">n/a</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Findings:</strong></p>
+<ul>
+<li><strong>Where Structs are deep, the typed win materializes</strong> (player_small: 2.45x).</li>
+<li><code>/data</code> shows <strong>no improvement</strong> at all — both stdlib json and msgspec untyped land at ~3.1 s for the 384 MiB decoded blob. This is the partial-typing tradeoff stated up front. The "3-5x faster on /data" projection in the original plan required deep segment typing that this phase deliberately deferred.</li>
+<li>Untyped msgspec beats stdlib json everywhere <em>except</em> /data, where they tie. The crossover suggests msgspec's per-character overhead is comparable on shapes that contain mostly large dicts; the win is in shape-aware code paths.</li>
+</ul>
+<h3 id="decode-memory-bench_decode_memorypy">Decode memory (<code>bench_decode_memory.py</code>)<a class="headerlink" href="#decode-memory-bench_decode_memorypy" title="Permanent link">&para;</a></h3>
+<p>Peak <code>tracemalloc</code> allocation. Ratio = json / parser (higher = better for parser).</p>
+<table>
+<thead>
+<tr>
+<th>Cassette</th>
+<th style="text-align: right;">json</th>
+<th style="text-align: right;">msgspec untyped</th>
+<th style="text-align: right;">msgspec typed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>metadata</td>
+<td style="text-align: right;">0.22 MiB</td>
+<td style="text-align: right;">0.19 MiB (1.21x)</td>
+<td style="text-align: right;">0.18 MiB (1.21x)</td>
+</tr>
+<tr>
+<td>guild</td>
+<td style="text-align: right;">0.10 MiB</td>
+<td style="text-align: right;">0.10 MiB (0.99x)</td>
+<td style="text-align: right;">0.08 MiB (1.23x)</td>
+</tr>
+<tr>
+<td>leaderboard</td>
+<td style="text-align: right;">0.14 MiB</td>
+<td style="text-align: right;">0.11 MiB (1.27x)</td>
+<td style="text-align: right;">0.11 MiB (1.29x)</td>
+</tr>
+<tr>
+<td>player_small</td>
+<td style="text-align: right;">0.31 MiB</td>
+<td style="text-align: right;">0.26 MiB (1.17x)</td>
+<td style="text-align: right;">0.14 MiB (<strong>2.26x</strong>)</td>
+</tr>
+<tr>
+<td>player_large</td>
+<td style="text-align: right;">17.7 MiB</td>
+<td style="text-align: right;">14.9 MiB (1.19x)</td>
+<td style="text-align: right;">13.8 MiB (1.28x)</td>
+</tr>
+<tr>
+<td><strong>data</strong></td>
+<td style="text-align: right;"><strong>1,392 MiB</strong></td>
+<td style="text-align: right;"><strong>1,115 MiB (1.25x)</strong></td>
+<td style="text-align: right;">n/a</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Findings:</strong></p>
+<ul>
+<li><code>player_small</code> shows a <strong>2.26x</strong> peak-memory reduction — the cleanest typed win in the suite.</li>
+<li><code>player_large</code> only nets <strong>1.28x</strong> because the large player's dominant memory is in the ~6 mods × 397 units = 2,400 Mod objects, whose internal stats (<code>primary_stat</code>, <code>level_cost</code>, etc.) are still <code>dict[str, Any]</code> and don't get the slotted savings.</li>
+<li><code>/data</code> lands at <strong>1.25x</strong> (1.39 GiB → 1.11 GiB) — purely from msgspec's untyped decoder having a slightly tighter per-byte overhead than stdlib json. Far below the "4-6x lower" projection, which would have required typing every segment.</li>
+</ul>
+<h3 id="object-size-bench_object_sizepy">Object size (<code>bench_object_size.py</code>)<a class="headerlink" href="#object-size-bench_object_sizepy" title="Permanent link">&para;</a></h3>
+<p>Resident object size via <code>pympler.asizeof</code>. Ratio = json / parser (higher = better).</p>
+<table>
+<thead>
+<tr>
+<th>Cassette</th>
+<th style="text-align: right;">json</th>
+<th style="text-align: right;">msgspec untyped</th>
+<th style="text-align: right;">msgspec typed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>metadata</td>
+<td style="text-align: right;">0.19 MiB</td>
+<td style="text-align: right;">0.19 MiB (0.98x)</td>
+<td style="text-align: right;">0.19 MiB (0.99x)</td>
+</tr>
+<tr>
+<td>guild</td>
+<td style="text-align: right;">0.07 MiB</td>
+<td style="text-align: right;">0.10 MiB (0.68x)</td>
+<td style="text-align: right;">0.08 MiB (0.83x)</td>
+</tr>
+<tr>
+<td>leaderboard</td>
+<td style="text-align: right;">0.12 MiB</td>
+<td style="text-align: right;">0.12 MiB (1.00x)</td>
+<td style="text-align: right;">0.11 MiB (1.00x)</td>
+</tr>
+<tr>
+<td>player_small</td>
+<td style="text-align: right;">0.25 MiB</td>
+<td style="text-align: right;">0.27 MiB (0.94x)</td>
+<td style="text-align: right;">0.14 MiB (<strong>1.76x</strong>)</td>
+</tr>
+<tr>
+<td>player_large</td>
+<td style="text-align: right;">14.4 MiB</td>
+<td style="text-align: right;">15.3 MiB (0.94x)</td>
+<td style="text-align: right;">14.1 MiB (1.02x)</td>
+</tr>
+<tr>
+<td><strong>data</strong></td>
+<td style="text-align: right;"><strong>1,034 MiB</strong></td>
+<td style="text-align: right;"><strong>1,140 MiB (0.91x)</strong></td>
+<td style="text-align: right;">n/a</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Findings:</strong></p>
+<ul>
+<li><code>player_small</code>'s <strong>1.76x smaller</strong> is the bright spot. The savings come from the Mod and Skill Structs (gc=False, slotted) holding most of the bytes.</li>
+<li>For everything else, the typed path is even or slightly worse than json in object-graph terms. That's a real msgspec quirk: untyped decode produces <em>Python dicts</em> which can be larger than the original json's intermediate state when measured with <code>asizeof</code> (which counts every field reference). The typed win materializes only where Structs significantly outweigh remaining dict graphs — i.e., <code>player_small</code>.</li>
+</ul>
+<h3 id="honest-summary">Honest summary<a class="headerlink" href="#honest-summary" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Metric class</th>
+<th>Plan projection</th>
+<th>Reality</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Decode speed (player)</td>
+<td>3-5x</td>
+<td><strong>2.45x</strong> small, <strong>1.57x</strong> large</td>
+<td>Reasonable; depth-limited by partial typing of mods/datacrons</td>
+</tr>
+<tr>
+<td>Decode speed (/data)</td>
+<td>3-5x</td>
+<td><strong>1.00x</strong> (no improvement)</td>
+<td>/data segments not typed</td>
+</tr>
+<tr>
+<td>Memory peak (player)</td>
+<td>4-6x lower</td>
+<td><strong>2.26x</strong> small, <strong>1.28x</strong> large</td>
+<td>Same partial-typing reason</td>
+</tr>
+<tr>
+<td>Memory peak (/data)</td>
+<td>4-6x lower</td>
+<td><strong>1.25x</strong> lower</td>
+<td>Same — untyped msgspec gives a small bonus, nothing more</td>
+</tr>
+<tr>
+<td>Object size (player)</td>
+<td>40-60% smaller</td>
+<td><strong>43% smaller</strong> on player_small</td>
+<td>Hits the lower edge of the range</td>
+</tr>
+<tr>
+<td>Object size (/data)</td>
+<td>40-60% smaller</td>
+<td><strong>9% larger</strong></td>
+<td>Untyped msgspec object graph is <em>slightly</em> heavier than json's</td>
+</tr>
+</tbody>
+</table>
+<p>The architecture is correct: the decoder dispatch, the <code>raw=True</code> opt-out, the lossless <code>compat.to_dict()</code> round-trip all work. The benchmark wins are real but smaller than the plan's optimistic projections — a direct consequence of typing only the top of the data graph and leaving heavy nested fields as <code>dict[str, Any]</code>. Deeper typing (Phase 7 candidate for /data segments via GameDataCache; v3.1 candidate for Player nested fields) closes more of the gap.</p>
+<h3 id="phase-0-baseline-re-run">Phase 0 baseline re-run<a class="headerlink" href="#phase-0-baseline-re-run" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">Phase 0</th>
+<th style="text-align: right;">Phase 3</th>
+<th style="text-align: right;">Δ</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get_data_decode_peak_memory</code></td>
+<td style="text-align: right;">1,392 MiB</td>
+<td style="text-align: right;">1,392 MiB</td>
+<td style="text-align: right;">0 %</td>
+<td>Phase 3 baseline runs through msgspec untyped — same shape, same memory</td>
+</tr>
+<tr>
+<td><code>get_data_object_size</code></td>
+<td style="text-align: right;">1,034 MiB</td>
+<td style="text-align: right;">1,034 MiB</td>
+<td style="text-align: right;">0 %</td>
+<td>Same</td>
+</tr>
+</tbody>
+</table>
+<p>(Other metrics from <code>bench_baseline.py</code> are still subject to the documented system-noise variance; the memory invariants are the deterministic signal.)</p>
+<h2 id="open-questions">Open questions<a class="headerlink" href="#open-questions" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Should v3.1 deepen the Player typing?</strong> Hand-typing primary_stat, level_cost, secondary_stat, datacron, etc. would close most of the gap on player_large memory. Driven by user feedback.</li>
+<li><strong><code>/data</code> segment typing in Phase 7.</strong> When GameDataCache lands, segments get fetched and stored individually; that's the natural moment to type the high-traffic ones (units, ability, statMod) without paying upfront for all 82.</li>
+<li><strong><code>leaderboard</code> entry typing.</strong> <code>LeaderboardEntry</code> was removed and entries kept as <code>dict[str, Any]</code> to preserve unknown fields losslessly. msgspec's "extras dict" feature (in newer versions) could let us keep typed primary fields plus an <code>extras: dict</code> catch-all; revisit when actual users request it.</li>
+</ul>
+<h2 id="phase-3-exit-criteria-check">Phase 3 exit criteria check<a class="headerlink" href="#phase-3-exit-criteria-check" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] Every typed endpoint returns Structs by default.</li>
+<li>[x] <code>raw=True</code> returns the v2 dict shape on every typed endpoint.</li>
+<li>[x] <code>compat.to_dict()</code> round-trips lossless (tested).</li>
+<li>[x] Memory regression guard tests pass.</li>
+<li>[x] Benchmarks show measurable wins (not at the plan's projected level, but documented).</li>
+<li>[x] Goldens updated.</li>
+<li>[x] Full test suite green (709 passed).</li>
+</ul>
+<p>Ready to merge <code>v3/phase-3-msgspec-models</code> → <code>v3.0-dev</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

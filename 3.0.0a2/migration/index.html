@@ -1,0 +1,1946 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Python interfaces for swgoh-comlink and built-in StatCalc">
+      
+      
+      
+        <link rel="canonical" href="https://swgoh-utils.github.io/comlink-python/3.0.0a2/migration/">
+      
+      
+        <link rel="prev" href="../v3/migration/">
+      
+      
+        <link rel="next" href="../logging/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Migrating from v1.x - swgoh_comlink</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#migration-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+    You are viewing the docs for a <strong>pre-release</strong> of swgoh_comlink.
+    APIs may change before the final release.
+    <a href="../..">Go to the docs for the latest stable release.</a>
+  
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="swgoh_comlink" class="md-header__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            swgoh_comlink
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Migrating from v1.x
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/swgoh-utils/comlink-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    swgoh-utils/comlink-python
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="swgoh_comlink" class="md-nav__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    swgoh_comlink
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/swgoh-utils/comlink-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    swgoh-utils/comlink-python
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/install-alpha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install the v3 Alpha
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating from v2 to v3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating from v1.x
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating from v1.x
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-update-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Update dependencies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-update-exception-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Update exception handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-update-logging-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Update logging configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-close-the-client-when-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Close the client when done
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-helpers-module-refactoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Helpers module refactoring
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Helpers module refactoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-moved" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What moved
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constantsget-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants.get() changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-checker-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration checker CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-subclass-and-internal-api-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Subclass and internal API changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Subclass and internal API changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constructor-inheritance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor inheritance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_request-signature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _request() signature
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_post-signature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _post() signature
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-removed-sentinels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Removed sentinels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-gac-bracket-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. GAC bracket helpers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-gamedataitems-server-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. GameDataItems server alignment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-of-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary of changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recipes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/recipes/long-running-bot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Long-running Bot
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/recipes/bulk-analyst/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bulk Analyst
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/recipes/cli-script/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Short-lived CLI Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/recipes/operator-side-concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator-side Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/recipes/typed-statcalc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed StatCalc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/recipes/typed-game-data-segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed /data Segments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/comlink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwgohComlink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwgohComlinkAsync
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/typed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed Clients
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/statcalc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StatCalc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release Notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/releases/v3.0.0a2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v3.0.0a2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/releases/v3.0.0a1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v3.0.0a1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-update-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Update dependencies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-update-exception-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Update exception handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-update-logging-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Update logging configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-close-the-client-when-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Close the client when done
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-helpers-module-refactoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Helpers module refactoring
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Helpers module refactoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-moved" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What moved
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constantsget-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants.get() changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-checker-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration checker CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-subclass-and-internal-api-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Subclass and internal API changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Subclass and internal API changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constructor-inheritance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor inheritance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_request-signature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _request() signature
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_post-signature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _post() signature
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-removed-sentinels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Removed sentinels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-gac-bracket-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. GAC bracket helpers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-gamedataitems-server-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. GameDataItems server alignment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-of-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary of changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="migration-guide">Migration Guide<a class="headerlink" href="#migration-guide" title="Permanent link">&para;</a></h1>
+<p>This guide covers the changes needed when upgrading from <code>swgoh_comlink</code> <strong>v1.x</strong> (the <code>requests</code>-based release)
+to the new version that introduces async support, <code>StatCalc</code>, and <code>httpx</code>.</p>
+<h2 id="1-update-dependencies">1. Update dependencies<a class="headerlink" href="#1-update-dependencies" title="Permanent link">&para;</a></h2>
+<p>The HTTP library changed from <code>requests</code> to <code>httpx</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Remove the old dependency</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>uninstall<span class="w"> </span>requests
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Install the new version</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>swgoh_comlink
+</code></pre></div>
+<p>If your project pins dependencies, update your <code>requirements.txt</code> or <code>pyproject.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gd">- requests&gt;=2.32.4</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="gi">+ httpx&gt;=0.28</span>
+</code></pre></div>
+<p><code>httpx</code> is installed automatically as a dependency of <code>swgoh_comlink</code>, so in most cases
+you only need to upgrade the package itself.</p>
+<h2 id="2-update-exception-handling">2. Update exception handling<a class="headerlink" href="#2-update-exception-handling" title="Permanent link">&para;</a></h2>
+<p>v1.x let <code>requests.RequestException</code> escape on network failures. The client now
+catches the transport errors raised by <code>httpx</code> (<code>httpx.RequestError</code>: connection
+refused, timeouts, DNS failures) and re-raises them as <code>SwgohComlinkException</code>, so
+code that caught the <code>requests</code> exception must catch <code>SwgohComlinkException</code>
+instead. Do not switch it to <code>httpx.RequestError</code>; that exception never reaches
+your code.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="w"> </span> from swgoh_comlink import SwgohComlink
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="gd">- import requests</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="gi">+ from swgoh_comlink.exceptions import SwgohComlinkException</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w"> </span> comlink = SwgohComlink()
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w"> </span> try:
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w"> </span>     player = comlink.get_player(allycode=245866537)
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="gd">- except requests.RequestException as e:</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="gi">+ except SwgohComlinkException as e:</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w"> </span>     print(f&quot;Network error: {e}&quot;)
+</code></pre></div>
+<p>To tell argument errors apart from service and network errors, catch the subclasses first:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">swgoh_comlink</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwgohComlink</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">swgoh_comlink.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">SwgohComlinkException</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">SwgohComlinkValueError</span><span class="p">,</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">SwgohComlinkTypeError</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">)</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">comlink</span> <span class="o">=</span> <span class="n">SwgohComlink</span><span class="p">()</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">player</span> <span class="o">=</span> <span class="n">comlink</span><span class="o">.</span><span class="n">get_player</span><span class="p">(</span><span class="n">allycode</span><span class="o">=</span><span class="mi">245866537</span><span class="p">)</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="k">except</span> <span class="n">SwgohComlinkValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid argument value: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="k">except</span> <span class="n">SwgohComlinkTypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid argument type: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="k">except</span> <span class="n">SwgohComlinkException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comlink error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The exception hierarchy is:</p>
+<ul>
+<li><code>SwgohComlinkException</code> — base for all library errors<ul>
+<li><code>SwgohComlinkValueError</code> (also inherits <code>ValueError</code>) — invalid argument values</li>
+<li><code>SwgohComlinkTypeError</code> (also inherits <code>TypeError</code>) — invalid argument types</li>
+<li><code>SwgohComlinkHTTPError</code> — comlink answered with an HTTP error status (v2.3+)<ul>
+<li><code>SwgohComlinkRateLimitError</code> — HTTP 429 or the game's <code>Rate exceeded!</code></li>
+<li><code>SwgohComlinkUnavailableError</code> — HTTP 503</li>
+<li><code>SwgohComlinkClientError</code> — any other 4xx</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>See <a href="../api/exceptions/">Exceptions</a> for details.</p>
+<h2 id="3-update-logging-configuration">3. Update logging configuration<a class="headerlink" href="#3-update-logging-configuration" title="Permanent link">&para;</a></h2>
+<p>The <code>get_logger()</code> helper no longer accepts a <code>log_level</code> parameter and no longer
+attaches handlers or sets log levels automatically. The library now follows Python best
+practice by attaching only a <code>NullHandler</code> to the package root logger.</p>
+<p><strong>Before:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">swgoh_comlink.globals</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>  <span class="c1"># auto-configured handler + level</span>
+</code></pre></div>
+<p><strong>After:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>  <span class="c1"># configure logging in your application</span>
+</code></pre></div>
+<p>Or target only the <code>swgoh_comlink</code> namespace:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">comlink_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;swgoh_comlink&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">comlink_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">comlink_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">())</span>
+</code></pre></div>
+<p>See <a href="../logging/">Logging</a> for more examples including the built-in <code>LoggingFormatter</code>
+and rotating file handlers.</p>
+<h2 id="4-close-the-client-when-done">4. Close the client when done<a class="headerlink" href="#4-close-the-client-when-done" title="Permanent link">&para;</a></h2>
+<p>The new version uses persistent <code>httpx</code> connection pools for better performance.
+This means the client should be closed when you are finished with it.</p>
+<p><strong>Context manager (recommended):</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">with</span> <span class="n">SwgohComlink</span><span class="p">()</span> <span class="k">as</span> <span class="n">comlink</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">player</span> <span class="o">=</span> <span class="n">comlink</span><span class="o">.</span><span class="n">get_player</span><span class="p">(</span><span class="n">allycode</span><span class="o">=</span><span class="mi">245866537</span><span class="p">)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># connections are closed automatically</span>
+</code></pre></div>
+<p><strong>Manual close:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">comlink</span> <span class="o">=</span> <span class="n">SwgohComlink</span><span class="p">()</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">player</span> <span class="o">=</span> <span class="n">comlink</span><span class="o">.</span><span class="n">get_player</span><span class="p">(</span><span class="n">allycode</span><span class="o">=</span><span class="mi">245866537</span><span class="p">)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">finally</span><span class="p">:</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">comlink</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div>
+<p>Existing code that does not call <code>close()</code> will still work — connections are cleaned up
+on garbage collection — but explicitly closing is preferred to avoid resource warnings.</p>
+<h2 id="5-helpers-module-refactoring">5. Helpers module refactoring<a class="headerlink" href="#5-helpers-module-refactoring" title="Permanent link">&para;</a></h2>
+<p>The monolithic <code>helpers.py</code> file has been refactored into a <code>helpers/</code> subpackage.
+<strong>All existing import paths continue to work</strong> — a backward-compatible re-export shim
+ensures no breaking changes.</p>
+<h3 id="what-moved">What moved<a class="headerlink" href="#what-moved" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Before</th>
+<th>After (internal location)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helpers.py</code> (single file)</td>
+<td><code>helpers/</code> subpackage with focused modules</td>
+</tr>
+<tr>
+<td><code>Constants.STAT_ENUMS</code></td>
+<td><code>helpers/_stat_data.STAT_ENUMS</code> (re-exported)</td>
+</tr>
+<tr>
+<td><code>Constants.STATS</code></td>
+<td><code>helpers/_stat_data.STATS</code> (re-exported)</td>
+</tr>
+<tr>
+<td><code>StatCalc.STATS_NAME_MAP</code></td>
+<td>Now imports from <code>helpers/_stat_data.STATS</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="constantsget-changes">Constants.get() changes<a class="headerlink" href="#constantsget-changes" title="Permanent link">&para;</a></h3>
+<p><code>Constants.get()</code> still works for all legacy PascalCase names (e.g., <code>"UnitDefinitions"</code>)
+as well as the new UPPER_SNAKE_CASE <code>DataItems</code> names (e.g., <code>"UNITS"</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">swgoh_comlink.helpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Constants</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># All three forms still work:</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">Constants</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;UnitDefinitions&quot;</span><span class="p">)</span>  <span class="c1"># -&gt; &#39;137438953472&#39; (legacy name)</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">Constants</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;UNITS&quot;</span><span class="p">)</span>            <span class="c1"># -&gt; &#39;137438953472&#39; (DataItems name)</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">Constants</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Segment1&quot;</span><span class="p">)</span>         <span class="c1"># -&gt; &#39;2097151&#39; (class attribute)</span>
+</code></pre></div>
+<p><strong>Recommendation:</strong> Prefer using <code>DataItems</code> enum values directly for type safety, request
+only the collections you need, and combine members with <code>|</code> — see
+<a href="#9-gamedataitems-server-alignment">GameDataItems server alignment</a> below:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">swgoh_comlink.helpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataItems</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">items</span> <span class="o">=</span> <span class="n">DataItems</span><span class="o">.</span><span class="n">SKILL</span> <span class="o">|</span> <span class="n">DataItems</span><span class="o">.</span><span class="n">EQUIPMENT</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">data</span> <span class="o">=</span> <span class="n">comlink</span><span class="o">.</span><span class="n">get_game_data</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="migration-checker-cli">Migration checker CLI<a class="headerlink" href="#migration-checker-cli" title="Permanent link">&para;</a></h3>
+<p>A CLI tool is included to scan your codebase for patterns that may need updating:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Scan a project directory</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>python<span class="w"> </span>-m<span class="w"> </span>swgoh_comlink.migrate<span class="w"> </span>/path/to/your/project
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># Or use the console script</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>swgoh-migrate<span class="w"> </span>/path/to/your/project
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># Filter by severity and exclude directories</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>swgoh-migrate<span class="w"> </span>.<span class="w"> </span>--severity<span class="o">=</span>WARNING<span class="w"> </span>--exclude<span class="w"> </span>.venv<span class="w"> </span>dist
+</code></pre></div>
+<p>The tool reports deprecated imports, removed APIs, and suggests replacements.</p>
+<h2 id="6-subclass-and-internal-api-changes">6. Subclass and internal API changes<a class="headerlink" href="#6-subclass-and-internal-api-changes" title="Permanent link">&para;</a></h2>
+<p>These only matter if you subclass <code>SwgohComlink</code> or call private methods directly.</p>
+<h3 id="constructor-inheritance">Constructor inheritance<a class="headerlink" href="#constructor-inheritance" title="Permanent link">&para;</a></h3>
+<p><code>SwgohComlink</code> and <code>SwgohComlinkAsync</code> now inherit from <code>SwgohComlinkBase</code>. The
+constructor parameters are unchanged, but the subclass signature uses <code>**kwargs</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Both still work:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">comlink</span> <span class="o">=</span> <span class="n">SwgohComlink</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://myhost:3000&quot;</span><span class="p">)</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">comlink</span> <span class="o">=</span> <span class="n">SwgohComlink</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s2">&quot;myhost&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">3000</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="_request-signature"><code>_request()</code> signature<a class="headerlink" href="#_request-signature" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="w"> </span> def _request(
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w"> </span>     self,
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w"> </span>     method: str = &quot;POST&quot;,
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="gd">-     url_base: str | None = None,</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w"> </span>     endpoint: str | None = None,
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w"> </span>     payload: dict | list | None = None,
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="gi">+     stats: bool = False,</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="gi">+     timeout: float | None = None,</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w"> </span> ) -&gt; dict | list:
+</code></pre></div>
+<ul>
+<li><code>url_base</code> was removed — the method now selects between <code>self.url_base</code> and
+  <code>self.stats_url_base</code> based on the <code>stats</code> flag.</li>
+<li><code>timeout</code> allows per-request timeout overrides.</li>
+</ul>
+<h3 id="_post-signature"><code>_post()</code> signature<a class="headerlink" href="#_post-signature" title="Permanent link">&para;</a></h3>
+<p>Same changes as <code>_request()</code> — <code>url_base</code> replaced by <code>stats</code> and <code>timeout</code>.</p>
+<h2 id="7-removed-sentinels">7. Removed sentinels<a class="headerlink" href="#7-removed-sentinels" title="Permanent link">&para;</a></h2>
+<p>All sentinel objects (<code>OPTIONAL</code>, <code>NotSet</code>, <code>REQUIRED</code>, <code>MISSING</code>, <code>GIVEN</code>,
+<code>MutualExclusiveRequired</code>) have been removed from <code>swgoh_comlink.helpers</code>.
+Remove any sentinel imports from your code.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="gd">- from swgoh_comlink.helpers import (</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="gd">-     REQUIRED,</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="gd">-     MISSING,</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="gd">-     GIVEN,</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="gd">-     OPTIONAL,</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="gd">-     NotSet,</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="gd">-     MutualExclusiveRequired,</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="gd">- )</span>
+</code></pre></div>
+<p>Functions that previously used sentinel defaults now use standard Python
+patterns: required parameters have no default, and optional parameters
+default to <code>None</code>.</p>
+<h2 id="8-gac-bracket-helpers">8. GAC bracket helpers<a class="headerlink" href="#8-gac-bracket-helpers" title="Permanent link">&para;</a></h2>
+<p><code>get_gac_brackets()</code> and <code>async_get_gac_brackets()</code> have two changes:</p>
+<ol>
+<li>
+<p>The <code>limit</code> parameter changed from a sentinel default to <code>int</code> with default <code>0</code>
+   (where <code>0</code> means "no limit"):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="gd">- get_gac_brackets(comlink, league=&quot;KYBER&quot;, limit=OPTIONAL)</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="gi">+ get_gac_brackets(comlink, league=&quot;KYBER&quot;, limit=0)</span>
+</code></pre></div>
+</li>
+<li>
+<p>Bracket boundary discovery now uses exponential probing with binary search,
+   reducing HTTP requests from O(n) to O(log n). The async variant also fetches
+   brackets in parallel batches via <code>asyncio.gather</code>. No code changes are needed
+   on your side — the return format is identical.</p>
+</li>
+</ol>
+<h2 id="9-gamedataitems-server-alignment">9. GameDataItems server alignment<a class="headerlink" href="#9-gamedataitems-server-alignment" title="Permanent link">&para;</a></h2>
+<p><code>DataItems</code> and <code>Constants</code> were re-synced against the live <code>GameDataItemsEnum</code> that
+<code>get_enums()</code> now exposes. Two practical impacts:</p>
+<p><strong><code>Segment2</code> and <code>Segment4</code> aggregate values changed.</strong> If you hardcoded the integers
+in your own code (rather than referencing the constants by name), update them:</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Old value</th>
+<th>New value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DataItems.SEGMENT2</code> / <code>Constants.Segment2</code></td>
+<td><code>68717379584</code></td>
+<td><code>1125968624222208</code></td>
+</tr>
+<tr>
+<td><code>DataItems.SEGMENT4</code> / <code>Constants.Segment4</code></td>
+<td><code>281200098803712</code></td>
+<td><code>3377424842620928</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>SEGMENT1</code> (<code>2097151</code>) and <code>SEGMENT3</code> (<code>206158430208</code>) are unchanged.</p>
+<p>Code that references the constant by name (<code>DataItems.SEGMENT2</code>, <code>Constants.Segment2</code>,
+<code>Constants.get("Segment2")</code>) picks up the new values automatically.</p>
+<p><strong><code>get_game_data(items=...)</code> accepts any in-range bitmask.</strong> Comlink accepts any
+<code>items</code> value from 1 to 2<sup>52</sup> − 1, or <code>-1</code> (<code>DataItems.ALL</code>) for everything,
+so single collections (e.g. <code>DataItems.UNITS</code>), custom combinations and the
+<code>SEGMENT1</code>–<code>SEGMENT4</code> aggregates all work. Out-of-range values are rejected with an
+HTTP 400. Earlier versions of this guide advised against single-collection values;
+the failures behind that advice were most likely caused by a since-fixed Comlink bug
+in how CDN URLs were built, so upgrade Comlink if you still see them.</p>
+<p>Combine members with <code>|</code> rather than <code>+</code>. Aliased members (e.g. <code>CONQUEST_DEFINITION</code>
+and <code>ARTIFACT_DEFINITION</code>, which are both the <code>CONQUEST</code> bit) set a different bit when
+added together.</p>
+<p><strong>New members added</strong> (from the live <code>GameDataItemsEnum</code>): <code>ABILITY_DECISION_TREE</code>,
+<code>ERA_DEFINITION</code>, <code>UBS_UPDATE</code>. New legacy-name aliases: <code>AbilityDecisionTrees</code>,
+<code>EraDefinitions</code>, <code>UBSUpdate</code>, <code>EpisodeDefinitions</code> (plural), <code>AccountLinking</code>.</p>
+<h2 id="summary-of-changes">Summary of changes<a class="headerlink" href="#summary-of-changes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Before (v1.x)</th>
+<th>After</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HTTP library</td>
+<td><code>requests</code></td>
+<td><code>httpx</code></td>
+</tr>
+<tr>
+<td>Transport exception</td>
+<td><code>requests.RequestException</code></td>
+<td><code>SwgohComlinkException</code> (wraps <code>httpx.RequestError</code>)</td>
+</tr>
+<tr>
+<td>Exception hierarchy</td>
+<td><code>SwgohComlinkException</code>, <code>SwgohComlinkValueError</code></td>
+<td>Added <code>SwgohComlinkTypeError</code></td>
+</tr>
+<tr>
+<td><code>get_logger(log_level=)</code></td>
+<td>Accepted <code>log_level</code>, auto-configured handlers</td>
+<td>No <code>log_level</code> param, no auto-configuration</td>
+</tr>
+<tr>
+<td>Default log output</td>
+<td>Console output at INFO level</td>
+<td>Silent (NullHandler only)</td>
+</tr>
+<tr>
+<td>Client lifecycle</td>
+<td>No close needed</td>
+<td>Use <code>with</code> or call <code>close()</code></td>
+</tr>
+<tr>
+<td>Async support</td>
+<td>Not available</td>
+<td><code>SwgohComlinkAsync</code></td>
+</tr>
+<tr>
+<td>Local stat calc</td>
+<td>Not available</td>
+<td><code>StatCalc</code> (sync) / <code>StatCalcAsync</code> (async)</td>
+</tr>
+<tr>
+<td><code>_request(url_base=)</code></td>
+<td><code>url_base</code> parameter</td>
+<td><code>stats</code> bool + <code>timeout</code></td>
+</tr>
+<tr>
+<td><code>helpers.py</code></td>
+<td>Single 1,970-line file</td>
+<td><code>helpers/</code> subpackage (all imports preserved)</td>
+</tr>
+<tr>
+<td>All sentinels</td>
+<td>Exported from helpers</td>
+<td>Removed — use <code>None</code> or required positional args</td>
+</tr>
+<tr>
+<td><code>get_gac_brackets(limit=)</code></td>
+<td>Sentinel default</td>
+<td><code>int</code> default <code>0</code> (0 = no limit)</td>
+</tr>
+<tr>
+<td>GAC bracket scanning</td>
+<td>Linear O(n)</td>
+<td>Exponential probe + binary search O(log n)</td>
+</tr>
+<tr>
+<td>Migration checker</td>
+<td>Not available</td>
+<td><code>swgoh-migrate</code> CLI / <code>python -m swgoh_comlink.migrate</code></td>
+</tr>
+<tr>
+<td><code>DataItems.SEGMENT2</code> value</td>
+<td><code>68717379584</code></td>
+<td><code>1125968624222208</code> (server-aligned)</td>
+</tr>
+<tr>
+<td><code>DataItems.SEGMENT4</code> value</td>
+<td><code>281200098803712</code></td>
+<td><code>3377424842620928</code> (server-aligned)</td>
+</tr>
+<tr>
+<td><code>get_game_data(items=)</code> values</td>
+<td>Any bitmask</td>
+<td>Any bitmask from 1 to 2<sup>52</sup> − 1, or <code>-1</code>; out of range → HTTP 400</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

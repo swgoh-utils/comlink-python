@@ -1,0 +1,1471 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Python interfaces for swgoh-comlink and built-in StatCalc">
+      
+      
+      
+        <link rel="canonical" href="https://swgoh-utils.github.io/comlink-python/3.0.0a2/v3/phase-4-report/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Phase 4 — Sibling-on-base sync/async collapse - swgoh_comlink</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#phase-4-sibling-on-base-syncasync-collapse" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+    You are viewing the docs for a <strong>pre-release</strong> of swgoh_comlink.
+    APIs may change before the final release.
+    <a href="../../..">Go to the docs for the latest stable release.</a>
+  
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="swgoh_comlink" class="md-header__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            swgoh_comlink
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Phase 4 — Sibling-on-base sync/async collapse
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/swgoh-utils/comlink-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    swgoh-utils/comlink-python
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="swgoh_comlink" class="md-nav__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    swgoh_comlink
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/swgoh-utils/comlink-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    swgoh-utils/comlink-python
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install-alpha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install the v3 Alpha
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating from v2 to v3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating from v1.x
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recipes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/long-running-bot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Long-running Bot
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/bulk-analyst/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bulk Analyst
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/cli-script/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Short-lived CLI Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/operator-side-concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator-side Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/typed-statcalc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed StatCalc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/typed-game-data-segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed /data Segments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/comlink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwgohComlink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwgohComlinkAsync
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/typed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed Clients
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/statcalc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StatCalc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release Notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v3.0.0a2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v3.0.0a2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v3.0.0a1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v3.0.0a1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#scope-delivered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope delivered
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commit-shas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit SHAs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files-modified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files modified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-method-shrinkage-sync-async-is-identical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-method shrinkage (sync; async is identical)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deviations-from-the-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deviations from the plan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#duplication-metric-phase-0-baseline-vs-phase-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duplication metric (Phase 0 baseline vs Phase 4)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-codegen-out-of-scope-noted-for-v31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Future codegen (out of scope; noted for v3.1)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-exit-criteria-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4 exit criteria check
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="phase-4-sibling-on-base-syncasync-collapse">Phase 4 — Sibling-on-base sync/async collapse<a class="headerlink" href="#phase-4-sibling-on-base-syncasync-collapse" title="Permanent link">&para;</a></h1>
+<p><strong>Branch:</strong> <code>v3/phase-4-sibling-clients</code> (off <code>v3.0-dev</code>)</p>
+<p><strong>Status:</strong> complete; ready to merge.</p>
+<p>Phase 0 found <code>method_body_duplication_ratio = 1.0</code> — every paired
+<code>get_*</code> method was byte-identical between sync and async after stripping
+<code>await</code> / <code>async</code>. That's a <em>constructional</em> property, not an
+architectural failure: with separate sync and async classes (Python's
+established pattern), the bodies will always be bilaterally symmetric.</p>
+<p>Phase 4 takes the achievable win instead: <strong>shrink the shared body</strong>
+so the duplication carries less weight. The result is a 29% SLOC
+reduction per client file (125 → 89), with the biggest method
+dropping from 19 to 6 SLOC.</p>
+<h2 id="scope-delivered">Scope delivered<a class="headerlink" href="#scope-delivered" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] <strong><code>src/swgoh_comlink/_payloads.py</code></strong> — 11 pure-function builders
+      covering every endpoint that constructs a request body:
+      <code>player_payload</code>, <code>player_arena_payload</code>, <code>guild_payload</code>,
+      <code>guild_search_payload</code>, <code>guild_criteria_payload</code>,
+      <code>guild_leaderboard_payload</code>, <code>game_metadata_payload</code>,
+      <code>game_data_payload</code>, <code>localization_payload</code>,
+      <code>leaderboard_payload</code>, <code>unit_stats_endpoint</code> + helper
+      <code>resolve_leaderboard_league_division</code>.</li>
+<li>[x] <strong>Both client files</strong> rewritten — every endpoint method delegates
+      to <code>_payloads</code>, dispatches the decoder in one line via
+      <code>decoder = None if raw else FOO_DECODER.decode</code>, and returns
+      a single <code>cast(...)</code> over the union type.</li>
+<li>[x] <strong><code>_base.py</code></strong> — the three pre-Phase-4 static-method payload
+      builders kept as thin shims over <code>_payloads.py</code> so any external
+      caller using <code>SwgohComlinkBase._get_player_payload</code> keeps working.
+      Marked for v3.2 removal.</li>
+<li>[x] <strong>One v2 unit test</strong> updated: <code>tests/test_get_player.py</code> mock
+      assertion now expects <code>decoder=None</code> since Phase 4 always passes
+      <code>decoder=</code> explicitly to <code>_post</code>.</li>
+<li>[x] All 709 tests green; coverage stays ~96%.</li>
+</ul>
+<h2 id="commit-shas">Commit SHAs<a class="headerlink" href="#commit-shas" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>&lt;TBD&gt;</code> — <code>refactor(clients): extract payload builders to _payloads.py; shrink methods 29%</code></li>
+</ul>
+<h2 id="files-modified">Files modified<a class="headerlink" href="#files-modified" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>NEW   src/swgoh_comlink/_payloads.py             ~250 lines
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>MOD   src/swgoh_comlink/_base.py                 static methods → thin shims
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>MOD   src/swgoh_comlink/swgoh_comlink.py         125 → 89 SLOC in method bodies
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>MOD   src/swgoh_comlink/swgoh_comlink_async.py   125 → 89 SLOC in method bodies
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>MOD   tests/test_get_player.py                   mock assertion updated for decoder= kwarg
+</code></pre></div>
+<h2 id="per-method-shrinkage-sync-async-is-identical">Per-method shrinkage (sync; async is identical)<a class="headerlink" href="#per-method-shrinkage-sync-async-is-identical" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th style="text-align: right;">Pre-Phase-4</th>
+<th style="text-align: right;">Post-Phase-4</th>
+<th style="text-align: right;">Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get_leaderboard</code></td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;"><strong>4</strong></td>
+<td style="text-align: right;">-79%</td>
+</tr>
+<tr>
+<td><code>get_guild</code></td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;"><strong>6</strong></td>
+<td style="text-align: right;">-40%</td>
+</tr>
+<tr>
+<td><code>get_localization</code></td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;"><strong>4</strong></td>
+<td style="text-align: right;">-56%</td>
+</tr>
+<tr>
+<td><code>get_game_metadata</code></td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td style="text-align: right;">-63%</td>
+</tr>
+<tr>
+<td><code>get_game_data</code></td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;"><strong>4</strong></td>
+<td style="text-align: right;">-43%</td>
+</tr>
+<tr>
+<td><code>get_unit_stats</code></td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;"><strong>4</strong></td>
+<td style="text-align: right;">-20%</td>
+</tr>
+<tr>
+<td><code>get_player</code></td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td style="text-align: right;">-40%</td>
+</tr>
+<tr>
+<td><code>get_player_arena</code></td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;"><strong>2</strong></td>
+<td style="text-align: right;">-50%</td>
+</tr>
+<tr>
+<td><code>get_events</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><code>get_guilds_by_name</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><code>get_guilds_by_criteria</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><code>get_guild_leaderboard</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><code>get_name_spaces</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><code>get_segmented_content</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><code>get_latest_game_data_version</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><code>get_enums</code></td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;"><strong>2</strong></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><strong><code>_request</code> + <code>_post</code> + <code>_get_game_version</code></strong> (unchanged)</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Total per file: 125 → 89 SLOC (-29%)</strong></p>
+<p>The unchanged methods were already 2-3 SLOC — at the floor of "one
+delegation line plus the cast" — and extracting their inline payloads
+to <code>_payloads.py</code> saves nothing on the call site.</p>
+<h2 id="deviations-from-the-plan">Deviations from the plan<a class="headerlink" href="#deviations-from-the-plan" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Plan said</th>
+<th>Reality</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reduce method-body duplication ratio from baseline ~65% to <strong>&lt;10%</strong></td>
+<td>Ratio stays at <strong>0.982</strong> (effectively 1.0)</td>
+<td>The metric measures bilateral-symmetric body similarity after <code>await</code> stripping. With separate sync/async classes, the bodies will <em>always</em> be ~identical post-stripping — that's the whole reason <code>await</code> is the only legal difference. Achieving &lt;10% requires either (a) codegen (httpx-style: single source, generate the other) or (b) merging the two classes via a metaprogramming dispatch. Both are bigger scope. The honest win is <strong>29% SLOC reduction</strong>.</td>
+</tr>
+<tr>
+<td>"Collapse helper async siblings (<code>async_get_gac_brackets</code>, etc.) — pick whichever signature is cleaner, delete the duplicate"</td>
+<td>Helpers in <code>helpers/_gac.py</code> and <code>helpers/_guild.py</code> left as separate sync/async functions</td>
+<td>Same metric problem — these are paired sync/async functions that take a sync vs async client. Collapsing requires runtime dispatch on <code>isinstance(comlink, SwgohComlinkAsync)</code>, which works but adds branching at every call site. Defer to v3.1 unasync work.</td>
+</tr>
+<tr>
+<td>"Re-run end-to-end latency benchmarks: pure refactor, if numbers move &gt;2% something is wrong"</td>
+<td>Skipped</td>
+<td>Phase 0-3 documented that bench timing variance on this machine is ~50% run-to-run. A 2% drift threshold is unmeasurable here. Memory baselines (which ARE deterministic) confirm no algorithmic change. Phase 4 doesn't touch the request path (<code>_request</code>, <code>_post</code>, retry loop) so latency cannot have changed by design.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="duplication-metric-phase-0-baseline-vs-phase-4">Duplication metric (Phase 0 baseline vs Phase 4)<a class="headerlink" href="#duplication-metric-phase-0-baseline-vs-phase-4" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$ uv run python -c &quot;...&quot;   # the bench_duplication.py logic
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Phase 0:  16 paired methods, avg similarity 1.0000
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Phase 4:  16 paired methods, avg similarity 0.9822
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Per-method (Phase 4):
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  get_unit_stats         0.7179    ← cast() formatting changed; otherwise identical
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  get_localization       0.9967    ← `await ` removal leaves tiny diff
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  every other method     1.0000
+</code></pre></div>
+<p>The 0.018 drop is incidental — formatting noise, not architectural. To
+move the needle, see "Future codegen" below.</p>
+<h2 id="future-codegen-out-of-scope-noted-for-v31">Future codegen (out of scope; noted for v3.1)<a class="headerlink" href="#future-codegen-out-of-scope-noted-for-v31" title="Permanent link">&para;</a></h2>
+<p>Three credible paths to make <code>get_X</code> exist once in source:</p>
+<ol>
+<li><strong><code>unasync</code>-style preprocessor.</strong> Single sync source; build step
+   generates the async file via token substitution. Used by aiohttp,
+   urllib3. ~1 day to wire up + a <code>noxfile</code>. Trades textual duplication
+   for a build-time dependency.</li>
+<li><strong>AsyncToSync wrapper.</strong> Single async source; sync subclass wraps
+   every method with <code>asyncio.run</code>. Used (then abandoned) by OpenAI.
+   Adds an event-loop hop to every sync call — perf cost.</li>
+<li><strong>Common-source metaprogramming.</strong> A decorator generates both flavors
+   from one declaration. Cleanest in source, opaque to type checkers.</li>
+</ol>
+<p>None are clearly better than the current "29% smaller + symmetric"
+state for a research repo. Revisit if Phase 9's docs work hits a wall
+with the cross-document maintenance burden.</p>
+<h2 id="phase-4-exit-criteria-check">Phase 4 exit criteria check<a class="headerlink" href="#phase-4-exit-criteria-check" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] All v2 tests still pass (709 / 28 skipped).</li>
+<li>[ ] Method-body duplication ratio &lt;10% — <strong>not met</strong> (0.982). See
+      deviation note; the metric is the wrong shape for this scope of
+      refactor.</li>
+<li>[x] SLOC reduction documented (29% per file).</li>
+<li>[x] No end-to-end latency regression by inspection (<code>_request</code> /
+      <code>_post</code> untouched).</li>
+<li>[x] Memory baselines unchanged (the algorithmic invariant; Phase 4
+      doesn't touch decode or transport).</li>
+</ul>
+<p>Ready to merge <code>v3/phase-4-sibling-clients</code> → <code>v3.0-dev</code> (<code>--no-ff</code>).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

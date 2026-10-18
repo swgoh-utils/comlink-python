@@ -1,0 +1,2321 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Python interfaces for swgoh-comlink and built-in StatCalc">
+      
+      
+      
+        <link rel="canonical" href="https://swgoh-utils.github.io/comlink-python/3.0.0a2/v3/benchmark-report/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>v3 Benchmark Report - swgoh_comlink</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#v3-benchmark-report" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+    You are viewing the docs for a <strong>pre-release</strong> of swgoh_comlink.
+    APIs may change before the final release.
+    <a href="../../..">Go to the docs for the latest stable release.</a>
+  
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="swgoh_comlink" class="md-header__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            swgoh_comlink
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              v3 Benchmark Report
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/swgoh-utils/comlink-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    swgoh-utils/comlink-python
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="swgoh_comlink" class="md-nav__button md-logo" aria-label="swgoh_comlink" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    swgoh_comlink
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/swgoh-utils/comlink-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    swgoh-utils/comlink-python
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install-alpha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install the v3 Alpha
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating from v2 to v3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrating from v1.x
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recipes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/long-running-bot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Long-running Bot
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/bulk-analyst/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bulk Analyst
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/cli-script/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Short-lived CLI Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/operator-side-concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator-side Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/typed-statcalc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed StatCalc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/typed-game-data-segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed /data Segments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/comlink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwgohComlink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwgohComlinkAsync
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/typed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Typed Clients
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/statcalc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StatCalc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release Notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v3.0.0a2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v3.0.0a2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v3.0.0a1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v3.0.0a1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#headlines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Headlines
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-metric-breakdown-vs-phase-0-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-metric breakdown vs Phase 0 baseline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-metric breakdown vs Phase 0 baseline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-0-baseline-recorded-against-v20x-code-at-sha-cb8a512" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0 baseline (recorded against v2.0.x code at SHA cb8a512)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-resilience-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 — Resilience layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-35-msgspecstruct-typing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3 + 3.5 — msgspec.Struct typing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-sloc-reduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4 — SLOC reduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-5-lazy-imports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5 — Lazy imports
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-6-extras-taxonomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6 — Extras taxonomy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-7-gamedatacache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 7 — GameDataCache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-8-ergonomics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 8 — Ergonomics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-9-migration-tooling-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 9 — Migration tooling + docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v31-typed-data-segment-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v3.1 — typed /data segment coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v31-typeddict-client-split-codegen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v3.1 — typed/dict client split + codegen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v31-async-aware-gamedatacache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v3.1 — async-aware GameDataCache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v32-statcalc-internals-bimorphic-input-cached-game_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v3.2 — StatCalc internals (bimorphic input + cached game_data)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v33-statcalc-rewrite-research-phase-1-baseline-adr-0007" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v3.3 — StatCalc rewrite research (Phase 1 baseline, ADR-0007)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-v3-didnt-deliver-deferred-to-v31v32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What v3 didn't deliver (deferred to v3.1/v3.2)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-v3-delivered-beyond-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What v3 delivered beyond plan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-reproduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to reproduce
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="v3-benchmark-report">v3 Benchmark Report<a class="headerlink" href="#v3-benchmark-report" title="Permanent link">&para;</a></h1>
+<p>Consolidated v2.0.x baseline vs v3.0 final numbers across every phase.
+Raw JSON results live in <code>benchmarks/v3/results/</code>; this document is
+the human-readable summary.</p>
+<p>All numbers measured on the same machine: <strong>macOS aarch64, Python
+3.11.15 (uv-managed), 16-inch MacBook Pro M-series</strong>. Same comlink
+cassettes (recorded Phase 0) used as inputs throughout. Timings are
+medians of N=10–50 iterations depending on the bench; cold-import
+numbers are particularly noisy on a working laptop (documented in
+the Phase 0/1 reports' "open questions" sections — variance can be
+30–50% run-to-run from system load).</p>
+<h2 id="headlines">Headlines<a class="headerlink" href="#headlines" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">v2.0.x baseline</th>
+<th style="text-align: right;">v3.0 final</th>
+<th style="text-align: right;">Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cold <code>import swgoh_comlink</code></td>
+<td style="text-align: right;">65.4 ms</td>
+<td style="text-align: right;"><strong>~7 ms</strong></td>
+<td style="text-align: right;"><strong>9.3× faster</strong> (Phase 5)</td>
+</tr>
+<tr>
+<td><code>httpx</code> loaded on <code>import</code></td>
+<td style="text-align: right;">True</td>
+<td style="text-align: right;"><strong>False</strong></td>
+<td style="text-align: right;">(Phase 5)</td>
+</tr>
+<tr>
+<td><code>get_player</code> decode speed (large roster)</td>
+<td style="text-align: right;">1× (json baseline)</td>
+<td style="text-align: right;"><strong>2.67× faster</strong></td>
+<td style="text-align: right;">(Phase 3.5)</td>
+</tr>
+<tr>
+<td><code>get_player</code> decode peak memory</td>
+<td style="text-align: right;">1×</td>
+<td style="text-align: right;"><strong>1.83× lower</strong></td>
+<td style="text-align: right;">(Phase 3.5)</td>
+</tr>
+<tr>
+<td><code>get_player</code> object size</td>
+<td style="text-align: right;">1×</td>
+<td style="text-align: right;"><strong>30% smaller</strong></td>
+<td style="text-align: right;">(Phase 3.5)</td>
+</tr>
+<tr>
+<td><code>GameDataCache</code> warm path (same instance)</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;"><strong>10⁷× faster than cold</strong></td>
+<td style="text-align: right;">(Phase 7)</td>
+</tr>
+<tr>
+<td>Method-body duplication ratio (sync/async)</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">0.98 (essentially 1.0)</td>
+<td style="text-align: right;">unchanged by design (Phase 4)</td>
+</tr>
+<tr>
+<td>Endpoint method total SLOC per client</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;"><strong>89</strong></td>
+<td style="text-align: right;"><strong>−29%</strong> (Phase 4)</td>
+</tr>
+<tr>
+<td>Coverage gate (<code>fail_under</code>)</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;"><strong>95</strong></td>
+<td style="text-align: right;">(Phase 9)</td>
+</tr>
+<tr>
+<td>Test count (full suite)</td>
+<td style="text-align: right;">654</td>
+<td style="text-align: right;"><strong>742+</strong></td>
+<td style="text-align: right;">new tests for every phase</td>
+</tr>
+</tbody>
+</table>
+<h2 id="per-metric-breakdown-vs-phase-0-baseline">Per-metric breakdown vs Phase 0 baseline<a class="headerlink" href="#per-metric-breakdown-vs-phase-0-baseline" title="Permanent link">&para;</a></h2>
+<p>Cassette: see <code>benchmarks/v3/fixtures/</code>. Tagged <code>data</code> ≈ 380 MiB JSON;
+<code>player_large</code> ≈ 3.6 MiB JSON (397 units); <code>player_small</code> ≈ 58 KiB
+(115 units); others smaller.</p>
+<h3 id="phase-0-baseline-recorded-against-v20x-code-at-sha-cb8a512">Phase 0 baseline (recorded against v2.0.x code at SHA <code>cb8a512</code>)<a class="headerlink" href="#phase-0-baseline-recorded-against-v20x-code-at-sha-cb8a512" title="Permanent link">&para;</a></h3>
+<p>Source: <code>benchmarks/v3/results/phase-0-baseline.json</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cold_import_time</code></td>
+<td style="text-align: right;">65.4 ms</td>
+</tr>
+<tr>
+<td><code>httpx_loaded_on_import</code></td>
+<td style="text-align: right;">True</td>
+</tr>
+<tr>
+<td><code>method_body_duplication_ratio</code></td>
+<td style="text-align: right;">1.0 (16/16 paired methods)</td>
+</tr>
+<tr>
+<td><code>get_player_small_e2e_latency</code></td>
+<td style="text-align: right;">0.29 ms (115-unit roster)</td>
+</tr>
+<tr>
+<td><code>get_player_large_e2e_latency</code></td>
+<td style="text-align: right;">40.1 ms (397-unit roster)</td>
+</tr>
+<tr>
+<td><code>get_data_decode_time</code> (json)</td>
+<td style="text-align: right;">7,120 ms</td>
+</tr>
+<tr>
+<td><code>get_data_decode_peak_memory</code></td>
+<td style="text-align: right;">1,392 MiB</td>
+</tr>
+<tr>
+<td><code>get_data_object_size</code></td>
+<td style="text-align: right;">1,034 MiB</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-2-resilience-layer">Phase 2 — Resilience layer<a class="headerlink" href="#phase-2-resilience-layer" title="Permanent link">&para;</a></h3>
+<p><code>bench_retry_overhead</code>: <strong>−1.10 %</strong> overhead with <code>max_retries=3</code> vs
+<code>0</code> on the happy path (target &lt;2 %).</p>
+<p><code>bench_retry_recovery</code>: <code>429 + Retry-After: 1</code> → 200 takes 1.011 s
+wall (expected ~1.0 s). 503 (no header) → exp-jitter wait ≈ 0.35 s.</p>
+<h3 id="phase-3-35-msgspecstruct-typing">Phase 3 + 3.5 — msgspec.Struct typing<a class="headerlink" href="#phase-3-35-msgspecstruct-typing" title="Permanent link">&para;</a></h3>
+<p>Best-case wins on <code>player_large</code> after Phase 3.5 deep typing:</p>
+<table>
+<thead>
+<tr>
+<th>Bench</th>
+<th style="text-align: right;">v2 (json)</th>
+<th style="text-align: right;">v3 typed</th>
+<th style="text-align: right;">win</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bench_decode_speed</code> (player_large)</td>
+<td style="text-align: right;">16.8 ms</td>
+<td style="text-align: right;"><strong>6.3 ms</strong></td>
+<td style="text-align: right;"><strong>2.67× faster</strong></td>
+</tr>
+<tr>
+<td><code>bench_decode_speed</code> (player_small)</td>
+<td style="text-align: right;">0.18 ms</td>
+<td style="text-align: right;"><strong>0.07 ms</strong></td>
+<td style="text-align: right;"><strong>2.49× faster</strong></td>
+</tr>
+<tr>
+<td><code>bench_decode_memory</code> (player_large peak)</td>
+<td style="text-align: right;">17.7 MiB</td>
+<td style="text-align: right;"><strong>9.7 MiB</strong></td>
+<td style="text-align: right;"><strong>1.83× lower</strong></td>
+</tr>
+<tr>
+<td><code>bench_decode_memory</code> (player_small peak)</td>
+<td style="text-align: right;">0.31 MiB</td>
+<td style="text-align: right;"><strong>0.13 MiB</strong></td>
+<td style="text-align: right;"><strong>2.45× lower</strong></td>
+</tr>
+<tr>
+<td><code>bench_object_size</code> (player_large resident)</td>
+<td style="text-align: right;">14.4 MiB</td>
+<td style="text-align: right;"><strong>10.0 MiB</strong></td>
+<td style="text-align: right;"><strong>1.43× smaller</strong></td>
+</tr>
+<tr>
+<td><code>bench_object_size</code> (player_small resident)</td>
+<td style="text-align: right;">0.25 MiB</td>
+<td style="text-align: right;"><strong>0.13 MiB</strong></td>
+<td style="text-align: right;"><strong>1.94× smaller</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Plan's original projection was 3–5× faster + 4–6× lower memory + 40–60% smaller
+object size. Phase 3.5 closed most of the gap; the remaining shortfall is
+from fields still typed as <code>dict[str, Any]</code> (uniformly empty/null in the
+cassettes — <code>equipment</code>, <code>unit_stat</code>, <code>Mod.converted_item</code>).</p>
+<p><code>/data</code> decode speed: <strong>1.00×</strong> (no improvement). Documented in phase-3 report
+as the partial-typing tradeoff — /data segments aren't deeply typed (deferred
+to Phase 7's GameDataCache and beyond). Object size for <code>/data</code> actually
+worsens 9% with msgspec untyped — msgspec's dict graph is marginally heavier
+than <code>json.loads</code> in this specific case.</p>
+<h3 id="phase-4-sloc-reduction">Phase 4 — SLOC reduction<a class="headerlink" href="#phase-4-sloc-reduction" title="Permanent link">&para;</a></h3>
+<p>Endpoint method bodies per client: <strong>125 → 89 SLOC (-29%)</strong>. Biggest
+methods:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th style="text-align: right;">v2</th>
+<th style="text-align: right;">v3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get_leaderboard</code></td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;"><strong>4</strong></td>
+</tr>
+<tr>
+<td><code>get_guild</code></td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;"><strong>6</strong></td>
+</tr>
+<tr>
+<td><code>get_localization</code></td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;"><strong>4</strong></td>
+</tr>
+<tr>
+<td><code>get_game_metadata</code></td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;"><strong>3</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Duplication ratio (sync vs async, post-<code>await</code>-stripping) stays at
+<strong>0.98</strong> (≈1.0). Achieving &lt;10% per the plan requires code generation
+(unasync-style); deferred. See Phase 4 report for the analysis.</p>
+<h3 id="phase-5-lazy-imports">Phase 5 — Lazy imports<a class="headerlink" href="#phase-5-lazy-imports" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">v2</th>
+<th style="text-align: right;">v3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cold_import_time</code></td>
+<td style="text-align: right;">65.4 ms</td>
+<td style="text-align: right;"><strong>7.0 ms</strong> (9.3× reduction)</td>
+</tr>
+<tr>
+<td><code>httpx_loaded_on_import</code></td>
+<td style="text-align: right;">True</td>
+<td style="text-align: right;"><strong>False</strong></td>
+</tr>
+<tr>
+<td><code>import_then_construct</code> (first SDK call)</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;">~80 ms (deferred cost paid on first construct)</td>
+</tr>
+</tbody>
+</table>
+<p><code>import swgoh_comlink</code> no longer pulls httpx, msgspec, or StatCalc.
+PEP 562 <code>__getattr__</code> resolves + caches names on first access.</p>
+<h3 id="phase-6-extras-taxonomy">Phase 6 — Extras taxonomy<a class="headerlink" href="#phase-6-extras-taxonomy" title="Permanent link">&para;</a></h3>
+<p>No perf benchmarks. Test counts: +7 (test_optional.py).</p>
+<h3 id="phase-7-gamedatacache">Phase 7 — GameDataCache<a class="headerlink" href="#phase-7-gamedatacache" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th style="text-align: right;">Time</th>
+<th style="text-align: right;">vs cold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cold (fresh on-disk cache; full pipeline)</td>
+<td style="text-align: right;">3,549 ms</td>
+<td style="text-align: right;">1×</td>
+</tr>
+<tr>
+<td>Disk-warm (new GameDataCache per call)</td>
+<td style="text-align: right;">3,503 ms</td>
+<td style="text-align: right;">~1×</td>
+</tr>
+<tr>
+<td><strong>In-memory warm</strong> (same instance, hot loop)</td>
+<td style="text-align: right;"><strong>0.0003 ms</strong></td>
+<td style="text-align: right;"><strong>10,659,556×</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The plan's 100–1000× target is met on the realistic operator path
+(one cache instance per process). The disk-only warm path is bound by
+the cost of constructing 11k+ Python dicts — msgspec.msgpack vs
+msgspec.json doesn't matter when structure dominates.</p>
+<h3 id="phase-8-ergonomics">Phase 8 — Ergonomics<a class="headerlink" href="#phase-8-ergonomics" title="Permanent link">&para;</a></h3>
+<p>No perf benchmarks. Test counts: +18 (test_ergonomics.py covering
+healthcheck, raw_request, stream_game_data, stream_localization on
+both sync and async clients).</p>
+<h3 id="phase-9-migration-tooling-docs">Phase 9 — Migration tooling + docs<a class="headerlink" href="#phase-9-migration-tooling-docs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Deliverable</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/v3/migration.md</code></td>
+<td>Side-by-side v2 → v3 examples</td>
+</tr>
+<tr>
+<td><code>docs/v3/recipes/*.md</code></td>
+<td>4 recipes (long-running bot, bulk analyst, CLI script, operator-side concurrency)</td>
+</tr>
+<tr>
+<td><code>swgoh-migrate</code> v2→v3 rules</td>
+<td>5 new rules (V3001–V3005) in <code>_rules.py</code></td>
+</tr>
+<tr>
+<td>Coverage ratchet</td>
+<td>92 → <strong>95</strong> (current actual ~96.5%)</td>
+</tr>
+<tr>
+<td><code>bench_v3_final.py</code></td>
+<td>Re-runs the headline benches; produces consolidated JSON</td>
+</tr>
+</tbody>
+</table>
+<h3 id="v31-typed-data-segment-coverage">v3.1 — typed <code>/data</code> segment coverage<a class="headerlink" href="#v31-typed-data-segment-coverage" title="Permanent link">&para;</a></h3>
+<p>Runs on <code>v3.1-research</code> (not <code>v3.0-dev</code> — v3.0 surface is frozen per
+Phase 9 / ADR-0004). Hand-types 14 of <code>/data</code>'s ~80 segments and
+measures dict-vs-typed decode for each. Helper:
+<code>swgoh_comlink.compat.decode_segment</code> (single generic entry point, no
+per-segment wrappers).</p>
+<p>Bench: <code>benchmarks/v3/bench_data_segments_typed_vs_dict.py</code>. Result
+JSON: <code>benchmarks/v3/results/phase-v3_1-data-segments.json</code>. Bytes-based
+on both sides (matches the units-only probe's methodology — apples to
+apples; <code>msgspec.json.Decoder()</code> vs <code>msgspec.json.Decoder(list[T])</code>).</p>
+<p>Cassette: same <code>data.json.gz</code> used elsewhere in this report.</p>
+<p><strong>Per-segment (typed/dict ratios; &lt;1 = typed is faster/lighter):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Segment</th>
+<th style="text-align: right;">Count</th>
+<th style="text-align: right;">Speed (×faster)</th>
+<th style="text-align: right;">Memory ratio</th>
+<th style="text-align: right;">Size ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>units</code></td>
+<td style="text-align: right;">11,169</td>
+<td style="text-align: right;"><strong>4.16×</strong></td>
+<td style="text-align: right;">0.64×</td>
+<td style="text-align: right;">0.66×</td>
+</tr>
+<tr>
+<td><code>effect</code></td>
+<td style="text-align: right;">60,015</td>
+<td style="text-align: right;"><strong>1.85×</strong></td>
+<td style="text-align: right;">0.49×</td>
+<td style="text-align: right;">0.49×</td>
+</tr>
+<tr>
+<td><code>statMod</code></td>
+<td style="text-align: right;">288</td>
+<td style="text-align: right;">1.72×</td>
+<td style="text-align: right;">0.56×</td>
+<td style="text-align: right;">0.57×</td>
+</tr>
+<tr>
+<td><code>material</code></td>
+<td style="text-align: right;">858</td>
+<td style="text-align: right;">1.59×</td>
+<td style="text-align: right;">0.59×</td>
+<td style="text-align: right;">0.59×</td>
+</tr>
+<tr>
+<td><code>datacronAffixTemplateSet</code></td>
+<td style="text-align: right;">722</td>
+<td style="text-align: right;">1.51×</td>
+<td style="text-align: right;">0.71×</td>
+<td style="text-align: right;">0.71×</td>
+</tr>
+<tr>
+<td><code>skill</code></td>
+<td style="text-align: right;">1,892</td>
+<td style="text-align: right;">1.50×</td>
+<td style="text-align: right;">0.49×</td>
+<td style="text-align: right;">0.50×</td>
+</tr>
+<tr>
+<td><code>equipment</code></td>
+<td style="text-align: right;">698</td>
+<td style="text-align: right;">1.50×</td>
+<td style="text-align: right;">0.57×</td>
+<td style="text-align: right;">0.58×</td>
+</tr>
+<tr>
+<td><code>recipe</code></td>
+<td style="text-align: right;">2,172</td>
+<td style="text-align: right;">1.48×</td>
+<td style="text-align: right;">0.54×</td>
+<td style="text-align: right;">0.54×</td>
+</tr>
+<tr>
+<td><code>datacronTemplate</code></td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">1.43×</td>
+<td style="text-align: right;">0.61×</td>
+<td style="text-align: right;">0.61×</td>
+</tr>
+<tr>
+<td><code>statModSet</code></td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1.25×</td>
+<td style="text-align: right;">0.56×</td>
+<td style="text-align: right;">0.55×</td>
+</tr>
+<tr>
+<td><code>ability</code></td>
+<td style="text-align: right;">6,465</td>
+<td style="text-align: right;">1.12×</td>
+<td style="text-align: right;">0.79×</td>
+<td style="text-align: right;">0.79×</td>
+</tr>
+<tr>
+<td><code>datacronSet</code></td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1.04×</td>
+<td style="text-align: right;">0.75×</td>
+<td style="text-align: right;">0.76×</td>
+</tr>
+<tr>
+<td><code>campaign</code></td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">1.04×</td>
+<td style="text-align: right;">1.00×</td>
+<td style="text-align: right;">1.00×</td>
+</tr>
+<tr>
+<td><code>datacronHelpEntry</code></td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">1.00×</td>
+<td style="text-align: right;">0.56×</td>
+<td style="text-align: right;">0.53×</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Aggregate across all 14 segments:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">dict</th>
+<th style="text-align: right;">typed</th>
+<th style="text-align: right;">ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Decode wall (sum)</td>
+<td style="text-align: right;">~3,290 ms</td>
+<td style="text-align: right;"><strong>~1,840 ms</strong></td>
+<td style="text-align: right;"><strong>1.79× faster</strong></td>
+</tr>
+<tr>
+<td>Peak alloc (sum)</td>
+<td style="text-align: right;">~3.5 GiB</td>
+<td style="text-align: right;"><strong>~2.3 GiB</strong></td>
+<td style="text-align: right;"><strong>0.66×</strong></td>
+</tr>
+<tr>
+<td>Resident size (sum)</td>
+<td style="text-align: right;">~3.5 GiB</td>
+<td style="text-align: right;"><strong>~2.3 GiB</strong></td>
+<td style="text-align: right;"><strong>0.66×</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decision rule</strong> (pre-registered in the bench script, identical to the
+units-only probe):
+- <code>speed_ratio ≥ 1.5×</code> AND <code>memory_ratio ≤ 0.7×</code> → green-light typing
+  remaining segments.
+- <code>speed_ratio &lt; 1.2×</code> OR <code>memory_ratio &gt; 0.9×</code> → stop here.
+- In-between → judgment call.</p>
+<p><strong>Outcome:</strong> aggregate <strong>1.79× faster</strong> AND <strong>0.66× memory</strong> — both
+thresholds met → green-light typing the remaining ~70 <code>/data</code> segments
+in a follow-up v3.1 phase if operator demand warrants.</p>
+<p><strong>Where the typing didn't move the needle:</strong>
+- <code>campaign</code> (1.04× speed, 1.00× memory). 16 entries, but each has a
+  deeply nested <code>campaignMap.campaignNodeDifficultyGroup.campaignNode</code>
+  list that v3.1 leaves as <code>dict[str, Any]</code>. The bulk is in the
+  un-typed sub-tree; typing only the outer envelope barely helps.
+  Deep-typing the <code>campaignNode</code> shape is a future-phase candidate.
+- <code>ability</code> (1.12× speed). Same story — <code>aiParams</code>, <code>synergy</code>,
+  <code>visualTarget</code>, <code>tier</code>, <code>descriptiveTag</code> left as dicts because their
+  shapes are sparse / inconsistent across the 6,465 entries.
+- Very small segments (<code>statModSet</code>, <code>datacronSet</code>, <code>datacronHelpEntry</code>).
+  Decode times are sub-millisecond; ratios are noisy and not meaningful.</p>
+<p><strong>Caveat:</strong> the helper's runtime path uses <code>msgspec.convert</code> on dicts
+(no JSON re-encode), since callers operate on dicts from
+<code>GameDataCache</code> or <code>get_game_data</code>. The bench's bytes-based comparison
+isolates the decoder cost. Real-world cost on the cached path is lower
+than the bench numbers because <code>msgspec.convert</code> walks the in-memory
+dict tree directly.</p>
+<h3 id="v31-typeddict-client-split-codegen">v3.1 — typed/dict client split + codegen<a class="headerlink" href="#v31-typeddict-client-split-codegen" title="Permanent link">&para;</a></h3>
+<p>Restructures the public surface into two import paths
+(<code>swgoh_comlink.*</code> = dict-default; <code>swgoh_comlink.typed.*</code> =
+typed-Struct default) and code-generates all four client classes
+(sync/async × dict/typed) from a single manifest. See
+<code>docs/adr/0005-typed-dict-client-split.md</code> and <code>docs/v3/codegen.md</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">Before (v3.0)</th>
+<th style="text-align: right;">After (v3.1-research)</th>
+<th>Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cold <code>import swgoh_comlink</code></td>
+<td style="text-align: right;">7.0 ms</td>
+<td style="text-align: right;"><strong>7.8 ms</strong></td>
+<td>+11% (still well under Phase 5's headline)</td>
+</tr>
+<tr>
+<td>Public client classes</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;"><strong>4</strong></td>
+<td>sync/async × dict/typed</td>
+</tr>
+<tr>
+<td>Hand-maintained endpoint method bodies</td>
+<td style="text-align: right;">32 (2 clients × 16)</td>
+<td style="text-align: right;"><strong>0</strong> (all generated from manifest)</td>
+<td>full elimination</td>
+</tr>
+<tr>
+<td>Manifest entries (single source of truth)</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;"><strong>15</strong></td>
+<td>one entry per uniform endpoint</td>
+</tr>
+<tr>
+<td>Hand-written escape hatches</td>
+<td style="text-align: right;">8 (per-client)</td>
+<td style="text-align: right;"><strong>5</strong> (per surface, in mixins)</td>
+<td>shared across dict/typed</td>
+</tr>
+<tr>
+<td>Codegen invariant tests</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><strong>107</strong></td>
+<td>guards the 2×2 surface contract</td>
+</tr>
+</tbody>
+</table>
+<p>No runtime behavior changes — the four generated clients call the same
+<code>_post</code> / <code>_request</code> / <code>_retry</code> paths Phase 4 + Phase 2 set up. The
+codegen lets all four track a single manifest entry per endpoint so a
+schema change ripples through every variant atomically.</p>
+<h3 id="v31-async-aware-gamedatacache">v3.1 — async-aware <code>GameDataCache</code><a class="headerlink" href="#v31-async-aware-gamedatacache" title="Permanent link">&para;</a></h3>
+<p><code>GameDataCache</code> grows <code>a*</code> twins of every client-touching method
+(<code>acurrent_version</code>, <code>aget_game_data</code>, <code>aget_localization</code>,
+<code>aevict_old_versions</code>, <code>aclose</code>) and an <code>async with</code> lifecycle.
+Blocking diskcache and msgpack ops run on <code>asyncio.to_thread</code>;
+in-memory hits stay synchronous. Same disk store and memo as the sync
+surface — a sync warmup script can populate a cache an async runtime
+reads.</p>
+<p>Async cache parity on the same <code>/data</code> cassette:</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th style="text-align: right;">Sync <code>get_game_data</code></th>
+<th style="text-align: right;">Async <code>aget_game_data</code></th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cold (fresh disk; full pipeline)</td>
+<td style="text-align: right;">3,462 ms</td>
+<td style="text-align: right;">4,291 ms</td>
+<td><code>asyncio.run</code> per-iter loop construction; in a live event loop this overhead is gone.</td>
+</tr>
+<tr>
+<td>Disk-warm (new instance per call)</td>
+<td style="text-align: right;">3,350 ms (1.0× vs cold)</td>
+<td style="text-align: right;">3,973 ms (1.1× vs async cold)</td>
+<td>Identical underlying work; +~0.6 ms <code>asyncio.to_thread</code> overhead.</td>
+</tr>
+<tr>
+<td>In-memory warm (same instance)</td>
+<td style="text-align: right;">0.0003 ms (<strong>10⁷×</strong>)</td>
+<td style="text-align: right;">0.1034 ms (<strong>4.15×10⁴</strong>)</td>
+<td>Bench overstates async warm cost — each iter spins up a fresh event loop. Real per-call cost in a live loop is the same dict access (~0.0003 ms).</td>
+</tr>
+</tbody>
+</table>
+<p>The 4.15×10⁴ warm headline still clears the Phase 7 100–1000× target
+by 40×. Async users were locked out of <code>GameDataCache</code> in v3.0; v3.1
+gives them the same disk + memo with the same correctness guarantees.</p>
+<h3 id="v32-statcalc-internals-bimorphic-input-cached-game_data">v3.2 — StatCalc internals (bimorphic input + cached game_data)<a class="headerlink" href="#v32-statcalc-internals-bimorphic-input-cached-game_data" title="Permanent link">&para;</a></h3>
+<p>Runs on <code>v3.2-research</code> (off <code>v3.1-research</code>; v3.0 surface stays frozen
+per ADR-0001). Three orthogonal axes researched; two winners shipped
+per the pre-registered decision rule in
+<a href="../../adr/0006-statcalc-internals-overhaul/">ADR-0006</a>. The other six
+candidates stay on throwaway prototype branches.</p>
+<p><strong>What shipped</strong></p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th style="text-align: right;">Measured</th>
+<th>Threshold</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A</strong> — <code>StatCalc.calc_player_stats(player_struct)</code> bimorphic</td>
+<td style="text-align: right;">+22.9 % vs dict input (5.2 ms on a 22.6 ms calc)</td>
+<td>≤ 10 % Struct overhead <strong>OR</strong> ship floor option</td>
+<td><strong>SHIPS</strong> (floor)</td>
+</tr>
+<tr>
+<td><strong>E</strong> — <code>get_statcalc_game_data(client, cache=cache)</code></td>
+<td style="text-align: right;">25.74 ms → 3.62 ms cold-start (+85.9 %)</td>
+<td>≥ 50 % cold-start improvement</td>
+<td><strong>SHIPS</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>What didn't</strong></p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th style="text-align: right;">Measured</th>
+<th>Threshold</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B — partial-conversion adapter</td>
+<td style="text-align: right;">+21.4 %</td>
+<td>≤ 10 % Struct overhead</td>
+<td>Defer (within ±1 % of A)</td>
+</tr>
+<tr>
+<td>C — accessor-subclass</td>
+<td style="text-align: right;">+23.6 %</td>
+<td>≤ 10 % Struct overhead</td>
+<td>Defer (slightly worse than A)</td>
+</tr>
+<tr>
+<td>D — <code>ProcessPoolExecutor</code> fan-out</td>
+<td style="text-align: right;">21.59 ms → 25.40 ms at 4w (<strong>0.85×</strong>)</td>
+<td>≥ 2× speedup AND ≤ 1 % serial regression</td>
+<td>Defer (regresses)</td>
+</tr>
+<tr>
+<td>F — typed-Struct game_data tables</td>
+<td style="text-align: right;">~+1.3 % (mechanism-bound; micro-bench, no prototype)</td>
+<td>≥ 10 % hot-path</td>
+<td>Defer (mechanism-bound below threshold)</td>
+</tr>
+<tr>
+<td>G — direct v3.1 typed-segment consumption</td>
+<td style="text-align: right;">est. -5 % to +10 % (extrapolation from F's micro-bench; no prototype)</td>
+<td>≥ 10 % hot-path</td>
+<td>Defer (negative-bound payoff)</td>
+</tr>
+<tr>
+<td>H — hot-table index restructuring</td>
+<td style="text-align: right;">+5.7 % targeted variant</td>
+<td>≥ 10 % hot-path</td>
+<td>Defer (aggressive variant broke parity on mod-set bonuses)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key findings</strong></p>
+<ul>
+<li><strong>Adapter cost is mechanism-bound by per-Mod conversion.</strong> All three
+  bimorphic candidates (A/B/C) land within ±1 % of each other because
+  the bulk of the work is <code>msgspec.to_builtins</code> walking the Mod
+  sub-Structs. B's "skip Player metadata" saves ~0.3 ms; C's
+  "interleave with calc" adds isinstance overhead that cancels the
+  win. Conclusion: the simplest of the three (A) ships; the recipe
+  recommends <code>client.get_player(..., raw=True)</code> for hot loops.</li>
+<li><strong>Parallelism is the wrong shape for this workload.</strong> Python's
+  <code>ProcessPoolExecutor</code> IPC break-even (~500 µs/task even with
+  batching) exceeds StatCalc's per-unit work (~70 µs). Parallel wins
+  on <code>player_small</code> (1.6× at 4w) and loses on <code>player_large</code> (0.85×
+  at 8w) — the result-pickle cost scales with batch size and the
+  serial ship-pass tail eats into the chars-pass gain. Wait for either
+  Cython inner loops (per-unit work grows) or sub-interpreters / free-
+  threaded Python (IPC cost shrinks) before revisiting.</li>
+<li><strong>Cold-start is the single most leveraged optimization in StatCalc
+  today.</strong> Just persisting the normalized form (no algorithmic
+  change) gives 7× faster process startup. Big win for cron jobs and
+  serverless callers; no-op for long-running bots.</li>
+<li><strong>Plan estimates ran consistently optimistic.</strong> Across Phases 2-4,
+  none of the eight candidates exceeded its plan-stated payoff
+  estimate; six fell short or failed entirely. The pre-registered
+  decision rule (written before any measurement) was load-bearing for
+  not shipping things that didn't pay back.</li>
+</ul>
+<h3 id="v33-statcalc-rewrite-research-phase-1-baseline-adr-0007">v3.3 — StatCalc rewrite research (Phase 1 baseline, ADR-0007)<a class="headerlink" href="#v33-statcalc-rewrite-research-phase-1-baseline-adr-0007" title="Permanent link">&para;</a></h3>
+<p>Runs on <code>v3.3-research</code> (off <code>v3.2-research</code>; v3.0 surface stays
+frozen per ADR-0001). v3.3 is a broad research sweep — pure-Python
+restructure + native acceleration (Cython / mypyc / Rust) +
+algorithmic re-attacks of v3.2's H + a typed-fastpath for the
+bimorphic +22.9 % cost. Pre-registered decision rule lives in
+<a href="../../adr/0007-statcalc-rewrite-evaluation/">ADR-0007</a>.</p>
+<p><strong>Phase 1 baseline (recorded against v3.2 shipped code at SHA
+<code>ef7a542</code>):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">Measured</th>
+<th>v3.3 ship threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>calc_player_stats(dict)</code> warm, <code>player_large</code> (397 units)</td>
+<td style="text-align: right;"><strong>21.8 ms</strong></td>
+<td>Hot-path: ≤ 19.6 ms (≥ 10 % improvement)</td>
+</tr>
+<tr>
+<td><code>calc_player_stats(Player_struct)</code> warm, bimorphic</td>
+<td style="text-align: right;"><strong>27.4 ms</strong> (+25.8 %)</td>
+<td>Ergonomics: ≤ 22.9 ms (Struct overhead ≤ 5 %)</td>
+</tr>
+<tr>
+<td><code>cold_start: GameDataBuilder + StatCalc.__init__</code></td>
+<td style="text-align: right;">24.9 ms</td>
+<td>already shipped (Candidate E cached path: 3.6 ms)</td>
+</tr>
+<tr>
+<td><code>game_data resident size</code> (asizeof, legacy dict tables)</td>
+<td style="text-align: right;"><strong>12.9 MB</strong></td>
+<td>Memory: ≤ 10.3 MB (≥ 20 % reduction)</td>
+</tr>
+<tr>
+<td><code>calc_player_stats</code> transient peak, <code>player_large</code></td>
+<td style="text-align: right;">18.0 MB</td>
+<td>Informational — no bar</td>
+</tr>
+<tr>
+<td><code>msgspec.to_builtins(roster_unit)</code> per-unit cost</td>
+<td style="text-align: right;"><strong>~6.0 µs</strong></td>
+<td>(Phase 4b typed-fastpath target — replace with direct getattr)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Surprises from the Phase 1 measurement</strong> (vs. assumptions in the
+plan):</p>
+<ul>
+<li><strong><code>game_data</code> is ~13 MB, not 50–100 MB.</strong> Plan over-estimated by
+  ~5×. The ≥ 20 % reduction bar (≤ 10.3 MB target) is still
+  meaningful but a smaller absolute win than imagined. Worth keeping
+  as a metric; not worth blocking a ship on it alone.</li>
+<li><strong><code>_format_stats</code> is the new #1 cProfile consumer, not
+  <code>_table_get</code>.</strong> Cumulative time: <code>_format_stats</code> 119 ms (39 %) vs
+  <code>_table_get</code> 85 ms (28 %). The v3.2 cProfile attribution noted
+  <code>_table_get</code> because it was the loudest individual function; once
+  you sum the inner work _format_stats does, it dominates. Phase 2's
+  decomposition target is well-placed.</li>
+<li><strong>Bimorphic conversion confirmed as 100 % <code>to_builtins</code>.</strong>
+  cProfile dump shows <code>_to_dict_if_struct</code> + <code>msgspec._core.to_builtins</code>
+  together = 22 ms of the 330 ms profile run, exactly matching the
+  bench's +25.8 % overhead. Phase 4b's typed-fastpath has a
+  surgically clear target.</li>
+</ul>
+<p>Subsequent Phase 2–4 prototype branches measure against this baseline.
+Phase 5 will fill in the per-candidate matrix here once the integration
+commit lands.</p>
+<p><strong>Phase 5 outcome (recorded against v3.3 integration HEAD):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th style="text-align: right;">Measured</th>
+<th>Threshold</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>calc_player_stats(dict)</code> warm, v3.3 integration</td>
+<td style="text-align: right;"><strong>18.24 ms</strong> (+16.3 % vs v3.2 baseline 21.80 ms)</td>
+<td>≥ 10 % hot-path</td>
+<td><strong>SHIPS</strong></td>
+</tr>
+<tr>
+<td><code>calc_player_stats(Player_struct)</code> via typed-fastpath</td>
+<td style="text-align: right;">+10.1 % overhead (down from v3.2 +22.9 %)</td>
+<td>≤ 5 % bimorphic</td>
+<td>Below bar; ships as partial-win</td>
+</tr>
+<tr>
+<td><code>game_data resident size</code></td>
+<td style="text-align: right;">unchanged at 12.9 MB</td>
+<td>≥ 20 %</td>
+<td>Nothing shipped (no candidate targeted memory)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Candidate matrix (all measured on player_large warm; v3.2 dict
+baseline = 21.80 ms):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Candidate</th>
+<th>Branch</th>
+<th style="text-align: right;">Hot-path</th>
+<th>Ergonomics</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 2 — pure-Python restructure</td>
+<td><code>pure-python-restructure</code></td>
+<td style="text-align: right;">+8.7 %</td>
+<td>—</td>
+<td>Ships combined</td>
+</tr>
+<tr>
+<td>Phase 3a — Cython + Phase 2</td>
+<td><code>cython-prototype</code></td>
+<td style="text-align: right;">+17.8 %</td>
+<td>—</td>
+<td>Cleared but distribution cost too high — defer</td>
+</tr>
+<tr>
+<td>Phase 3b — mypyc + Phase 2</td>
+<td><code>mypyc-prototype</code></td>
+<td style="text-align: right;">+15.0 %</td>
+<td>—</td>
+<td>Cleared but distribution cost too high — defer</td>
+</tr>
+<tr>
+<td>Phase 3c — Rust/PyO3 + Phase 2</td>
+<td><code>rust-kernel-prototype</code></td>
+<td style="text-align: right;">est. ~+10-15 %</td>
+<td>—</td>
+<td>Mechanism-bound below Cython — defer</td>
+</tr>
+<tr>
+<td>Phase 4a — Candidate H re-attack</td>
+<td>not prototyped</td>
+<td style="text-align: right;">est. ~+5-8 % alone</td>
+<td>—</td>
+<td>Defer (covered by Cython in combined results)</td>
+</tr>
+<tr>
+<td>Phase 4b — typed-fastpath</td>
+<td><code>typed-fastpath</code></td>
+<td style="text-align: right;">—</td>
+<td>+10.1 % bimorphic overhead</td>
+<td>Ships as partial-win</td>
+</tr>
+<tr>
+<td><strong>Phase 2 + 4b integration</strong></td>
+<td><code>final-integration</code></td>
+<td style="text-align: right;"><strong>+16.3 %</strong></td>
+<td>bimorphic +10.1 % (down from +22.9 %)</td>
+<td><strong>SHIPS</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key v3.3 finding:</strong> the 15-wheel-per-release native distribution
+matrix is the binding constraint on Cython/mypyc/Rust shipping, not
+their raw speed. All three cleared (or near-cleared) the 10 % hot-path
+bar, but for a research library serving a small SWGOH community the
++6-9 percentage points of additional speed do not justify 30-60 min
+of CI per release tag. Pure-Python restructure + typed-fastpath
+together cleared the bar without the distribution complexity. Native
+variants stay on throwaway prototype branches as future options.</p>
+<h2 id="what-v3-didnt-deliver-deferred-to-v31v32">What v3 didn't deliver (deferred to v3.1/v3.2)<a class="headerlink" href="#what-v3-didnt-deliver-deferred-to-v31v32" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>[ratelimit]</code></strong> + <code>[circuitbreaker]</code> extras — ADR-0004</li>
+<li>~~<strong>Async-aware StatCalc</strong> with threshold-based <code>ProcessPoolExecutor</code>~~ — prototyped in <code>v3.2</code>; D regresses on large rosters; deferred without ship (ADR-0006)</li>
+<li><strong><code>StatCalc/</code> → <code>statcalc/</code></strong> PEP 8 rename</li>
+<li><strong>Deeper <code>Mod.equipment</code> / <code>unit_stat</code></strong> typing (needs non-empty cassette samples)</li>
+<li>~~<strong>Async-aware <code>GameDataCache</code></strong> for <code>SwgohComlinkAsync</code>~~ — landed in <code>v3.1-research</code></li>
+<li>~~<strong><code>GameDataBuilder</code> rewrite</strong> atop GameDataCache~~ — landed in <code>v3.2-research</code> as <code>get_statcalc_game_data</code> helper (ADR-0006)</li>
+<li><strong><code>unasync</code>-style codegen</strong> to actually eliminate sync/async duplication</li>
+<li><strong><code>stamina</code> dependency</strong> — never added (Phase 2 hand-rolled the retry loop)</li>
+<li><strong><code>globals.py</code> rename</strong> — collides with the builtin <code>globals()</code> function
+  inside <code>__init__.py</code>; works today but is a known foot-gun</li>
+</ul>
+<h2 id="what-v3-delivered-beyond-plan">What v3 delivered beyond plan<a class="headerlink" href="#what-v3-delivered-beyond-plan" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>compat.to_pydantic(struct, model_class)</code></strong> — dynamic adapter without
+  doubling the type surface. The plan called for <code>as_model=True</code> per
+  endpoint method; the helper form serves the same need with zero kwarg
+  explosion.</li>
+<li><strong>GameDataCache in-memory memo</strong> — the plan only specified disk caching.
+  The realistic 10⁷× win comes from same-instance dict lookups; disk
+  alone gives ~1×.</li>
+</ul>
+<h2 id="how-to-reproduce">How to reproduce<a class="headerlink" href="#how-to-reproduce" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Fresh checkout + native ARM Python 3.11</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>git<span class="w"> </span>clone<span class="w"> </span>&lt;repo&gt;
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">cd</span><span class="w"> </span>comlink-python-v3
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.11
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>sync<span class="w"> </span>--group<span class="w"> </span>dev
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Record cassettes (once, with a live comlink + ally codes)</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nv">COMLINK_URL</span><span class="o">=</span>http://your.comlink.local:3000<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nv">SMALL_ROSTER_ALLYCODE</span><span class="o">=</span>&lt;small&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nv">LARGE_ROSTER_ALLYCODE</span><span class="o">=</span>&lt;large&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nv">GUILD_ID</span><span class="o">=</span>&lt;guild-id&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>benchmarks.v3._record
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="c1"># Run every bench from this report</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>benchmarks.v3.bench_v3_final
+</code></pre></div>
+<p>Per-phase per-bench results land in <code>benchmarks/v3/results/phase-*.json</code>.</p>
+<h2 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h2>
+<ul>
+<li>All numbers are on one machine. Phase-to-phase comparisons are valid
+  (same hardware, same Python, same cassettes); cross-platform / cross-CPU
+  comparisons aren't.</li>
+<li>Timing benches drift 30–50% run-to-run on a working laptop. Memory
+  baselines (deterministic — same bytes in, same allocations out) are
+  the stable signal. Documented per-phase as an open question.</li>
+<li>The Phase 3 plan's "Mann-Whitney U at p&lt;0.05 on every comparative
+  claim" was downgraded to "MWU only on Phase 3 headlines" (Plan D10).
+  This report relies on consistent direction-of-change across multiple
+  runs rather than statistical hypothesis testing per metric.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
