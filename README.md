@@ -38,7 +38,7 @@ pip install git+https://github.com/MarTrepodi/comlink-python.git@v3.0.0a2
 
 **Strongly recommended:** install the alpha in a dedicated virtual
 environment with a rollback path to the public v2.x release — see
-[`docs/v3/install-alpha.md`](docs/v3/install-alpha.md).
+[the alpha install guide](https://swgoh-utils.github.io/comlink-python/alpha/v3/install-alpha/).
 
 **What this gives you:**
 - Typed client at `from swgoh_comlink.typed import SwgohComlink`
@@ -49,13 +49,13 @@ environment with a rollback path to the public v2.x release — see
 - `healthcheck()`, `raw_request()`, connection-pool presets via `profile="bot"` / `"bulk"`, and
   opt-in retries via `retry=RetryPolicy(...)`
 
-See [`docs/v3/migration.md`](docs/v3/migration.md) for v2 → v3
-patterns and [`examples/typed/`](examples/typed/) for ready-to-run
+See the [migration guide](https://swgoh-utils.github.io/comlink-python/alpha/v3/migration/) for v2 → v3
+patterns and [`examples/typed/`](https://github.com/swgoh-utils/comlink-python/tree/release/v3.0.0a2/examples/typed) for ready-to-run
 examples of the typed surface.
 
 **What it does NOT promise:** API stability across alphas. Breaking
 changes between `aN` and `a(N+1)` are allowed. See
-[ADR-0008](docs/adr/0008-pre-release-distribution-via-github-releases.md)
+[ADR-0008](https://swgoh-utils.github.io/comlink-python/alpha/adr/0008-pre-release-distribution-via-github-releases/)
 for the policy. **Report bugs against the `v3` label.**
 
 ## Installation (stable v2)
@@ -75,9 +75,8 @@ The PyPI release tracks v2.x. For the v3 alpha see "Alpha (v3) install" above.
 Full documentation, including the API reference, is at
 [swgoh-utils.github.io/comlink-python](https://swgoh-utils.github.io/comlink-python/).
 It opens on the newest stable (2.x) release; each upstream `release/*` branch adds its
-own version to the picker, so v3 alphas appear there (alias `alpha`) once their
-release branch is pushed to swgoh-utils/comlink-python. Until then, read the v3
-guides in [`docs/`](docs/).
+own version to the picker. The newest v3 alpha is always at
+[swgoh-utils.github.io/comlink-python/alpha/](https://swgoh-utils.github.io/comlink-python/alpha/).
 
 ## Synchronous Usage
 
