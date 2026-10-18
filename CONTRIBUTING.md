@@ -547,7 +547,7 @@ Never paste your comlink `access_key` / `secret_key` into an issue.
 
 Releases are handled by the maintainer through GitHub Actions. Contributors don't need to manage versioning or releases, but here's how it works for reference:
 
-1. **prepare release** (`prepare-release.yml`) is dispatched on `develop`. It computes the next version from the Conventional Commits since the last tag (or a chosen `patch`/`minor`/`major` bump), regenerates `CHANGELOG.md`, and pushes a `release/vX.Y.Z` branch. If the computed version is a major, the job summary lists the commit lines that triggered it, and an `auto` bump stops unless one is a real `BREAKING CHANGE:` footer (see [Commit Messages](#commit-messages)).
+1. **prepare release** (`prepare-release.yml`) is dispatched on `develop`. It computes the next version from the Conventional Commits since the last tag (or a chosen `patch`/`minor`/`major` bump), regenerates `CHANGELOG.md`, pushes a `release/vX.Y.Z` branch, and dispatches **Deploy docs** on it. If the computed version is a major, the job summary lists the commit lines that triggered it, and an `auto` bump stops unless one is a real `BREAKING CHANGE:` footer (see [Commit Messages](#commit-messages)).
 2. The maintainer opens the release PR from that branch into `main` (a link is in the workflow summary). Its body restates every `Closes #N` from the PRs merged since the last release, so GitHub closes those issues when it merges. CI runs as normal and the PR is merged.
 3. **comlink-python release** (`release.yml`) is dispatched on `main`. It reads the version from `CHANGELOG.md`, builds the package — [hatch-vcs](https://github.com/ofek/hatch-vcs) stamps that version, so **no version string is committed to the repo** — and publishes to [PyPI](https://pypi.org/project/swgoh-comlink/) via trusted publishing.
 4. Only after a successful publish is the Git tag created and a GitHub Release cut, with release notes auto-generated from the PR history.
@@ -583,7 +583,7 @@ Deploys run **only from `release/*` branches of `swgoh-utils/comlink-python`**. 
 - **Pre-releases** take the alias for their kind (`alpha`, `beta`, `rc`, or `dev`, which wins for `aN.devM`) only when they are at least as new as every deployed version of that kind. They never touch `latest` or the default, and every page shows a "pre-release" banner ([`overrides/main.html`](overrides/main.html); the deploy sets `DOCS_PRERELEASE`, which feeds `extra.prerelease` in `mkdocs.yml`). Stable versions instead get Material's "older version" banner whenever they are not `latest`.
 - **Every release is its own folder.** `2.5.0` and `2.5.1` both stay in the picker; remove ones you no longer want with `mike delete` (below).
 - **Nothing else deploys.** Pushes to `main`, `develop` or tags, runs in forks, and manual runs on a non-`release/*` ref skip the job. Deleting a release branch after its PR merges leaves its docs on `gh-pages`.
-- **Release timing.** `prepare-release.yml` pushes `release/vX.Y.Z` before the release PR merges and before the PyPI publish, so a stable release's docs can go live (and take `latest`) before the package is on PyPI. That push is made with `GITHUB_TOKEN`, though, and GitHub does not start workflows from `GITHUB_TOKEN` pushes: run **Actions → Deploy docs → Run workflow** on the new release branch (later pushes to the branch, such as review fixes, deploy on their own).
+- **Release timing.** `prepare-release.yml` pushes `release/vX.Y.Z` before the release PR merges and before the PyPI publish, so a stable release's docs can go live (and take `latest`) before the package is on PyPI. That push is made with `GITHUB_TOKEN`, and GitHub does not start workflows from `GITHUB_TOKEN` pushes, so `prepare-release.yml` dispatches **Deploy docs** on the new branch itself (`workflow_dispatch` is the documented exception). Later pushes to the branch, such as review fixes, deploy on their own.
 - Deploys queue in the `gh-pages` concurrency group, so they never race.
 
 **Preview the versioned site locally** without touching the remote (the deploy commits to a local `gh-pages` branch only):
@@ -612,9 +612,11 @@ The site used to be deployed by `actions/deploy-pages` from `main`, as a single 
    uv run mike set-default --push latest
    ```
 
-3. **Switch the Pages source.** In **Settings → Pages → Build and deployment**, change **Source** from "GitHub Actions" to **"Deploy from a branch"**, branch **`gh-pages`**, folder **`/ (root)`**. Check that the root URL opens the 2.5.0 docs.
+3. **Switch the Pages source.** First allow the branch to deploy: in **Settings → Environments → `github-pages` → Deployment branches and tags**, add **`gh-pages`** (branch-based Pages builds still deploy through this environment, and it only allowed `main`). Then, in **Settings → Pages → Build and deployment**, change **Source** from "GitHub Actions" to **"Deploy from a branch"**, branch **`gh-pages`**, folder **`/ (root)`**. Check that the root URL opens the 2.5.0 docs.
 4. **Protect `gh-pages`** (optional, recommended). Add a ruleset or branch protection rule for `gh-pages` that blocks force pushes and deletion. Leave direct pushes allowed for GitHub Actions: the deploy pushes with the workflow's `GITHUB_TOKEN`, so a rule that requires pull requests or status checks would block it (or add "GitHub Actions" to the bypass list).
-5. **Clean up.** The old `github-pages` environment created by `deploy-pages` can be deleted, or kept for history.
+5. **Keep the `github-pages` environment.** Branch-based Pages builds (`pages-build-deployment`) deploy through it, so deleting it or removing `gh-pages` from its deployment branches stops the site from updating.
+
+This cutover was completed on 2026-10-18: `2.5.0` (`latest`) and `3.0.0a2` (`alpha`) are published, and `gh-pages` is protected by the **Protect gh-pages** ruleset.
 
 #### Maintaining versions
 
