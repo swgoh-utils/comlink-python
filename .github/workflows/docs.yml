@@ -22,7 +22,7 @@ name: Deploy docs
 # build-checks every PR.
 #
 # Pushes made with GITHUB_TOKEN (such as prepare-release.yml's) do not start this
-# workflow; run it by hand on that release branch instead.
+# workflow, so prepare-release.yml dispatches it on the branch it stages.
 #
 # One-time setup: Settings -> Pages -> Build and deployment -> Source:
 # "Deploy from a branch", branch `gh-pages`, folder `/ (root)`.
@@ -40,7 +40,8 @@ on:
       - "uv.lock"
       - ".github/workflows/docs.yml"
       - ".github/scripts/docs_version.py"
-  # Run by hand on a release/* branch, e.g. after prepare-release.yml pushed it.
+  # Dispatched by prepare-release.yml for the branch it stages; also run by hand
+  # on a release/* branch to rebuild that version.
   # Runs started on any other ref are skipped by the job condition below.
   workflow_dispatch:
 

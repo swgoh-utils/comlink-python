@@ -26,6 +26,8 @@ permissions:
   # Read merged PRs and their issues to restate closing keywords (closing_issues.py).
   pull-requests: read
   issues: read
+  # Dispatch docs.yml on the release branch (see "Deploy the release docs").
+  actions: write
 
 jobs:
   prepare:
@@ -126,6 +128,20 @@ jobs:
           # `docs` would list every release's regeneration in the next release.
           git commit -m "chore(changelog): update for ${tag}"
           git push --force-with-lease origin "${branch}"
+
+      # A push made with GITHUB_TOKEN does not start workflows, so docs.yml's
+      # `push: release/**` trigger never fires for the branch staged above.
+      # workflow_dispatch is the documented exception, so start the deploy
+      # explicitly: the release's docs publish (and take `latest` if it is the
+      # newest stable) as soon as its branch exists.
+      - name: Deploy the release docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="release/${{ steps.version.outputs.tag }}"
+          gh workflow run docs.yml --repo "${{ github.repository }}" --ref "${branch}"
+          echo "Dispatched docs.yml on ${branch}."
 
       - name: Summarise how to open the release PR
         run: |
