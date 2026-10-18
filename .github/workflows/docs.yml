@@ -1,39 +1,81 @@
 name: Deploy docs
 
-# Publishes the MkDocs site to GitHub Pages (https://swgoh-utils.github.io/comlink-python/).
+# Publishes the versioned MkDocs site (https://swgoh-utils.github.io/comlink-python/)
+# with mike. Every `release/*` branch publishes its own folder on the `gh-pages`
+# branch, named after the PEP 440 version in the branch name, and Material's version
+# picker reads the versions.json that mike keeps there.
 #
-# Deploys from `main` only, so the published docs always describe the latest release
-# rather than unreleased work on `develop`. CI's `docs` job still build-checks every PR.
+# .github/scripts/docs_version.py picks the alias from what is already deployed:
 #
-# One-time setup: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+#   branch               version     alias              title
+#   release/v2.5.0       2.5.0       latest (default)   2.5.0              newest stable so far
+#   release/v2.4.2       2.4.2       (none)             2.4.2              older than a deployed stable
+#   release/v3.0.0a2     3.0.0a2     alpha              3.0.0a2 (alpha)
+#   release/v3.0.0b1     3.0.0b1     beta               3.0.0b1 (beta)
+#   release/v3.0.0rc1    3.0.0rc1    rc                 3.0.0rc1 (rc)
+#   release/v3.0.0.dev1  3.0.0.dev1  dev                3.0.0.dev1 (dev)
+#
+# A stable version takes `latest` only if it is at least as new as every deployed
+# stable version; a pre-release takes its kind's alias only if it is at least as new
+# as every deployed version of that kind, and never touches `latest`. The root URL
+# redirects to `latest`. main, develop and tags do not deploy; CI's `docs` job
+# build-checks every PR.
+#
+# Pushes made with GITHUB_TOKEN (such as prepare-release.yml's) do not start this
+# workflow; run it by hand on that release branch instead.
+#
+# One-time setup: Settings -> Pages -> Build and deployment -> Source:
+# "Deploy from a branch", branch `gh-pages`, folder `/ (root)`.
+# See "Publishing the docs" in CONTRIBUTING.md.
 
 on:
   push:
-    branches: [main]
+    branches: ["release/**"]
     paths:
       - "docs/**"
+      - "overrides/**"
       - "src/**"
       - "mkdocs.yml"
       - "pyproject.toml"
+      - "uv.lock"
       - ".github/workflows/docs.yml"
+      - ".github/scripts/docs_version.py"
+  # Run by hand on a release/* branch, e.g. after prepare-release.yml pushed it.
+  # Runs started on any other ref are skipped by the job condition below.
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
+# Deploys push to the gh-pages branch, so they queue behind one another instead
+# of racing.
 concurrency:
-  group: pages
+  group: gh-pages
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build docs
+  deploy:
+    name: Deploy versioned docs
+    # Only release branches of the upstream repository publish; forks and runs on
+    # other refs never touch gh-pages.
+    if: github.repository == 'swgoh-utils/comlink-python' && startsWith(github.ref, 'refs/heads/release/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history: hatch-vcs needs the tags, and mike builds on top of the
+          # existing origin/gh-pages history.
+          fetch-depth: 0
+          # `mike deploy --push` pushes gh-pages with the token checkout stores.
+          # No artifacts are uploaded, so it never leaves the runner.
+          persist-credentials: true
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
+        with:
+          # This job publishes the site, so it must not restore a cache that
+          # other workflows (e.g. PR runs) can write.
+          enable-cache: false
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -43,25 +85,42 @@ jobs:
       - name: Install dependencies
         run: uv sync --group docs
 
-      - name: Build docs
+      - name: Pick docs version
+        id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          # `[]` when gh-pages does not exist yet.
+          deployed="$(uv run mike list --json)"
+          uv run --with packaging python .github/scripts/docs_version.py "$REF_NAME" "$deployed"
+
+      - name: Build docs (strict)
+        env:
+          DOCS_PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: uv run mkdocs build --strict
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: site/
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v5
+      - name: Deploy with mike
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ALIAS: ${{ steps.version.outputs.alias }}
+          TITLE: ${{ steps.version.outputs.title }}
+          SET_DEFAULT: ${{ steps.version.outputs.set_default }}
+          # Shows the pre-release banner (mkdocs.yml extra.prerelease).
+          DOCS_PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          if [[ -n "$ALIAS" ]]; then
+            uv run mike deploy --push --update-aliases --title "$TITLE" "$VERSION" "$ALIAS"
+          else
+            uv run mike deploy --push --title "$TITLE" "$VERSION"
+          fi
+
+          # Only the newest stable version gets here. Re-running it when the root
+          # already redirects to `latest` is a no-op (mike skips the empty commit).
+          if [[ "$SET_DEFAULT" == "true" ]]; then
+            uv run mike set-default --push latest
+          fi

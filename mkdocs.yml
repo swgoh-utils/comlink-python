@@ -7,6 +7,7 @@ edit_uri: edit/develop/docs/
 
 theme:
   name: material
+  custom_dir: overrides
   palette:
     - scheme: default
       primary: indigo
@@ -33,6 +34,18 @@ nav:
       - "StatCalc": api/statcalc.md
       - "Helpers": api/helpers.md
       - "Exceptions": api/exceptions.md
+
+extra:
+  # Versioned with mike: each release/* branch publishes its own folder on the
+  # gh-pages branch (see "Publishing the docs" in CONTRIBUTING.md).
+  version:
+    provider: mike
+    default: latest
+    alias: true
+  # Pre-release banner on every page (overrides/main.html). The deploy sets
+  # DOCS_PRERELEASE from the release branch's version; local builds use the
+  # default, which matches this line (2.x stable releases).
+  prerelease: !ENV [DOCS_PRERELEASE, false]
 
 extra_css:
   - stylesheets/extra.css

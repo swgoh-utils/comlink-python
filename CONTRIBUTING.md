@@ -18,6 +18,7 @@ Thanks for your interest in contributing to comlink-python! This guide covers ev
 - [Submitting a Pull Request](#submitting-a-pull-request)
 - [Issue Guidelines](#issue-guidelines)
 - [Release Process](#release-process)
+  - [Publishing the docs](#publishing-the-docs)
 - [Getting Help](#getting-help)
 
 ---
@@ -134,7 +135,7 @@ comlink-python/
 │   │   ├── backmerge.yml           # Stages the main → develop back-merge after a release
 │   │   ├── ci.yml                  # CI pipeline (lint, type-check, test, docs, build)
 │   │   ├── commitlint.yml          # Commit message validation (npm-based)
-│   │   ├── docs.yml                # Publishes the docs site to GitHub Pages from main
+│   │   ├── docs.yml                # Publishes the versioned docs site (mike → gh-pages)
 │   │   ├── integration.yml         # Integration tests against live comlink services
 │   │   ├── labeler.yml             # Auto-label PRs by file path
 │   │   ├── prepare-release.yml     # Regenerates CHANGELOG.md and stages a release branch
@@ -184,6 +185,7 @@ comlink-python/
 ├── SECURITY.md                     # Supported versions and vulnerability reporting
 ├── SUPPORT.md                      # Where to get help / report what
 ├── mkdocs.yml                      # Docs site configuration
+├── overrides/                      # MkDocs Material theme overrides (version banners)
 ├── pyproject.toml                  # Project metadata, build config, tool settings
 └── uv.lock                         # Locked dependency versions
 ```
@@ -527,6 +529,68 @@ This is why conventional commit messages matter — they become the changelog an
 - **Patch** (2.4.x): Bug fixes, documentation
 - **Minor** (2.x.0): New features, backward-compatible changes
 - **Major** (x.0.0): Breaking API changes
+
+### Publishing the docs
+
+The docs site at [swgoh-utils.github.io/comlink-python](https://swgoh-utils.github.io/comlink-python/) is versioned with [mike](https://github.com/jimporter/mike). Each version has its own copy of the site in a folder on the `gh-pages` branch, and the version picker in the header (Material for MkDocs, `extra.version.provider: mike`) switches between them.
+
+Deploys run **only from `release/*` branches of `swgoh-utils/comlink-python`**. [`docs.yml`](.github/workflows/docs.yml) runs after every push to one that touches the docs. The docs version is the [PEP 440](https://peps.python.org/pep-0440/) version in the branch name (`release/` and an optional `v` are stripped), and [`.github/scripts/docs_version.py`](.github/scripts/docs_version.py) picks the alias from what is already deployed:
+
+| Branch | Version | Alias | Picker title |
+|---|---|---|---|
+| `release/v2.5.0` (newest stable so far) | `2.5.0` | `latest`, the site default | `2.5.0` |
+| `release/v2.4.2` after `2.5.0` is deployed | `2.4.2` | none | `2.4.2` |
+| `release/v2.6.0` after `2.5.0` | `2.6.0` | `latest` (moves off `2.5.0`) | `2.6.0` |
+| `release/v3.0.0a2` | `3.0.0a2` | `alpha` | `3.0.0a2 (alpha)` |
+| `release/v3.0.0b1` | `3.0.0b1` | `beta` | `3.0.0b1 (beta)` |
+| `release/v3.0.0rc1` | `3.0.0rc1` | `rc` | `3.0.0rc1 (rc)` |
+| `release/v3.0.0.dev1`, `release/v3.0.0a2.dev1` | as named | `dev` | `… (dev)` |
+| `release/v3.0.0a2` after `3.0.0a3` is deployed | `3.0.0a2` | none | `3.0.0a2 (alpha)` |
+| `release/next`, `release/v2.5.0+local` | the job fails: not a public PEP 440 version | | |
+
+- **Stable versions** take `latest` only when they are at least as new as every stable version already deployed, so a patch for an older line never takes it. The root URL redirects to `latest`.
+- **Pre-releases** take the alias for their kind (`alpha`, `beta`, `rc`, or `dev`, which wins for `aN.devM`) only when they are at least as new as every deployed version of that kind. They never touch `latest` or the default, and every page shows a "pre-release" banner ([`overrides/main.html`](overrides/main.html); the deploy sets `DOCS_PRERELEASE`, which feeds `extra.prerelease` in `mkdocs.yml`). Stable versions instead get Material's "older version" banner whenever they are not `latest`.
+- **Every release is its own folder.** `2.5.0` and `2.5.1` both stay in the picker; remove ones you no longer want with `mike delete` (below).
+- **Nothing else deploys.** Pushes to `main`, `develop` or tags, runs in forks, and manual runs on a non-`release/*` ref skip the job. Deleting a release branch after its PR merges leaves its docs on `gh-pages`.
+- **Release timing.** `prepare-release.yml` pushes `release/vX.Y.Z` before the release PR merges and before the PyPI publish, so a stable release's docs can go live (and take `latest`) before the package is on PyPI. That push is made with `GITHUB_TOKEN`, though, and GitHub does not start workflows from `GITHUB_TOKEN` pushes: run **Actions → Deploy docs → Run workflow** on the new release branch (later pushes to the branch, such as review fixes, deploy on their own).
+- Deploys queue in the `gh-pages` concurrency group, so they never race.
+
+**Preview the versioned site locally** without touching the remote (the deploy commits to a local `gh-pages` branch only):
+
+```bash
+uv sync --group docs
+uv run mike deploy --title "2.5.0" 2.5.0 latest   # or: --title "3.0.0a2 (alpha)" 3.0.0a2 alpha
+uv run mike set-default latest
+uv run mike serve                                 # http://localhost:8000/
+git branch -D gh-pages                            # throw the local preview away
+```
+
+For a quick single-version preview, `uv run mkdocs serve` is still enough; the version picker only appears under `mike serve`.
+
+#### One-time cutover (maintainer)
+
+The site used to be deployed by `actions/deploy-pages` from `main`, as a single version. To switch to the versioned layout:
+
+1. **Merge the versioned docs setup into `develop`** (the normal PR), so every future `release/vX.Y.Z` branch carries it.
+2. **Publish 2.5.0.** `main` is the 2.5.0 release, so cut `release/v2.5.0` from `main`, bring the docs setup onto it (cherry-pick the merged commits from `develop`), and push it to `swgoh-utils/comlink-python`. The deploy creates `gh-pages` with `2.5.0/`, the `latest` alias and the root redirect. The old site stays live while the Pages source is still "GitHub Actions". By hand instead:
+
+   ```bash
+   git switch release/v2.5.0
+   uv sync --group docs
+   uv run mike deploy --push --update-aliases --title "2.5.0" 2.5.0 latest
+   uv run mike set-default --push latest
+   ```
+
+3. **Switch the Pages source.** In **Settings → Pages → Build and deployment**, change **Source** from "GitHub Actions" to **"Deploy from a branch"**, branch **`gh-pages`**, folder **`/ (root)`**. Check that the root URL opens the 2.5.0 docs.
+4. **Protect `gh-pages`** (optional, recommended). Add a ruleset or branch protection rule for `gh-pages` that blocks force pushes and deletion. Leave direct pushes allowed for GitHub Actions: the deploy pushes with the workflow's `GITHUB_TOKEN`, so a rule that requires pull requests or status checks would block it (or add "GitHub Actions" to the bypass list).
+5. **Clean up.** The old `github-pages` environment created by `deploy-pages` can be deleted, or kept for history.
+
+#### Maintaining versions
+
+- **Remove a version** (for example a superseded pre-release): `uv run mike delete --push 3.0.0a1`.
+- **Retitle** a version: `uv run mike retitle --push 3.0.0b1 "3.0.0b1 (beta, final)"`.
+- **Move an alias by hand**: `uv run mike alias --push --update-aliases 2.5.1 latest`.
+- **Rebuild a version** by pushing to (or re-running the workflow on) its release branch; recreate the branch from its tag if it was deleted.
 
 ---
 
