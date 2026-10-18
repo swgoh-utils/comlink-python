@@ -59,14 +59,16 @@ not_in_nav: |
   /v3/releases/runbook-*.md
 
 extra:
-  # Versioned with mike: each release line publishes its own folder on the
+  # Versioned with mike: each release/* branch publishes its own folder on the
   # gh-pages branch (see "Publishing the docs" in CONTRIBUTING.md).
   version:
     provider: mike
     default: latest
     alias: true
-  # Pre-release lines show a banner on every page (overrides/main.html).
-  prerelease: true
+  # Pre-release banner on every page (overrides/main.html). The deploy sets
+  # DOCS_PRERELEASE from the release branch's version; local builds use the
+  # default, which matches this line (3.x pre-releases).
+  prerelease: !ENV [DOCS_PRERELEASE, true]
 
 extra_css:
   - stylesheets/extra.css

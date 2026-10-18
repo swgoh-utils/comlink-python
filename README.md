@@ -74,8 +74,10 @@ The PyPI release tracks v2.x. For the v3 alpha see "Alpha (v3) install" above.
 
 Full documentation, including the API reference, is at
 [swgoh-utils.github.io/comlink-python](https://swgoh-utils.github.io/comlink-python/).
-It opens on the stable 2.x docs; the v3 alpha docs are under **3.0 (pre-release)** in
-the version picker ([swgoh-utils.github.io/comlink-python/dev/](https://swgoh-utils.github.io/comlink-python/dev/)).
+It opens on the newest stable (2.x) release; each upstream `release/*` branch adds its
+own version to the picker, so v3 alphas appear there (alias `alpha`) once their
+release branch is pushed to swgoh-utils/comlink-python. Until then, read the v3
+guides in [`docs/`](docs/).
 
 ## Synchronous Usage
 
@@ -286,7 +288,7 @@ comlink = SwgohComlink(retry=RetryPolicy(attempts=3, min_interval=0.4))
 ```
 
 `with_options(retry=...)` derives a client with a different policy. See the
-[client documentation](https://swgoh-utils.github.io/comlink-python/dev/api/comlink/#retries-and-pacing)
+[client documentation](https://swgoh-utils.github.io/comlink-python/latest/api/comlink/#retries-and-pacing)
 for the full behaviour.
 
 ### Version caching
