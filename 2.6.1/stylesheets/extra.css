@@ -1,0 +1,101 @@
+/* Custom heading colors for documentation */
+h1 {
+  color: #3f51b5 !important;  /* indigo — matches primary theme */
+}
+
+h2 {
+  color: #5c6bc0 !important;  /* lighter indigo */
+}
+
+h3 {
+  color: #7986cb !important;  /* even lighter indigo */
+}
+
+h4, h5, h6 {
+  color: #9fa8da !important;
+}
+
+/* Dark mode overrides */
+[data-md-color-scheme="slate"] h1 {
+  color: #7986cb !important;
+}
+
+[data-md-color-scheme="slate"] h2 {
+  color: #9fa8da !important;
+}
+
+[data-md-color-scheme="slate"] h3 {
+  color: #c5cae9 !important;
+}
+
+[data-md-color-scheme="slate"] h4,
+[data-md-color-scheme="slate"] h5,
+[data-md-color-scheme="slate"] h6 {
+  color: #e8eaf6 !important;
+}
+
+/* ── mkdocstrings: function & method name colors ── */
+
+/* Function/method names in headings */
+.doc-function .doc-heading code,
+.doc-method .doc-heading code {
+  color: #1565c0 !important;  /* blue */
+}
+
+/* Class names in headings */
+.doc-class .doc-heading code {
+  color: #6a1b9a !important;  /* purple */
+}
+
+/* Attribute/property names */
+.doc-attribute .doc-heading code {
+  color: #00838f !important;  /* teal */
+}
+
+/* Parameter names in signatures */
+.doc-param-name {
+  color: #e65100 !important;  /* deep orange */
+}
+
+/* Parameter type annotations */
+.doc-param-type code {
+  color: #2e7d32 !important;  /* green */
+}
+
+/* Return type annotations */
+.doc-returns-type code {
+  color: #2e7d32 !important;  /* green — same as param types */
+}
+
+/* Inline code references (e.g., `SwgohComlink` in body text) */
+.md-typeset code:not(.highlight code) {
+  color: #d32f2f;  /* red for inline code */
+}
+
+/* ── Dark mode overrides for mkdocstrings ── */
+
+[data-md-color-scheme="slate"] .doc-function .doc-heading code,
+[data-md-color-scheme="slate"] .doc-method .doc-heading code {
+  color: #64b5f6 !important;  /* light blue */
+}
+
+[data-md-color-scheme="slate"] .doc-class .doc-heading code {
+  color: #ce93d8 !important;  /* light purple */
+}
+
+[data-md-color-scheme="slate"] .doc-attribute .doc-heading code {
+  color: #4dd0e1 !important;  /* light teal */
+}
+
+[data-md-color-scheme="slate"] .doc-param-name {
+  color: #ffab40 !important;  /* amber */
+}
+
+[data-md-color-scheme="slate"] .doc-param-type code,
+[data-md-color-scheme="slate"] .doc-returns-type code {
+  color: #81c784 !important;  /* light green */
+}
+
+[data-md-color-scheme="slate"] .md-typeset code:not(.highlight code) {
+  color: #ef9a9a;  /* light red for inline code */
+}
