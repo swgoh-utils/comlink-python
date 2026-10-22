@@ -42,6 +42,10 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    # Not imported directly: httpx verifies TLS against certifi's CA bundle. The floor
+    # drops the emSign roots with compromised intermediates (GHSA-6q48-6c7w-9gw2) and
+    # makes upgrading this package upgrade an older certifi along with it.
+    "certifi>=2026.10.19",
     "httpx>=0.28",
     "typing-extensions>=4.15.0",
 ]
