@@ -32,7 +32,8 @@ jobs:
       - name: Validate commits
         run: |
           set -euo pipefail
-          git fetch --no-tags --quiet origin main
+          git fetch --no-tags --quiet origin \
+            +main:refs/remotes/origin/main +develop:refs/remotes/origin/develop
           base="${{ github.event.pull_request.base.sha }}"
           head="${{ github.event.pull_request.head.sha }}"
           # Lint only the commits this PR actually introduces: exclude merge
@@ -40,7 +41,15 @@ jobs:
           # automated back-merge PRs re-introduce main's (sometimes
           # non-conventional squash) commits — those are already on main and are
           # not this PR's responsibility to police.
-          commits="$(git rev-list --no-merges --reverse "${base}..${head}" --not FETCH_HEAD)"
+          landed=(origin/main)
+          # A release PR into main carries every develop commit, and each one was
+          # already linted (or exempted, as Dependabot's are below) by the PR that
+          # landed it on develop. Without this, a release re-lints Dependabot's
+          # "Bump ..." subjects outside a Dependabot PR and fails subject-case.
+          if [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
+            landed+=(origin/develop)
+          fi
+          commits="$(git rev-list --no-merges --reverse "${base}..${head}" --not "${landed[@]}")"
           # Dependabot copies its subject casing from repo history rather than from
           # dependabot.yml, so its "chore(deps): Bump ..." can fail subject-case. Its own
           # commits are machine-generated and never reach the changelog, so skip them —
@@ -49,7 +58,7 @@ jobs:
           if [ "${{ github.event.pull_request.user.login }}" = "dependabot[bot]" ]; then
             bot="49699333+dependabot[bot]@users.noreply.github.com"
             commits="$(git rev-list --no-merges --reverse --no-commit-header --format='%H %ae' \
-              "${base}..${head}" --not FETCH_HEAD | awk -v bot="${bot}" '$2 != bot { print $1 }')"
+              "${base}..${head}" --not "${landed[@]}" | awk -v bot="${bot}" '$2 != bot { print $1 }')"
             echo "Dependabot PR: skipping commits authored by ${bot}."
           fi
           if [ -z "${commits}" ]; then
