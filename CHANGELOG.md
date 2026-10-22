@@ -1,6 +1,14 @@
 # CHANGELOG
 
 <!-- insertion marker -->
+<a name="v2.6.1"></a>
+
+## [v2.6.1](https://github.com/swgoh-utils/comlink-python/compare/v2.6.0...v2.6.1) (2026-10-22)
+
+### Bug Fixes
+
+- **deps:** require certifi 2026.10.19 to drop compromised emSign CAs ([0f5c92e](https://github.com/swgoh-utils/comlink-python/commit/0f5c92e9fa0f86f23f273ab9c24d25f59903ff32))
+
 <a name="v2.6.0"></a>
 
 ## [v2.6.0](https://github.com/swgoh-utils/comlink-python/compare/v2.5.0...v2.6.0) (2026-10-22)
