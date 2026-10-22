@@ -131,12 +131,14 @@ comlink-python/
 │   │   ├── documentation.yml       # Documentation issue template
 │   │   └── feature_request.yml     # Feature request template
 │   ├── release-pr/                 # Release PR bodies written by prepare-release.yml
+│   ├── tools/                      # Python helpers the workflows run (release + issue bookkeeping)
 │   ├── workflows/
 │   │   ├── backmerge.yml           # Stages the main → develop back-merge after a release
 │   │   ├── ci.yml                  # CI pipeline (lint, type-check, test, docs, build)
-│   │   ├── commitlint.yml          # Commit message validation (npm-based)
+│   │   ├── commitlint.yml          # Commit message validation (runs the pre-commit hook)
 │   │   ├── docs.yml                # Publishes the versioned docs site (mike → gh-pages)
 │   │   ├── integration.yml         # Integration tests against live comlink services
+│   │   ├── issue-fixed-in-develop.yml # Comments on issues a merge into develop resolves
 │   │   ├── labeler.yml             # Auto-label PRs by file path
 │   │   ├── prepare-release.yml     # Regenerates CHANGELOG.md and stages a release branch
 │   │   └── release.yml             # Build → PyPI → tag + GitHub Release (version via hatch-vcs)
@@ -238,7 +240,7 @@ This project follows standard Python conventions, enforced by [Ruff](https://doc
 
 **General principles:**
 
-- Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting — `uvx ruff format` handles this for you
+- Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting — `uv run ruff format` handles this for you
 - Use **complete type annotations** on all functions, parameters, and return values — the package ships a `py.typed` marker, so downstream users' type checkers rely on them
 - Use `from __future__ import annotations` at the top of each module for modern annotation syntax
 - Use docstrings (Google style) on all public classes and methods — they are rendered into the API reference
@@ -372,6 +374,9 @@ Other accepted types — `build`, `deps`, `chore`, `test`, `style`, `ci` — are
 
 Types and scopes are defined in [`.commitlintrc.json`](.commitlintrc.json), the single config used by both the
 pre-commit `commit-msg` hook and the CI **Commit Lint** check. Unknown scopes produce a warning, not a failure.
+The commitlint, preset and Node versions are pinned once, on the `commitlint` hook in
+[`.pre-commit-config.yaml`](.pre-commit-config.yaml); CI runs that same hook, so a message that passes locally
+passes in CI.
 
 **Examples:**
 
@@ -404,7 +409,27 @@ Closes #12
 
 Mark breaking changes with a `BREAKING CHANGE: <description>` footer — this drives the major version bump.
 **Don't use the `feat!:` shorthand:** the changelog generator's Angular convention doesn't recognize it, so the
-commit would be left out of the changelog entirely.
+commit would be left out of the changelog entirely. Commit Lint rejects `!` before the colon for this reason.
+
+> **Gotcha — accidental major bumps.** git-changelog decides a commit is breaking by matching
+> `^break(s|ing changes?)?[ :].+$` against **every line** of the message, case-insensitively. So any
+> body line that *starts* with `break`, `breaks`, `breaking change` or `breaking changes` followed by a
+> space or colon bumps the major version — even mid-paragraph prose that just happened to wrap there:
+>
+> ```
+> docs: explain the changelog conventions
+>
+> Commits must use the
+> BREAKING CHANGE footer (the angular convention ignores "feat!:").   <- bumps to 3.0.0!
+> ```
+>
+> Never start a body line with those words unless it is the intentional `BREAKING CHANGE: <description>`
+> footer — reflow the text so the word lands mid-line instead (`Commits must use the BREAKING CHANGE`
+> / `footer ...`). Upper-case `BREAKING CHANGE:` with a colon is the only form to use; `BREAKING-CHANGE:`
+> is not recognized at all. As a backstop, the **prepare release** workflow lists every line that
+> triggered a major in its job summary, and with `bump=auto` it stops unless one of them is the exact
+> `BREAKING CHANGE: ` footer. Check before pushing with
+> `uv run python .github/tools/breaking_changes.py --bump auto --next-tag "$(uv run git-changelog --bumped-version)"`.
 
 ---
 
@@ -423,8 +448,8 @@ commit would be left out of the changelog entirely.
 
    ```bash
    # Lint and format
-   uvx ruff check src/ tests/
-   uvx ruff format --check src/ tests/
+   uv run ruff check src/ tests/
+   uv run ruff format --check src/ tests/
 
    # Type check
    uv run ty check src/swgoh_comlink/
@@ -456,6 +481,12 @@ commit would be left out of the changelog entirely.
    - Any breaking changes or migration notes
    - How you tested the change
    - A short checklist mirroring the CI checks
+
+   **Linking issues:** use a closing keyword (`Closes #51`, `Fixes #51`, `Resolves #51`), with one
+   keyword per issue — `Closes #1, #2` only closes #1. Because PRs merge into `develop` rather than
+   the default branch, GitHub won't close the issue at merge time. Instead, a bot comment on the
+   issue notes that the fix is in `develop`, and the issue closes automatically when the next
+   release merges into `main`.
 
 6. **After submitting:**
 
@@ -516,8 +547,8 @@ Never paste your comlink `access_key` / `secret_key` into an issue.
 
 Releases are handled by the maintainer through GitHub Actions. Contributors don't need to manage versioning or releases, but here's how it works for reference:
 
-1. **prepare release** (`prepare-release.yml`) is dispatched on `develop`. It computes the next version from the Conventional Commits since the last tag (or a chosen `patch`/`minor`/`major` bump), regenerates `CHANGELOG.md`, and pushes a `release/vX.Y.Z` branch.
-2. The maintainer opens the release PR from that branch into `main` (a link is in the workflow summary). CI runs as normal and the PR is merged.
+1. **prepare release** (`prepare-release.yml`) is dispatched on `develop`. It computes the next version from the Conventional Commits since the last tag (or a chosen `patch`/`minor`/`major` bump), regenerates `CHANGELOG.md`, pushes a `release/vX.Y.Z` branch, and dispatches **Deploy docs** on it. If the computed version is a major, the job summary lists the commit lines that triggered it, and an `auto` bump stops unless one is a real `BREAKING CHANGE:` footer (see [Commit Messages](#commit-messages)).
+2. The maintainer opens the release PR from that branch into `main` (a link is in the workflow summary). Its body restates every `Closes #N` from the PRs merged since the last release, so GitHub closes those issues when it merges. CI runs as normal and the PR is merged.
 3. **comlink-python release** (`release.yml`) is dispatched on `main`. It reads the version from `CHANGELOG.md`, builds the package — [hatch-vcs](https://github.com/ofek/hatch-vcs) stamps that version, so **no version string is committed to the repo** — and publishes to [PyPI](https://pypi.org/project/swgoh-comlink/) via trusted publishing.
 4. Only after a successful publish is the Git tag created and a GitHub Release cut, with release notes auto-generated from the PR history.
 5. **back-merge main into develop** (`backmerge.yml`) then stages a branch so `main` can be merged back into `develop`.
@@ -552,7 +583,7 @@ Deploys run **only from `release/*` branches of `swgoh-utils/comlink-python`**. 
 - **Pre-releases** take the alias for their kind (`alpha`, `beta`, `rc`, or `dev`, which wins for `aN.devM`) only when they are at least as new as every deployed version of that kind. They never touch `latest` or the default, and every page shows a "pre-release" banner ([`overrides/main.html`](overrides/main.html); the deploy sets `DOCS_PRERELEASE`, which feeds `extra.prerelease` in `mkdocs.yml`). Stable versions instead get Material's "older version" banner whenever they are not `latest`.
 - **Every release is its own folder.** `2.5.0` and `2.5.1` both stay in the picker; remove ones you no longer want with `mike delete` (below).
 - **Nothing else deploys.** Pushes to `main`, `develop` or tags, runs in forks, and manual runs on a non-`release/*` ref skip the job. Deleting a release branch after its PR merges leaves its docs on `gh-pages`.
-- **Release timing.** `prepare-release.yml` pushes `release/vX.Y.Z` before the release PR merges and before the PyPI publish, so a stable release's docs can go live (and take `latest`) before the package is on PyPI. That push is made with `GITHUB_TOKEN`, though, and GitHub does not start workflows from `GITHUB_TOKEN` pushes: run **Actions → Deploy docs → Run workflow** on the new release branch (later pushes to the branch, such as review fixes, deploy on their own).
+- **Release timing.** `prepare-release.yml` pushes `release/vX.Y.Z` before the release PR merges and before the PyPI publish, so a stable release's docs can go live (and take `latest`) before the package is on PyPI. That push is made with `GITHUB_TOKEN`, and GitHub does not start workflows from `GITHUB_TOKEN` pushes, so `prepare-release.yml` dispatches **Deploy docs** on the new branch itself (`workflow_dispatch` is the documented exception). Later pushes to the branch, such as review fixes, deploy on their own.
 - Deploys queue in the `gh-pages` concurrency group, so they never race.
 
 **Preview the versioned site locally** without touching the remote (the deploy commits to a local `gh-pages` branch only):
@@ -581,9 +612,11 @@ The site used to be deployed by `actions/deploy-pages` from `main`, as a single 
    uv run mike set-default --push latest
    ```
 
-3. **Switch the Pages source.** In **Settings → Pages → Build and deployment**, change **Source** from "GitHub Actions" to **"Deploy from a branch"**, branch **`gh-pages`**, folder **`/ (root)`**. Check that the root URL opens the 2.5.0 docs.
+3. **Switch the Pages source.** First allow the branch to deploy: in **Settings → Environments → `github-pages` → Deployment branches and tags**, add **`gh-pages`** (branch-based Pages builds still deploy through this environment, and it only allowed `main`). Then, in **Settings → Pages → Build and deployment**, change **Source** from "GitHub Actions" to **"Deploy from a branch"**, branch **`gh-pages`**, folder **`/ (root)`**. Check that the root URL opens the 2.5.0 docs.
 4. **Protect `gh-pages`** (optional, recommended). Add a ruleset or branch protection rule for `gh-pages` that blocks force pushes and deletion. Leave direct pushes allowed for GitHub Actions: the deploy pushes with the workflow's `GITHUB_TOKEN`, so a rule that requires pull requests or status checks would block it (or add "GitHub Actions" to the bypass list).
-5. **Clean up.** The old `github-pages` environment created by `deploy-pages` can be deleted, or kept for history.
+5. **Keep the `github-pages` environment.** Branch-based Pages builds (`pages-build-deployment`) deploy through it, so deleting it or removing `gh-pages` from its deployment branches stops the site from updating.
+
+This cutover was completed on 2026-10-18: `2.5.0` (`latest`) and `3.0.0a2` (`alpha`) are published, and `gh-pages` is protected by the **Protect gh-pages** ruleset.
 
 #### Maintaining versions
 

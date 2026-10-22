@@ -23,6 +23,11 @@ on:
 
 permissions:
   contents: write
+  # Read merged PRs and their issues to restate closing keywords (closing_issues.py).
+  pull-requests: read
+  issues: read
+  # Dispatch docs.yml on the release branch (see "Deploy the release docs").
+  actions: write
 
 jobs:
   prepare:
@@ -56,8 +61,34 @@ jobs:
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
           echo "Next version: ${tag}"
 
+      # git-changelog's angular convention counts ANY message line matching
+      # ^break(s|ing changes?)?[ :] (case-insensitive) as breaking, so a wrapped body line
+      # like "Breaking changes are ..." silently bumps the major. On a major, list every
+      # triggering line in the job summary; with bump=auto, also stop here (before anything
+      # is pushed) unless one of them is the exact "BREAKING CHANGE: <description>" footer.
+      # An explicit bump=major is a human decision and is only reported, never blocked.
+      - name: Check for an accidental major bump
+        run: >-
+          uv run python .github/tools/breaking_changes.py
+          --bump '${{ inputs.bump }}'
+          --next-tag '${{ steps.version.outputs.tag }}'
+
       - name: Regenerate CHANGELOG.md
         run: uv run git-changelog --bump '${{ inputs.bump }}'
+
+      # Closing keywords ("Closes #12") only fire for PRs merged into the default branch, so
+      # the ones in PRs merged into develop never close anything. Restate them in the release
+      # PR, which does merge into main, so the issues close when the release lands.
+      - name: Collect the issues this release closes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Newest release tag, not `git describe`: until the post-release back-merge lands,
+          # develop cannot reach the latest tag and describe would fall back to an older one.
+          since="$(git tag --list 'v*' --sort=-v:refname | head -n1)"
+          python3 .github/tools/closing_issues.py release --since "${since}" > "${RUNNER_TEMP}/closes.md"
+          cat "${RUNNER_TEMP}/closes.md"
 
       - name: Write the release PR text
         id: pr_text
@@ -77,7 +108,8 @@ jobs:
             printf 'Automated release prep for **%s**. CHANGELOG.md regenerated via git-changelog.\n\n' "${tag}"
             printf 'Merging promotes `develop` -> `main` with the changelog already in place.\n'
             printf 'Afterwards, run the **release** workflow on `main` to build, publish, and tag %s.\n\n' "${tag}"
-            printf -- '---\n\n'
+            cat "${RUNNER_TEMP}/closes.md"
+            printf '\n---\n\n'
             printf '%s\n' "${notes}"
           } > "${body_file}"
 
@@ -96,6 +128,20 @@ jobs:
           # `docs` would list every release's regeneration in the next release.
           git commit -m "chore(changelog): update for ${tag}"
           git push --force-with-lease origin "${branch}"
+
+      # A push made with GITHUB_TOKEN does not start workflows, so docs.yml's
+      # `push: release/**` trigger never fires for the branch staged above.
+      # workflow_dispatch is the documented exception, so start the deploy
+      # explicitly: the release's docs publish (and take `latest` if it is the
+      # newest stable) as soon as its branch exists.
+      - name: Deploy the release docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="release/${{ steps.version.outputs.tag }}"
+          gh workflow run docs.yml --repo "${{ github.repository }}" --ref "${branch}"
+          echo "Dispatched docs.yml on ${branch}."
 
       - name: Summarise how to open the release PR
         run: |

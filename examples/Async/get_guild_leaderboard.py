@@ -10,27 +10,26 @@ from swgoh_comlink import SwgohComlinkAsync
 
 
 def get_max_guild_name_length(guild_list: list) -> int:
-    max_length = max(len(leader_guild['name']) for leader_guild in guild_list)
+    max_length = max(len(leader_guild["name"]) for leader_guild in guild_list)
     return max_length
 
 
-def print_table(leaderboard: list,
-                table_title: str,
-                guild_name_col_title: str,
-                score_col_title: str,
-                rank_col_title: str) -> None:
+def print_table(
+    leaderboard: list, table_title: str, guild_name_col_title: str, score_col_title: str, rank_col_title: str
+) -> None:
     guild_name_col_width = get_max_guild_name_length(leaderboard)
     total_width = guild_name_col_width + len(score_col_title) + len(rank_col_title) + 7
     print()
     print(f"{table_title: ^{total_width}}")
-    print('=' * total_width)
+    print("=" * total_width)
     print(f"{guild_name_col_title:^{guild_name_col_width}} | {score_col_title} | Rank")
-    print('-' * total_width)
+    print("-" * total_width)
     for leaderboard_entry in leaderboard:
         score = f"{int(leaderboard_entry['leaderboardScore']):,}"
         print(
-            f"{leaderboard_entry['name']:{guild_name_col_width}} | {score:^{len(score_col_title)}} | " +
-            f"{leaderboard_entry['rank']:^{len(rank_col_title)}}")
+            f"{leaderboard_entry['name']:{guild_name_col_width}} | {score:^{len(score_col_title)}} | "
+            + f"{leaderboard_entry['rank']:^{len(rank_col_title)}}"
+        )
 
 
 async def main():
@@ -51,30 +50,30 @@ async def main():
         tw_top_5 = await comlink.get_guild_leaderboard(leaderboard_id=tw_leaderboard_id, count=5)
 
         # Print the top 5 TW leaderboard information
-        print_table(leaderboard=tw_top_5['leaderboard'][0]['guild'],
-                    table_title="Top 5 TW Leaderboard for current month",
-                    guild_name_col_title="Guild Name",
-                    score_col_title="Total GP Defeated",
-                    rank_col_title="Rank")
+        print_table(
+            leaderboard=tw_top_5["leaderboard"][0]["guild"],
+            table_title="Top 5 TW Leaderboard for current month",
+            guild_name_col_title="Guild Name",
+            score_col_title="Total GP Defeated",
+            rank_col_title="Rank",
+        )
 
         # Get the top 5 Speeder Bike raid leaderboard for the past month
         speederbike_raid_leaderboard_id = [
-            {
-                "leaderboardType": 6,
-                "defId": "GUILD:RAIDS:NORMAL_DIFF:ROTJ:SPEEDERBIKE",
-                "monthOffset": 1
-            }
+            {"leaderboardType": 6, "defId": "GUILD:RAIDS:NORMAL_DIFF:ROTJ:SPEEDERBIKE", "monthOffset": 1}
         ]
         speederbike_raid_top_5 = await comlink.get_guild_leaderboard(
             leaderboard_id=speederbike_raid_leaderboard_id, count=5
         )
 
         # Print the top 5 raid information
-        print_table(leaderboard=speederbike_raid_top_5['leaderboard'][0]['guild'],
-                    table_title="Top 5 Speeder bike raid Leaderboard for past month",
-                    guild_name_col_title="Guild Name",
-                    score_col_title="Total Raid points achieved",
-                    rank_col_title="Rank")
+        print_table(
+            leaderboard=speederbike_raid_top_5["leaderboard"][0]["guild"],
+            table_title="Top 5 Speeder bike raid Leaderboard for past month",
+            guild_name_col_title="Guild Name",
+            score_col_title="Total Raid points achieved",
+            rank_col_title="Rank",
+        )
 
 
 asyncio.run(main())

@@ -36,6 +36,7 @@ from swgoh_comlink.helpers import (
     get_ability_upgrade_costs,
     get_conquest_feats,
     get_data_disc_names,
+    get_era_units,
     get_event_schedule,
     get_game_config,
     get_game_config_int,
@@ -948,6 +949,88 @@ class TestGetEventSchedule:
         localization: Any = ["not", "a", "dict"]
         with pytest.raises(SwgohComlinkValueError, match="localization"):
             get_event_schedule(_GAME_EVENTS, localization)
+
+
+# ── _eras ────────────────────────────────────────────────────────────────
+
+# Trimmed from live game data: consecutive Eras share their boundary millisecond.
+_ERA09_START_MS = 1785261600000  # 2026-07-28 18:00 UTC
+_ERA10_START_MS = 1792519200000  # 2026-10-20 18:00 UTC
+_ERA_DATA: dict[str, Any] = {
+    "eraDefinition": [
+        {
+            "id": "ERA09_MYTHS",
+            "startTimeMs": str(_ERA09_START_MS),
+            "endTimeMs": str(_ERA10_START_MS),
+            "eraUnitId": ["DARTHJARJAR", "THERONIN", "JAXXON"],
+            "journeyUnit": "DARTHJARJAR",
+            "loanedUnit": [{"expireTime": str(_ERA10_START_MS), "id": "MAUL"}],
+        },
+        {
+            "id": "ERA10_MANDALORIANANDGROGU",
+            "startTimeMs": str(_ERA10_START_MS),
+            "endTimeMs": "1794942000000",
+            "eraUnitId": ["ADELPHIRANGER", "B1MERCDROID"],
+            "journeyUnit": "",
+            "loanedUnit": [
+                {"expireTime": "1794942000000", "id": "CARSONTEVA"},
+                {"expireTime": "1794942000000", "id": "B1MERCDROID"},
+            ],
+        },
+    ]
+}
+
+
+def _era_moment(millis: int) -> datetime:
+    return datetime.fromtimestamp(millis / 1000, tz=timezone.utc)
+
+
+class TestGetEraUnits:
+    def test_defaults_to_the_active_era(self):
+
+        now = _era_moment(_ERA10_START_MS) + timedelta(days=2)
+        assert get_era_units(_ERA_DATA, now=now) == ["ADELPHIRANGER", "B1MERCDROID"]
+
+    def test_era_boundary_belongs_to_the_next_era(self):
+
+        assert get_era_units(_ERA_DATA, now=_era_moment(_ERA10_START_MS - 1)) == ["DARTHJARJAR", "THERONIN", "JAXXON"]
+        assert get_era_units(_ERA_DATA, now=_era_moment(_ERA10_START_MS)) == ["ADELPHIRANGER", "B1MERCDROID"]
+
+    def test_named_era_ignores_now(self):
+
+        units = get_era_units(_ERA_DATA["eraDefinition"], "ERA09_MYTHS", now=_era_moment(0))
+        assert units == ["DARTHJARJAR", "THERONIN", "JAXXON"]
+
+    def test_include_loaned_appends_loans_once(self):
+
+        units = get_era_units(_ERA_DATA, "ERA10_MANDALORIANANDGROGU", include_loaned=True)
+        assert units == ["ADELPHIRANGER", "B1MERCDROID", "CARSONTEVA"]
+
+    def test_journey_unit_missing_from_roster_is_added(self):
+
+        eras = [{"id": "E", "eraUnitId": ["A"], "journeyUnit": "J:SEVEN_STAR", "loanedUnit": ["bad"]}]
+        assert get_era_units(eras, "E", include_loaned=True) == ["A", "J"]
+
+    def test_no_active_era_returns_empty_list(self):
+
+        assert get_era_units(_ERA_DATA, now=_era_moment(_ERA09_START_MS - 1)) == []
+        assert get_era_units({"eraDefinition": []}) == []
+
+    def test_naive_now_is_local_time(self):
+
+        now = _era_moment(_ERA09_START_MS).astimezone().replace(tzinfo=None)
+        assert get_era_units(_ERA_DATA, now=now) == ["DARTHJARJAR", "THERONIN", "JAXXON"]
+
+    def test_unknown_era_id_raises(self):
+
+        with pytest.raises(SwgohComlinkValueError, match="ERA99.*ERA09_MYTHS"):
+            get_era_units(_ERA_DATA, "ERA99")
+
+    @pytest.mark.parametrize("eras", [None, "eras", {"units": []}])
+    def test_invalid_eras_raises(self, eras: Any):
+
+        with pytest.raises(SwgohComlinkValueError, match="get_era_units"):
+            get_era_units(eras)
 
 
 # ── _guild (pure functions) ─────────────────────────────────────────────

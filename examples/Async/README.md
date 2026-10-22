@@ -34,9 +34,11 @@ These examples use the `SwgohComlinkAsync` async client. All methods must be `aw
 import asyncio
 from swgoh_comlink import SwgohComlinkAsync
 
+
 async def main():
     async with SwgohComlinkAsync() as comlink:
         player = await comlink.get_player(allycode=314927874)
+
 
 asyncio.run(main())
 ```

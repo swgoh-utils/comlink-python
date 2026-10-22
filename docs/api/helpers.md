@@ -372,6 +372,44 @@ displayed.
 
 ---
 
+## Era Helpers
+
+Functions for reading the game data `eraDefinition` collection. These do not call
+comlink themselves.
+
+### get_era_units
+
+Lists the base ids of an Era's units. With no Era named, it reads the one active now.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import DataItems, get_era_units
+
+comlink = SwgohComlink()
+game_data = comlink.get_game_data(items=DataItems.ERA_DEFINITION, include_pve_units=False)
+
+print(get_era_units(game_data))
+# ['ADELPHIRANGER', 'B1MERCDROID']
+print(get_era_units(game_data, "ERA09_MYTHS"))
+# ['DARTHJARJAR', 'THERONIN', 'STORMTROOPERCONCEPT', 'LUKESTARKILLER', 'YODADSV', 'JAXXON', 'MARAJADESKYWALKER']
+```
+
+Game data usually carries the previous, current and next Era. An Era's own units are
+its `eraUnitId` roster plus its journey unit; pass `include_loaned=True` to also list
+the older units it lends to players for its episodes.
+
+!!! note
+    Consecutive Eras share their boundary: one ends at the millisecond the next starts.
+    At that moment the new Era is the active one. When no Era is active, the default
+    call returns an empty list.
+
+::: swgoh_comlink.helpers._eras.get_era_units
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+---
+
 ## Guild Helpers
 
 ### Sync

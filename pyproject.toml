@@ -119,6 +119,9 @@ test = [
 typecheck = [
     "ty>=0.0.34",
 ]
+lint = [
+    "ruff>=0.8",
+]
 changelog = [
     "git-changelog>=2.9,<3",
 ]
@@ -126,7 +129,7 @@ dev = [
     {include-group = "test"},
     {include-group = "typecheck"},
     {include-group = "changelog"},
-    "ruff>=0.8",
+    {include-group = "lint"},
 ]
 docs = [
     "mike>=2.2.0",
@@ -165,6 +168,8 @@ ignore = [
 # Existing violations to address incrementally — do not add new suppressions
 "src/swgoh_comlink/__init__.py" = ["UP036"]   # outdated version block (sys.exit check)
 "src/swgoh_comlink/helpers/*.py" = ["B007", "B904", "SIM102"]  # existing patterns to clean up
+# Examples assign results to named variables to show what each call returns
+"examples/**" = ["F841"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["swgoh_comlink"]

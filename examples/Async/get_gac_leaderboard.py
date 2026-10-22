@@ -10,7 +10,7 @@ from swgoh_comlink import SwgohComlinkAsync
 
 
 def format_output(lb_list: list):
-    """ Calculate the necessary column widths for formatted output based on data provided in tb_list """
+    """Calculate the necessary column widths for formatted output based on data provided in tb_list"""
     if not isinstance(lb_list, list):
         return None
     # First create a list of (name, guild, skill) tuples
@@ -18,15 +18,14 @@ def format_output(lb_list: list):
     max_name_len = 0
     max_guild_len = 0
     for player in lb_list:
-        if len(player['name']) > max_name_len:
-            max_name_len = len(player['name'])
-        if len(player['guild']['name']) > max_guild_len:
-            max_guild_len = len(player['guild']['name'])
-        output_list.append((player['name'],
-                            player['guild']['name'],
-                            player['playerRating']['playerSkillRating']['skillRating'])
-                           )
-    return max_name_len+2, max_guild_len+2, output_list
+        if len(player["name"]) > max_name_len:
+            max_name_len = len(player["name"])
+        if len(player["guild"]["name"]) > max_guild_len:
+            max_guild_len = len(player["guild"]["name"])
+        output_list.append(
+            (player["name"], player["guild"]["name"], player["playerRating"]["playerSkillRating"]["skillRating"])
+        )
+    return max_name_len + 2, max_guild_len + 2, output_list
 
 
 async def main():
@@ -59,14 +58,17 @@ async def main():
         gac_kyber_2_lb = await comlink.get_gac_leaderboard(leaderboard_type=6, league=100, division=20)
 
         # Output the GAC leaderboard information
-        name_col_width, guild_col_width, lb_entries = format_output(gac_kyber_2_lb['player'])
+        name_col_width, guild_col_width, lb_entries = format_output(gac_kyber_2_lb["player"])
         for player in lb_entries:
-            print("Player nane: {name:{name_width}} Guild: {g_name:{g_width}} Skill Rating: {rating}".format(
-                name=player[0],
-                name_width=name_col_width,
-                g_name=player[1],
-                g_width=guild_col_width,
-                rating=player[2]))
+            print(
+                "Player nane: {name:{name_width}} Guild: {g_name:{g_width}} Skill Rating: {rating}".format(
+                    name=player[0],
+                    name_width=name_col_width,
+                    g_name=player[1],
+                    g_width=guild_col_width,
+                    rating=player[2],
+                )
+            )
 
 
 asyncio.run(main())

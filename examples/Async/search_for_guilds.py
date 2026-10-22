@@ -24,9 +24,9 @@ async def main():
         """
 
         # Search for a guild by name
-        guilds_by_name = await comlink.get_guilds_by_name(name='guild')
+        guilds_by_name = await comlink.get_guilds_by_name(name="guild")
         # Print the names of the maximum 10 guilds matched
-        for guild in guilds_by_name['guild']:
+        for guild in guilds_by_name["guild"]:
             print(f'{guild["name"]=}')
 
         """
@@ -52,15 +52,13 @@ async def main():
             "includeInviteOnly": True,
             "minGuildGalacticPower": 500000000,
             "maxGuildGalacticPower": 600000000,
-            "recentTbParticipatedIn": []
+            "recentTbParticipatedIn": [],
         }
 
-        guilds_by_criteria = await comlink.get_guilds_by_criteria(
-            search_criteria=guild_search_criteria, count=1000
-        )
+        guilds_by_criteria = await comlink.get_guilds_by_criteria(search_criteria=guild_search_criteria, count=1000)
         # Check the actual number of guilds over 500m GP with 48 players minimum to compare against the max
         # count of 1000
-        print(len(guilds_by_criteria['guild']))
+        print(len(guilds_by_criteria["guild"]))
 
 
 asyncio.run(main())

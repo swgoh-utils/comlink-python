@@ -5,7 +5,6 @@ Sample script to get events from Comlink using the async client
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Union
 
 from swgoh_comlink import SwgohComlinkAsync
 
