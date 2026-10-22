@@ -1,6 +1,29 @@
 # CHANGELOG
 
 <!-- insertion marker -->
+<a name="v2.6.0"></a>
+
+## [v2.6.0](https://github.com/swgoh-utils/comlink-python/compare/v2.5.0...v2.6.0) (2026-10-22)
+
+### Features
+
+- **helpers:** add get_era_units for an Era's unit roster ([38b44cd](https://github.com/swgoh-utils/comlink-python/commit/38b44cdb3d736338387bdc61fbde697c60dd4b60))
+
+### Bug Fixes
+
+- **statcalc:** build units that start above one star ([c19921b](https://github.com/swgoh-utils/comlink-python/commit/c19921bdffb9122a31c5ff0cacfad7fd3b64a04f))
+- **parity:** pass strict=True to zip in the list comparators ([0cdc467](https://github.com/swgoh-utils/comlink-python/commit/0cdc467162faa7d16ac816eee63db1334e16dda0))
+
+### Code Refactoring
+
+- **helpers:** narrow TB reward table ids to str in get_tb_mission_scores ([4edfb76](https://github.com/swgoh-utils/comlink-python/commit/4edfb76eb87167edb244f6b4a4ca1aec47fafb5b))
+
+### Docs
+
+- transport errors arrive as SwgohComlinkException ([ed3d204](https://github.com/swgoh-utils/comlink-python/commit/ed3d20418725cb3c8f5d4ce564eb3f9d3c297f8e))
+- **api:** order client pages for first-time readers ([df8dc90](https://github.com/swgoh-utils/comlink-python/commit/df8dc90ba027d81ae9fb7acb7de23aafc145dcee))
+- document the accidental major bump gotcha in commit messages ([93e05eb](https://github.com/swgoh-utils/comlink-python/commit/93e05eb57e1dbd13c562678350980184b0f94d72))
+
 <a name="v2.5.0"></a>
 
 ## [v2.5.0](https://github.com/swgoh-utils/comlink-python/compare/v2.4.0...v2.5.0) (2026-10-13)
