@@ -507,6 +507,17 @@ def test_growth_modifiers_across_rarities(make_unit: Callable[..., dict[str, Any
     assert result["unitData"]["UNIT1"]["growthModifiers"] == {"1": {"2": 10}, "7": {"2": 70}}
 
 
+@pytest.mark.parametrize("make_unit", [_char_unit, _ship_unit], ids=["character", "ship"])
+@pytest.mark.parametrize("rarities", [[2, 7], [7, 2], ["SEVEN_STAR", "TWO_STAR"]], ids=["asc", "desc", "enum"])
+def test_unit_without_one_star_row_uses_lowest_rarity_as_base(make_unit: Callable[..., dict[str, Any]], rarities):
+    """Units that start above 1★ (e.g. ADELPHIRANGER at 2★) have no rarity-1 row but must still be built."""
+    units = [make_unit("STARTS_AT_TWO", rarity=r, statProgressionId=f"stattable_{r}") for r in rarities]
+
+    result = _build_unit_data(units, {}, {})
+
+    assert list(result) == ["STARTS_AT_TWO"]
+
+
 @pytest.mark.parametrize(
     "excluded",
     [

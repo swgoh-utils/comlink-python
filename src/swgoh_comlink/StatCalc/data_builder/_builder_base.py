@@ -238,16 +238,19 @@ def _build_unit_data(
     """Build per-unit metadata for characters and ships.
 
     The Comlink ``units`` field is an array of rarity groups, each
-    containing a ``unitDef`` array.  Rarity-1 entries supply base
-    definitions (gear tiers, skills, etc.); all rarities contribute
+    containing a ``unitDef`` array.  Each unit's lowest-rarity entry
+    supplies its base definition (gear tiers, skills, etc.) — usually
+    rarity 1, but some units (e.g. ``ADELPHIRANGER``) start at 2★ and
+    have no rarity-1 entry.  All rarities contribute
     ``statProgressionId`` for growth modifier tables.
     """
     base_units: dict[str, dict[str, Any]] = {}
+    base_rarity: dict[str, int] = {}
     stat_prog_map: dict[str, dict[str, str]] = {}
 
     total_units = 0
 
-    # Filter for only obtainable units at rarity 1
+    # Filter for only obtainable units
     base_unit_list = [unit for unit in raw_units if unit.get("obtainable", False) and unit.get("obtainableTime") == "0"]
 
     for unit in base_unit_list:
@@ -264,7 +267,8 @@ def _build_unit_data(
         if prog_id:
             stat_prog_map.setdefault(base_id, {})[str(rarity)] = prog_id
 
-        if rarity == 1:
+        if 0 < rarity < base_rarity.get(base_id, 8):
+            base_rarity[base_id] = rarity
             base_units[base_id] = unit
 
     data: dict[str, dict[str, Any]] = {}
