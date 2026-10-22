@@ -25,7 +25,14 @@ from pytest_httpx import HTTPXMock
 import swgoh_comlink.helpers as helpers
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 from swgoh_comlink.exceptions import SwgohComlinkValueError
-from swgoh_comlink.helpers import get_event_schedule, get_game_config, get_game_config_int, get_guild_activity
+from swgoh_comlink.helpers import (
+    DataItems,
+    get_era_units,
+    get_event_schedule,
+    get_game_config,
+    get_game_config_int,
+    get_guild_activity,
+)
 
 URL = "http://localhost:3000"
 LEADERBOARD_URL = f"{URL}/getLeaderboard"
@@ -338,6 +345,10 @@ def _journey_summary(events: dict[str, Any]) -> list[tuple[Any, ...]]:
     return [(e["name"], e["title"], e["subtitle"], e["status"], e["end"]) for e in schedule]
 
 
+def _era_summary(game_data: dict[str, Any]) -> list[str]:
+    return get_era_units(game_data, now=datetime(2026, 10, 22, tzinfo=timezone.utc), include_loaned=True)
+
+
 def _config_summary(metadata: dict[str, Any]) -> tuple[Any, ...]:
     return get_game_config(metadata), get_game_config_int(metadata, "max-datacron-currency")
 
@@ -376,6 +387,25 @@ def _config_summary(metadata: dict[str, Any]) -> tuple[Any, ...]:
             _journey_summary,
             [("THE MANDALORIAN - Hero's Journey", "THE MANDALORIAN", "Hero's Journey", "live", None)],
             id="event-schedule",
+        ),
+        pytest.param(
+            "get_game_data",
+            {"version": "g1", "items": DataItems.ERA_DEFINITION},
+            {
+                "eraDefinition": [
+                    {
+                        "id": "ERA10_MANDALORIANANDGROGU",
+                        "startTimeMs": "1792519200000",
+                        "endTimeMs": "1794942000000",
+                        "eraUnitId": ["ADELPHIRANGER", "B1MERCDROID"],
+                        "journeyUnit": "",
+                        "loanedUnit": [{"expireTime": "1794942000000", "id": "CARSONTEVA"}],
+                    }
+                ]
+            },
+            _era_summary,
+            ["ADELPHIRANGER", "B1MERCDROID", "CARSONTEVA"],
+            id="era-units",
         ),
         pytest.param(
             "get_game_metadata",
