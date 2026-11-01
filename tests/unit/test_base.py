@@ -4,20 +4,15 @@ from __future__ import annotations
 
 import hashlib
 from json import dumps
-from typing import TYPE_CHECKING, Any, cast, get_type_hints
+from typing import TYPE_CHECKING, Any, Self, assert_type, cast, get_type_hints
 
 import pytest
-from typing_extensions import Self
 
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink._base import _SENSITIVE_KEYS, SwgohComlinkBase, param_alias, sanitize_url
 from swgoh_comlink.exceptions import SwgohComlinkValueError
 
 if TYPE_CHECKING:
-    # `typing.assert_type` is 3.11+; `typing_extensions` works on every
-    # supported Python version and is already in the dev dependency closure.
-    from typing_extensions import assert_type
-
     from swgoh_comlink import SwgohComlinkAsync
 
 # ── sanitize_url ─────────────────────────────────────────────────────────

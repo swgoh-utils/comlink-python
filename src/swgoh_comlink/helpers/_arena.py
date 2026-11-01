@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from math import floor
 
 
@@ -44,7 +44,7 @@ def get_arena_payout(offset: int, fleet: bool = False, *, now: datetime | None =
     Returns:
         datetime: The next payout after ``now``, as a timezone-aware UTC datetime.
     """
-    now = datetime.now(timezone.utc) if now is None else now.astimezone(timezone.utc)
+    now = datetime.now(UTC) if now is None else now.astimezone(UTC)
     hour = 19 if fleet else 18
     payout = now.replace(hour=hour, minute=0, second=0, microsecond=0) - timedelta(minutes=offset)
     # The offset can move the payout onto another UTC day, so step back as well as forward.

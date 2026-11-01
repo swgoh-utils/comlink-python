@@ -13,10 +13,8 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from json import dumps
-from typing import Any
+from typing import Any, Self
 from urllib.parse import urlparse, urlunparse
-
-from typing_extensions import Self
 
 from .exceptions import SwgohComlinkException, SwgohComlinkTypeError, SwgohComlinkValueError
 from .helpers import Constants, DataItems

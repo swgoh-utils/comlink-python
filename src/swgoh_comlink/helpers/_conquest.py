@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from math import ceil, floor
 from typing import Any, TypedDict
 
@@ -121,7 +121,7 @@ def calc_stamina_full_time(unit: dict[str, Any], pass_plus: bool = False, *, now
     if remaining < 0:
         raise SwgohComlinkValueError(f"{get_function_name()}: 'unit' has no valid 'remainingStamina'.")
 
-    now = datetime.now(timezone.utc) if now is None else now.astimezone(timezone.utc)
+    now = datetime.now(UTC) if now is None else now.astimezone(UTC)
     # Whole seconds, as lastRefreshTime and calc_current_stamina count them
     now_seconds = floor(now.timestamp())
     last_refresh = as_int(unit.get("lastRefreshTime"))
@@ -133,7 +133,7 @@ def calc_stamina_full_time(unit: dict[str, Any], pass_plus: bool = False, *, now
     # The fewest whole minutes for which calc_current_stamina's floor(minutes / 30 * factor) covers the
     # missing points. Exact for both factors and every missing count from 0 to 100, float rounding included.
     minutes = ceil(missing * 30 / factor)
-    return datetime.fromtimestamp(last_refresh + minutes * 60, tz=timezone.utc)
+    return datetime.fromtimestamp(last_refresh + minutes * 60, tz=UTC)
 
 
 def get_conquest_feats(

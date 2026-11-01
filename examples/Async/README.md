@@ -25,8 +25,7 @@ These examples use the `SwgohComlinkAsync` async client. All methods must be `aw
 
 ## Requirements
 
-- Python 3.10+ for the basic async examples
-- Python 3.11+ for examples using `asyncio.TaskGroup` (`streaming_guild_roster*.py`)
+- Python 3.11+
 
 ## Usage
 

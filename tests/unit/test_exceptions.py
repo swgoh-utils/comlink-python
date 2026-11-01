@@ -6,7 +6,7 @@ import copy
 import logging
 import pickle
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime
 from typing import Any
 
@@ -139,7 +139,7 @@ def test_retry_after_delta_seconds(header: str, expected: float | None) -> None:
     ],
 )
 def test_retry_after_http_date(fmt: Callable[[datetime], str]) -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     future = fmt(now + timedelta(seconds=30))
     past = fmt(now - timedelta(seconds=30))
 
