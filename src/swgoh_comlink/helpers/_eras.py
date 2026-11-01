@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from ..exceptions import SwgohComlinkValueError
@@ -59,7 +59,7 @@ def get_era_units(
     definitions = [era for era in definitions if isinstance(era, dict)]
 
     if era_id is None:
-        now = datetime.now(timezone.utc) if now is None else now.astimezone(timezone.utc)
+        now = datetime.now(UTC) if now is None else now.astimezone(UTC)
         now_ms = now.timestamp() * 1000
         era = next(
             (e for e in definitions if as_int(e.get("startTimeMs")) <= now_ms < as_int(e.get("endTimeMs"))), None

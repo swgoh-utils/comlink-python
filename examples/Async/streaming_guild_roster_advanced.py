@@ -21,11 +21,6 @@ Unlike the basic streaming_guild_roster.py example, this version:
   - Tracks per-fetch and aggregate timing statistics
 """
 
-import sys
-
-if sys.version_info < (3, 11):
-    sys.exit("This example requires Python 3.11+ (asyncio.TaskGroup support).")
-
 import argparse
 import asyncio
 import time

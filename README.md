@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/swgoh-utils/comlink-python/actions/workflows/ci.yml/badge.svg)](https://github.com/swgoh-utils/comlink-python/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/swgoh-comlink.svg)](https://pypi.org/project/swgoh-comlink/)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://swgoh-utils.github.io/comlink-python/)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/swgoh-utils/comlink-python)
@@ -13,7 +13,7 @@ A python wrapper for the [swgoh-comlink](https://github.com/swgoh-utils/swgoh-co
 
 Supports both **synchronous** and **asynchronous** usage via `SwgohComlink` and `SwgohComlinkAsync`.
 
-**Requires Python 3.10 or higher.**
+**Requires Python 3.11 or higher.**
 
 ## Installation
 

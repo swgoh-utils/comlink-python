@@ -15,7 +15,7 @@ import json
 import re
 import zipfile
 from collections.abc import AsyncIterator, Awaitable, Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -341,12 +341,12 @@ def _guild_summary(guild: dict[str, Any]) -> tuple[Any, ...]:
 
 def _journey_summary(events: dict[str, Any]) -> list[tuple[Any, ...]]:
     loc = {"EVENT_JOURNEY_MANDALORIAN_NAME": "THE MANDALORIAN\\n[c][FFC891]Hero's Journey[-][/c]"}
-    schedule = get_event_schedule(events, loc, now=datetime(2026, 9, 23, 12, tzinfo=timezone.utc))
+    schedule = get_event_schedule(events, loc, now=datetime(2026, 9, 23, 12, tzinfo=UTC))
     return [(e["name"], e["title"], e["subtitle"], e["status"], e["end"]) for e in schedule]
 
 
 def _era_summary(game_data: dict[str, Any]) -> list[str]:
-    return get_era_units(game_data, now=datetime(2026, 10, 22, tzinfo=timezone.utc), include_loaned=True)
+    return get_era_units(game_data, now=datetime(2026, 10, 22, tzinfo=UTC), include_loaned=True)
 
 
 def _config_summary(metadata: dict[str, Any]) -> tuple[Any, ...]:
