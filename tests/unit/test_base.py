@@ -125,6 +125,29 @@ class TestConstructor:
         assert client.stats_url_base == "http://192.168.1.1:4223"
         client.close()
 
+    def test_host_without_ports_uses_default_ports(self):
+        client = SwgohComlink(host="192.168.1.1")
+        assert client.url_base == "http://192.168.1.1:3000"
+        assert client.stats_url_base == "http://192.168.1.1:3223"
+        client.close()
+
+    def test_port_without_host_replaces_url_port(self):
+        client = SwgohComlink(port=3200)
+        assert client.url_base == "http://localhost:3200"
+        assert client.stats_url_base == "http://localhost:3223"
+        client.close()
+
+    def test_stats_port_without_host_replaces_stats_url_port(self):
+        client = SwgohComlink(stats_url="http://stats.local:3223", stats_port=4223)
+        assert client.url_base == "http://localhost:3000"
+        assert client.stats_url_base == "http://stats.local:4223"
+        client.close()
+
+    def test_port_without_host_keeps_url_scheme_and_host(self):
+        client = SwgohComlink(url="https://comlink.example.com", port=8443)
+        assert client.url_base == "https://comlink.example.com:8443"
+        client.close()
+
     def test_hmac_enabled_with_keys(self):
         client = SwgohComlink(access_key="pub", secret_key="priv")
         assert client.hmac is True

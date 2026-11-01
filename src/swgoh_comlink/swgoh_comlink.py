@@ -46,8 +46,10 @@ class SwgohComlink(SwgohComlinkBase):
         secret_key (str): The HMAC private key. Default to None which indicates HMAC is not used.
         stats_url (str): The url of the swgoh-stats service (if used), such as 'http://localhost:3223'
         host (str): IP address or DNS name of server where the swgoh-comlink service is running
-        port (int): TCP port number where the swgoh-comlink service is running [Default: 3000]
-        stats_port (int): TCP port number of where the comlink-stats service is running [Default: 3223]
+        port (int): TCP port number where the swgoh-comlink service is running. With 'host' it defaults to 3000;
+            without 'host' it replaces the port in 'url'. [Default: None]
+        stats_port (int): TCP port number of where the comlink-stats service is running. With 'host' it defaults
+            to 3223; without 'host' it replaces the port in 'stats_url'. [Default: None]
         verify_ssl (bool): Whether to verify TLS certificates. [Default: True]
         version_cache_ttl (float): Seconds to cache the game/localization versions fetched from
             /metadata. 0 disables caching; ``math.inf`` caches for the client lifetime. [Default: 3600]
@@ -56,7 +58,7 @@ class SwgohComlink(SwgohComlinkBase):
             :class:`~swgoh_comlink.retry.RetryPolicy`. [Default: None, one attempt per call and no waiting]
 
     Notes:
-        If the 'host' and 'port' parameters are provided, the 'url' and 'stats_url' parameters are ignored.
+        If the 'host' parameter is provided, the 'url' and 'stats_url' parameters are ignored.
 
     Examples:
         Basic usage::

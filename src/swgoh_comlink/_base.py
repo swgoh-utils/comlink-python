@@ -92,6 +92,12 @@ def sanitize_url(url: str) -> str:
     return url
 
 
+def _replace_port(url: str, port: int) -> str:
+    """Return *url* with its port set to *port*, keeping its scheme and host."""
+    parsed = urlparse(url)
+    return urlunparse(parsed._replace(netloc=f"{parsed.hostname}:{port}"))
+
+
 class SwgohComlinkBase:
     """Base class for comlink-python interface and supported methods.
 
@@ -140,8 +146,8 @@ class SwgohComlinkBase:
         access_key: str | None = None,
         secret_key: str | None = None,
         host: str | None = None,
-        port: int = 3000,
-        stats_port: int = 3223,
+        port: int | None = None,
+        stats_port: int | None = None,
         verify_ssl: bool = True,
         version_cache_ttl: float = DEFAULT_VERSION_CACHE_TTL,
         *,
@@ -167,10 +173,15 @@ class SwgohComlinkBase:
         self.retry_policy = retry
         self._pacer = _Pacer(retry.min_interval, retry.unpaced_endpoints) if retry is not None else None
 
-        # host and port parameters override defaults
+        # host replaces url and stats_url outright; port and stats_port alone replace only their ports
         if host:
-            self.url_base = self.PROTOCOL + f"://{host}:{port}"
-            self.stats_url_base = self.PROTOCOL + f"://{host}:{stats_port}"
+            self.url_base = self.PROTOCOL + f"://{host}:{3000 if port is None else port}"
+            self.stats_url_base = self.PROTOCOL + f"://{host}:{3223 if stats_port is None else stats_port}"
+        else:
+            if port is not None:
+                self.url_base = _replace_port(self.url_base, port)
+            if stats_port is not None:
+                self.stats_url_base = _replace_port(self.stats_url_base, stats_port)
 
         # Use values passed from client first, otherwise check for environment variables
         self.access_key = access_key or os.environ.get("ACCESS_KEY")

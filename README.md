@@ -219,8 +219,8 @@ Constructor parameters for `SwgohComlink` and `SwgohComlinkAsync`:
 | `access_key` | `str` | `None` | HMAC public key. Also reads from `ACCESS_KEY` env var |
 | `secret_key` | `str` | `None` | HMAC private key. Also reads from `SECRET_KEY` env var |
 | `host` | `str` | `None` | Server hostname (overrides `url` and `stats_url`) |
-| `port` | `int` | `3000` | Comlink TCP port (used with `host`) |
-| `stats_port` | `int` | `3223` | Stats service TCP port (used with `host`) |
+| `port` | `int` | `None` | Comlink TCP port. With `host` it defaults to `3000`; without `host` it replaces the port in `url` |
+| `stats_port` | `int` | `None` | Stats service TCP port. With `host` it defaults to `3223`; without `host` it replaces the port in `stats_url` |
 | `verify_ssl` | `bool` | `True` | Enable TLS certificate verification |
 | `version_cache_ttl` | `float` | `3600` | Seconds to cache game/localization versions from `/metadata` (see below) |
 
