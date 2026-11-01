@@ -6,7 +6,7 @@ import doctest
 import inspect
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, cast
@@ -260,7 +260,7 @@ class TestGetMaxRankJump:
 
 
 def _at(hour: int, minute: int = 0, day: int = 8) -> datetime:
-    return datetime(2026, 10, day, hour, minute, tzinfo=timezone.utc)
+    return datetime(2026, 10, day, hour, minute, tzinfo=UTC)
 
 
 class TestGetArenaPayout:
@@ -282,7 +282,7 @@ class TestGetArenaPayout:
         assert get_arena_payout(offset, fleet=fleet, now=now) == expected
 
     def test_returns_aware_utc(self):
-        assert get_arena_payout(0).tzinfo == timezone.utc
+        assert get_arena_payout(0).tzinfo == UTC
 
     def test_naive_now_is_local_time(self):
         now = datetime.now()
@@ -571,7 +571,7 @@ _REFRESH = 1_790_164_800  # 2026-09-23 12:00:00 UTC, in seconds as lastRefreshTi
 
 def _utc(seconds: float):
 
-    return datetime.fromtimestamp(seconds, tz=timezone.utc)
+    return datetime.fromtimestamp(seconds, tz=UTC)
 
 
 class TestCalcCurrentStamina:
@@ -610,7 +610,7 @@ class TestCalcStaminaFullTime:
     def test_returns_aware_utc(self):
 
         result = calc_stamina_full_time({"remainingStamina": 50, "lastRefreshTime": _REFRESH})
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
 
     @pytest.mark.parametrize("pass_plus", [False, True])
     def test_agrees_with_calc_current_stamina(self, pass_plus: bool):
@@ -798,7 +798,7 @@ def _run(start: int, end: int | str, run_id: str | None = None, **extra: Any) ->
 
 def _events_now():
 
-    return datetime.fromtimestamp(_EVENTS_NOW_MS / 1000, tz=timezone.utc)
+    return datetime.fromtimestamp(_EVENTS_NOW_MS / 1000, tz=UTC)
 
 
 _NODE = {"campaignId": "EVENTS", "campaignMapId": "JOURNEY", "campaignNodeDifficulty": 4, "campaignNodeId": "JM"}
@@ -898,7 +898,7 @@ class TestGetEventSchedule:
 
         journey = get_event_schedule(_GAME_EVENTS, now=_events_now())[0]
         assert journey["end"] is None
-        assert journey["start"] == datetime(2016, 10, 15, 12, tzinfo=timezone.utc)
+        assert journey["start"] == datetime(2016, 10, 15, 12, tzinfo=UTC)
         assert journey["instance_id"] == "J1"
         assert journey["type"] == 3
         assert journey["campaign_element"] == _NODE
@@ -907,7 +907,7 @@ class TestGetEventSchedule:
 
         jaxxon = get_event_schedule(_GAME_EVENTS, now=_events_now())[1]
         assert jaxxon["instance_id"] == "EARLIER_END"
-        assert jaxxon["end"] is not None and jaxxon["end"].tzinfo == timezone.utc
+        assert jaxxon["end"] is not None and jaxxon["end"].tzinfo == UTC
         assert jaxxon["end"].timestamp() * 1000 == _EVENTS_NOW_MS + _DAY_MS
 
     def test_upcoming_event_uses_its_next_run(self):
@@ -982,7 +982,7 @@ _ERA_DATA: dict[str, Any] = {
 
 
 def _era_moment(millis: int) -> datetime:
-    return datetime.fromtimestamp(millis / 1000, tz=timezone.utc)
+    return datetime.fromtimestamp(millis / 1000, tz=UTC)
 
 
 class TestGetEraUnits:
@@ -1132,9 +1132,9 @@ class TestGetGuildActivity:
         leader, officer, new = get_guild_activity(_guild_payload())["members"]
         assert (leader["player_id"], leader["name"], leader["galactic_power"]) == ("p1", "Leader", 11_000_000)
         # guildJoinTime is in seconds, lastActivityTime in milliseconds
-        assert leader["joined"] == datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)
-        assert leader["last_activity"] == datetime(2026, 9, 23, 12, tzinfo=timezone.utc)
-        assert officer["joined"] == datetime(2020, 1, 23, 18, 35, 4, tzinfo=timezone.utc)
+        assert leader["joined"] == datetime(2022, 6, 22, 22, 55, 56, tzinfo=UTC)
+        assert leader["last_activity"] == datetime(2026, 9, 23, 12, tzinfo=UTC)
+        assert officer["joined"] == datetime(2020, 1, 23, 18, 35, 4, tzinfo=UTC)
         assert officer["last_activity"] is None
         assert new["joined"] is None and new["last_activity"] is None
 
@@ -1570,28 +1570,28 @@ class TestAsEpoch:
         ("value", "expected"),
         [
             # guildJoinTime / Conquest lastRefreshTime: seconds
-            (1655938556, datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)),
-            ("1655938556", datetime(2022, 6, 22, 22, 55, 56, tzinfo=timezone.utc)),
+            (1655938556, datetime(2022, 6, 22, 22, 55, 56, tzinfo=UTC)),
+            ("1655938556", datetime(2022, 6, 22, 22, 55, 56, tzinfo=UTC)),
             # lastActivityTime: milliseconds, kept to the millisecond
-            ("1770515437123", datetime(2026, 2, 8, 1, 50, 37, 123000, tzinfo=timezone.utc)),
-            (1700000000000, datetime(2023, 11, 14, 22, 13, 20, tzinfo=timezone.utc)),
+            ("1770515437123", datetime(2026, 2, 8, 1, 50, 37, 123000, tzinfo=UTC)),
+            (1700000000000, datetime(2023, 11, 14, 22, 13, 20, tzinfo=UTC)),
             # Either side of the 1e11 boundary
-            (99_999_999_999, datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=99_999_999_999)),
-            (100_000_000_000, datetime(1973, 3, 3, 9, 46, 40, tzinfo=timezone.utc)),
+            (99_999_999_999, datetime(1970, 1, 1, tzinfo=UTC) + timedelta(seconds=99_999_999_999)),
+            (100_000_000_000, datetime(1973, 3, 3, 9, 46, 40, tzinfo=UTC)),
         ],
     )
     def test_seconds_and_milliseconds_as_aware_utc(self, value: Any, expected: datetime):
         moment = as_epoch(value)
         # Aware datetimes compare by instant, so check the zone separately.
         assert moment == expected
-        assert moment is not None and moment.tzinfo is timezone.utc
+        assert moment is not None and moment.tzinfo is UTC
 
     @pytest.mark.parametrize("value", [None, 0, "0", "", "-5", -1, "abc", True, "99999999999999999999"])
     def test_no_time_returns_none(self, value: Any):
         assert as_epoch(value) is None
 
     def test_example_player_times(self, example_player):
-        assert as_epoch(example_player["lastActivityTime"]) == datetime(2026, 2, 8, 1, 50, 37, tzinfo=timezone.utc)
+        assert as_epoch(example_player["lastActivityTime"]) == datetime(2026, 2, 8, 1, 50, 37, tzinfo=UTC)
         assert all(as_epoch(season["joinTime"]) for season in example_player["seasonStatus"])
 
 

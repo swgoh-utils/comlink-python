@@ -10,7 +10,7 @@ unusable field never costs the whole record.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from ..exceptions import SwgohComlinkValueError
@@ -20,7 +20,7 @@ from ._utils import get_function_name
 # Conquest lastRefreshTime are seconds, lastActivityTime is milliseconds), and 1e11 seconds is the
 # year 5138 while 1e11 milliseconds is March 1973, so the two ranges cannot meet in real data.
 _MILLISECONDS_FROM = 100_000_000_000
-_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
+_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 
 
 def as_int(value: Any, default: int = 0) -> int:

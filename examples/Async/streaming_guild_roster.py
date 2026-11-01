@@ -13,11 +13,6 @@ structured concurrency — if any single fetch fails, the entire group is cancel
 and the exception is raised cleanly.
 """
 
-import sys
-
-if sys.version_info < (3, 11):
-    sys.exit("This example requires Python 3.11+ (asyncio.TaskGroup support).")
-
 import asyncio
 import time
 

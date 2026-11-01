@@ -4,20 +4,15 @@ from __future__ import annotations
 
 import hashlib
 from json import dumps
-from typing import TYPE_CHECKING, Any, cast, get_type_hints
+from typing import TYPE_CHECKING, Any, Self, assert_type, cast, get_type_hints
 
 import pytest
-from typing_extensions import Self
 
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink._base import _SENSITIVE_KEYS, SwgohComlinkBase, param_alias, sanitize_url
 from swgoh_comlink.exceptions import SwgohComlinkValueError
 
 if TYPE_CHECKING:
-    # `typing.assert_type` is 3.11+; `typing_extensions` works on every
-    # supported Python version and is already in the dev dependency closure.
-    from typing_extensions import assert_type
-
     from swgoh_comlink import SwgohComlinkAsync
 
 # ── sanitize_url ─────────────────────────────────────────────────────────
@@ -128,6 +123,29 @@ class TestConstructor:
         client = SwgohComlink(host="192.168.1.1", port=4000, stats_port=4223)
         assert client.url_base == "http://192.168.1.1:4000"
         assert client.stats_url_base == "http://192.168.1.1:4223"
+        client.close()
+
+    def test_host_without_ports_uses_default_ports(self):
+        client = SwgohComlink(host="192.168.1.1")
+        assert client.url_base == "http://192.168.1.1:3000"
+        assert client.stats_url_base == "http://192.168.1.1:3223"
+        client.close()
+
+    def test_port_without_host_replaces_url_port(self):
+        client = SwgohComlink(port=3200)
+        assert client.url_base == "http://localhost:3200"
+        assert client.stats_url_base == "http://localhost:3223"
+        client.close()
+
+    def test_stats_port_without_host_replaces_stats_url_port(self):
+        client = SwgohComlink(stats_url="http://stats.local:3223", stats_port=4223)
+        assert client.url_base == "http://localhost:3000"
+        assert client.stats_url_base == "http://stats.local:4223"
+        client.close()
+
+    def test_port_without_host_keeps_url_scheme_and_host(self):
+        client = SwgohComlink(url="https://comlink.example.com", port=8443)
+        assert client.url_base == "https://comlink.example.com:8443"
         client.close()
 
     def test_hmac_enabled_with_keys(self):

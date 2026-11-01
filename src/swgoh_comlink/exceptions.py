@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import functools
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from typing import TYPE_CHECKING, Any
 
@@ -205,7 +205,7 @@ def _parse_retry_after(value: str | None) -> float | None:
         except (TypeError, ValueError, IndexError):
             return None
         if when.tzinfo is None:
-            when = when.replace(tzinfo=timezone.utc)
-        return max((when - datetime.now(timezone.utc)).total_seconds(), 0.0)
+            when = when.replace(tzinfo=UTC)
+        return max((when - datetime.now(UTC)).total_seconds(), 0.0)
     # NaN fails every comparison, so ``seconds >= 0`` also rejects it.
     return seconds if seconds >= 0 and seconds != float("inf") else None

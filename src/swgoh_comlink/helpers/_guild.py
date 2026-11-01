@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from collections.abc import Coroutine
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, overload
 
 from ..exceptions import SwgohComlinkValueError
@@ -193,7 +193,7 @@ async def async_get_guild_members(
 def _epoch(value: Any, scale: int) -> datetime | None:
     """An epoch time in seconds (``scale=1``) or milliseconds (``scale=1000``); 0 or missing is ``None``."""
     number = as_int(value)
-    return datetime.fromtimestamp(number / scale, tz=timezone.utc) if number > 0 else None
+    return datetime.fromtimestamp(number / scale, tz=UTC) if number > 0 else None
 
 
 def _dicts(value: Any) -> list[dict[str, Any]]:

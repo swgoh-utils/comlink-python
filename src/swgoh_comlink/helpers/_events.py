@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal, TypedDict
 
 from ..exceptions import SwgohComlinkValueError
@@ -43,7 +43,7 @@ class ScheduledEvent(TypedDict):
 
 
 def _moment(millis: int) -> datetime:
-    return datetime.fromtimestamp(millis / 1000, tz=timezone.utc)
+    return datetime.fromtimestamp(millis / 1000, tz=UTC)
 
 
 def _event_name(text: str) -> tuple[str, str | None]:
@@ -113,7 +113,7 @@ def get_event_schedule(
         raise SwgohComlinkValueError(
             f"{get_function_name()}: 'localization' must be a dictionary, not {type(localization)}"
         )
-    now = datetime.now(timezone.utc) if now is None else now.astimezone(timezone.utc)
+    now = datetime.now(UTC) if now is None else now.astimezone(UTC)
     now_ms = now.timestamp() * 1000
 
     live: list[ScheduledEvent] = []

@@ -37,7 +37,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 
 ### Prerequisites
 
-- **Python 3.10+** (CI tests 3.10 through 3.14)
+- **Python 3.11+** (CI tests 3.11 through 3.14)
 - **[uv](https://docs.astral.sh/uv/)** — used for dependency management, virtual environments, and running tools
 - **Git**
 - **Docker** (optional) — for running a local [swgoh-comlink](https://github.com/swgoh-utils/swgoh-comlink) service for integration tests
@@ -490,7 +490,7 @@ commit would be left out of the changelog entirely. Commit Lint rejects `!` befo
 
 6. **After submitting:**
 
-   CI checks (lint, type check, tests on Python 3.10–3.14, docs build, package build, commit message validation, and integration tests) run automatically.
+   CI checks (lint, type check, tests on Python 3.11–3.14, docs build, package build, commit message validation, and integration tests) run automatically.
    Address any failures before requesting review — the maintainer is automatically
    assigned via CODEOWNERS when a PR is opened.
 
