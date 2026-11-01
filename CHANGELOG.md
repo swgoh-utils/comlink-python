@@ -1,6 +1,18 @@
 # CHANGELOG
 
 <!-- insertion marker -->
+<a name="v2.7.0"></a>
+
+## [v2.7.0](https://github.com/swgoh-utils/comlink-python/compare/v2.6.1...v2.7.0) (2026-11-01)
+
+### Features
+
+- require Python 3.11+ (drop EOL 3.10) ([c59d04f](https://github.com/swgoh-utils/comlink-python/commit/c59d04f9ea41fc1efff85f4cf191a28e892091ff))
+
+### Bug Fixes
+
+- **client:** honour port and stats_port when host is not given ([7d9450d](https://github.com/swgoh-utils/comlink-python/commit/7d9450dbefee4f471500f6ae6459ec62d7e238d7))
+
 <a name="v2.6.1"></a>
 
 ## [v2.6.1](https://github.com/swgoh-utils/comlink-python/compare/v2.6.0...v2.6.1) (2026-10-22)
