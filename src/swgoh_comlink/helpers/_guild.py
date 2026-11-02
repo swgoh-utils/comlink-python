@@ -9,22 +9,20 @@ from typing import TYPE_CHECKING, Any, Literal, TypedDict, overload
 
 from ..exceptions import SwgohComlinkValueError
 from ._utils import _client_kind, get_function_name, sanitize_allycode
-from ._wire import as_int
+from ._wire import as_int, parse_enum
 
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 
-# memberLevel (GuildMemberLevel), looked up as text: an integer (enums=False) or its enum name (enums=True)
+# GuildMemberLevel members and their roles. memberLevel arrives as a number (enums=False) or a member name
+# (enums=True), bare (GUILD_MEMBER) or type-prefixed (GUILDMEMBERLEVEL_GUILDMEMBER); parse_enum reads all three.
 _MEMBER_ROLES: dict[str, tuple[int, str]] = {
-    "1": (1, "Pending"),
-    "2": (2, "Member"),
-    "3": (3, "Officer"),
-    "4": (4, "Leader"),
     "GUILD_PENDING": (1, "Pending"),
     "GUILD_MEMBER": (2, "Member"),
     "GUILD_OFFICER": (3, "Officer"),
     "GUILD_LEADER": (4, "Leader"),
 }
+_MEMBER_LEVELS = {name: level for name, (level, _) in _MEMBER_ROLES.items()}
 
 
 class TerritoryBattleResult(TypedDict):
@@ -210,7 +208,8 @@ def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
     The payload's numbers are read whether they arrive as integers or as strings. Member join times
     (``guildJoinTime``) are epoch **seconds**, while ``lastActivityTime`` is epoch milliseconds; both are
     returned as datetimes, and a missing or zero value as ``None``. ``memberLevel`` is read as a number
-    or as its ``GuildMemberLevel`` enum name (``enums=True``).
+    or as its ``GuildMemberLevel`` enum name (``enums=True``), bare (``GUILD_MEMBER``) or type-prefixed
+    (``GUILDMEMBERLEVEL_GUILDMEMBER``).
 
     Args:
         guild: The response from ``SwgohComlink.get_guild(..., include_recent_guild_activity_info=True)``.
@@ -272,7 +271,8 @@ def get_guild_activity(guild: dict[str, Any]) -> GuildActivity:
 
     member_activity: list[GuildMemberActivity] = []
     for member in members:
-        level, role = _MEMBER_ROLES.get(str(member.get("memberLevel")), (None, None))
+        level_name = parse_enum(member.get("memberLevel"), _MEMBER_LEVELS, enum_name="GuildMemberLevel")
+        level, role = _MEMBER_ROLES.get(level_name or "", (None, None))
         player_id = member.get("playerId", "")
         member_activity.append(
             {
