@@ -18,6 +18,7 @@ from urllib.parse import urlparse, urlunparse
 
 from .exceptions import SwgohComlinkException, SwgohComlinkTypeError, SwgohComlinkValueError
 from .helpers import Constants, DataItems
+from .helpers._data_items import _items_wire_value
 from .retry import RetryPolicy, _no_release, _Pacer
 
 __all__ = [
@@ -333,7 +334,7 @@ class SwgohComlinkBase:
         if items:
             if isinstance(items, int):
                 # Direct integer (e.g. from IntFlag arithmetic)
-                inner_payload["items"] = str(items)
+                inner_payload["items"] = _items_wire_value(items)
             elif items.lstrip("-").isdigit():
                 # Numeric string — pass through as-is
                 inner_payload["items"] = items

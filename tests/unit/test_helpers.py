@@ -3038,6 +3038,8 @@ class TestConstants:
         ("name", "expected"),
         [
             pytest.param("Segment1", str(Constants.Segment1), id="own-attribute"),
+            # Sent as -1 even on Python 3.15+, where int(DataItems.ALL) is 2**52 - 1.
+            pytest.param("ALL", "-1", id="all"),
             pytest.param("UnitDefinitions", "137438953472", id="legacy-name"),  # 2**37, DataItems.UNITS
             pytest.param("UNITS", "137438953472", id="data-items-name"),
             # Aligned with the live GameDataItemsEnum from get_enums().

@@ -69,6 +69,10 @@ in about 2.4 seconds, versus about 147 MB in about 12.5 seconds for
     HTTP 400. Older Comlink releases had a bug in how CDN URLs were built that could
     make some single-collection requests fail; upgrade Comlink if you see that.
 
+    On Python 3.15 and later, `int(DataItems.ALL)` is 2<sup>52</sup> − 1 rather than
+    `-1`, because `enum` now turns a negative flag value into the union of every
+    defined bit. The client still sends `-1` for `DataItems.ALL` and `items="ALL"`.
+
 Use `DataItems.members()` to list all available member names.
 
 ::: swgoh_comlink.helpers._data_items.DataItems

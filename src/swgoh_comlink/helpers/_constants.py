@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 
-from ._data_items import DataItems
+from ._data_items import DataItems, _items_wire_value
 from ._stat_data import (
     LANGUAGES,
     MOD_SET_IDS,
@@ -174,13 +174,13 @@ class Constants:
         mapped_name = _LEGACY_NAME_MAP.get(item)
         if mapped_name:
             try:
-                return str(DataItems[mapped_name].value)
+                return _items_wire_value(DataItems[mapped_name].value)
             except KeyError:
                 pass
 
         # 3. Try DataItems member name directly
         try:
-            return str(DataItems[item].value)
+            return _items_wire_value(DataItems[item].value)
         except KeyError:
             pass
 
