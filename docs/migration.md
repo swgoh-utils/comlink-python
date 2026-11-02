@@ -292,7 +292,8 @@ Code that references the constant by name (`DataItems.SEGMENT2`, `Constants.Segm
 `Constants.get("Segment2")`) picks up the new values automatically.
 
 **`get_game_data(items=...)` accepts any in-range bitmask.** Comlink accepts any
-`items` value from 1 to 2<sup>52</sup> − 1, or `-1` (`DataItems.ALL`) for everything,
+`items` value from 1 to 2<sup>52</sup> − 1, or `-1` (`DataItems.ALL`; the client sends
+`-1` for it even on Python 3.15+, where `int(DataItems.ALL)` is 2<sup>52</sup> − 1) for everything,
 so single collections (e.g. `DataItems.UNITS`), custom combinations and the
 `SEGMENT1`–`SEGMENT4` aggregates all work. Out-of-range values are rejected with an
 HTTP 400. Earlier versions of this guide advised against single-collection values;
