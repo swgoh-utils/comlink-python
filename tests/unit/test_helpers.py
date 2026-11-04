@@ -2261,7 +2261,7 @@ class TestItemNames:
 
 
 def _recorded_enums() -> dict[str, Any]:
-    """The ItemType and CurrencyType groups of a real get_enums() response (game data 0.40.6)."""
+    """The ItemType and CurrencyType groups of a real get_enums() response (client schema 0.41.2115745)."""
 
     return json.loads((_RESOURCES / "enums-item-currency.json").read_text())
 
@@ -3321,13 +3321,15 @@ class TestConstants:
         ("name", "expected"),
         [
             pytest.param("Segment1", str(Constants.Segment1), id="own-attribute"),
-            # Sent as -1 even on Python 3.15+, where int(DataItems.ALL) is 2**52 - 1.
+            # Sent as -1 even on Python 3.15+, where int(DataItems.ALL) is 2**53 - 1.
             pytest.param("ALL", "-1", id="all"),
             pytest.param("UnitDefinitions", "137438953472", id="legacy-name"),  # 2**37, DataItems.UNITS
             pytest.param("UNITS", "137438953472", id="data-items-name"),
             # Aligned with the live GameDataItemsEnum from get_enums().
             pytest.param("AbilityDecisionTrees", "1099511627776", id="ability-decision-trees"),
             pytest.param("EraDefinitions", "2251799813685248", id="era-definitions"),
+            pytest.param("Overcharge", "4503599627370496", id="overcharge"),  # 2**52, client 0.41.2115745
+            pytest.param("Segment4", "7881024469991424", id="segment4-includes-overcharge"),
             pytest.param("UBSUpdate", "2150109456", id="ubs-update"),
             pytest.param("EpisodeDefinitions", "281474976710656", id="episode-definitions-plural"),
             pytest.param("AccountLinking", "562949953421312", id="account-linking-alias"),
@@ -3351,13 +3353,30 @@ class TestConstants:
             2097151,
             1125968624222208,
             206158430208,
-            3377424842620928,
+            7881024469991424,
         )
+        assert DataItems.SEGMENT4 == 3377424842620928 | DataItems.OVERCHARGE
 
     def test_dataitems_members_present(self):
         assert DataItems.ABILITY_DECISION_TREE.value == 1099511627776
         assert DataItems.ERA_DEFINITION.value == 2251799813685248
         assert DataItems.UBS_UPDATE.value == 2150109456
+        assert DataItems.OVERCHARGE.value == 4503599627370496
+
+    @pytest.mark.parametrize(
+        "alias", ["OVERCHARGE_DEFINITION", "OVERCHARGE_STAT_GROUP", "OVERCHARGE_POINT_MISSION_LOOKUP"]
+    )
+    def test_overcharge_collections_share_one_bit(self, alias):
+        assert DataItems[alias] is DataItems.OVERCHARGE
+
+    def test_critical_damage_negate_stat(self):
+        # UnitStat 62 arrived with client schema 0.41.2115745; the keys are the localization bundle's.
+        assert Constants.UNIT_STAT_ENUMS_MAP["62"] == {
+            "enum": "UNITSTATCRITICALDAMAGENEGATE",
+            "nameKey": "UNIT_STAT_CRITICAL_DAMAGE_NEGATE",
+            "tableKey": "CRITICAL_DAMAGE_NEGATE",
+        }
+        assert Constants.STATS["62"]["name"] == "Critical Defense"
 
 
 # ── _decorators ─────────────────────────────────────────────────────────
