@@ -20,7 +20,9 @@ def test_release_pins_checkout_and_serializes_publish_and_tag():
 
 def test_release_rejects_checkout_other_than_dispatched_commit(tmp_path):
     workflow = WORKFLOW.read_text()
-    guard = re.search(r"          sha=.*\n          test .*\n", workflow).group()
+    match = re.search(r"          sha=.*\n          test .*\n", workflow)
+    assert match is not None, "release.yml no longer contains the checkout identity guard"
+    guard = match.group()
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     git = ["git", "-C", str(tmp_path), "-c", "user.name=Test", "-c", "user.email=test@example.invalid"]
     subprocess.run([*git, "commit", "--allow-empty", "-qm", "first"], check=True)
