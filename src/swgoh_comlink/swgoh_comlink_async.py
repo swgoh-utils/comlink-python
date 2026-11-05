@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from json import loads
+from json import JSONDecodeError, loads
 from typing import Any, cast
 
 import httpx
@@ -21,6 +21,7 @@ from ._base import (
     param_alias,
 )
 from .exceptions import (
+    SwgohComlinkDecodeError,
     SwgohComlinkException,
     SwgohComlinkHTTPError,
     SwgohComlinkRateLimitError,
@@ -134,14 +135,21 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             wait, release = self._pace_slot(endpoint, stats)
             wait += extra
             extra = 0.0
-            if wait > 0:
-                logger.debug("Pacing %s for %.2fs", endpoint, wait)
-                try:
-                    await _retry._async_sleep(wait)
-                except asyncio.CancelledError:
-                    # Hand the unused slot back so later callers do not wait for a call that never happens.
-                    release()
-                    raise
+            while True:
+                deadline = _retry._clock() + wait
+                if wait > 0:
+                    logger.debug("Pacing %s for %.2fs", endpoint, wait)
+                    try:
+                        await _retry._async_sleep(wait)
+                    except asyncio.CancelledError:
+                        release()
+                        raise
+                if not self._hold_changed(endpoint, stats, deadline):
+                    break
+                # A refusal arrived while this caller slept. Requeue behind the
+                # current hold, preserving spacing with other delayed callers.
+                release()
+                wait, release = self._pace_slot(endpoint, stats)
             try:
                 return await self._send(method, endpoint, payload, stats, timeout)
             except SwgohComlinkHTTPError as exc:
@@ -171,19 +179,25 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         timeout: float | None,
     ) -> dict[str, Any] | list[Any]:
         """Make one attempt at a request. Headers, including the HMAC signature, are rebuilt per attempt."""
-        req_headers = self._construct_request_headers(method, endpoint, payload)
+        body = self._serialize_payload(payload) if method.upper() != "GET" and payload is not None else None
+        req_headers = self._construct_request_headers(method, endpoint, payload, body=body)
         client = self.stats_client if stats else self.client
 
         request_kwargs: dict[str, Any] = {"headers": req_headers}
         if timeout is not None:
             request_kwargs["timeout"] = timeout
         if method.upper() != "GET":
-            request_kwargs["json"] = payload
+            request_kwargs["content"] = body
 
         try:
             r = await client.request(method.upper(), f"/{endpoint}", **request_kwargs)
             r.raise_for_status()
-            return cast(dict[str, Any] | list[Any], loads(r.content.decode("utf-8")))
+            decoded = loads(r.content.decode("utf-8"))
+            if not isinstance(decoded, (dict, list)):
+                raise SwgohComlinkDecodeError("Expected a JSON object or array in the service response.")
+            return decoded
+        except (JSONDecodeError, UnicodeDecodeError) as e:
+            raise SwgohComlinkDecodeError("Unable to decode the service response as UTF-8 JSON.") from e
         except httpx.HTTPStatusError as e:
             raise SwgohComlinkHTTPError.from_response(e.response) from e
         except httpx.RequestError as e:

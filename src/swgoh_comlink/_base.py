@@ -18,6 +18,7 @@ from urllib.parse import urlparse, urlunparse
 
 from .exceptions import SwgohComlinkException, SwgohComlinkTypeError, SwgohComlinkValueError
 from .helpers import Constants, DataItems
+from .helpers._data_items import _items_wire_value
 from .retry import RetryPolicy, _no_release, _Pacer
 
 __all__ = [
@@ -203,6 +204,16 @@ class SwgohComlinkBase:
         name = endpoint.split("?", 1)[0]
         return self._pacer.reserve_slot(f"{'stats' if stats else 'comlink'}:{name}", name)
 
+    def _hold_changed(self, endpoint: str, stats: bool, deadline: float) -> bool:
+        """Whether a rate hold on *endpoint* now ends after *deadline*, the time a caller was due to send.
+
+        A refusal can land while a queued caller sleeps toward its slot; ``True`` tells it to requeue.
+        """
+        if self._pacer is None:
+            return False
+        name = endpoint.split("?", 1)[0]
+        return self._pacer.held_after(f"{'stats' if stats else 'comlink'}:{name}", name, deadline)
+
     def _hold_endpoint(self, endpoint: str, stats: bool, seconds: float) -> bool:
         """Hold back calls to *endpoint* for *seconds*; return ``False`` when the caller must wait it out itself."""
         if self._pacer is None:
@@ -211,7 +222,12 @@ class SwgohComlinkBase:
         return self._pacer.hold(f"{'stats' if stats else 'comlink'}:{name}", name, seconds)
 
     def _construct_request_headers(
-        self, method: str, endpoint: str, payload: dict[str, Any] | list[Any] | None = None
+        self,
+        method: str,
+        endpoint: str,
+        payload: dict[str, Any] | list[Any] | None = None,
+        *,
+        body: bytes | None = None,
     ) -> dict[str, str]:
         """Create HTTP request headers with optional HMAC authentication.
 
@@ -232,25 +248,31 @@ class SwgohComlinkBase:
             hmac_obj.update(req_time.encode())
             hmac_obj.update(method.upper().encode())
             hmac_obj.update(f"/{endpoint}".encode())
-            # json dumps separators needed for compact string formatting required for compatibility with
-            # comlink since it is written with javascript as the primary object model
-            #
-            # The digest has to cover exactly the bytes that go on the wire. A POST sends
-            # `json=payload`, so an empty dict is transmitted as `{}` — testing truthiness
-            # here hashed `""` instead and every empty-payload signed POST (get_game_metadata
-            # with no client_specs) was rejected with HTTP 403 HMACValidationError. Only a
-            # bodiless request (GET, payload=None) hashes the empty string.
-            if payload is not None:
-                payload_string = dumps(payload, separators=(",", ":"))
-            else:
-                payload_string = dumps("")
+            # Sign the exact serialized bytes used by the transport. Signing a separate
+            # re-serialization drifted from the wire twice: an empty dict hashed as `""`
+            # (HTTP 403 HMACValidationError on every empty-payload POST), and non-ASCII
+            # text hashed as `\uXXXX` escapes while httpx sent raw UTF-8 (HTTP 401).
+            # Only a bodiless request (GET, payload=None) hashes the JSON empty string.
+            if body is None:
+                body = self._serialize_payload(payload) if payload is not None else dumps("").encode()
             # NOTE: MD5 is used here because the comlink service (JavaScript) requires it for
             # HMAC payload verification. This is a protocol constraint, not a security choice.
-            payload_hash_digest = hashlib.md5(payload_string.encode()).hexdigest()  # noqa: S324
+            payload_hash_digest = hashlib.md5(body).hexdigest()  # noqa: S324
             hmac_obj.update(payload_hash_digest.encode())
             hmac_digest = hmac_obj.hexdigest()
             req_headers["Authorization"] = f"HMAC-SHA256 Credential={self.access_key},Signature={hmac_digest}"
         return req_headers
+
+    @staticmethod
+    def _serialize_payload(payload: dict[str, Any] | list[Any]) -> bytes:
+        """Serialize once for both authentication and transport.
+
+        Matches JavaScript's ``JSON.stringify``: compact separators, raw UTF-8 and no NaN/Infinity.
+        """
+        try:
+            return dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
+        except ValueError as exc:
+            raise SwgohComlinkValueError(f"Request payload cannot be sent as JSON: {exc}") from exc
 
     # ── Version cache ────────────────────────────────────────────────────
 
@@ -333,7 +355,7 @@ class SwgohComlinkBase:
         if items:
             if isinstance(items, int):
                 # Direct integer (e.g. from IntFlag arithmetic)
-                inner_payload["items"] = str(items)
+                inner_payload["items"] = _items_wire_value(items)
             elif items.lstrip("-").isdigit():
                 # Numeric string — pass through as-is
                 inner_payload["items"] = items

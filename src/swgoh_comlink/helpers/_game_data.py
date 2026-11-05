@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import io
 import logging
 import time
 import zipfile
 from collections.abc import Coroutine
+from dataclasses import dataclass, fields
 from math import floor
 from typing import TYPE_CHECKING, Any, overload
 
@@ -112,7 +114,31 @@ def create_localized_unit_name_dictionary(locale: str | list[Any]) -> dict[str, 
     return unit_name_map
 
 
-def _parse_localization_bundle(bundle: dict[str, Any], language: str) -> dict[str, str]:
+@dataclass(frozen=True)
+class LocalizationLimits:
+    """Bounds for localization parsing (bytes include line terminators).
+
+    Defaults allow a 32 MiB ZIP, 64 MiB expanded language file, 1 MiB lines,
+    500,000 records, and 1,024 archive entries. Increase individual limits
+    explicitly for larger trusted bundles; all values must be positive integers.
+    """
+
+    max_archive_bytes: int = 32 * 1024 * 1024
+    max_expanded_bytes: int = 64 * 1024 * 1024
+    max_line_bytes: int = 1024 * 1024
+    max_records: int = 500_000
+    max_entries: int = 1024
+
+    def __post_init__(self) -> None:
+        for field in fields(self):
+            value = getattr(self, field.name)
+            if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+                raise SwgohComlinkValueError(f"{field.name} must be a positive integer.")
+
+
+def _parse_localization_bundle(
+    bundle: dict[str, Any], language: str, limits: LocalizationLimits | None = None
+) -> dict[str, str]:
     """Decode a ``get_localization()`` response and parse one language file into a dictionary.
 
     The Comlink ``localization`` endpoint returns a base64-encoded zip archive under the
@@ -135,32 +161,54 @@ def _parse_localization_bundle(bundle: dict[str, Any], language: str) -> dict[st
         err_msg = f"{get_function_name()}: response is missing the 'localizationBundle' key."
         raise SwgohComlinkValueError(err_msg)
 
-    decoded = base64.b64decode(bundle["localizationBundle"])
+    limits = limits or LocalizationLimits()
+    encoded = bundle["localizationBundle"]
+    if len(encoded) > 4 * ((limits.max_archive_bytes + 2) // 3):
+        raise SwgohComlinkValueError("Localization archive exceeds max_archive_bytes.")
+    decoded = base64.b64decode(encoded)
+    if len(decoded) > limits.max_archive_bytes:
+        raise SwgohComlinkValueError("Localization archive exceeds max_archive_bytes.")
     target = f"Loc_{language.upper()}.txt"
     result: dict[str, str] = {}
     with zipfile.ZipFile(io.BytesIO(decoded)) as zip_obj:
+        if len(zip_obj.infolist()) > limits.max_entries:
+            raise SwgohComlinkValueError("Localization archive exceeds max_entries.")
         names = zip_obj.namelist()
         if target not in names:
             err_msg = f"{get_function_name()}: '{target}' not found in localization bundle (available: {names})."
             raise SwgohComlinkValueError(err_msg)
-        with zip_obj.open(target) as raw, io.TextIOWrapper(raw, encoding="utf-8") as stream:
-            for line in stream:
+        if zip_obj.getinfo(target).file_size > limits.max_expanded_bytes:
+            raise SwgohComlinkValueError("Localization file exceeds max_expanded_bytes.")
+        total = records = 0
+        with zip_obj.open(target) as stream:
+            while raw_line := stream.readline(min(limits.max_line_bytes, limits.max_expanded_bytes - total) + 1):
+                total += len(raw_line)
+                if total > limits.max_expanded_bytes:
+                    raise SwgohComlinkValueError("Localization file exceeds max_expanded_bytes.")
+                if len(raw_line) > limits.max_line_bytes:
+                    raise SwgohComlinkValueError("Localization line exceeds max_line_bytes.")
+                line = raw_line.decode("utf-8")
                 if line.startswith("#"):
                     continue
                 key, sep, value = line.rstrip("\r\n").partition("|")
                 if sep:
+                    records += 1
+                    if records > limits.max_records:
+                        raise SwgohComlinkValueError("Localization file exceeds max_records.")
                     result[key] = value
     return result
 
 
 @overload
-def get_localization_dictionary(comlink: SwgohComlink, language: str = "eng_us") -> dict[str, str]: ...
+def get_localization_dictionary(
+    comlink: SwgohComlink, language: str = "eng_us", *, limits: LocalizationLimits | None = None
+) -> dict[str, str]: ...
 @overload
 def get_localization_dictionary(
-    comlink: SwgohComlinkAsync, language: str = "eng_us"
+    comlink: SwgohComlinkAsync, language: str = "eng_us", *, limits: LocalizationLimits | None = None
 ) -> Coroutine[Any, Any, dict[str, str]]: ...
 def get_localization_dictionary(
-    comlink: Any, language: str = "eng_us"
+    comlink: Any, language: str = "eng_us", *, limits: LocalizationLimits | None = None
 ) -> dict[str, str] | Coroutine[Any, Any, dict[str, str]]:
     """Fetch a localization bundle and parse it into a key/value dictionary.
 
@@ -168,6 +216,7 @@ def get_localization_dictionary(
         comlink: Instance of SwgohComlink. An instance of SwgohComlinkAsync is also accepted, in which case
             the result of :func:`async_get_localization_dictionary` is returned for the caller to await.
         language: Locale identifier to retrieve. [Default: ``"eng_us"``]
+        limits: Optional resource limits; defaults to :class:`LocalizationLimits`.
 
     Returns:
         A dictionary mapping localization keys to their localized string values, or an awaitable of it
@@ -180,7 +229,7 @@ def get_localization_dictionary(
     """
     kind = _client_kind(comlink)
     if kind == "async":
-        return async_get_localization_dictionary(comlink, language=language)
+        return async_get_localization_dictionary(comlink, language=language, limits=limits)
     if kind != "sync":
         err_msg = f"{get_function_name()}: The 'comlink' argument is required and must be an instance of SwgohComlink."
         raise SwgohComlinkValueError(err_msg)
@@ -190,15 +239,18 @@ def get_localization_dictionary(
         raise SwgohComlinkValueError(err_msg)
 
     bundle = comlink.get_localization(locale=language)
-    return _parse_localization_bundle(bundle, language)
+    return _parse_localization_bundle(bundle, language, limits)
 
 
-async def async_get_localization_dictionary(comlink: Any, language: str = "eng_us") -> dict[str, str]:
+async def async_get_localization_dictionary(
+    comlink: Any, language: str = "eng_us", *, limits: LocalizationLimits | None = None
+) -> dict[str, str]:
     """Fetch a localization bundle and parse it into a key/value dictionary (async version).
 
     Args:
         comlink: Instance of SwgohComlinkAsync.
         language: Locale identifier to retrieve. [Default: ``"eng_us"``]
+        limits: Optional resource limits; defaults to :class:`LocalizationLimits`.
 
     Returns:
         A dictionary mapping localization keys to their localized string values.
@@ -219,7 +271,7 @@ async def async_get_localization_dictionary(comlink: Any, language: str = "eng_u
         raise SwgohComlinkValueError(err_msg)
 
     bundle = await comlink.get_localization(locale=language)
-    return _parse_localization_bundle(bundle, language)
+    return await asyncio.to_thread(_parse_localization_bundle, bundle, language, limits)
 
 
 def get_playable_units(units_collection: list[dict[str, Any]]) -> list[dict[str, Any]]:

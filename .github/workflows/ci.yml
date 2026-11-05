@@ -149,3 +149,23 @@ jobs:
         run: |
           uv pip install --system dist/*.whl
           python -c "from swgoh_comlink import SwgohComlink; print('Import OK')"
+
+  parity:
+    name: Offline StatCalc parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - run: uv sync --locked --group test
+      - name: Compare against the committed JavaScript baseline
+        env:
+          RUN_PARITY_TESTS: "1"
+        run: |
+          node --version
+          uv run --no-sync python -m pytest tests/statcalc/ -v

@@ -30,6 +30,9 @@ class DataItems(IntFlag):
         Comlink accepts any bitmask from 1 to 2**52 - 1, or -1 (`DataItems.ALL`) for everything. Values outside
         that range are rejected with an HTTP 400.
 
+        On Python 3.15 and later, `int(DataItems.ALL)` is 2**52 - 1 rather than -1, because `enum` now turns a
+        negative flag value into the union of every defined bit. The client still sends -1 for `DataItems.ALL`.
+
     Some of the DataItems members are actually aliases for other members. For example, the `TABLE` member is an
     alias for the `XP_TABLE` member. This is done because both members name the same bit, which Comlink calls
     `AllTables`: requesting it returns two collections, `xpTable` and `table` (the latter holds lookup tables such as
@@ -140,3 +143,12 @@ class DataItems(IntFlag):
     def members(cls) -> KeysView[str]:
         """Return a list of the member names of the DataItems class."""
         return cls.__members__.keys()
+
+
+def _items_wire_value(items: int) -> str:
+    """Return the `items` request value for a bitmask, sending `DataItems.ALL` as Comlink's ``-1``.
+
+    Python 3.15 stores ``ALL = -1`` as the union of every defined bit instead (CPython gh-107538), so the
+    member's value can't be sent as-is.
+    """
+    return "-1" if items == DataItems.ALL else str(items)

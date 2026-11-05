@@ -11,6 +11,7 @@ import pytest
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink._base import _SENSITIVE_KEYS, SwgohComlinkBase, param_alias, sanitize_url
 from swgoh_comlink.exceptions import SwgohComlinkValueError
+from swgoh_comlink.helpers import DataItems
 
 if TYPE_CHECKING:
     from swgoh_comlink import SwgohComlinkAsync
@@ -301,6 +302,21 @@ class TestBuildGameDataPayload:
         payload = SwgohComlinkBase._build_game_data_payload(game_version="1.0", items="ALL")
         assert payload["payload"]["items"] == "-1"
         assert "requestSegment" not in payload["payload"]
+
+    # Python 3.15 stores DataItems.ALL as the union of every defined bit, not -1 (CPython gh-107538), but
+    # every spelling of "all collections" must still reach Comlink as -1.
+    @pytest.mark.parametrize(
+        "items",
+        [DataItems.ALL, "ALL", -1, "-1"],
+        ids=["member", "name", "int", "numeric-string"],
+    )
+    def test_all_items_sent_as_minus_one(self, items):
+        payload = SwgohComlinkBase._build_game_data_payload(game_version="1.0", items=items)
+        assert payload["payload"]["items"] == "-1"
+
+    def test_with_items_flag_combination(self):
+        payload = SwgohComlinkBase._build_game_data_payload(game_version="1.0", items=DataItems.UNITS | DataItems.SKILL)
+        assert payload["payload"]["items"] == str(2**37 | 4)
 
     def test_with_items_known_constant(self):
         payload = SwgohComlinkBase._build_game_data_payload(game_version="1.0", items="SkillDefinitions")

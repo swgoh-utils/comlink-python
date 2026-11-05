@@ -69,6 +69,10 @@ in about 2.4 seconds, versus about 147 MB in about 12.5 seconds for
     HTTP 400. Older Comlink releases had a bug in how CDN URLs were built that could
     make some single-collection requests fail; upgrade Comlink if you see that.
 
+    On Python 3.15 and later, `int(DataItems.ALL)` is 2<sup>52</sup> − 1 rather than
+    `-1`, because `enum` now turns a negative flag value into the union of every
+    defined bit. The client still sends `-1` for `DataItems.ALL` and `items="ALL"`.
+
 Use `DataItems.members()` to list all available member names.
 
 ::: swgoh_comlink.helpers._data_items.DataItems
@@ -739,6 +743,43 @@ These do not require a comlink instance.
 ### get_datacron_dismantle_total
 
 ::: swgoh_comlink.helpers._game_data.get_datacron_dismantle_total
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_localization_dictionary
+
+Unlike the helpers above, this one calls comlink: it fetches a localization bundle
+and parses one language into a key/value dictionary.
+Parsing enforces resource limits while decoding the ZIP bundle.
+`LocalizationLimits` defaults to a 32 MiB archive, a 64 MiB expanded language file,
+1 MiB per line (including its terminator), 500,000 records, and 1,024 ZIP entries.
+Exceeding a limit raises `SwgohComlinkValueError`. For larger trusted datasets,
+pass an explicit override to either the sync or async helper:
+
+```python
+from swgoh_comlink.helpers import LocalizationLimits, get_localization_dictionary
+
+loc = get_localization_dictionary(
+    comlink, limits=LocalizationLimits(max_expanded_bytes=128 * 1024 * 1024)
+)
+```
+
+The async helper parses in a worker thread to keep the event loop responsive.
+These parsing limits apply after the HTTP response has been received; they do not
+limit the transport's response buffering.
+
+::: swgoh_comlink.helpers._game_data.get_localization_dictionary
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._game_data.async_get_localization_dictionary
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._game_data.LocalizationLimits
     options:
       show_root_heading: true
       show_root_full_path: false
