@@ -10,6 +10,7 @@ import math
 import random
 import threading
 import time
+from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
@@ -192,7 +193,7 @@ class _Pacer:
     def __init__(self, interval: float, unpaced: frozenset[str]) -> None:
         self._interval = interval
         self._unpaced = unpaced
-        self._slots: dict[str, list[float]] = {}
+        self._slots: dict[str, OrderedDict[object, float]] = {}
         self._held: dict[str, float] = {}
         self._lock = threading.Lock()
 
@@ -222,19 +223,21 @@ class _Pacer:
                     del self._held[key]
             if self._interval <= 0:
                 return due - now, _no_release
-            # Slots that no longer delay anyone are dropped as the queue is read.
-            slots = [start for start in self._slots.get(key, []) if start + self._interval > now]
+            # Deadlines are inserted in order. Prune only the expired prefix;
+            # each slot is visited at most once during cleanup. Tokens permit
+            # constant-time cancellation anywhere in the queue.
+            slots = self._slots.setdefault(key, OrderedDict())
+            while slots and next(iter(slots.values())) + self._interval <= now:
+                slots.popitem(last=False)
             if slots:
-                due = max(due, max(slots) + self._interval)
-            slots.append(due)
-            self._slots[key] = slots
+                due = max(due, next(reversed(slots.values())) + self._interval)
+            token = object()
+            slots[token] = due
             wait = due - now
 
         def release() -> None:
             with self._lock:
-                taken = self._slots.get(key)
-                if taken and due in taken:
-                    taken.remove(due)
+                slots.pop(token, None)
 
         return wait, release
 
