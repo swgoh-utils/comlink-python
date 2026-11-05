@@ -731,8 +731,9 @@ function useValuesChar(char, useValues) {
     equipped: char.equipment,
     equippedStatMod: char.equippedStatMod,
     relic: char.relic,
-    skills: char.skill.map( skill => { return { id: skill.id, tier: skill.tier + 2 }; })
-    // TODO set purchasedAbilityId
+    skills: char.skill.map( skill => { return { id: skill.id, tier: skill.tier + 2 }; }),
+    // Preserve purchased ultimates when adapting raw Comlink units.
+    purchasedAbilityId: char.purchasedAbilityId
   };
   if (!useValues) return char;
 
@@ -745,8 +746,8 @@ function useValuesChar(char, useValues) {
     mods: char.mods,
     equippedStatMod: char.equippedStatMod,
     relic: useValues.char.relic ? {currentTier: useValues.char.relic } : char.relic,
-    skills: setSkills(char.defId, useValues.char.skills || char.skills || [])
-    // TODO set purchasedAbilityId
+    skills: setSkills(char.defId, useValues.char.skills || char.skills || []),
+    purchasedAbilityId: char.purchasedAbilityId
   };
 
   if (useValues.char.modRarity || useValues.char.modLevel || useValues.char.modTier) {

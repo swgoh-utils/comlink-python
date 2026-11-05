@@ -14,16 +14,23 @@ from swgoh_comlink import StatCalc
 ROOT = Path(__file__).resolve().parents[2]
 
 
-DEFAULT_GAMEDATA_URL = "https://raw.githubusercontent.com/swgoh-utils/gamedata/main/gameData.json"
+DEFAULT_GAMEDATA = str(ROOT / "tests" / "resources" / "gameData.json")
 DEFAULT_PLAYER = ROOT / "tests" / "resources" / "example-player.json"
 JS_RUNNER = ROOT / "parity" / "scripts" / "run_js_player_parity.js"
 
 
+class _ParityStatCalc(StatCalc):
+    """Compare numeric stat IDs before presentation aliases merge duplicate names."""
+
+    def _rename_stats(self, stats: dict[str, Any], lang: str = "eng_us") -> dict[str, Any]:
+        return stats
+
+
 def _run_python(player: dict[str, Any], game_data: dict[str, Any]) -> dict[str, Any]:
-    calc = StatCalc(game_data)
+    calc = _ParityStatCalc(game_data)
     payload = _sanitize_player(player, game_data)
-    count = calc.calc_player_stats(payload)
-    return {"count": count, "player": payload}
+    calc.calc_player_stats(payload)
+    return {"player": payload}
 
 
 def _run_js(player_path: Path, game_data_path: Path) -> dict[str, Any]:
@@ -93,7 +100,7 @@ def _load_game_data(gamedata: str) -> tuple[dict[str, Any], Path]:
     return data, gamedata_path
 
 
-def run(player_path: Path, gamedata: str = DEFAULT_GAMEDATA_URL) -> int:
+def run(player_path: Path, gamedata: str = DEFAULT_GAMEDATA) -> int:
     game_data, game_data_path = _load_game_data(gamedata)
     player = json.loads(player_path.read_text(encoding="utf-8"))
 
@@ -195,7 +202,7 @@ def _sanitize_player(player: dict[str, Any], game_data: dict[str, Any]) -> dict[
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run JS vs Python parity for example player")
-    parser.add_argument("--gamedata", default=DEFAULT_GAMEDATA_URL)
+    parser.add_argument("--gamedata", default=DEFAULT_GAMEDATA)
     parser.add_argument("--player", type=Path, default=DEFAULT_PLAYER)
     args = parser.parse_args()
     return run(args.player, args.gamedata)

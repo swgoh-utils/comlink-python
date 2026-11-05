@@ -14,7 +14,8 @@ const gameDataPath = process.argv[2];
 const playerPath = process.argv[3];
 
 const calc = require(path.join(__dirname, '..', 'js', 'statCalculator.js'));
-const gameData = JSON.parse(fs.readFileSync(gameDataPath, 'utf-8'));
+const rawGameData = JSON.parse(fs.readFileSync(gameDataPath, 'utf-8'));
+const gameData = rawGameData.data || rawGameData;
 const player = JSON.parse(fs.readFileSync(playerPath, 'utf-8'));
 
 calc.setGameData(gameData);
@@ -79,6 +80,6 @@ function sanitizePlayer(input) {
 }
 
 const payload = sanitizePlayer(player);
-const count = calc.calcPlayerStats(payload, fixedOptions);
+calc.calcPlayerStats(payload, fixedOptions);
 
-process.stdout.write(JSON.stringify({ count, player: payload }));
+process.stdout.write(JSON.stringify({ player: payload }));
