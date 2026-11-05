@@ -17,15 +17,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-release-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build distributions
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-
-    concurrency:
-      group: ${{ github.workflow }}-release-${{ github.ref_name }}
-      cancel-in-progress: false
 
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -36,7 +36,7 @@ jobs:
       - name: Check-out repository
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.sha }}
           fetch-depth: 0  # full history + tags for version derivation
 
       - name: Install uv
@@ -51,6 +51,8 @@ jobs:
         id: version
         run: |
           set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          test "$sha" = "$GITHUB_SHA"
           version="$(grep -m1 -oE '^## \[v?[0-9]+\.[0-9]+\.[0-9]+[^]]*\]' CHANGELOG.md \
                      | sed -E 's/^## \[(v?[0-9][^]]*)\]$/\1/')"
           if [ -z "${version}" ]; then
@@ -66,9 +68,9 @@ jobs:
           {
             echo "version=${semver}"
             echo "tag=${tag}"
-            echo "sha=${GITHUB_SHA}"
+            echo "sha=${sha}"
           } >> "$GITHUB_OUTPUT"
-          echo "Releasing ${tag} (from CHANGELOG.md) at ${GITHUB_SHA}"
+          echo "Releasing ${tag} (from CHANGELOG.md) at ${sha}"
 
       - name: Build the package
         env:
