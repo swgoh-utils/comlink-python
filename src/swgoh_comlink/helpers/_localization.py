@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+from html import escape
 from typing import Any, Literal
 
 __all__ = ["parse_swgoh_string"]
@@ -278,7 +279,7 @@ def parse_swgoh_string(text: str, output: OutputFormat = "bare") -> str:
         token_type = token["type"]
 
         if token_type == "text":
-            result.append(str(token["value"]))
+            result.append(escape(str(token["value"])) if output == "web" else str(token["value"]))
         elif token_type == "newline":
             result.append("\n")
         elif token_type == "color_block_open":
