@@ -427,3 +427,25 @@ async def test_async_context_manager_closes_clients(httpx_mock: HTTPXMock) -> No
 
     assert client.client.is_closed
     assert client.stats_client.is_closed
+
+
+@pytest.mark.parametrize("payload", [{}, {"name": "café 🚀", "nested": ["日本語", {}]}])
+async def test_hmac_covers_exact_transmitted_bytes(make_comlink, call, httpx_mock, payload):
+    client = make_comlink(access_key="test-key", secret_key="test-secret")
+    httpx_mock.add_response(json={})
+    await call(client, "_post", endpoint="getGuilds", payload=payload)
+    request = httpx_mock.get_request()
+    digest = hmac.new(b"test-secret", digestmod=hashlib.sha256)
+    digest.update(request.headers["X-Date"].encode())
+    digest.update(b"POST/getGuilds")
+    digest.update(hashlib.md5(request.content).hexdigest().encode())
+    assert request.headers["Authorization"].endswith(digest.hexdigest())
+    assert json.loads(request.content) == payload
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf")])
+async def test_non_json_payload_raises_library_error(make_comlink, call, httpx_mock, value):
+    client = make_comlink()
+    with pytest.raises(SwgohComlinkValueError, match="cannot be sent as JSON"):
+        await call(client, "_post", endpoint="getGuilds", payload={"value": value})
+    assert httpx_mock.get_requests() == []

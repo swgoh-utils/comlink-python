@@ -171,14 +171,15 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         timeout: float | None,
     ) -> dict[str, Any] | list[Any]:
         """Make one attempt at a request. Headers, including the HMAC signature, are rebuilt per attempt."""
-        req_headers = self._construct_request_headers(method, endpoint, payload)
+        body = self._serialize_payload(payload) if method.upper() != "GET" and payload is not None else None
+        req_headers = self._construct_request_headers(method, endpoint, payload, body=body)
         client = self.stats_client if stats else self.client
 
         request_kwargs: dict[str, Any] = {"headers": req_headers}
         if timeout is not None:
             request_kwargs["timeout"] = timeout
         if method.upper() != "GET":
-            request_kwargs["json"] = payload
+            request_kwargs["content"] = body
 
         try:
             r = await client.request(method.upper(), f"/{endpoint}", **request_kwargs)
