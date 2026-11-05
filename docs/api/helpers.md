@@ -747,6 +747,43 @@ These do not require a comlink instance.
       show_root_heading: true
       show_root_full_path: false
 
+### get_localization_dictionary
+
+Unlike the helpers above, this one calls comlink: it fetches a localization bundle
+and parses one language into a key/value dictionary.
+Parsing enforces resource limits while decoding the ZIP bundle.
+`LocalizationLimits` defaults to a 32 MiB archive, a 64 MiB expanded language file,
+1 MiB per line (including its terminator), 500,000 records, and 1,024 ZIP entries.
+Exceeding a limit raises `SwgohComlinkValueError`. For larger trusted datasets,
+pass an explicit override to either the sync or async helper:
+
+```python
+from swgoh_comlink.helpers import LocalizationLimits, get_localization_dictionary
+
+loc = get_localization_dictionary(
+    comlink, limits=LocalizationLimits(max_expanded_bytes=128 * 1024 * 1024)
+)
+```
+
+The async helper parses in a worker thread to keep the event loop responsive.
+These parsing limits apply after the HTTP response has been received; they do not
+limit the transport's response buffering.
+
+::: swgoh_comlink.helpers._game_data.get_localization_dictionary
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._game_data.async_get_localization_dictionary
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._game_data.LocalizationLimits
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
 ---
 
 ## Game Configuration Helpers

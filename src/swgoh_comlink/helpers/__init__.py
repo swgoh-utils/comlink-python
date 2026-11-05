@@ -26,6 +26,7 @@ from ._gac import (
 )
 from ._game_config import get_game_config, get_game_config_int
 from ._game_data import (
+    LocalizationLimits,
     async_get_localization_dictionary,
     create_localized_unit_name_dictionary,
     get_current_datacron_sets,
@@ -187,6 +188,7 @@ __all__ = [
     "get_game_config",
     "get_game_config_int",
     # Game data
+    "LocalizationLimits",
     "async_get_localization_dictionary",
     "create_localized_unit_name_dictionary",
     "get_current_datacron_sets",
