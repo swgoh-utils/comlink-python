@@ -441,3 +441,11 @@ async def test_hmac_covers_exact_transmitted_bytes(make_comlink, call, httpx_moc
     digest.update(hashlib.md5(request.content).hexdigest().encode())
     assert request.headers["Authorization"].endswith(digest.hexdigest())
     assert json.loads(request.content) == payload
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf")])
+async def test_non_json_payload_raises_library_error(make_comlink, call, httpx_mock, value):
+    client = make_comlink()
+    with pytest.raises(SwgohComlinkValueError, match="cannot be sent as JSON"):
+        await call(client, "_post", endpoint="getGuilds", payload={"value": value})
+    assert httpx_mock.get_requests() == []

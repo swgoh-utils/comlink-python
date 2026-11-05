@@ -238,8 +238,11 @@ class SwgohComlinkBase:
             hmac_obj.update(req_time.encode())
             hmac_obj.update(method.upper().encode())
             hmac_obj.update(f"/{endpoint}".encode())
-            # Sign the exact serialized bytes used by the transport. The protocol
-            # represents a bodiless request with the JSON empty string (b'""').
+            # Sign the exact serialized bytes used by the transport. Signing a separate
+            # re-serialization drifted from the wire twice: an empty dict hashed as `""`
+            # (HTTP 403 HMACValidationError on every empty-payload POST), and non-ASCII
+            # text hashed as `\uXXXX` escapes while httpx sent raw UTF-8 (HTTP 401).
+            # Only a bodiless request (GET, payload=None) hashes the JSON empty string.
             if body is None:
                 body = self._serialize_payload(payload) if payload is not None else dumps("").encode()
             # NOTE: MD5 is used here because the comlink service (JavaScript) requires it for
@@ -252,8 +255,14 @@ class SwgohComlinkBase:
 
     @staticmethod
     def _serialize_payload(payload: dict[str, Any] | list[Any]) -> bytes:
-        """Serialize once for both authentication and transport."""
-        return dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
+        """Serialize once for both authentication and transport.
+
+        Matches JavaScript's ``JSON.stringify``: compact separators, raw UTF-8 and no NaN/Infinity.
+        """
+        try:
+            return dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
+        except ValueError as exc:
+            raise SwgohComlinkValueError(f"Request payload cannot be sent as JSON: {exc}") from exc
 
     # ── Version cache ────────────────────────────────────────────────────
 
