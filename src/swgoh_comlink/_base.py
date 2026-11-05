@@ -204,6 +204,12 @@ class SwgohComlinkBase:
         name = endpoint.split("?", 1)[0]
         return self._pacer.reserve_slot(f"{'stats' if stats else 'comlink'}:{name}", name)
 
+    def _hold_changed(self, endpoint: str, stats: bool, deadline: float) -> bool:
+        if self._pacer is None:
+            return False
+        name = endpoint.split("?", 1)[0]
+        return self._pacer.held_after(f"{'stats' if stats else 'comlink'}:{name}", name, deadline)
+
     def _hold_endpoint(self, endpoint: str, stats: bool, seconds: float) -> bool:
         """Hold back calls to *endpoint* for *seconds*; return ``False`` when the caller must wait it out itself."""
         if self._pacer is None:

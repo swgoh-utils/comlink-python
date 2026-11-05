@@ -135,11 +135,22 @@ class SwgohComlink(SwgohComlinkBase):
         attempt = 1
         extra = 0.0  # retry wait carried into the next pass, on top of its pacing slot
         while True:
-            wait = self._pace_delay(endpoint, stats) + extra
+            wait, release = self._pace_slot(endpoint, stats)
+            wait += extra
             extra = 0.0
-            if wait > 0:
-                logger.debug("Pacing %s for %.2fs", endpoint, wait)
-                _retry._sleep(wait)
+            while True:
+                deadline = _retry._clock() + wait
+                if wait > 0:
+                    logger.debug("Pacing %s for %.2fs", endpoint, wait)
+                    try:
+                        _retry._sleep(wait)
+                    except BaseException:
+                        release()
+                        raise
+                if not self._hold_changed(endpoint, stats, deadline):
+                    break
+                release()
+                wait, release = self._pace_slot(endpoint, stats)
             try:
                 return self._send(method, endpoint, payload, stats, timeout)
             except SwgohComlinkHTTPError as exc:
