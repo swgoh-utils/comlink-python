@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from json import loads
+from json import JSONDecodeError, loads
 from typing import Any, cast
 
 import httpx
@@ -21,6 +21,7 @@ from ._base import (
     param_alias,
 )
 from .exceptions import (
+    SwgohComlinkDecodeError,
     SwgohComlinkException,
     SwgohComlinkHTTPError,
     SwgohComlinkRateLimitError,
@@ -183,7 +184,12 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         try:
             r = await client.request(method.upper(), f"/{endpoint}", **request_kwargs)
             r.raise_for_status()
-            return cast(dict[str, Any] | list[Any], loads(r.content.decode("utf-8")))
+            decoded = loads(r.content.decode("utf-8"))
+            if not isinstance(decoded, (dict, list)):
+                raise SwgohComlinkDecodeError("Expected a JSON object or array in the service response.")
+            return decoded
+        except (JSONDecodeError, UnicodeDecodeError) as e:
+            raise SwgohComlinkDecodeError("Unable to decode the service response as UTF-8 JSON.") from e
         except httpx.HTTPStatusError as e:
             raise SwgohComlinkHTTPError.from_response(e.response) from e
         except httpx.RequestError as e:
