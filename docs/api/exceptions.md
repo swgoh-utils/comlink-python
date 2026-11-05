@@ -20,6 +20,16 @@ except SwgohComlinkException:
     print("Comlink request failed")
 ```
 
+## Response decoding errors
+
+When comlink answers with a success status but the body is not UTF-8 JSON, or
+is a JSON scalar (`null`, a number, a string) instead of an object or array,
+the clients raise `SwgohComlinkDecodeError`. The underlying
+`json.JSONDecodeError` or `UnicodeDecodeError` is kept as `__cause__`, and the
+response body is not included in the message. `SwgohComlinkDecodeError` is
+also a `ValueError`, so handlers written against the earlier
+`json.JSONDecodeError` keep working.
+
 ## HTTP errors
 
 When comlink answers with an HTTP error status, the clients raise a

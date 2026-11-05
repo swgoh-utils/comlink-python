@@ -39,8 +39,12 @@ class SwgohComlinkException(Exception):
     """Base class for exceptions in this module."""
 
 
-class SwgohComlinkDecodeError(SwgohComlinkException):
-    """The service returned invalid UTF-8, JSON, or a non-object/non-array payload."""
+class SwgohComlinkDecodeError(SwgohComlinkException, ValueError):
+    """The service returned invalid UTF-8, JSON, or a non-object/non-array payload.
+
+    Also a :class:`ValueError`: before this class existed, an undecodable response escaped as
+    :class:`json.JSONDecodeError`, so handlers catching ``ValueError`` keep working.
+    """
 
 
 class SwgohComlinkValueError(SwgohComlinkException, ValueError):

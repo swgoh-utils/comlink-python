@@ -17,7 +17,11 @@ async def test_decode_errors_preserve_cause(comlink, call, httpx_mock, body, cau
         await call(comlink, "get_game_metadata")
     assert isinstance(caught.value, SwgohComlinkDecodeError)
     assert isinstance(caught.value.__cause__, cause)
-    assert body.decode("utf-8", errors="replace") not in str(caught.value) or not body
+    # Compatible with handlers written for the json.JSONDecodeError raised before.
+    assert isinstance(caught.value, ValueError)
+    # The response body is not echoed into the message.
+    if body:
+        assert body.decode("utf-8", errors="replace") not in str(caught.value)
 
 
 @pytest.mark.parametrize("body", ["null", "true", "42", '"text"'])
