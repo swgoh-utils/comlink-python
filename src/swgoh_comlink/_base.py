@@ -205,6 +205,10 @@ class SwgohComlinkBase:
         return self._pacer.reserve_slot(f"{'stats' if stats else 'comlink'}:{name}", name)
 
     def _hold_changed(self, endpoint: str, stats: bool, deadline: float) -> bool:
+        """Whether a rate hold on *endpoint* now ends after *deadline*, the time a caller was due to send.
+
+        A refusal can land while a queued caller sleeps toward its slot; ``True`` tells it to requeue.
+        """
         if self._pacer is None:
             return False
         name = endpoint.split("?", 1)[0]

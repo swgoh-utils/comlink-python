@@ -26,7 +26,9 @@ async def test_hold_extensions_during_wait_are_observed(make_comlink, call, http
 
     monkeypatch.setattr(retry, "_sleep", sleep)
     monkeypatch.setattr(retry, "_async_sleep", async_sleep)
-    await call(client, "get_game_metadata")
+    # A regression that never re-checks the hold must fail, not hang.
+    async with asyncio.timeout(5):
+        await call(client, "get_game_metadata")
     assert waits == [1, 5, 5]
     assert len(httpx_mock.get_requests()) == 2
 
@@ -51,8 +53,12 @@ async def test_cancellation_during_extended_hold_releases_slot(monkeypatch):
 
         monkeypatch.setattr(retry, "_async_sleep", sleep)
         task = asyncio.create_task(client.get_game_metadata())
-        await parked.wait()
-        task.cancel()
+        try:
+            # Without the re-check the task never parks in a second sleep; fail rather than hang.
+            async with asyncio.timeout(5):
+                await parked.wait()
+        finally:
+            task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
         assert client._pace_delay("metadata", False) == 5
