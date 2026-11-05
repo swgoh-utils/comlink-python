@@ -1174,6 +1174,24 @@ Functions for querying omicron skill data from game data collections.
 
 ## Localization Helpers
 
+Localization dictionary helpers enforce resource limits while decoding ZIP bundles.
+`LocalizationLimits` defaults to a 32 MiB archive, a 64 MiB expanded language file,
+1 MiB per line (including its terminator), 500,000 records, and 1,024 ZIP entries.
+Exceeding a limit raises `SwgohComlinkValueError`. For larger trusted datasets,
+pass an explicit override to either the sync or async helper:
+
+```python
+from swgoh_comlink.helpers import LocalizationLimits, get_localization_dictionary
+
+loc = get_localization_dictionary(
+    comlink, limits=LocalizationLimits(max_expanded_bytes=128 * 1024 * 1024)
+)
+```
+
+The async helper parses in a worker thread to keep the event loop responsive.
+These parsing limits apply after the HTTP response has been received; they do not
+limit the transport's response buffering.
+
 Utilities for working with the SWGOH client's BBCode-style markup that appears
 throughout localization bundles (ability descriptions, mod descriptions, event
 banners, etc.).

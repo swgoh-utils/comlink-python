@@ -26,6 +26,7 @@ from ._gac import (
 )
 from ._game_config import get_game_config, get_game_config_int
 from ._game_data import (
+    LocalizationLimits,
     async_get_localization_dictionary,
     create_localized_unit_name_dictionary,
     get_current_datacron_sets,
@@ -117,6 +118,7 @@ from ._utils import (
 from ._wire import as_epoch, as_id, as_int, as_list, as_scalar, as_str, base_id, parse_enum
 
 __all__ = [
+    "LocalizationLimits",
     # Enums and constants
     "Constants",
     "DataItems",
