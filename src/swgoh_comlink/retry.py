@@ -238,6 +238,13 @@ class _Pacer:
 
         return wait, release
 
+    def held_after(self, key: str, endpoint: str, deadline: float) -> bool:
+        """Whether a hold was extended beyond a caller's scheduled admission."""
+        if endpoint in self._unpaced:
+            return False
+        with self._lock:
+            return self._held.get(key, deadline) > max(deadline, _clock())
+
     def hold(self, key: str, endpoint: str, seconds: float) -> bool:
         """Hold back calls to *key* for *seconds* from now; return whether a hold applies.
 
