@@ -1,3 +1,9 @@
+// Vendored JavaScript baseline for parity/scripts/run_player_parity.py.
+// Local patch: useValuesChar() passes `purchasedAbilityId` through, resolving the upstream
+// "TODO set purchasedAbilityId". Without it a purchased ultimate adds no GP here, and every
+// Galactic Legend that owns one (10 in tests/resources/example-player.json, e.g. GLLEIA)
+// differs from the Python StatCalc by roughly 7,500 GP. Keep any further edits minimal and noted here.
+
 let unitData,  // global variables containing properly formatted game data.
     modSetData,
     gearData,

@@ -20,7 +20,11 @@ JS_RUNNER = ROOT / "parity" / "scripts" / "run_js_player_parity.js"
 
 
 class _ParityStatCalc(StatCalc):
-    """Compare numeric stat IDs before presentation aliases merge duplicate names."""
+    """StatCalc that keeps numeric stat IDs, which is what the JS baseline reports.
+
+    The Python calculator renames stat IDs to display names by default; the JS one does not.
+    Several IDs share a display name (flat and percent variants), so names are not a lossless key.
+    """
 
     def _rename_stats(self, stats: dict[str, Any], lang: str = "eng_us") -> dict[str, Any]:
         return stats
@@ -29,6 +33,8 @@ class _ParityStatCalc(StatCalc):
 def _run_python(player: dict[str, Any], game_data: dict[str, Any]) -> dict[str, Any]:
     calc = _ParityStatCalc(game_data)
     payload = _sanitize_player(player, game_data)
+    # Compare the mutated player only: JS calcPlayerStats returns a unit count, while the Python
+    # calc_player_stats returns the player itself, so the two return values are not comparable.
     calc.calc_player_stats(payload)
     return {"player": payload}
 
