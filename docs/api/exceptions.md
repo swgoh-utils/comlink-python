@@ -36,7 +36,9 @@ When comlink answers with an HTTP error status, the clients raise a
 `SwgohComlinkHTTPError` (or one of its subclasses) from the original
 `httpx.HTTPStatusError`. `str(exc)` is `"HTTP {status}: {body}"`, as it has
 always been, so existing handlers that catch `SwgohComlinkException` keep
-working.
+working. Since v2.9 a body longer than 512 characters is cut in the message and
+followed by `… (N bytes total)`; classification, `code` and `detail` still use
+the full body, which stays available as `exc.response.text`.
 
 | Exception | Raised for |
 |---|---|

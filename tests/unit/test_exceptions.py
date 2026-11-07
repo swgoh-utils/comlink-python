@@ -106,6 +106,31 @@ def test_from_response_non_json_body() -> None:
     assert error.retry_after is None
 
 
+def test_from_response_truncates_large_body_in_message() -> None:
+    body = "<html>" + "x" * 100_000 + "Rate exceeded</html>"
+    response = httpx.Response(502, text=body, request=httpx.Request("POST", "http://h/x"))
+
+    error = SwgohComlinkHTTPError.from_response(response)
+
+    message = str(error)
+    assert len(message) < 600
+    assert message.startswith(f"HTTP 502: {body[:512]}")
+    assert message.endswith(f"… ({len(response.content)} bytes total)")
+    # Classification and detail still use the full body, past the cut-off.
+    assert type(error) is SwgohComlinkRateLimitError
+    assert error.detail == body
+    assert error.response is response
+    assert error.response.text == body
+
+
+def test_from_response_keeps_body_at_truncation_limit() -> None:
+    body = "y" * 512
+
+    error = SwgohComlinkHTTPError.from_response(httpx.Response(500, text=body))
+
+    assert str(error) == f"HTTP 500: {body}"
+
+
 def test_from_response_json_non_object_body() -> None:
     error = SwgohComlinkHTTPError.from_response(httpx.Response(500, json=["a", "b"]))
 

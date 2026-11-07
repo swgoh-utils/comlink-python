@@ -308,6 +308,15 @@ added together.
 `ERA_DEFINITION`, `UBS_UPDATE`. New legacy-name aliases: `AbilityDecisionTrees`,
 `EraDefinitions`, `UBSUpdate`, `EpisodeDefinitions` (plural), `AccountLinking`.
 
+## 10. v2.9 changes
+
+Upgrading from v2.8 to v2.9.
+
+- **HTTP error messages are truncated.** `str(exc)` for `SwgohComlinkHTTPError` cuts a
+  body longer than 512 characters and appends `… (N bytes total)`. Read the full body
+  from `exc.response.text`; `exc.code`, `exc.detail` and the exception class still come
+  from the full body.
+
 ## Summary of changes
 
 | Area | Before (v1.x) | After |
