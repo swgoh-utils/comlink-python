@@ -165,3 +165,27 @@ class TestSkillLookup:
             calc._get_skill_gp("NONEXISTENT_UNIT_XYZ", {"id": "x", "tier": 1})
         with pytest.raises(KeyError):
             calc._get_crewless_skills_gp("NONEXISTENT_UNIT_XYZ", [{"id": "x", "tier": 1}])
+
+
+class TestFormatStats:
+    def test_final_stats_keep_first_seen_order_and_sum_every_source(self, calc):
+        mods = {"35": 4e8}
+        stats = {
+            "base": {"1": 1e8, "21": 2e8},
+            "growthModifiers": {"2": 1e8},
+            "gear": {"5": 3e8, "1": 1e8},
+            "mods": mods,
+        }
+        result = calc._format_stats(stats, 85)
+        # base ids (21 folds into 14, then the converted percent stats), then gear-only, then mods-only (35 -> 39)
+        assert list(result["final"]) == ["1", "14", "15", "8", "9", "37", "38", "12", "13", "39", "40", "5"]
+        assert (result["final"]["1"], result["final"]["5"]) == (2.0, 3.0)
+        assert result["mods"] is mods
+        assert mods["35"] == 4.0
+
+    def test_ship_final_stats_add_crew(self, calc):
+        stats = {"base": {"1": 1e8}, "growthModifiers": {}, "crew": {"1": 2e8, "5": 3e8}}
+        result = calc._format_stats(stats, 85)
+        assert result["crew"] is stats["crew"]
+        assert (result["final"]["1"], result["final"]["5"]) == (3.0, 3.0)
+        assert list(result["final"])[-1] == "5"

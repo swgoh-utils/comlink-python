@@ -874,22 +874,19 @@ class StatCalc:
     def _format_stats(self, stats: dict[str, Any], level: int) -> dict[str, Any]:
         scale = 1e-8
 
-        if stats.get("mods"):
-            for stat_id in list(stats["mods"].keys()):
-                stats["mods"][stat_id] = round(stats["mods"][stat_id])
+        # Each loop only replaces values of existing keys, so it can iterate the dict itself.
+        mods = stats.get("mods")
+        if mods:
+            for stat_id, value in mods.items():
+                mods[stat_id] = round(value)
 
         if scale != 1:
-            for stat_id in list(stats["base"].keys()):
-                stats["base"][stat_id] *= scale
-            for stat_id in list(stats.get("gear", {}).keys()):
-                stats["gear"][stat_id] *= scale
-            for stat_id in list(stats.get("crew", {}).keys()):
-                stats["crew"][stat_id] *= scale
-            for stat_id in list(stats["growthModifiers"].keys()):
-                stats["growthModifiers"][stat_id] *= scale
-            if stats.get("mods"):
-                for stat_id in list(stats["mods"].keys()):
-                    stats["mods"][stat_id] *= scale
+            for table in (stats["base"], stats.get("gear", {}), stats.get("crew", {}), stats["growthModifiers"]):
+                for stat_id, value in table.items():
+                    table[stat_id] = value * scale
+            if mods:
+                for stat_id, value in mods.items():
+                    mods[stat_id] = value * scale
 
         if self._FIXED_PERCENT_VALS or self._FIXED_GAME_STYLE:
             self._convert_percent(
@@ -954,23 +951,23 @@ class StatCalc:
             )
 
         if self._FIXED_GAME_STYLE:
-            gs_stats: dict[str, Any] = {"final": {}}
+            final: dict[str, Any] = {}
+            gs_stats: dict[str, Any] = {"final": final}
+            base = stats["base"]
 
-            stat_list = list(stats["base"].keys())
-
-            def add_stat_id(sid: str) -> None:
-                if sid not in stat_list:
-                    stat_list.append(sid)
+            # Stat ids in first-seen order: a dict is an insertion-ordered set with O(1) lookups.
+            stat_ids = dict.fromkeys(base)
 
             if "gear" in stats:
-                for sid in stats["gear"].keys():
-                    add_stat_id(sid)
-                if "mods" in stats:
-                    for sid in stats["mods"].keys():
-                        add_stat_id(sid)
+                gear = stats["gear"]
+                stat_ids |= dict.fromkeys(gear)
+                has_mods = "mods" in stats
+                mod_values: dict[str, Any] = (stats["mods"] or {}) if has_mods else {}
+                if has_mods:
+                    stat_ids |= dict.fromkeys(stats["mods"])
                     gs_stats["mods"] = stats["mods"]
 
-                for stat_id in stat_list:
+                for stat_id in stat_ids:
                     stat_int = int(stat_id)
                     flat_stat_id = stat_int
                     if stat_int in {21, 22}:
@@ -979,20 +976,16 @@ class StatCalc:
                         flat_stat_id = stat_int + 4
 
                     key = str(flat_stat_id)
-                    gs_stats["final"][key] = gs_stats["final"].get(key, 0) + (
-                        self._table_get(stats["base"], stat_id)
-                        + self._table_get(stats["gear"], stat_id)
-                        + (self._table_get(stats["mods"], stat_id) if "mods" in stats else 0)
+                    final[key] = final.get(key, 0) + (
+                        base.get(stat_id, 0) + gear.get(stat_id, 0) + (mod_values.get(stat_id, 0) if has_mods else 0)
                     )
             else:
-                for sid in stats.get("crew", {}).keys():
-                    add_stat_id(sid)
-                gs_stats["crew"] = stats.get("crew", {})
+                crew = stats.get("crew", {})
+                stat_ids |= dict.fromkeys(crew)
+                gs_stats["crew"] = crew
 
-                for stat_id in stat_list:
-                    gs_stats["final"][str(stat_id)] = self._table_get(stats["base"], stat_id) + self._table_get(
-                        stats["crew"], stat_id
-                    )
+                for stat_id in stat_ids:
+                    final[str(stat_id)] = base.get(stat_id, 0) + crew.get(stat_id, 0)
 
             stats = gs_stats
 
@@ -1020,24 +1013,28 @@ class StatCalc:
     ) -> None:
         del level
         sid = str(stat_id)
-        flat = self._table_get(stats["base"], sid)
+        base = stats["base"]
+        flat = base.get(sid, 0)
         percent = convert_func(flat)
-        stats["base"][sid] = percent
+        base[sid] = percent
         last = percent
 
         if "crew" in stats:
-            if self._table_get(stats["crew"], sid):
-                flat = flat + self._table_get(stats["crew"], sid)
-                stats["crew"][sid] = convert_func(flat) - last
+            crew = stats["crew"]
+            if crew and (crew_value := crew.get(sid, 0)):
+                flat = flat + crew_value
+                crew[sid] = convert_func(flat) - last
         else:
-            if "gear" in stats and self._table_get(stats["gear"], sid):
-                flat = flat + self._table_get(stats["gear"], sid)
+            gear = stats.get("gear")
+            if gear and (gear_value := gear.get(sid, 0)):
+                flat = flat + gear_value
                 percent = convert_func(flat)
-                stats["gear"][sid] = percent - last
+                gear[sid] = percent - last
                 last = percent
-            if "mods" in stats and self._table_get(stats["mods"], sid):
-                flat = flat + self._table_get(stats["mods"], sid)
-                stats["mods"][sid] = convert_func(flat) - last
+            mods = stats.get("mods")
+            if mods and (mod_value := mods.get(sid, 0)):
+                flat = flat + mod_value
+                mods[sid] = convert_func(flat) - last
 
     def _calc_char_gp(self, char: dict[str, Any]) -> int:
         assert self._gp_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
