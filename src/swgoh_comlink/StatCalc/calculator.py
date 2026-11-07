@@ -5,7 +5,7 @@ import json
 import logging
 import math
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 import httpx
@@ -854,19 +854,21 @@ class StatCalc:
             def crit_avoidance(val: float) -> float:
                 return self._convert_flat_crit_avoid_to_percent(val, percent_scale)
 
-            for stat_id, convert in (
-                ("14", crit),
-                ("15", crit),
-                ("8", defense),
-                ("9", defense),
-                ("37", accuracy),
-                ("38", accuracy),
-                ("12", accuracy),
-                ("13", accuracy),
-                ("39", crit_avoidance),
-                ("40", crit_avoidance),
-            ):
-                self._convert_percent(stats, stat_id, convert)
+            self._convert_percent(
+                stats,
+                (
+                    ("14", crit),
+                    ("15", crit),
+                    ("8", defense),
+                    ("9", defense),
+                    ("37", accuracy),
+                    ("38", accuracy),
+                    ("12", accuracy),
+                    ("13", accuracy),
+                    ("39", crit_avoidance),
+                    ("40", crit_avoidance),
+                ),
+            )
 
         if self._FIXED_GAME_STYLE:
             final: dict[str, Any] = {}
@@ -916,26 +918,35 @@ class StatCalc:
         return rn_stats
 
     @staticmethod
-    def _convert_percent(stats: dict[str, Any], sid: str, convert_func: Callable[[float], float]) -> None:
-        base = stats["base"]
-        flat = base.get(sid, 0)
-        percent = convert_func(flat)
-        base[sid] = percent
-        last = percent
+    def _convert_percent(stats: dict[str, Any], conversions: Iterable[tuple[str, Callable[[float], float]]]) -> None:
+        """Convert each flat stat to a percent with its converter, in order.
 
-        if "crew" in stats:
-            crew = stats["crew"]
-            if crew and (crew_value := crew.get(sid, 0)):
-                flat = flat + crew_value
-                crew[sid] = convert_func(flat) - last
-        else:
-            gear = stats.get("gear")
+        The base value becomes the percent of the base flat value. A ship's crew value, or a
+        character's gear and then mods value, becomes the percent it adds on top of the
+        values before it.
+        """
+        # The stat dicts are only updated in place, so they are looked up once for all conversions.
+        base = stats["base"]
+        is_ship = "crew" in stats
+        crew = stats.get("crew")
+        gear = stats.get("gear")
+        mods = stats.get("mods")
+        for sid, convert_func in conversions:
+            flat = base.get(sid, 0)
+            percent = convert_func(flat)
+            base[sid] = percent
+            last = percent
+
+            if is_ship:
+                if crew and (crew_value := crew.get(sid, 0)):
+                    flat = flat + crew_value
+                    crew[sid] = convert_func(flat) - last
+                continue
             if gear and (gear_value := gear.get(sid, 0)):
                 flat = flat + gear_value
                 percent = convert_func(flat)
                 gear[sid] = percent - last
                 last = percent
-            mods = stats.get("mods")
             if mods and (mod_value := mods.get(sid, 0)):
                 flat = flat + mod_value
                 mods[sid] = convert_func(flat) - last
