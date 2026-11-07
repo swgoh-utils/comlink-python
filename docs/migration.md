@@ -320,6 +320,9 @@ Upgrading from v2.8 to v2.9.
   `ACCESS_KEY` / `SECRET_KEY` environment variables. The old names still work until v3
   with a `DeprecationWarning`, and are read only when neither new name is set.
   Constructor arguments still win. Setting only one key now logs a warning.
+- **Plain-HTTP HMAC warning.** A client with HMAC keys whose `url` or `stats_url` is
+  `http://` to a non-loopback host logs one warning. Requests are still sent; switch to
+  `https` or a private network, or filter the `swgoh_comlink._base` logger.
 
 ## Summary of changes
 

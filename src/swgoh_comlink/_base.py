@@ -8,6 +8,7 @@ from __future__ import annotations
 import functools
 import hashlib
 import hmac
+import ipaddress
 import logging
 import os
 import re
@@ -107,6 +108,20 @@ def sanitize_url(url: str) -> str:
     return url
 
 
+def _is_plain_http_remote(url: str) -> bool:
+    """Whether *url* is plain ``http`` to a host other than ``localhost``, ``127.0.0.0/8`` or ``::1``."""
+    parsed = urlparse(url)
+    if parsed.scheme.lower() != "http":
+        return False
+    host = (parsed.hostname or "").rstrip(".")
+    if host == "localhost":
+        return False
+    try:
+        return not ipaddress.ip_address(host).is_loopback
+    except ValueError:  # a host name; resolving it would need a DNS lookup
+        return True
+
+
 def _replace_port(url: str, port: int) -> str:
     """Return *url* with its port set to *port*, keeping its scheme and host."""
     parsed = urlparse(url)
@@ -201,6 +216,13 @@ class SwgohComlinkBase:
         self.access_key, self.secret_key = self._resolve_credentials(access_key, secret_key)
         if self.access_key and self.secret_key:
             self.hmac = True
+            if plain := [url for url in (self.url_base, self.stats_url_base) if _is_plain_http_remote(url)]:
+                logger.warning(
+                    "HMAC signing is on but %s uses plain HTTP to a non-loopback host. Signing does not protect "
+                    "responses from being altered in transit or stop signed requests from being replayed; use "
+                    "https or a private network.",
+                    " and ".join(plain),
+                )
         elif self.access_key or self.secret_key:
             present, missing = ("access_key", "secret_key") if self.access_key else ("secret_key", "access_key")
             logger.warning(
