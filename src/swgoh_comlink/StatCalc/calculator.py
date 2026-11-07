@@ -39,6 +39,24 @@ def _check_fetch_options(
     return normalized
 
 
+def _str_keyed(value: Any) -> Any:
+    """Return *value* with every nested dict keyed by ``str``, never modifying *value*.
+
+    Containers that already qualify are returned as is, so JSON-parsed game data is used
+    without copying; only a dict or list holding a non-``str`` key somewhere below it is
+    rebuilt.
+    """
+    if isinstance(value, dict):
+        if all(type(k) is str and _str_keyed(v) is v for k, v in value.items()):
+            return value
+        return {str(k): _str_keyed(v) for k, v in value.items()}
+    if isinstance(value, list):
+        if all(_str_keyed(v) is v for v in value):
+            return value
+        return [_str_keyed(v) for v in value]
+    return value
+
+
 class _GameDataDownload:
     """Collect a streamed game data body, enforcing the size cap and optional SHA-256 check.
 
@@ -150,12 +168,13 @@ class StatCalc:
         missing = [key for key in self._REQUIRED_TABLES if game_data.get(key) is None]
         if missing:
             raise SwgohComlinkValueError(f"Game data is missing required table(s): {', '.join(missing)}")
-        self._unit_data = game_data["unitData"]
-        self._gear_data = game_data["gearData"]
-        self._mod_set_data = game_data["modSetData"]
-        self._cr_tables = game_data["crTables"]
-        self._gp_tables = game_data["gpTables"]
-        self._relic_data = game_data["relicData"]
+        # Lookups use str keys only, so tables with int keys are rebuilt (not modified).
+        self._unit_data = _str_keyed(game_data["unitData"])
+        self._gear_data = _str_keyed(game_data["gearData"])
+        self._mod_set_data = _str_keyed(game_data["modSetData"])
+        self._cr_tables = _str_keyed(game_data["crTables"])
+        self._gp_tables = _str_keyed(game_data["gpTables"])
+        self._relic_data = _str_keyed(game_data["relicData"])
         self._LOGGER.info(
             "Game data loaded: units=%d gear=%d mod_sets=%d",
             len(self._unit_data),
@@ -404,16 +423,8 @@ class StatCalc:
             if 0 <= idx < len(table):
                 return table[idx]
             return default
-        if key in table:
-            return table[key]
-        skey = str(key)
-        if skey in table:
-            return table[skey]
-        try:
-            ikey = int(key)
-        except (TypeError, ValueError):
-            return default
-        return table.get(ikey, default)
+        # Game data tables are str-keyed by set_game_data; internal stat dicts use str keys too.
+        return table.get(str(key), default)
 
     @staticmethod
     def _add_stat(stats: dict[str, Any], stat_id: Any, value: float) -> None:
@@ -627,50 +638,50 @@ class StatCalc:
         base = stats["base"]
         gms = stats["growthModifiers"]
 
-        self._add_stat(base, 2, self._floor(self._table_get(gms, 2) * level, 8))
-        self._add_stat(base, 3, self._floor(self._table_get(gms, 3) * level, 8))
-        self._add_stat(base, 4, self._floor(self._table_get(gms, 4) * level, 8))
+        self._add_stat(base, 2, self._floor(gms.get("2", 0) * level, 8))
+        self._add_stat(base, 3, self._floor(gms.get("3", 0) * level, 8))
+        self._add_stat(base, 4, self._floor(gms.get("4", 0) * level, 8))
 
         ud = self._unit_data[base_id]
 
-        if self._table_get(base, 61):
+        if base.get("61", 0):
             mms = self._cr_tables.get(ud["masteryModifierID"], {})
             for stat_id, value in mms.items():
-                self._add_stat(base, stat_id, self._table_get(base, 61) * value)
+                self._add_stat(base, stat_id, base.get("61", 0) * value)
 
-        self._add_stat(base, 1, self._table_get(base, 2) * 18)
+        self._add_stat(base, 1, base.get("2", 0) * 18)
         self._add_stat(
             base,
             6,
             self._floor(
-                self._table_get(base, 6) + (self._table_get(base, ud["primaryStat"]) * 1.4),
+                base.get("6", 0) + (base.get(str(ud["primaryStat"]), 0) * 1.4),
                 8,
             )
-            - self._table_get(base, 6),
+            - base.get("6", 0),
         )
         self._add_stat(
             base,
             7,
-            self._floor(self._table_get(base, 7) + (self._table_get(base, 4) * 2.4), 8) - self._table_get(base, 7),
+            self._floor(base.get("7", 0) + (base.get("4", 0) * 2.4), 8) - base.get("7", 0),
         )
         self._add_stat(
             base,
             8,
             self._floor(
-                self._table_get(base, 8) + (self._table_get(base, 2) * 0.14) + (self._table_get(base, 3) * 0.07),
+                base.get("8", 0) + (base.get("2", 0) * 0.14) + (base.get("3", 0) * 0.07),
                 8,
             )
-            - self._table_get(base, 8),
+            - base.get("8", 0),
         )
         self._add_stat(
             base,
             9,
-            self._floor(self._table_get(base, 9) + (self._table_get(base, 4) * 0.1), 8) - self._table_get(base, 9),
+            self._floor(base.get("9", 0) + (base.get("4", 0) * 0.1), 8) - base.get("9", 0),
         )
         self._add_stat(
             base,
             14,
-            self._floor(self._table_get(base, 14) + (self._table_get(base, 3) * 0.4), 8) - self._table_get(base, 14),
+            self._floor(base.get("14", 0) + (base.get("3", 0) * 0.4), 8) - base.get("14", 0),
         )
 
         self._add_stat(base, 12, 24 * 1e8)
@@ -771,38 +782,38 @@ class StatCalc:
                     mod_stats,
                     6,
                     self._floor(
-                        self._table_get(mod_stats, 6) + (self._table_get(base_stats, 6) * 1e-8 * value),
+                        mod_stats.get("6", 0) + (base_stats.get("6", 0) * 1e-8 * value),
                         8,
                     )
-                    - self._table_get(mod_stats, 6),
+                    - mod_stats.get("6", 0),
                 )
                 self._add_stat(
                     mod_stats,
                     7,
                     self._floor(
-                        self._table_get(mod_stats, 7) + (self._table_get(base_stats, 7) * 1e-8 * value),
+                        mod_stats.get("7", 0) + (base_stats.get("7", 0) * 1e-8 * value),
                         8,
                     )
-                    - self._table_get(mod_stats, 7),
+                    - mod_stats.get("7", 0),
                 )
             elif stat_id == 49:
                 self._add_stat(
                     mod_stats,
                     8,
                     self._floor(
-                        self._table_get(mod_stats, 8) + (self._table_get(base_stats, 8) * 1e-8 * value),
+                        mod_stats.get("8", 0) + (base_stats.get("8", 0) * 1e-8 * value),
                         8,
                     )
-                    - self._table_get(mod_stats, 8),
+                    - mod_stats.get("8", 0),
                 )
                 self._add_stat(
                     mod_stats,
                     9,
                     self._floor(
-                        self._table_get(mod_stats, 9) + (self._table_get(base_stats, 9) * 1e-8 * value),
+                        mod_stats.get("9", 0) + (base_stats.get("9", 0) * 1e-8 * value),
                         8,
                     )
-                    - self._table_get(mod_stats, 9),
+                    - mod_stats.get("9", 0),
                 )
             elif stat_id == 53:
                 self._add_stat(mod_stats, 21, value)
@@ -815,30 +826,30 @@ class StatCalc:
                     mod_stats,
                     1,
                     self._floor(
-                        self._table_get(mod_stats, 1) + (self._table_get(base_stats, 1) * 1e-8 * value),
+                        mod_stats.get("1", 0) + (base_stats.get("1", 0) * 1e-8 * value),
                         8,
                     )
-                    - self._table_get(mod_stats, 1),
+                    - mod_stats.get("1", 0),
                 )
             elif stat_id == 56:
                 self._add_stat(
                     mod_stats,
                     28,
                     self._floor(
-                        self._table_get(mod_stats, 28) + (self._table_get(base_stats, 28) * 1e-8 * value),
+                        mod_stats.get("28", 0) + (base_stats.get("28", 0) * 1e-8 * value),
                         8,
                     )
-                    - self._table_get(mod_stats, 28),
+                    - mod_stats.get("28", 0),
                 )
             elif stat_id == 57:
                 self._add_stat(
                     mod_stats,
                     5,
                     self._floor(
-                        self._table_get(mod_stats, 5) + (self._table_get(base_stats, 5) * 1e-8 * value),
+                        mod_stats.get("5", 0) + (base_stats.get("5", 0) * 1e-8 * value),
                         8,
                     )
-                    - self._table_get(mod_stats, 5),
+                    - mod_stats.get("5", 0),
                 )
             else:
                 self._add_stat(mod_stats, stat_id_str, value)

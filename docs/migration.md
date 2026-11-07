@@ -335,6 +335,10 @@ Upgrading from v2.8 to v2.9.
   `calc_*` method in a worker thread. The sync `calc_*` methods are unchanged but block the
   loop; in async code, replace `calc.calc_player_stats(p)` with
   `await calc.acalc_player_stats(p)`.
+- **StatCalc reads game data tables by `str` key.** `set_game_data` rebuilds any table
+  holding non-`str` keys (such as `int` keys from a hand-built dict) with `str` keys, so
+  it now gives the same results as JSON game data; your dict is not modified. Such a
+  rebuilt table is a copy: call `set_game_data` again after changing it.
 
 ## Summary of changes
 
