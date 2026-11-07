@@ -17,6 +17,7 @@ import pytest
 from swgoh_comlink import StatCalc
 
 _PLAYER_FILE = Path(__file__).resolve().parent.parent / "resources" / "example-player.json"
+_RESULT_KEYS = ("stats", "gp")
 
 
 @pytest.fixture(scope="module")
@@ -36,6 +37,38 @@ def _int_keyed(value: Any) -> Any:
     if isinstance(value, list):
         return [_int_keyed(v) for v in value]
     return value
+
+
+def _def_id(unit: dict[str, Any]) -> str:
+    return unit["definitionId"].split(":")[0]
+
+
+def _normalized(raw: dict[str, Any]) -> dict[str, Any]:
+    """The normalized (``defId``) form of a raw Comlink roster unit."""
+    return {
+        "defId": _def_id(raw),
+        "rarity": raw["currentRarity"],
+        "level": raw["currentLevel"],
+        "gear": raw.get("currentTier"),
+        "equipped": copy.deepcopy(raw.get("equipment", [])),
+        "relic": copy.deepcopy(raw.get("relic")),
+        "skills": [{"id": s["id"], "tier": s["tier"] + 2} for s in raw.get("skill", [])],
+        "purchasedAbilityId": list(raw.get("purchasedAbilityId", [])),
+        "equippedStatMod": copy.deepcopy(raw.get("equippedStatMod")),
+    }
+
+
+def _without_results(unit: dict[str, Any]) -> dict[str, Any]:
+    return {k: v for k, v in unit.items() if k not in _RESULT_KEYS}
+
+
+def _crewed_ship(game_data: dict[str, Any], player: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    roster = {_def_id(u): u for u in player["rosterUnit"]}
+    for def_id, unit in roster.items():
+        meta = game_data["unitData"].get(def_id, {})
+        if meta.get("combatType") == 2 and meta.get("crew") and all(c in roster for c in meta["crew"]):
+            return copy.deepcopy(unit), [copy.deepcopy(roster[c]) for c in meta["crew"]]
+    raise AssertionError("fixture roster has no fully crewed ship")
 
 
 class TestGameDataKeys:
@@ -63,3 +96,37 @@ class TestGameDataKeys:
         # JSON game data already has str keys, so nothing is duplicated in memory.
         assert calc._unit_data is game_data["unitData"]
         assert calc._gp_tables is game_data["gpTables"]
+
+
+class TestCallerUnitsUnchanged:
+    def test_calc_char_stats_only_adds_results(self, calc, player):
+        char = _normalized(player["rosterUnit"][0])
+        snapshot = copy.deepcopy(char)
+        calc.calc_char_stats(char)
+        assert _without_results(char) == snapshot
+        assert set(char) - set(snapshot) == set(_RESULT_KEYS)
+
+    def test_calc_char_gp_leaves_unit_unchanged(self, calc, player):
+        char = _normalized(player["rosterUnit"][0])
+        char.pop("equipped")  # setdefault() on the copy must not reach the caller
+        snapshot = copy.deepcopy(char)
+        calc.calc_char_gp(char)
+        assert char == snapshot
+
+    def test_calc_ship_stats_only_adds_results(self, calc, game_data, player):
+        raw_ship, raw_crew = _crewed_ship(game_data, player)
+        crew = [_normalized(c) for c in raw_crew]
+        for member, raw in zip(crew, raw_crew, strict=True):
+            member["gp"] = calc.calc_char_gp(raw)
+        ship = _normalized(raw_ship)
+        ship_snapshot, crew_snapshot = copy.deepcopy(ship), copy.deepcopy(crew)
+        calc.calc_ship_stats(ship, crew)
+        assert _without_results(ship) == ship_snapshot
+        assert crew == crew_snapshot
+
+    def test_calc_ship_gp_leaves_ship_and_crew_unchanged(self, calc, game_data, player):
+        raw_ship, raw_crew = _crewed_ship(game_data, player)
+        ship, crew = _normalized(raw_ship), [_normalized(c) for c in raw_crew]
+        ship_snapshot, crew_snapshot = copy.deepcopy(ship), copy.deepcopy(crew)
+        calc.calc_ship_gp(ship, crew)
+        assert (ship, crew) == (ship_snapshot, crew_snapshot)

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import hashlib
 import json
 import logging
@@ -445,7 +444,9 @@ class StatCalc:
                 "purchasedAbilityId": char.get("purchasedAbilityId", []),
             }
         else:
-            normalized = copy.deepcopy(char)
+            # Only top-level keys are set below and nested values are only read, so a shallow
+            # copy keeps the caller's unit unmodified.
+            normalized = dict(char)
 
         normalized.setdefault("equipped", [])
         normalized.setdefault("skills", [])
@@ -482,9 +483,10 @@ class StatCalc:
                 )
             return normalized_ship, normalized_crew
 
-        normalized_ship = copy.deepcopy(ship)
+        # Shallow copies suffice: only top-level keys (defaults, crew "gp") are ever set.
+        normalized_ship = dict(ship)
         normalized_ship.setdefault("skills", [])
-        normalized_crew = [copy.deepcopy(c) for c in crew]
+        normalized_crew = [dict(c) for c in crew]
         for c in normalized_crew:
             c.setdefault("skills", [])
             c.setdefault("equipped", [])
