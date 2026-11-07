@@ -64,6 +64,9 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             to this size. [Default: None, no limit]
         max_game_data_bytes (int | None): Keyword-only. The same limit for /data (``get_game_data``), whose
             responses are far larger than any other endpoint's. [Default: None, no limit]
+        limits (httpx.Limits | None): Keyword-only. Connection pool limits for both underlying httpx clients,
+            such as ``httpx.Limits(keepalive_expiry=30)``. Timeouts are not affected.
+            [Default: None, the httpx defaults: 100 connections, 20 kept alive, idle ones closed after 5 s]
 
     Notes:
         If the 'host' parameter is provided, the 'url' and 'stats_url' parameters are ignored.
@@ -81,20 +84,19 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         super().__init__(**kwargs)
         self._version_lock = asyncio.Lock()
         self._enums_lock = asyncio.Lock()
-        connection_limits = httpx.Limits(keepalive_expiry=None)
         self.client = httpx.AsyncClient(
             base_url=self.url_base,
             headers={"Content-Type": "application/json"},
             verify=self.verify_ssl,
             timeout=DEFAULT_TIMEOUT,
-            limits=connection_limits,
+            **self._pool_limits,
         )
         self.stats_client = httpx.AsyncClient(
             base_url=self.stats_url_base,
             headers={"Content-Type": "application/json"},
             verify=self.verify_ssl,
             timeout=DEFAULT_TIMEOUT,
-            limits=connection_limits,
+            **self._pool_limits,
         )
 
     async def __aenter__(self) -> SwgohComlinkAsync:

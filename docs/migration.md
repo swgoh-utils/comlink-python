@@ -328,6 +328,11 @@ Upgrading from v2.8 to v2.9.
   `SwgohComlinkValueError` for a larger response, instead of reading it all into
   memory. Both default to `None`, so nothing changes unless you set them. See
   [Limiting Response Size](api/comlink.md#limiting-response-size).
+- **`SwgohComlinkAsync` closes idle connections after 5 s.** It no longer keeps idle
+  pooled connections open forever; both clients now use the httpx default pool limits.
+  A new keyword-only `limits=httpx.Limits(...)` argument on both clients sets other
+  limits, e.g. `limits=httpx.Limits(keepalive_expiry=None)` restores the old async
+  behaviour. Request timeouts are unchanged.
 
 ## Summary of changes
 

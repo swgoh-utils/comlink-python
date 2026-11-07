@@ -17,7 +17,7 @@ import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
 from json import dumps
-from typing import Any, Self
+from typing import Any, Self, TypedDict
 from urllib.parse import urlencode, urlparse, urlunparse
 
 import httpx
@@ -55,6 +55,12 @@ DEFAULT_VERSION_CACHE_TTL: float = 3600.0
 
 # Indirection over the monotonic clock so tests can control cache expiry.
 _now: Callable[[], float] = time.monotonic
+
+
+class _PoolLimits(TypedDict, total=False):
+    """Connection pool keyword for ``httpx.Client`` / ``httpx.AsyncClient``; empty keeps the httpx defaults."""
+
+    limits: httpx.Limits
 
 
 @dataclass(frozen=True)
@@ -221,6 +227,7 @@ class SwgohComlinkBase:
         retry: RetryPolicy | None = None,
         max_response_bytes: int | None = None,
         max_game_data_bytes: int | None = None,
+        limits: httpx.Limits | None = None,
     ):
         from swgoh_comlink import version
 
@@ -243,6 +250,12 @@ class SwgohComlinkBase:
         self._pacer = _Pacer(retry.min_interval, retry.unpaced_endpoints) if retry is not None else None
         self.max_response_bytes = _check_size_limit("max_response_bytes", max_response_bytes)
         self.max_game_data_bytes = _check_size_limit("max_game_data_bytes", max_game_data_bytes)
+        if limits is not None and not isinstance(limits, httpx.Limits):
+            raise SwgohComlinkTypeError(f"limits must be an httpx.Limits or None, got {type(limits).__name__}.")
+        self.limits = limits
+        # Both clients splat this into every httpx client they build, so their pools always match.
+        # Empty when limits is None, which leaves the httpx defaults (5 s idle keep-alive) in place.
+        self._pool_limits: _PoolLimits = {} if limits is None else {"limits": limits}
 
         # host replaces url and stats_url outright; port and stats_port alone replace only their ports
         if host:
