@@ -731,7 +731,8 @@ class StatCalc:
             return {}
 
         set_bonuses: dict[int, dict[str, int]] = {}
-        raw_mod_stats: dict[str, float] = {}
+        # Keyed by int stat id; converted to the str-keyed mod stats below.
+        raw_mod_stats: dict[int, float] = {}
 
         if char.get("mods"):
             for mod in char["mods"]:
@@ -751,16 +752,15 @@ class StatCalc:
                 if mod.get("stat"):
                     for stat in mod["stat"]:
                         sid, sval = stat
-                        key = str(sid)
-                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(sid, sval)
+                        key = int(sid)
+                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(key, sval)
                 else:
                     stat = mod.get("primaryStat")
                     secondary = mod.get("secondaryStat", [])
                     i = 0
                     while stat:
-                        sid = stat["unitStat"]
-                        key = str(sid)
-                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(sid, stat["value"])
+                        key = int(stat["unitStat"])
+                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(key, stat["value"])
                         if i >= len(secondary):
                             break
                         stat = secondary[i]
@@ -783,8 +783,7 @@ class StatCalc:
                 secondary = mod.get("secondaryStat", [])
                 i = 0
                 while stat:
-                    sid = stat["unitStatId"]
-                    key = str(sid)
+                    key = int(stat["unitStatId"])
                     raw_mod_stats[key] = raw_mod_stats.get(key, 0) + float(stat["unscaledDecimalValue"])
                     if i >= len(secondary):
                         break
@@ -796,12 +795,11 @@ class StatCalc:
             if not set_def:
                 continue
             multiplier = (bonus["count"] // set_def["count"]) + (bonus["maxLevel"] // set_def["count"])
-            key = str(set_def["id"])
+            key = int(set_def["id"])
             raw_mod_stats[key] = raw_mod_stats.get(key, 0) + (set_def["value"] * multiplier)
 
         mod_stats: dict[str, float] = {}
-        for stat_id_str, value in raw_mod_stats.items():
-            stat_id = int(stat_id_str)
+        for stat_id, value in raw_mod_stats.items():
             if (targets := _MOD_STAT_SPLITS.get(stat_id)) is not None:
                 for target in targets:
                     mod_stats[target] = mod_stats.get(target, 0) + value
@@ -811,7 +809,8 @@ class StatCalc:
                     increase = self._floor(current + (base_stats.get(target, 0) * 1e-8 * value), 8) - current
                     mod_stats[target] = current + increase
             else:
-                mod_stats[stat_id_str] = mod_stats.get(stat_id_str, 0) + value
+                key = str(stat_id)
+                mod_stats[key] = mod_stats.get(key, 0) + value
 
         return mod_stats
 
