@@ -73,6 +73,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     Examples:
         Basic usage::
 
+            comlink = SwgohComlinkAsync()
+            player = await comlink.get_player(allycode=123456789)
+
+        As a context manager::
+
             async with SwgohComlinkAsync() as comlink:
                 player = await comlink.get_player(allycode=123456789)
     """
@@ -106,7 +111,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         await self.aclose()
 
     async def aclose(self) -> None:
-        """Close the underlying async HTTP client connections."""
+        """Close the underlying HTTP client connections."""
         await self.client.aclose()
         await self.stats_client.aclose()
 
@@ -118,7 +123,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         stats: bool = False,
         timeout: float | None = None,
     ) -> dict[str, Any] | list[Any]:
-        """Send an async HTTP request to the comlink service: the single gateway for all HTTP communication.
+        """Send an HTTP request to the comlink service: the single gateway for all HTTP communication.
 
         Each attempt waits for admission (pacing and rate holds), is sent, and on an HTTP error asks the
         shared retry core in ``_base`` whether to try again, so both clients retry identically.
@@ -209,7 +214,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         stats: bool = False,
         timeout: float | None = None,
     ) -> dict[str, Any] | list[Any]:
-        """Send an async POST request to the comlink service.
+        """Send a POST request to the comlink service.
 
         Convenience wrapper around :meth:`_request`.
         """
