@@ -16,16 +16,22 @@ import time
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
-from json import dumps
-from typing import Any, Self, TypedDict
+from json import JSONDecodeError, dumps, loads
+from typing import Any, ClassVar, Self, TypedDict
 from urllib.parse import urlencode, urlparse, urlunparse
 
 import httpx
 
-from .exceptions import SwgohComlinkException, SwgohComlinkTypeError, SwgohComlinkValueError
+from .exceptions import (
+    SwgohComlinkDecodeError,
+    SwgohComlinkException,
+    SwgohComlinkHTTPError,
+    SwgohComlinkTypeError,
+    SwgohComlinkValueError,
+)
 from .helpers import Constants, DataItems
 from .helpers._data_items import _items_wire_value
-from .retry import RetryPolicy, _no_release, _Pacer
+from .retry import RetryPolicy, _Admission, _no_release, _Pacer, _retry_step
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +90,22 @@ class _CachedVersions:
         if self.language is None:
             raise SwgohComlinkException("'latestLocalizationBundleVersion' was missing from the /metadata response.")
         return self.language
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparedRequest:
+    """One attempt at a request, ready to send: the method, URL path and httpx keyword arguments.
+
+    ``stats`` picks the httpx client (``stats_client`` when set, else ``client``). ``limit`` is the response
+    size limit named ``limit_name``; ``None`` reads the response in one go, any other value streams it.
+    """
+
+    method: str
+    url: str
+    kwargs: dict[str, Any]
+    stats: bool
+    limit_name: str
+    limit: int | None
 
 
 def param_alias(param: str, alias: str) -> Callable[..., Any]:
@@ -199,6 +221,8 @@ class SwgohComlinkBase:
 
     __comlink_type__: str | None = None
     PROTOCOL = "http"
+    # Retry log messages go to the client module's logger, as they did before the retry core moved here.
+    _log: ClassVar[logging.Logger] = logger
 
     @staticmethod
     def _mask(value: str | None, visible: int = 4) -> str:
@@ -427,6 +451,87 @@ class SwgohComlinkBase:
             return dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
         except ValueError as exc:
             raise SwgohComlinkValueError(f"Request payload cannot be sent as JSON: {exc}") from exc
+
+    # ── Sans-I/O request core ────────────────────────────────────────────
+    #
+    # Each client's _request is a short loop over these: admit the attempt (sleeping the waits _admission
+    # hands out), send it, and on an HTTP error ask _retry_wait whether to go round again. Only sending,
+    # sleeping and cancellation differ between the runtimes, so only they live in the clients.
+
+    def _prepare_request(
+        self,
+        method: str,
+        endpoint: str,
+        payload: dict[str, Any] | list[Any] | None,
+        stats: bool,
+        timeout: float | None,
+    ) -> _PreparedRequest:
+        """Build one attempt. Headers, including the HMAC signature, are rebuilt for every attempt."""
+        method = method.upper()
+        body = self._serialize_payload(payload) if method != "GET" and payload is not None else None
+        kwargs: dict[str, Any] = {"headers": self._construct_request_headers(method, endpoint, payload, body=body)}
+        if timeout is not None:
+            kwargs["timeout"] = timeout
+        if method != "GET":
+            kwargs["content"] = body
+        limit_name, limit = self._size_limit(endpoint, stats)
+        return _PreparedRequest(method, f"/{endpoint}", kwargs, stats, limit_name, limit)
+
+    @staticmethod
+    def _interpret_response(response: httpx.Response, content: bytes) -> dict[str, Any] | list[Any]:
+        """Turn a received *response* and its body *content* into the decoded JSON object or array.
+
+        Raises:
+            SwgohComlinkHTTPError: The response has an HTTP error status (subclass by kind of error).
+            SwgohComlinkDecodeError: The body is not UTF-8 JSON, or not a JSON object or array.
+        """
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise SwgohComlinkHTTPError.from_response(e.response) from e
+        try:
+            decoded = loads(content.decode("utf-8"))
+        except (JSONDecodeError, UnicodeDecodeError) as e:
+            raise SwgohComlinkDecodeError("Unable to decode the service response as UTF-8 JSON.") from e
+        if not isinstance(decoded, (dict, list)):
+            raise SwgohComlinkDecodeError("Expected a JSON object or array in the service response.")
+        return decoded
+
+    def _admission(self, endpoint: str, stats: bool, extra: float) -> _Admission:
+        """Reserve a slot for one attempt at *endpoint*, *extra* seconds later than pacing alone would."""
+        return _Admission(
+            endpoint,
+            extra,
+            lambda: self._pace_slot(endpoint, stats),
+            lambda deadline: self._hold_changed(endpoint, stats, deadline),
+            self._log,
+        )
+
+    def _retry_wait(self, error: SwgohComlinkHTTPError, attempt: int, endpoint: str, stats: bool) -> float | None:
+        """Decide what follows attempt *attempt* at *endpoint* failing with *error*.
+
+        Returns ``None`` when the client must re-raise *error*, otherwise the seconds to carry into the next
+        attempt's admission. A rate refusal on a paced endpoint holds the endpoint for the retry delay
+        instead, so only the jitter is carried and every caller waits out the hold together.
+        """
+        policy = self.retry_policy
+        if policy is None:
+            return None
+        step = _retry_step(policy, error, attempt)
+        if step is None:
+            if attempt > 1:
+                self._log.info("%s on %s; giving up after %d attempts", type(error).__name__, endpoint, attempt)
+            return None
+        self._log.info(
+            "%s on %s (attempt %d of %d); retrying in %.1fs",
+            type(error).__name__,
+            endpoint,
+            attempt,
+            policy.attempts,
+            step.delay,
+        )
+        held = step.hold and self._hold_endpoint(endpoint, stats, step.delay)
+        return policy.jitter_extra(step.delay) + (0.0 if held else step.delay)
 
     # ── Version cache ────────────────────────────────────────────────────
 

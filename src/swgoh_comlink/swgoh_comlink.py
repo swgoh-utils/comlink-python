@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 import threading
-from json import JSONDecodeError, loads
 from typing import Any, cast
 
 import httpx
@@ -21,13 +20,12 @@ from ._base import (
     _CachedVersions,
     _declared_length,
     _lookup_name,
+    _PreparedRequest,
     param_alias,
 )
 from .exceptions import (
-    SwgohComlinkDecodeError,
     SwgohComlinkException,
     SwgohComlinkHTTPError,
-    SwgohComlinkRateLimitError,
     SwgohComlinkValueError,
 )
 from .helpers import Constants, DataItems
@@ -85,6 +83,7 @@ class SwgohComlink(SwgohComlinkBase):
     """
 
     __comlink_type__ = "SwgohComlink"
+    _log = logger
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -124,66 +123,40 @@ class SwgohComlink(SwgohComlinkBase):
         stats: bool = False,
         timeout: float | None = None,
     ) -> dict[str, Any] | list[Any]:
-        """Send an HTTP request to the comlink service.
+        """Send an HTTP request to the comlink service: the single gateway for all HTTP communication.
 
-        This is the single gateway for all HTTP communication.  Every public
-        method should route through here so that HMAC authentication, TLS
-        verification, and error handling are applied consistently.
-
-        Args:
-            method: HTTP method (``"GET"`` or ``"POST"``).
-            endpoint: API endpoint path.
-            payload: JSON body for the request (ignored for GET requests).
-            stats: If True, use the stats service client.
-            timeout: Per-request timeout override.
-
-        Returns:
-            Decoded JSON response (dict or list).
+        Each attempt waits for admission (pacing and rate holds), is sent, and on an HTTP error asks the
+        shared retry core in ``_base`` whether to try again, so both clients retry identically.
 
         Raises:
             SwgohComlinkHTTPError: When the service answers with an HTTP error status, after any retries
                 allowed by the client's retry policy. Subclasses identify rate refusals, HTTP 503 and 4xx.
             SwgohComlinkException: On any network or decoding error.
         """
-        policy = self.retry_policy
-        attempt = 1
-        extra = 0.0  # retry wait carried into the next pass, on top of its pacing slot
+        attempt, extra = 1, 0.0
         while True:
-            wait, release = self._pace_slot(endpoint, stats)
-            wait += extra
-            extra = 0.0
-            while True:
-                deadline = _retry._clock() + wait
-                if wait > 0:
-                    logger.debug("Pacing %s for %.2fs", endpoint, wait)
-                    try:
-                        _retry._sleep(wait)
-                    except BaseException:
-                        release()
-                        raise
-                if not self._hold_changed(endpoint, stats, deadline):
-                    break
-                release()
-                wait, release = self._pace_slot(endpoint, stats)
+            self._admit(endpoint, stats, extra)
             try:
                 return self._send(method, endpoint, payload, stats, timeout)
             except SwgohComlinkHTTPError as exc:
-                delay = None if policy is None else policy.retry_delay(exc, attempt)
-                if policy is None or delay is None:
-                    if policy is not None and attempt > 1:
-                        logger.info("%s on %s; giving up after %d attempts", type(exc).__name__, endpoint, attempt)
+                extra = self._retry_wait(exc, attempt, endpoint, stats)
+                if extra is None:
                     raise
-                logger.info(
-                    "%s on %s (attempt %d of %d); retrying in %.1fs",
-                    type(exc).__name__,
-                    endpoint,
-                    attempt,
-                    policy.attempts,
-                    delay,
-                )
-                held = isinstance(exc, SwgohComlinkRateLimitError) and self._hold_endpoint(endpoint, stats, delay)
-                extra = policy.jitter_extra(delay) + (0.0 if held else delay)
                 attempt += 1
+
+    def _admit(self, endpoint: str, stats: bool, extra: float) -> None:
+        """Sleep until *endpoint* admits the next attempt.
+
+        Any exception while sleeping, ``KeyboardInterrupt`` included, gives the reserved slot back before it
+        propagates, so an interrupted caller never leaves a gap that later callers wait out.
+        """
+        admission = self._admission(endpoint, stats, extra)
+        while (wait := admission.next_wait()) is not None:
+            try:
+                _retry._sleep(wait)
+            except BaseException:
+                admission.abandon()
+                raise
 
     def _send(
         self,
@@ -194,53 +167,30 @@ class SwgohComlink(SwgohComlinkBase):
         timeout: float | None,
     ) -> dict[str, Any] | list[Any]:
         """Make one attempt at a request. Headers, including the HMAC signature, are rebuilt per attempt."""
-        body = self._serialize_payload(payload) if method.upper() != "GET" and payload is not None else None
-        req_headers = self._construct_request_headers(method, endpoint, payload, body=body)
-        client = self.stats_client if stats else self.client
-
-        request_kwargs: dict[str, Any] = {"headers": req_headers}
-        if timeout is not None:
-            request_kwargs["timeout"] = timeout
-        if method.upper() != "GET":
-            request_kwargs["content"] = body
-
-        limit_name, limit = self._size_limit(endpoint, stats)
+        request = self._prepare_request(method, endpoint, payload, stats, timeout)
+        client = self.stats_client if request.stats else self.client
         try:
-            if limit is None:
-                r = client.request(method.upper(), f"/{endpoint}", **request_kwargs)
-                r.raise_for_status()
-                content = r.content
+            if request.limit is None:
+                response = client.request(request.method, request.url, **request.kwargs)
+                content = response.content
             else:
-                content = self._receive_limited(client, method, endpoint, request_kwargs, limit_name, limit)
-            decoded = loads(content.decode("utf-8"))
-            if not isinstance(decoded, (dict, list)):
-                raise SwgohComlinkDecodeError("Expected a JSON object or array in the service response.")
-            return decoded
-        except (JSONDecodeError, UnicodeDecodeError) as e:
-            raise SwgohComlinkDecodeError("Unable to decode the service response as UTF-8 JSON.") from e
-        except httpx.HTTPStatusError as e:
-            raise SwgohComlinkHTTPError.from_response(e.response) from e
+                response, content = self._receive_limited(client, request, endpoint, request.limit)
         except httpx.RequestError as e:
             raise SwgohComlinkException(e) from e
+        return self._interpret_response(response, content)
 
     def _receive_limited(
-        self,
-        client: httpx.Client,
-        method: str,
-        endpoint: str,
-        request_kwargs: dict[str, Any],
-        limit_name: str,
-        limit: int,
-    ) -> bytes:
-        """Stream one response, reading at most *limit* decoded bytes of its body.
+        self, client: httpx.Client, request: _PreparedRequest, endpoint: str, limit: int
+    ) -> tuple[httpx.Response, bytes]:
+        """Stream one response, reading at most *limit* decoded bytes of its body; return it and the body.
 
         A success larger than *limit* raises ``SwgohComlinkValueError``, before any of the body is read when
-        ``Content-Length`` already exceeds it. An error body is cut to *limit* bytes and raised through
-        ``raise_for_status``.
+        ``Content-Length`` already exceeds it. An error response comes back as a copy whose body is cut to
+        *limit* bytes.
         """
-        with client.stream(method.upper(), f"/{endpoint}", **request_kwargs) as r:
+        with client.stream(request.method, request.url, **request.kwargs) as r:
             if r.is_success and (declared := _declared_length(r.headers)) is not None and declared > limit:
-                raise self._too_large(endpoint, limit_name, limit, declared)
+                raise self._too_large(endpoint, request.limit_name, limit, declared)
             chunks: list[bytes] = []
             size = 0
             for chunk in r.iter_bytes():
@@ -248,12 +198,13 @@ class SwgohComlink(SwgohComlinkBase):
                 size += len(chunk)
                 if size > limit:
                     if r.is_success:
-                        raise self._too_large(endpoint, limit_name, limit)
+                        raise self._too_large(endpoint, request.limit_name, limit)
                     break
             body = b"".join(chunks)
             if not r.is_success:
-                _bounded_error_response(r, body[:limit]).raise_for_status()
-            return body
+                error = _bounded_error_response(r, body[:limit])
+                return error, error.content
+            return r, body
 
     def _post(
         self,
