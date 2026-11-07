@@ -339,7 +339,8 @@ Upgrading from v2.8 to v2.9.
   holding non-`str` keys (such as `int` keys from a hand-built dict) with `str` keys, so
   it now gives the same results as JSON game data; your dict is not modified. Such a
   rebuilt table is a copy: call `set_game_data` again after changing it. The same applies
-  to a unit's `skills` list, which `set_game_data` indexes by skill id.
+  to a unit's `skills` list, which `set_game_data` indexes by skill id, and to
+  `gpTables["modRarityLevelTierGP"]`, which it indexes by pips, level and tier.
 
 ## Summary of changes
 
