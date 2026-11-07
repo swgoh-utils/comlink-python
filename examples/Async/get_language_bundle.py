@@ -1,7 +1,13 @@
 # coding=utf-8
 """
 get_language_bundle.py
-Sample script for retrieving a specific language bundle using the async client.
+Sample script for retrieving a specific language bundle using the async client and decoding it by hand.
+
+To get the same lookup in one call, use the supported helper instead, which also skips comment
+lines and applies resource limits:
+
+    from swgoh_comlink.helpers import async_get_localization_dictionary
+    der_str_lookup = await async_get_localization_dictionary(cl, language="ger_de")
 """
 
 import asyncio
@@ -12,7 +18,7 @@ import zipfile
 from swgoh_comlink import SwgohComlinkAsync
 
 
-async def main():
+async def main() -> dict[str, str]:
     # Create a SwgohComlinkAsync instance
     async with SwgohComlinkAsync() as cl:
         # Retrieve the German language strings (Default is to collect data as a base64 encoded compressed string
@@ -39,12 +45,21 @@ async def main():
         der_obj_lines = der_obj_decoded.splitlines()
 
         # Each line has a key value and the corresponding text separated by a pipe ('|')
+        # The file also contains comment lines starting with '#' (e.g. '# Start Category: ...') and
+        #  blank lines, which have no key/value pair. Values may themselves contain '|'.
         # To create a dictionary for easy mapping of strings from IDs used in game data collections,
-        #  loop through the lines, split on the '|' character and store the information in an empty dict
+        #  loop through the lines, skip comments and blank lines, split on the first '|' only and
+        #  store the information in an empty dict
         der_str_lookup = {}
         for line in der_obj_lines:
-            key, value = line.split("|")
-            der_str_lookup[key] = value
+            if not line or line.startswith("#"):
+                continue
+            key, sep, value = line.partition("|")
+            if sep:
+                der_str_lookup[key] = value
+
+        print(f"Built a lookup of {len(der_str_lookup)} German strings")
+        return der_str_lookup
 
 
-asyncio.run(main())
+der_str_lookup = asyncio.run(main())

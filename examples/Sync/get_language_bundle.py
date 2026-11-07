@@ -1,7 +1,13 @@
 # coding=utf-8
 """
 get_language_bundle.py
-Sample script for retrieving a specific language bundle.
+Sample script for retrieving a specific language bundle and decoding it by hand.
+
+To get the same lookup in one call, use the supported helper instead, which also skips comment
+lines and applies resource limits:
+
+    from swgoh_comlink.helpers import get_localization_dictionary
+    der_str_lookup = get_localization_dictionary(cl, language="ger_de")
 """
 
 import base64
@@ -37,9 +43,17 @@ der_obj_decoded = der_obj.decode("utf-8")
 der_obj_lines = der_obj_decoded.splitlines()
 
 # Each line has a key value and the corresponding text separated by a pipe ('|')
+# The file also contains comment lines starting with '#' (e.g. '# Start Category: ...') and
+#  blank lines, which have no key/value pair. Values may themselves contain '|'.
 # To create a dictionary for easy mapping of strings from IDs used in game data collections,
-#  loop through the lines, split on the '|' character and store the information in an empty dict
+#  loop through the lines, skip comments and blank lines, split on the first '|' only and
+#  store the information in an empty dict
 der_str_lookup = {}
 for line in der_obj_lines:
-    key, value = line.split("|")
-    der_str_lookup[key] = value
+    if not line or line.startswith("#"):
+        continue
+    key, sep, value = line.partition("|")
+    if sep:
+        der_str_lookup[key] = value
+
+print(f"Built a lookup of {len(der_str_lookup)} German strings")
