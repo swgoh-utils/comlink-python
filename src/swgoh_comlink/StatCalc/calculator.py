@@ -5,6 +5,7 @@ import json
 import logging
 import math
 import re
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -34,6 +35,10 @@ _MOD_STAT_PERCENT_OF_BASE: dict[int, tuple[str, ...]] = {
     56: ("28",),
     57: ("5",),
 }
+
+# Character stat ids whose final value is added to another stat (Physical and Special Critical
+# Chance to Critical Rating, Physical and Special Critical Avoidance to Critical Avoidance Rating).
+_FLAT_STAT_IDS: dict[str, str] = {"21": "14", "22": "15", "35": "39", "36": "40"}
 
 
 def _check_fetch_options(
@@ -834,66 +839,34 @@ class StatCalc:
                     mods[stat_id] = value * scale
 
         if self._FIXED_PERCENT_VALS or self._FIXED_GAME_STYLE:
-            self._convert_percent(
-                stats,
-                14,
-                lambda val: self._convert_flat_crit_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                15,
-                lambda val: self._convert_flat_crit_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                8,
-                lambda val: self._convert_flat_def_to_percent(val, level, scale * 1e8, "crew" in stats),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                9,
-                lambda val: self._convert_flat_def_to_percent(val, level, scale * 1e8, "crew" in stats),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                37,
-                lambda val: self._convert_flat_acc_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                38,
-                lambda val: self._convert_flat_acc_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                12,
-                lambda val: self._convert_flat_acc_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                13,
-                lambda val: self._convert_flat_acc_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                39,
-                lambda val: self._convert_flat_crit_avoid_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                40,
-                lambda val: self._convert_flat_crit_avoid_to_percent(val, scale * 1e8),
-                level,
-            )
+            percent_scale = scale * 1e8
+            is_ship = "crew" in stats
+
+            def crit(val: float) -> float:
+                return self._convert_flat_crit_to_percent(val, percent_scale)
+
+            def defense(val: float) -> float:
+                return self._convert_flat_def_to_percent(val, level, percent_scale, is_ship)
+
+            def accuracy(val: float) -> float:
+                return self._convert_flat_acc_to_percent(val, percent_scale)
+
+            def crit_avoidance(val: float) -> float:
+                return self._convert_flat_crit_avoid_to_percent(val, percent_scale)
+
+            for stat_id, convert in (
+                ("14", crit),
+                ("15", crit),
+                ("8", defense),
+                ("9", defense),
+                ("37", accuracy),
+                ("38", accuracy),
+                ("12", accuracy),
+                ("13", accuracy),
+                ("39", crit_avoidance),
+                ("40", crit_avoidance),
+            ):
+                self._convert_percent(stats, stat_id, convert)
 
         if self._FIXED_GAME_STYLE:
             final: dict[str, Any] = {}
@@ -906,23 +879,16 @@ class StatCalc:
             if "gear" in stats:
                 gear = stats["gear"]
                 stat_ids |= dict.fromkeys(gear)
-                has_mods = "mods" in stats
-                mod_values: dict[str, Any] = (stats["mods"] or {}) if has_mods else {}
-                if has_mods:
+                mod_values: dict[str, Any] = {}
+                if "mods" in stats:
+                    mod_values = stats["mods"] or {}
                     stat_ids |= dict.fromkeys(stats["mods"])
                     gs_stats["mods"] = stats["mods"]
 
                 for stat_id in stat_ids:
-                    stat_int = int(stat_id)
-                    flat_stat_id = stat_int
-                    if stat_int in {21, 22}:
-                        flat_stat_id = stat_int - 7
-                    elif stat_int in {35, 36}:
-                        flat_stat_id = stat_int + 4
-
-                    key = str(flat_stat_id)
+                    key = _FLAT_STAT_IDS.get(stat_id, stat_id)
                     final[key] = final.get(key, 0) + (
-                        base.get(stat_id, 0) + gear.get(stat_id, 0) + (mod_values.get(stat_id, 0) if has_mods else 0)
+                        base.get(stat_id, 0) + gear.get(stat_id, 0) + mod_values.get(stat_id, 0)
                     )
             else:
                 crew = stats.get("crew", {})
@@ -930,7 +896,7 @@ class StatCalc:
                 gs_stats["crew"] = crew
 
                 for stat_id in stat_ids:
-                    final[str(stat_id)] = base.get(stat_id, 0) + crew.get(stat_id, 0)
+                    final[stat_id] = base.get(stat_id, 0) + crew.get(stat_id, 0)
 
             stats = gs_stats
 
@@ -949,15 +915,8 @@ class StatCalc:
         self._LOGGER.debug("Done renaming stats")
         return rn_stats
 
-    def _convert_percent(
-        self,
-        stats: dict[str, Any],
-        stat_id: int,
-        convert_func: Any,
-        level: int,
-    ) -> None:
-        del level
-        sid = str(stat_id)
+    @staticmethod
+    def _convert_percent(stats: dict[str, Any], sid: str, convert_func: Callable[[float], float]) -> None:
         base = stats["base"]
         flat = base.get(sid, 0)
         percent = convert_func(flat)
