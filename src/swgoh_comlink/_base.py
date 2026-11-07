@@ -8,18 +8,36 @@ from __future__ import annotations
 import functools
 import hashlib
 import hmac
+import ipaddress
+import logging
 import os
+import re
 import time
+import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
-from json import dumps
-from typing import Any, Self
-from urllib.parse import urlparse, urlunparse
+from json import JSONDecodeError, dumps, loads
+from typing import Any, ClassVar, Self, TypedDict
+from urllib.parse import urlencode, urlparse, urlunparse
 
-from .exceptions import SwgohComlinkException, SwgohComlinkTypeError, SwgohComlinkValueError
+import httpx
+
+from .exceptions import (
+    SwgohComlinkDecodeError,
+    SwgohComlinkException,
+    SwgohComlinkHTTPError,
+    SwgohComlinkTypeError,
+    SwgohComlinkValueError,
+)
 from .helpers import Constants, DataItems
 from .helpers._data_items import _items_wire_value
-from .retry import RetryPolicy, _no_release, _Pacer
+from .retry import RetryPolicy, _Admission, _no_release, _Pacer, _retry_step
+
+logger = logging.getLogger(__name__)
+
+# A swgoh-stats language code such as ``eng_us``. Nothing that matches can carry ``&``, ``#``, ``=`` or ``/``
+# into the stats query string.
+_LANGUAGE_CODE = re.compile(r"[A-Za-z]{2,3}_[A-Za-z]{2}")
 
 __all__ = [
     "SwgohComlinkBase",
@@ -32,12 +50,23 @@ __all__ = [
 # Keys whose values must be masked in logs, repr, and debug output.
 _SENSITIVE_KEYS = frozenset({"secret_key", "access_key"})
 
+# Environment variables holding the HMAC (access, secret) key pair. The generic names are deprecated and are
+# read only when neither namespaced name is set, so a pair is never assembled from both namespaces.
+_CREDENTIAL_ENV_VARS = ("COMLINK_ACCESS_KEY", "COMLINK_SECRET_KEY")
+_DEPRECATED_CREDENTIAL_ENV_VARS = ("ACCESS_KEY", "SECRET_KEY")
+
 DEFAULT_TIMEOUT: float = 120.0
 GAME_DATA_TIMEOUT: float = 300.0
 DEFAULT_VERSION_CACHE_TTL: float = 3600.0
 
 # Indirection over the monotonic clock so tests can control cache expiry.
 _now: Callable[[], float] = time.monotonic
+
+
+class _PoolLimits(TypedDict, total=False):
+    """Connection pool keyword for ``httpx.Client`` / ``httpx.AsyncClient``; empty keeps the httpx defaults."""
+
+    limits: httpx.Limits
 
 
 @dataclass(frozen=True)
@@ -61,6 +90,22 @@ class _CachedVersions:
         if self.language is None:
             raise SwgohComlinkException("'latestLocalizationBundleVersion' was missing from the /metadata response.")
         return self.language
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparedRequest:
+    """One attempt at a request, ready to send: the method, URL path and httpx keyword arguments.
+
+    ``stats`` picks the httpx client (``stats_client`` when set, else ``client``). ``limit`` is the response
+    size limit named ``limit_name``; ``None`` reads the response in one go, any other value streams it.
+    """
+
+    method: str
+    url: str
+    kwargs: dict[str, Any]
+    stats: bool
+    limit_name: str
+    limit: int | None
 
 
 def param_alias(param: str, alias: str) -> Callable[..., Any]:
@@ -91,6 +136,55 @@ def sanitize_url(url: str) -> str:
             netloc = f"{parsed.hostname}:443"
             url = urlunparse(parsed._replace(netloc=netloc))
     return url
+
+
+def _is_plain_http_remote(url: str) -> bool:
+    """Whether *url* is plain ``http`` to a host other than ``localhost``, ``127.0.0.0/8`` or ``::1``."""
+    parsed = urlparse(url)
+    if parsed.scheme.lower() != "http":
+        return False
+    host = (parsed.hostname or "").rstrip(".")
+    if host == "localhost":
+        return False
+    try:
+        return not ipaddress.ip_address(host).is_loopback
+    except ValueError:  # a host name; resolving it would need a DNS lookup
+        return True
+
+
+def _check_size_limit(name: str, value: int | None) -> int | None:
+    """Validate a response size limit argument: ``None`` or a positive ``int``."""
+    if value is None:
+        return None
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise SwgohComlinkTypeError(f"{name} must be an int or None, got {type(value).__name__}.")
+    if value <= 0:
+        raise SwgohComlinkValueError(f"{name} must be a positive number of bytes or None.")
+    return value
+
+
+def _declared_length(headers: httpx.Headers) -> int | None:
+    """The ``Content-Length`` header as an ``int``, or ``None`` when absent or unreadable."""
+    try:
+        return int(headers["content-length"])
+    except (KeyError, ValueError):
+        return None
+
+
+def _bounded_error_response(response: httpx.Response, body: bytes) -> httpx.Response:
+    """A copy of a streamed error *response* carrying *body*, its decoded and possibly cut-short content.
+
+    The transfer headers are dropped because they described the encoded body, not *body*.
+    """
+    headers = [
+        (name, value)
+        for name, value in response.headers.multi_items()
+        if name.lower() not in ("content-encoding", "content-length", "transfer-encoding")
+    ]
+    extensions = {key: value for key, value in response.extensions.items() if key in ("http_version", "reason_phrase")}
+    return httpx.Response(
+        response.status_code, headers=headers, content=body, request=response.request, extensions=extensions
+    )
 
 
 def _lookup_name(kind: str, table: dict[str, int], name: str) -> int:
@@ -127,6 +221,8 @@ class SwgohComlinkBase:
 
     __comlink_type__: str | None = None
     PROTOCOL = "http"
+    # Retry log messages go to the client module's logger, as they did before the retry core moved here.
+    _log: ClassVar[logging.Logger] = logger
 
     @staticmethod
     def _mask(value: str | None, visible: int = 4) -> str:
@@ -170,6 +266,9 @@ class SwgohComlinkBase:
         version_cache_ttl: float = DEFAULT_VERSION_CACHE_TTL,
         *,
         retry: RetryPolicy | None = None,
+        max_response_bytes: int | None = None,
+        max_game_data_bytes: int | None = None,
+        limits: httpx.Limits | None = None,
     ):
         from swgoh_comlink import version
 
@@ -190,6 +289,14 @@ class SwgohComlinkBase:
             raise SwgohComlinkTypeError(f"retry must be a RetryPolicy or None, got {type(retry).__name__}.")
         self.retry_policy = retry
         self._pacer = _Pacer(retry.min_interval, retry.unpaced_endpoints) if retry is not None else None
+        self.max_response_bytes = _check_size_limit("max_response_bytes", max_response_bytes)
+        self.max_game_data_bytes = _check_size_limit("max_game_data_bytes", max_game_data_bytes)
+        if limits is not None and not isinstance(limits, httpx.Limits):
+            raise SwgohComlinkTypeError(f"limits must be an httpx.Limits or None, got {type(limits).__name__}.")
+        self.limits = limits
+        # Both clients splat this into every httpx client they build, so their pools always match.
+        # Empty when limits is None, which leaves the httpx defaults (5 s idle keep-alive) in place.
+        self._pool_limits: _PoolLimits = {} if limits is None else {"limits": limits}
 
         # host replaces url and stats_url outright; port and stats_port alone replace only their ports
         if host:
@@ -201,11 +308,64 @@ class SwgohComlinkBase:
             if stats_port is not None:
                 self.stats_url_base = _replace_port(self.stats_url_base, stats_port)
 
-        # Use values passed from client first, otherwise check for environment variables
-        self.access_key = access_key or os.environ.get("ACCESS_KEY")
-        self.secret_key = secret_key or os.environ.get("SECRET_KEY")
+        self.access_key, self.secret_key = self._resolve_credentials(access_key, secret_key)
         if self.access_key and self.secret_key:
             self.hmac = True
+            if plain := [url for url in (self.url_base, self.stats_url_base) if _is_plain_http_remote(url)]:
+                logger.warning(
+                    "HMAC signing is on but %s uses plain HTTP to a non-loopback host. Signing does not protect "
+                    "responses from being altered in transit or stop signed requests from being replayed; use "
+                    "https or a private network.",
+                    " and ".join(plain),
+                )
+        elif self.access_key or self.secret_key:
+            present, missing = ("access_key", "secret_key") if self.access_key else ("secret_key", "access_key")
+            logger.warning(
+                "HMAC signing is off: %s is set but %s is not. Pass both keys, or set both %s and %s.",
+                present,
+                missing,
+                *_CREDENTIAL_ENV_VARS,
+            )
+
+    @staticmethod
+    def _resolve_credentials(access_key: str | None, secret_key: str | None) -> tuple[str | None, str | None]:
+        """Return the HMAC (access, secret) keys: constructor arguments first, then the environment.
+
+        Emits one ``DeprecationWarning`` when a key is taken from ``ACCESS_KEY`` or ``SECRET_KEY``.
+        """
+        env_names = _CREDENTIAL_ENV_VARS
+        env_values = [os.environ.get(name) or None for name in env_names]
+        if not any(env_values):
+            env_names = _DEPRECATED_CREDENTIAL_ENV_VARS
+            env_values = [os.environ.get(name) or None for name in env_names]
+        args = (access_key or None, secret_key or None)
+        if env_names is _DEPRECATED_CREDENTIAL_ENV_VARS and (
+            used := [name for name, arg, value in zip(env_names, args, env_values, strict=True) if value and not arg]
+        ):
+            # stacklevel 4: this method, SwgohComlinkBase.__init__, the client's __init__, then the caller.
+            warnings.warn(
+                f"Reading HMAC keys from {' and '.join(used)} is deprecated and will be removed in v3. "
+                f"Set {' and '.join(_CREDENTIAL_ENV_VARS)} instead.",
+                DeprecationWarning,
+                stacklevel=4,
+            )
+        access, secret = (arg or value for arg, value in zip(args, env_values, strict=True))
+        return access, secret
+
+    def _size_limit(self, endpoint: str, stats: bool) -> tuple[str, int | None]:
+        """The name and value of the response size limit for *endpoint*: ``/data`` has its own."""
+        if endpoint == "data" and not stats:
+            return "max_game_data_bytes", self.max_game_data_bytes
+        return "max_response_bytes", self.max_response_bytes
+
+    @staticmethod
+    def _too_large(endpoint: str, limit_name: str, limit: int, declared: int | None = None) -> SwgohComlinkValueError:
+        """The error for a response from *endpoint* larger than *limit* bytes."""
+        size = f"declares {declared} bytes, over" if declared is not None else "is over"
+        return SwgohComlinkValueError(
+            f"Response from /{endpoint} {size} {limit_name} ({limit} bytes). "
+            f"Raise {limit_name}, or set it to None to remove the limit."
+        )
 
     def _pace_delay(self, endpoint: str, stats: bool) -> float:
         """Reserve the next call slot for *endpoint* and return the seconds to wait for it.
@@ -291,6 +451,87 @@ class SwgohComlinkBase:
             return dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
         except ValueError as exc:
             raise SwgohComlinkValueError(f"Request payload cannot be sent as JSON: {exc}") from exc
+
+    # ── Sans-I/O request core ────────────────────────────────────────────
+    #
+    # Each client's _request is a short loop over these: admit the attempt (sleeping the waits _admission
+    # hands out), send it, and on an HTTP error ask _retry_wait whether to go round again. Only sending,
+    # sleeping and cancellation differ between the runtimes, so only they live in the clients.
+
+    def _prepare_request(
+        self,
+        method: str,
+        endpoint: str,
+        payload: dict[str, Any] | list[Any] | None,
+        stats: bool,
+        timeout: float | None,
+    ) -> _PreparedRequest:
+        """Build one attempt. Headers, including the HMAC signature, are rebuilt for every attempt."""
+        method = method.upper()
+        body = self._serialize_payload(payload) if method != "GET" and payload is not None else None
+        kwargs: dict[str, Any] = {"headers": self._construct_request_headers(method, endpoint, payload, body=body)}
+        if timeout is not None:
+            kwargs["timeout"] = timeout
+        if method != "GET":
+            kwargs["content"] = body
+        limit_name, limit = self._size_limit(endpoint, stats)
+        return _PreparedRequest(method, f"/{endpoint}", kwargs, stats, limit_name, limit)
+
+    @staticmethod
+    def _interpret_response(response: httpx.Response, content: bytes) -> dict[str, Any] | list[Any]:
+        """Turn a received *response* and its body *content* into the decoded JSON object or array.
+
+        Raises:
+            SwgohComlinkHTTPError: The response has an HTTP error status (subclass by kind of error).
+            SwgohComlinkDecodeError: The body is not UTF-8 JSON, or not a JSON object or array.
+        """
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise SwgohComlinkHTTPError.from_response(e.response) from e
+        try:
+            decoded = loads(content.decode("utf-8"))
+        except (JSONDecodeError, UnicodeDecodeError) as e:
+            raise SwgohComlinkDecodeError("Unable to decode the service response as UTF-8 JSON.") from e
+        if not isinstance(decoded, (dict, list)):
+            raise SwgohComlinkDecodeError("Expected a JSON object or array in the service response.")
+        return decoded
+
+    def _admission(self, endpoint: str, stats: bool, extra: float) -> _Admission:
+        """Reserve a slot for one attempt at *endpoint*, *extra* seconds later than pacing alone would."""
+        return _Admission(
+            endpoint,
+            extra,
+            lambda: self._pace_slot(endpoint, stats),
+            lambda deadline: self._hold_changed(endpoint, stats, deadline),
+            self._log,
+        )
+
+    def _retry_wait(self, error: SwgohComlinkHTTPError, attempt: int, endpoint: str, stats: bool) -> float | None:
+        """Decide what follows attempt *attempt* at *endpoint* failing with *error*.
+
+        Returns ``None`` when the client must re-raise *error*, otherwise the seconds to carry into the next
+        attempt's admission. A rate refusal on a paced endpoint holds the endpoint for the retry delay
+        instead, so only the jitter is carried and every caller waits out the hold together.
+        """
+        policy = self.retry_policy
+        if policy is None:
+            return None
+        step = _retry_step(policy, error, attempt)
+        if step is None:
+            if attempt > 1:
+                self._log.info("%s on %s; giving up after %d attempts", type(error).__name__, endpoint, attempt)
+            return None
+        self._log.info(
+            "%s on %s (attempt %d of %d); retrying in %.1fs",
+            type(error).__name__,
+            endpoint,
+            attempt,
+            policy.attempts,
+            step.delay,
+        )
+        held = step.hold and self._hold_endpoint(endpoint, stats, step.delay)
+        return policy.jitter_extra(step.delay) + (0.0 if held else step.delay)
 
     # ── Version cache ────────────────────────────────────────────────────
 
@@ -392,11 +633,15 @@ class SwgohComlinkBase:
     def _build_unit_stats_endpoint(flags: list[str] | None = None, language: str | None = None) -> str:
         """Build the stats endpoint string with query parameters.
 
+        A well-formed ``language`` that is not in ``Constants.LANGUAGES`` logs a warning and is still sent,
+        so a language the game adds before the list is updated keeps working.
+
         Returns:
             Endpoint string like ``"api?flags=calcGP&language=eng_us"``.
 
         Raises:
-            SwgohComlinkValueError: If flags contains invalid values.
+            SwgohComlinkValueError: If flags contains invalid values, or language is not a language code
+                such as ``eng_us``.
         """
         _allowed_flags = {
             "gameStyle",
@@ -412,23 +657,30 @@ class SwgohComlinkBase:
             "noSpace",
         }
 
-        flag_str = None
+        query: dict[str, str] = {}
         if flags:
             if isinstance(flags, list) and set(flags).issubset(_allowed_flags):
-                flag_str = "flags=" + ",".join(flags)
+                query["flags"] = ",".join(flags)
             else:
                 raise SwgohComlinkValueError(
                     f'Invalid argument. <flags> should be a list of strings with one or more of "'
                     f"{_allowed_flags} flag values."
                 )
 
-        lang_str = f"language={language}" if language else None
+        if language:
+            if not isinstance(language, str) or not _LANGUAGE_CODE.fullmatch(language):
+                raise SwgohComlinkValueError(
+                    f"Invalid argument. <language> should be a language code such as 'eng_us', got {language!r}."
+                )
+            if language.lower() not in Constants.LANGUAGES:
+                logger.warning(
+                    "Unknown language %r; sending it anyway. Known languages: %s",
+                    language,
+                    ", ".join(Constants.LANGUAGES),
+                )
+            query["language"] = language
 
-        query_string = None
-        if flag_str or lang_str:
-            query_string = "?" + "&".join(filter(None, iter([flag_str, lang_str])))
-
-        return "api" + query_string if query_string else "api"
+        return f"api?{urlencode(query, safe=',')}" if query else "api"
 
     @property
     def version(self) -> str:

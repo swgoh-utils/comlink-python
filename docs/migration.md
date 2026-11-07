@@ -312,6 +312,27 @@ added together.
 
 Upgrading from v2.8 to v2.9.
 
+- **`get_unit_stats(language=)` must be a language code.** A value that doesn't match
+  `xx_yy` / `xxx_yy` (letters only, e.g. `eng_us`) now raises `SwgohComlinkValueError`
+  instead of being passed through into the query string. A well-formed code that isn't in
+  `Constants.LANGUAGES` logs a warning and is still sent. Case is unchanged.
+- **HMAC keys move to `COMLINK_ACCESS_KEY` / `COMLINK_SECRET_KEY`.** Rename the
+  `ACCESS_KEY` / `SECRET_KEY` environment variables. The old names still work until v3
+  with a `DeprecationWarning`, and are read only when neither new name is set.
+  Constructor arguments still win. Setting only one key now logs a warning.
+- **Plain-HTTP HMAC warning.** A client with HMAC keys whose `url` or `stats_url` is
+  `http://` to a non-loopback host logs one warning. Requests are still sent; switch to
+  `https` or a private network, or filter the `swgoh_comlink._base` logger.
+- **Optional response size limits.** New keyword-only `max_response_bytes` and
+  `max_game_data_bytes` (for `/data`) arguments make the clients raise
+  `SwgohComlinkValueError` for a larger response, instead of reading it all into
+  memory. Both default to `None`, so nothing changes unless you set them. See
+  [Limiting Response Size](api/comlink.md#limiting-response-size).
+- **`SwgohComlinkAsync` closes idle connections after 5 s.** It no longer keeps idle
+  pooled connections open forever; both clients now use the httpx default pool limits.
+  A new keyword-only `limits=httpx.Limits(...)` argument on both clients sets other
+  limits, e.g. `limits=httpx.Limits(keepalive_expiry=None)` restores the old async
+  behaviour. Request timeouts are unchanged.
 - **HTTP error messages are truncated.** `str(exc)` for `SwgohComlinkHTTPError` cuts a
   body longer than 512 characters and appends `… (N bytes total)`. Read the full body
   from `exc.response.text`; `exc.code`, `exc.detail` and the exception class still come

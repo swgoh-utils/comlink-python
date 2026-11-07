@@ -164,8 +164,10 @@ class TestConstructor:
         client.close()
 
     def test_hmac_from_env(self, monkeypatch):
-        monkeypatch.setenv("ACCESS_KEY", "env_pub")
-        monkeypatch.setenv("SECRET_KEY", "env_priv")
+        monkeypatch.delenv("ACCESS_KEY", raising=False)
+        monkeypatch.delenv("SECRET_KEY", raising=False)
+        monkeypatch.setenv("COMLINK_ACCESS_KEY", "env_pub")
+        monkeypatch.setenv("COMLINK_SECRET_KEY", "env_priv")
         client = SwgohComlink()
         assert client.hmac is True
         assert client.access_key == "env_pub"

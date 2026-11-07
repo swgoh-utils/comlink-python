@@ -216,8 +216,8 @@ Constructor parameters for `SwgohComlink` and `SwgohComlinkAsync`:
 |-----------|------|---------|-------------|
 | `url` | `str` | `http://localhost:3000` | URL where swgoh-comlink is running |
 | `stats_url` | `str` | `http://localhost:3223` | URL where swgoh-stats service is running |
-| `access_key` | `str` | `None` | HMAC public key. Also reads from `ACCESS_KEY` env var |
-| `secret_key` | `str` | `None` | HMAC private key. Also reads from `SECRET_KEY` env var |
+| `access_key` | `str` | `None` | HMAC public key. Also reads from `COMLINK_ACCESS_KEY` env var (`ACCESS_KEY` is deprecated) |
+| `secret_key` | `str` | `None` | HMAC private key. Also reads from `COMLINK_SECRET_KEY` env var (`SECRET_KEY` is deprecated) |
 | `host` | `str` | `None` | Server hostname (overrides `url` and `stats_url`) |
 | `port` | `int` | `None` | Comlink TCP port. With `host` it defaults to `3000`; without `host` it replaces the port in `url` |
 | `stats_port` | `int` | `None` | Stats service TCP port. With `host` it defaults to `3223`; without `host` it replaces the port in `stats_url` |

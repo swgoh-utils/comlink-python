@@ -196,10 +196,10 @@ comlink-python/
 
 | Module | Purpose |
 |--------|---------|
-| `_base.py` | `SwgohComlinkBase` — shared payload construction, HMAC signing, and config for both clients |
+| `_base.py` | `SwgohComlinkBase` — shared payload construction, HMAC signing, config, and the sans-I/O request core (request preparation, response interpretation, retry waits) for both clients |
 | `swgoh_comlink.py` | `SwgohComlink` — synchronous HTTP client (all endpoint methods) |
 | `swgoh_comlink_async.py` | `SwgohComlinkAsync` — asynchronous HTTP client (mirrors sync API) |
-| `retry.py` | Retry and backoff behavior for transient HTTP failures |
+| `retry.py` | Retry and backoff behavior for transient HTTP failures; the pacer, the per-attempt admission state and the retry step, all without I/O |
 | `StatCalc/calculator.py` | `StatCalc` — local stat and GP calculation for game units |
 | `helpers/` | `DataItems` IntFlag enum, `Constants` class, and utility functions split across focused submodules |
 | `exceptions.py` | `SwgohComlinkException`, `SwgohComlinkValueError`, and `SwgohComlinkTypeError` |

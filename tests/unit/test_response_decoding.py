@@ -35,3 +35,12 @@ async def test_scalar_json_is_rejected(comlink, call, httpx_mock, body):
 async def test_supported_response_shapes(comlink, call, httpx_mock, body):
     httpx_mock.add_response(json=body)
     assert await call(comlink, "_post", endpoint="test") == body
+
+
+@pytest.mark.parametrize("caps", [{}, {"max_response_bytes": 1_000}], ids=["buffered", "capped"])
+async def test_utf8_bom_is_rejected(make_comlink, call, httpx_mock, caps):
+    """Regression guard: a BOM-prefixed body stays a decode error, as ``json.loads(str)`` rejects the BOM."""
+    httpx_mock.add_response(content=b'\xef\xbb\xbf{"latestGamedataVersion": "g"}')
+    with pytest.raises(SwgohComlinkDecodeError) as caught:
+        await call(make_comlink(**caps), "get_game_metadata")
+    assert isinstance(caught.value.__cause__, json.JSONDecodeError)

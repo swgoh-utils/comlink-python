@@ -28,7 +28,7 @@ finally:
 
 `SwgohComlinkAsync` takes the same constructor arguments as the synchronous
 client: `url` or `host`/`port` to choose the service, and `access_key`/
-`secret_key` (or the `ACCESS_KEY`/`SECRET_KEY` environment variables) for HMAC
+`secret_key` (or the `COMLINK_ACCESS_KEY`/`COMLINK_SECRET_KEY` environment variables) for HMAC
 signing. See [Connecting to Comlink](comlink.md#connecting-to-comlink).
 
 ```python
@@ -40,6 +40,11 @@ async with SwgohComlinkAsync(host="192.168.1.10", port=3000) as comlink:
 
 Failed calls raise the same [typed HTTP errors](exceptions.md#http-errors) as
 the synchronous client.
+
+## Limiting Response Size
+
+`max_response_bytes` and `max_game_data_bytes` work as in the synchronous
+client; see [Limiting Response Size](comlink.md#limiting-response-size).
 
 ## Retries and Pacing
 
