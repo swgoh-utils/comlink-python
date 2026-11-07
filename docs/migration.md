@@ -324,6 +324,12 @@ Upgrading from v2.8 to v2.9.
   `modSetData`, `crTables`, `gpTables` or `relicData` table, or one set to `None`, raises
   `SwgohComlinkValueError` naming it, instead of `KeyError` or `AssertionError`. The
   previously loaded data is kept.
+- **StatCalc game data download is capped and uses httpx.** `StatCalc()` fetches through
+  `httpx` (certifi CA bundle, not the system store) and follows redirects in both the sync
+  and async paths. A body over 64 MiB raises `SwgohComlinkValueError`. New keyword-only
+  `game_data_url` and `expected_sha256` on `StatCalc()` and `StatCalcAsync.create()` pick
+  the source and verify its SHA-256; the default stays the latest `main` of
+  swgoh-utils/gamedata.
 
 ## Summary of changes
 

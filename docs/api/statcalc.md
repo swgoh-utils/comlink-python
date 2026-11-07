@@ -27,10 +27,27 @@ calc = StatCalc()
 
 # Offline — supply pre-loaded game data
 calc = StatCalc(game_data=my_game_data_dict)
+
+# Fetch from a mirror or fork, and check the bytes against a known digest
+calc = StatCalc(game_data_url="https://mirror.example/gameData.json", expected_sha256="<64 hex digits>")
+
+# Async — same options on the factory
+calc = await StatCalcAsync.create(expected_sha256="<64 hex digits>")
 ```
 
 The `game_data` parameter accepts the JSON payload from the
 [swgoh-utils/gamedata](https://github.com/swgoh-utils/gamedata) repository.
+
+When `game_data` is omitted, the calculator downloads the latest `gameData.json`
+from the `main` branch of that repository over `httpx` (sync and async alike).
+The download is capped at 64 MiB, counted after any gzip decoding; a larger body
+raises `SwgohComlinkValueError`. The keyword-only options apply only to that download:
+
+- `game_data_url` fetches from another URL instead of the default.
+- `expected_sha256` hashes the downloaded bytes before parsing and raises
+  `SwgohComlinkValueError` if they do not match.
+
+Passing either option together with `game_data` raises `SwgohComlinkValueError`.
 
 ## Usage Examples
 
