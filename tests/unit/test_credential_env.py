@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+import os
 import warnings
 from collections.abc import Callable
 
 import pytest
 
+import swgoh_comlink
 from swgoh_comlink import SwgohComlink, SwgohComlinkAsync
 
 Client = SwgohComlink | SwgohComlinkAsync
@@ -88,6 +90,31 @@ async def test_async_deprecation_points_at_the_caller(monkeypatch: pytest.Monkey
     with pytest.warns(DeprecationWarning) as record:
         client = SwgohComlinkAsync()
     await client.aclose()
+    assert record[0].filename == __file__
+
+
+@pytest.mark.parametrize("parent", [SwgohComlink, SwgohComlinkAsync])
+async def test_deprecation_skips_a_subclass_inside_the_package(
+    parent: type[Client], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A subclass in the package adds a frame; the warning must still blame the code that built the client.
+
+    The subclass is compiled under a file name inside the package, as a module there would be, so nothing is written.
+    """
+    in_package = os.path.join(os.path.dirname(swgoh_comlink.__file__), "_subclass_under_test.py")
+    source = "class Child(Parent):\n    def __init__(self, **kwargs):\n        super().__init__(**kwargs)\n"
+    namespace: dict[str, object] = {"Parent": parent}
+    exec(compile(source, in_package, "exec"), namespace)
+    child = namespace["Child"]
+    assert isinstance(child, type)
+    monkeypatch.setenv("ACCESS_KEY", "old_pub")
+    monkeypatch.setenv("SECRET_KEY", "old_priv")
+    with pytest.warns(DeprecationWarning) as record:
+        client = child()
+    if isinstance(client, SwgohComlinkAsync):
+        await client.aclose()
+    else:
+        client.close()
     assert record[0].filename == __file__
 
 

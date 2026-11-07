@@ -12,6 +12,7 @@ import ipaddress
 import logging
 import os
 import re
+import sys
 import time
 import warnings
 from collections.abc import Callable
@@ -136,6 +137,26 @@ def sanitize_url(url: str) -> str:
             netloc = f"{parsed.hostname}:443"
             url = urlunparse(parsed._replace(netloc=netloc))
     return url
+
+
+# Directory of this package, so a warning can be attributed to the first frame outside it.
+_PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__)) + os.sep
+
+
+def _stacklevel_outside_package() -> int:
+    """The ``stacklevel`` that makes the calling function's warning point at the first frame outside the package.
+
+    A fixed number assumes a fixed call depth, which a subclass's ``__init__`` breaks: a subclass defined in
+    the package adds a frame, and a fixed level would blame its constructor instead of the code that built
+    the client.
+    ``warnings.warn(skip_file_prefixes=...)`` does this natively but needs Python 3.12.
+    """
+    frame = sys._getframe(1)  # the function about to warn: stacklevel 1
+    level = 1
+    while frame is not None and frame.f_code.co_filename.startswith(_PACKAGE_DIR):
+        frame = frame.f_back
+        level += 1
+    return level
 
 
 def _is_plain_http_remote(url: str) -> bool:
@@ -342,12 +363,11 @@ class SwgohComlinkBase:
         if env_names is _DEPRECATED_CREDENTIAL_ENV_VARS and (
             used := [name for name, arg, value in zip(env_names, args, env_values, strict=True) if value and not arg]
         ):
-            # stacklevel 4: this method, SwgohComlinkBase.__init__, the client's __init__, then the caller.
             warnings.warn(
                 f"Reading HMAC keys from {' and '.join(used)} is deprecated and will be removed in v3. "
                 f"Set {' and '.join(_CREDENTIAL_ENV_VARS)} instead.",
                 DeprecationWarning,
-                stacklevel=4,
+                stacklevel=_stacklevel_outside_package(),
             )
         access, secret = (arg or value for arg, value in zip(args, env_values, strict=True))
         return access, secret
