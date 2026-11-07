@@ -145,6 +145,7 @@ class StatCalc:
         self._cr_tables: dict[str, Any] | None = None
         self._gp_tables: dict[str, Any] | None = None
         self._relic_data: dict[str, Any] | None = None
+        self._skill_index: dict[str, dict[Any, dict[str, Any]]] = {}
 
         if game_data is None:
             self._LOGGER.info("No game data provided, loading from GitHub")
@@ -174,6 +175,12 @@ class StatCalc:
         self._cr_tables = _str_keyed(game_data["crTables"])
         self._gp_tables = _str_keyed(game_data["gpTables"])
         self._relic_data = _str_keyed(game_data["relicData"])
+        # Per-unit {skill id: skill definition}; reversed so the first definition of an id wins.
+        self._skill_index = {
+            unit_id: {skill["id"]: skill for skill in reversed(meta["skills"]) if "id" in skill}
+            for unit_id, meta in self._unit_data.items()
+            if isinstance(meta, dict) and isinstance(meta.get("skills"), list)
+        }
         self._LOGGER.info(
             "Game data loaded: units=%d gear=%d mod_sets=%d",
             len(self._unit_data),
@@ -1115,10 +1122,7 @@ class StatCalc:
     def _get_skill_gp(self, unit_id: str, skill: dict[str, Any]) -> float:
         assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         assert self._gp_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
-        skill_def = next(
-            (s for s in self._unit_data[unit_id]["skills"] if s["id"] == skill["id"]),
-            None,
-        )
+        skill_def = self._find_skill_def(unit_id, skill["id"])
         if not skill_def:
             return 0
         power_override = self._table_get(skill_def.get("powerOverrideTags", {}), skill["tier"], None)
@@ -1127,6 +1131,18 @@ class StatCalc:
             return gp_value
         gp_value = self._table_get(self._gp_tables["abilityLevelGP"], skill["tier"], 0)
         return gp_value
+
+    def _find_skill_def(self, unit_id: str, skill_id: Any) -> dict[str, Any] | None:
+        """Return the unit's first skill definition with *skill_id*, or None.
+
+        Raises:
+            KeyError: *unit_id* is not in the game data, or its entry has no skill list.
+        """
+        index = self._skill_index.get(unit_id)
+        if index is not None:
+            return index.get(skill_id)
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
+        return next((s for s in self._unit_data[unit_id]["skills"] if s["id"] == skill_id), None)
 
     def _calc_ship_gp(self, ship: dict[str, Any], crew: list[dict[str, Any]] | None = None) -> int:
         assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
@@ -1167,10 +1183,7 @@ class StatCalc:
         reinforcement = 0.0
 
         for skill in skills:
-            skill_def = next(
-                (s for s in self._unit_data[unit_id]["skills"] if s["id"] == skill["id"]),
-                None,
-            )
+            skill_def = self._find_skill_def(unit_id, skill["id"])
             if not skill_def:
                 continue
             o_tag = self._table_get(skill_def.get("powerOverrideTags", {}), skill["tier"], None)

@@ -130,3 +130,38 @@ class TestCallerUnitsUnchanged:
         ship_snapshot, crew_snapshot = copy.deepcopy(ship), copy.deepcopy(crew)
         calc.calc_ship_gp(ship, crew)
         assert (ship, crew) == (ship_snapshot, crew_snapshot)
+
+
+class TestSkillLookup:
+    _UNIT = "CINTA"
+
+    @staticmethod
+    def _with_skill(game_data: dict[str, Any], unit_id: str, skill: dict[str, Any]) -> dict[str, Any]:
+        data = copy.deepcopy(game_data)
+        data["unitData"][unit_id]["skills"].append(skill)
+        return data
+
+    def test_first_matching_skill_definition_wins(self, calc, game_data):
+        first = game_data["unitData"][self._UNIT]["skills"][0]
+        shadow = {**first, "powerOverrideTags": {"8": "ultimate"}}
+        shadowed = StatCalc(game_data=self._with_skill(game_data, self._UNIT, shadow))
+        skill = {"id": first["id"], "tier": 8}
+        assert shadowed._get_skill_gp(self._UNIT, skill) == calc._get_skill_gp(self._UNIT, skill)
+        assert shadowed._get_crewless_skills_gp(self._UNIT, [skill]) == calc._get_crewless_skills_gp(
+            self._UNIT, [skill]
+        )
+
+    def test_set_game_data_replaces_the_skill_definitions(self, game_data):
+        extra = {"id": "extra_skill", "maxTier": 8, "powerOverrideTags": {"8": "ultimate"}}
+        calc = StatCalc(game_data=game_data)
+        skill = {"id": "extra_skill", "tier": 8}
+        assert calc._get_skill_gp(self._UNIT, skill) == 0
+        calc.set_game_data(self._with_skill(game_data, self._UNIT, extra))
+        assert calc._get_skill_gp(self._UNIT, skill) == game_data["gpTables"]["abilitySpecialGP"]["ultimate"] > 0
+        assert calc._get_crewless_skills_gp(self._UNIT, [skill])["ability"] > 0
+
+    def test_unknown_unit_still_raises_key_error(self, calc):
+        with pytest.raises(KeyError):
+            calc._get_skill_gp("NONEXISTENT_UNIT_XYZ", {"id": "x", "tier": 1})
+        with pytest.raises(KeyError):
+            calc._get_crewless_skills_gp("NONEXISTENT_UNIT_XYZ", [{"id": "x", "tier": 1}])
