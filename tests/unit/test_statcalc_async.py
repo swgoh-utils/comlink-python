@@ -27,7 +27,7 @@ async def test_create_with_game_data(game_data):
 
 
 async def test_create_without_game_data_fetches_it(monkeypatch, game_data):
-    async def fetch() -> dict[str, Any]:
+    async def fetch(url: str | None = None, expected_sha256: str | None = None) -> dict[str, Any]:
         return game_data
 
     monkeypatch.setattr(StatCalcAsync, "_async_fetch_game_data_from_github", staticmethod(fetch))

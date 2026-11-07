@@ -1,14 +1,76 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import logging
 import math
-import urllib.request
+import re
 from typing import Any
+
+import httpx
 
 from ..exceptions import SwgohComlinkValueError
 from ..helpers._stat_data import STATS as _CANONICAL_STATS
+
+# Largest game data body accepted, counted after any Content-Encoding is decoded
+# (gameData.json is about 1.6 MB).
+_MAX_GAMEDATA_BYTES = 64 * 1024 * 1024
+_GAMEDATA_TIMEOUT = 30.0
+_SHA256_HEX = re.compile(r"[0-9a-f]{64}")
+
+
+def _check_fetch_options(
+    game_data: dict[str, Any] | None, game_data_url: str | None, expected_sha256: str | None
+) -> str | None:
+    """Validate the game data fetch options and return *expected_sha256* normalised to lower case.
+
+    Raises:
+        SwgohComlinkValueError: A fetch option was combined with *game_data*, or
+            *expected_sha256* is not 64 hex digits.
+    """
+    if game_data is not None and (game_data_url is not None or expected_sha256 is not None):
+        raise SwgohComlinkValueError("game_data_url and expected_sha256 apply only when game_data is not given")
+    if expected_sha256 is None:
+        return None
+    normalized = expected_sha256.strip().lower()
+    if not _SHA256_HEX.fullmatch(normalized):
+        raise SwgohComlinkValueError("expected_sha256 must be a SHA-256 digest of 64 hexadecimal digits")
+    return normalized
+
+
+class _GameDataDownload:
+    """Collect a streamed game data body, enforcing the size cap and optional SHA-256 check.
+
+    Shared by the sync and async fetches: each feeds the decoded chunks it reads
+    from ``iter_bytes``/``aiter_bytes`` into :meth:`feed`, then calls :meth:`parse`.
+    """
+
+    __slots__ = ("_body", "_expected_sha256", "_hasher", "_url")
+
+    def __init__(self, url: str, expected_sha256: str | None) -> None:
+        self._url = url
+        self._expected_sha256 = expected_sha256
+        self._hasher = hashlib.sha256() if expected_sha256 is not None else None
+        self._body = bytearray()
+
+    def feed(self, chunk: bytes) -> None:
+        """Append *chunk*, raising once the body passes ``_MAX_GAMEDATA_BYTES``."""
+        if len(self._body) + len(chunk) > _MAX_GAMEDATA_BYTES:
+            raise SwgohComlinkValueError(
+                f"Game data from {self._url} exceeds the {_MAX_GAMEDATA_BYTES} bytes limit; download aborted"
+            )
+        self._body += chunk
+        if self._hasher is not None:
+            self._hasher.update(chunk)
+
+    def parse(self) -> Any:
+        """Check the SHA-256 digest, if one was expected, then decode the body as JSON."""
+        if self._hasher is not None and (actual := self._hasher.hexdigest()) != self._expected_sha256:
+            raise SwgohComlinkValueError(
+                f"Game data SHA-256 mismatch for {self._url}: expected {self._expected_sha256}, got {actual}"
+            )
+        return json.loads(self._body.decode("utf-8"))
 
 
 class StatCalc:
@@ -18,6 +80,12 @@ class StatCalc:
         game_data: Optional preloaded game data payload. If omitted, the
             calculator fetches the latest payload from the swgoh-utils
             GitHub game data repository.
+        game_data_url: Keyword-only. URL to fetch the game data from instead
+            of the latest ``main`` of swgoh-utils/gamedata, such as a mirror
+            or a fork. Only used when *game_data* is omitted.
+        expected_sha256: Keyword-only. Hex SHA-256 digest the fetched body
+            must match; checked before parsing. Only used when *game_data*
+            is omitted.
     """
 
     _FIXED_GAME_STYLE = True
@@ -32,12 +100,28 @@ class StatCalc:
     # Tables set_game_data requires; each must be present and not None.
     _REQUIRED_TABLES: tuple[str, ...] = ("unitData", "gearData", "modSetData", "crTables", "gpTables", "relicData")
 
-    def __init__(self, game_data: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        game_data: dict[str, Any] | None = None,
+        *,
+        game_data_url: str | None = None,
+        expected_sha256: str | None = None,
+    ) -> None:
         """Initialize a calculator instance.
 
         Args:
             game_data: Optional game data payload to load immediately.
+            game_data_url: URL to fetch the game data from when *game_data* is
+                omitted. Defaults to the latest ``main`` of swgoh-utils/gamedata.
+            expected_sha256: Hex SHA-256 digest the fetched body must match.
+
+        Raises:
+            SwgohComlinkValueError: *expected_sha256* is malformed, a fetch option
+                is combined with *game_data*, the fetched body is larger than
+                64 MiB, or its digest does not match *expected_sha256*.
+            RuntimeError: The game data could not be fetched or parsed.
         """
+        expected_sha256 = _check_fetch_options(game_data, game_data_url, expected_sha256)
         self._unit_data: dict[str, Any] | None = None
         self._mod_set_data: dict[str, Any] | None = None
         self._gear_data: dict[str, Any] | None = None
@@ -47,7 +131,7 @@ class StatCalc:
 
         if game_data is None:
             self._LOGGER.info("No game data provided, loading from GitHub")
-            game_data = self._fetch_game_data_from_github()
+            game_data = self._fetch_game_data_from_github(game_data_url, expected_sha256)
         else:
             self._LOGGER.debug("Using caller-provided game data")
         self.set_game_data(game_data)
@@ -265,14 +349,24 @@ class StatCalc:
             raise RuntimeError("set_game_data(game_data) must be called first")
 
     @classmethod
-    def _fetch_game_data_from_github(cls) -> dict[str, Any]:
+    def _fetch_game_data_from_github(cls, url: str | None = None, expected_sha256: str | None = None) -> dict[str, Any]:
+        url = cls._DEFAULT_GAMEDATA_URL if url is None else url
+        download = _GameDataDownload(url, expected_sha256)
         try:
-            cls._LOGGER.info("Fetching game data from %s", cls._DEFAULT_GAMEDATA_URL)
-            with urllib.request.urlopen(cls._DEFAULT_GAMEDATA_URL, timeout=30) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-        except Exception as exc:  # pragma: no cover - network failure path
-            cls._LOGGER.exception("Failed to fetch game data from GitHub")
-            raise RuntimeError(f"Unable to retrieve game data from {cls._DEFAULT_GAMEDATA_URL}") from exc
+            cls._LOGGER.info("Fetching game data from %s", url)
+            with (
+                httpx.Client(follow_redirects=True, timeout=_GAMEDATA_TIMEOUT) as client,
+                client.stream("GET", url) as response,
+            ):
+                response.raise_for_status()
+                for chunk in response.iter_bytes():
+                    download.feed(chunk)
+            payload = download.parse()
+        except SwgohComlinkValueError:
+            raise
+        except Exception as exc:
+            cls._LOGGER.exception("Failed to fetch game data from %s", url)
+            raise RuntimeError(f"Unable to retrieve game data from {url}") from exc
 
         return cls._normalize_game_data_payload(payload)
 
