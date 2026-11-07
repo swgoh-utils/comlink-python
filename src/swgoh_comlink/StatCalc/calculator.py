@@ -19,6 +19,23 @@ _GAMEDATA_TIMEOUT = 30.0
 _SHA256_HEX = re.compile(r"[0-9a-f]{64}")
 
 
+# Mod stats that add their value to each of several stats (e.g. 41, Offense, adds to 6 and 7).
+_MOD_STAT_SPLITS: dict[int, tuple[str, ...]] = {
+    41: ("6", "7"),
+    42: ("8", "9"),
+    53: ("21", "22"),
+    54: ("35", "36"),
+}
+# Percent mod stats that add a share of the unit's base stat to each target stat, floored to 8 digits.
+_MOD_STAT_PERCENT_OF_BASE: dict[int, tuple[str, ...]] = {
+    48: ("6", "7"),
+    49: ("8", "9"),
+    55: ("1",),
+    56: ("28",),
+    57: ("5",),
+}
+
+
 def _check_fetch_options(
     game_data: dict[str, Any] | None, game_data_url: str | None, expected_sha256: str | None
 ) -> str | None:
@@ -780,88 +797,16 @@ class StatCalc:
         mod_stats: dict[str, float] = {}
         for stat_id_str, value in raw_mod_stats.items():
             stat_id = int(stat_id_str)
-            if stat_id == 41:
-                self._add_stat(mod_stats, 6, value)
-                self._add_stat(mod_stats, 7, value)
-            elif stat_id == 42:
-                self._add_stat(mod_stats, 8, value)
-                self._add_stat(mod_stats, 9, value)
-            elif stat_id == 48:
-                self._add_stat(
-                    mod_stats,
-                    6,
-                    self._floor(
-                        mod_stats.get("6", 0) + (base_stats.get("6", 0) * 1e-8 * value),
-                        8,
-                    )
-                    - mod_stats.get("6", 0),
-                )
-                self._add_stat(
-                    mod_stats,
-                    7,
-                    self._floor(
-                        mod_stats.get("7", 0) + (base_stats.get("7", 0) * 1e-8 * value),
-                        8,
-                    )
-                    - mod_stats.get("7", 0),
-                )
-            elif stat_id == 49:
-                self._add_stat(
-                    mod_stats,
-                    8,
-                    self._floor(
-                        mod_stats.get("8", 0) + (base_stats.get("8", 0) * 1e-8 * value),
-                        8,
-                    )
-                    - mod_stats.get("8", 0),
-                )
-                self._add_stat(
-                    mod_stats,
-                    9,
-                    self._floor(
-                        mod_stats.get("9", 0) + (base_stats.get("9", 0) * 1e-8 * value),
-                        8,
-                    )
-                    - mod_stats.get("9", 0),
-                )
-            elif stat_id == 53:
-                self._add_stat(mod_stats, 21, value)
-                self._add_stat(mod_stats, 22, value)
-            elif stat_id == 54:
-                self._add_stat(mod_stats, 35, value)
-                self._add_stat(mod_stats, 36, value)
-            elif stat_id == 55:
-                self._add_stat(
-                    mod_stats,
-                    1,
-                    self._floor(
-                        mod_stats.get("1", 0) + (base_stats.get("1", 0) * 1e-8 * value),
-                        8,
-                    )
-                    - mod_stats.get("1", 0),
-                )
-            elif stat_id == 56:
-                self._add_stat(
-                    mod_stats,
-                    28,
-                    self._floor(
-                        mod_stats.get("28", 0) + (base_stats.get("28", 0) * 1e-8 * value),
-                        8,
-                    )
-                    - mod_stats.get("28", 0),
-                )
-            elif stat_id == 57:
-                self._add_stat(
-                    mod_stats,
-                    5,
-                    self._floor(
-                        mod_stats.get("5", 0) + (base_stats.get("5", 0) * 1e-8 * value),
-                        8,
-                    )
-                    - mod_stats.get("5", 0),
-                )
+            if (targets := _MOD_STAT_SPLITS.get(stat_id)) is not None:
+                for target in targets:
+                    mod_stats[target] = mod_stats.get(target, 0) + value
+            elif (targets := _MOD_STAT_PERCENT_OF_BASE.get(stat_id)) is not None:
+                for target in targets:
+                    current = mod_stats.get(target, 0)
+                    increase = self._floor(current + (base_stats.get(target, 0) * 1e-8 * value), 8) - current
+                    mod_stats[target] = current + increase
             else:
-                self._add_stat(mod_stats, stat_id_str, value)
+                mod_stats[stat_id_str] = mod_stats.get(stat_id_str, 0) + value
 
         return mod_stats
 
