@@ -326,6 +326,11 @@ async def test_request_error_raises_comlink_exception(comlink: Client, call: Cal
         pytest.param("get_game_data", {"version": "v1", "request_segment": -1}, id="game-data-segment-negative"),
         pytest.param("get_unit_stats", {"request_payload": [{}], "flags": ["invalidFlag"]}, id="unit-stats-bad-flag"),
         pytest.param("get_guild", {"guild_id": ""}, id="guild-empty-id"),
+        pytest.param("get_leaderboard", {"leaderboard_type": 6, "league": "bad", "division": 1}, id="bad-league"),
+        pytest.param("get_leaderboard", {"leaderboard_type": 6, "league": "kyber", "division": "9"}, id="bad-division"),
+        pytest.param(
+            "get_leaderboard", {"leaderboard_type": 6, "league": "kyber", "division": 0}, id="bad-int-division"
+        ),
     ],
 )
 async def test_invalid_arguments_raise_before_any_request(
@@ -334,6 +339,23 @@ async def test_invalid_arguments_raise_before_any_request(
     with pytest.raises(SwgohComlinkValueError):
         await call(comlink, method, **kwargs)
 
+    assert httpx_mock.get_requests() == []
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "valid_names"),
+    [
+        pytest.param({"league": "Bad", "division": 1}, "kyber, aurodium, chromium, bronzium, carbonite", id="league"),
+        pytest.param({"league": "kyber", "division": "six"}, "1, 2, 3, 4, 5", id="division"),
+    ],
+)
+async def test_unknown_leaderboard_name_lists_valid_names(
+    comlink: Client, call: Call, httpx_mock: HTTPXMock, kwargs: dict[str, Any], valid_names: str
+) -> None:
+    with pytest.raises(SwgohComlinkValueError, match=valid_names) as excinfo:
+        await call(comlink, "get_leaderboard", leaderboard_type=6, **kwargs)
+
+    assert not isinstance(excinfo.value, KeyError)
     assert httpx_mock.get_requests() == []
 
 

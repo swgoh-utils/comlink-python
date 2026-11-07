@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from json import dumps
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self, assert_type, cast, get_type_hints
 
 import pytest
 
 from swgoh_comlink import SwgohComlink
 from swgoh_comlink._base import _SENSITIVE_KEYS, SwgohComlinkBase, param_alias, sanitize_url
-from swgoh_comlink.exceptions import SwgohComlinkValueError
+from swgoh_comlink.exceptions import SwgohComlinkException, SwgohComlinkValueError
 from swgoh_comlink.helpers import DataItems
 
 if TYPE_CHECKING:
@@ -252,6 +254,29 @@ class TestHmacHeaders:
         old_sig = _compute_sig(dumps({}))
         assert actual_sig != old_sig
         client.close()
+
+    def test_hmac_without_secret_key_raises_library_error(self):
+        # A runtime guard, not an assert: it must hold under ``python -O`` too.
+        client = SwgohComlink(access_key="mykey", secret_key="mysecret")
+        client.secret_key = None
+        with pytest.raises(SwgohComlinkException, match="secret_key"):
+            client._construct_request_headers("POST", "player")
+        client.close()
+
+
+# ── Runtime asserts (SEC-7) ──────────────────────────────────────────────
+
+
+def test_src_asserts_are_only_commented_type_narrowing():
+    """Runtime checks must not rely on ``assert``, which ``python -O`` strips."""
+    src = Path(__file__).resolve().parents[2] / "src"
+    offenders = [
+        f"{path.relative_to(src)}:{number}: {line.strip()}"
+        for path in sorted(src.rglob("*.py"))
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1)
+        if re.match(r"\s*assert ", line) and "# type narrowing" not in line
+    ]
+    assert offenders == []
 
 
 # ── _get_player_payload ──────────────────────────────────────────────────

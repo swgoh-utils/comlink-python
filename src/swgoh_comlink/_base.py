@@ -165,6 +165,23 @@ def _bounded_error_response(response: httpx.Response, body: bytes) -> httpx.Resp
     )
 
 
+def _lookup_name(kind: str, table: dict[str, int], name: str) -> int:
+    """Return ``table[name.lower()]``, or raise a library error listing the valid names.
+
+    Args:
+        kind: What the name identifies (``"league"`` or ``"division"``), for the message.
+        table: Mapping of lower-case names to wire values, such as ``Constants.LEAGUES``.
+        name: The caller-supplied name. Matching ignores case.
+
+    Raises:
+        SwgohComlinkValueError: ``name`` is not a key of ``table``.
+    """
+    try:
+        return table[name.lower()]
+    except KeyError:
+        raise SwgohComlinkValueError(f"Unknown {kind} {name!r}. Valid {kind} names: {', '.join(table)}") from None
+
+
 def _replace_port(url: str, port: int) -> str:
     """Return *url* with its port set to *port*, keeping its scheme and host."""
     parsed = urlparse(url)
@@ -379,7 +396,8 @@ class SwgohComlinkBase:
         if self.hmac:
             req_time = str(int(time.time() * 1000))
             req_headers = {"X-Date": f"{req_time}"}
-            assert self.secret_key is not None
+            if self.secret_key is None:
+                raise SwgohComlinkException("HMAC signing is enabled but secret_key is not set.")
             hmac_obj = hmac.new(key=self.secret_key.encode(), digestmod=hashlib.sha256)
             hmac_obj.update(req_time.encode())
             hmac_obj.update(method.upper().encode())
