@@ -308,6 +308,23 @@ added together.
 `ERA_DEFINITION`, `UBS_UPDATE`. New legacy-name aliases: `AbilityDecisionTrees`,
 `EraDefinitions`, `UBSUpdate`, `EpisodeDefinitions` (plural), `AccountLinking`.
 
+## 10. v2.9 changes
+
+Upgrading from v2.8 to v2.9.
+
+- **HTTP error messages are truncated.** `str(exc)` for `SwgohComlinkHTTPError` cuts a
+  body longer than 512 characters and appends `… (N bytes total)`. Read the full body
+  from `exc.response.text`; `exc.code`, `exc.detail` and the exception class still come
+  from the full body.
+- **Bad league or division names raise `SwgohComlinkValueError`.** `get_leaderboard`
+  raised a bare `KeyError` for an unknown `league` or `division` name; it now raises
+  `SwgohComlinkValueError` (a `ValueError`, not a `KeyError`) listing the valid names.
+  Catch `SwgohComlinkValueError` instead of `KeyError`.
+- **`StatCalc.set_game_data` validates its tables.** A missing `unitData`, `gearData`,
+  `modSetData`, `crTables`, `gpTables` or `relicData` table, or one set to `None`, raises
+  `SwgohComlinkValueError` naming it, instead of `KeyError` or `AssertionError`. The
+  previously loaded data is kept.
+
 ## Summary of changes
 
 | Area | Before (v1.x) | After |

@@ -7,6 +7,7 @@ import math
 import urllib.request
 from typing import Any
 
+from ..exceptions import SwgohComlinkValueError
 from ..helpers._stat_data import STATS as _CANONICAL_STATS
 
 
@@ -27,6 +28,9 @@ class StatCalc:
     _LOGGER = logging.getLogger(__name__)
 
     STATS_NAME_MAP: dict[str, dict[str, Any]] = _CANONICAL_STATS
+
+    # Tables set_game_data requires; each must be present and not None.
+    _REQUIRED_TABLES: tuple[str, ...] = ("unitData", "gearData", "modSetData", "crTables", "gpTables", "relicData")
 
     def __init__(self, game_data: dict[str, Any] | None = None) -> None:
         """Initialize a calculator instance.
@@ -54,16 +58,20 @@ class StatCalc:
         Args:
             game_data: Game data payload containing unit, gear, CR, GP, relic,
                 and mod set tables.
+
+        Raises:
+            SwgohComlinkValueError: A required table is missing or ``None``. The
+                previously loaded game data, if any, is kept.
         """
+        missing = [key for key in self._REQUIRED_TABLES if game_data.get(key) is None]
+        if missing:
+            raise SwgohComlinkValueError(f"Game data is missing required table(s): {', '.join(missing)}")
         self._unit_data = game_data["unitData"]
         self._gear_data = game_data["gearData"]
         self._mod_set_data = game_data["modSetData"]
         self._cr_tables = game_data["crTables"]
         self._gp_tables = game_data["gpTables"]
         self._relic_data = game_data["relicData"]
-        assert self._unit_data is not None
-        assert self._gear_data is not None
-        assert self._mod_set_data is not None
         self._LOGGER.info(
             "Game data loaded: units=%d gear=%d mod_sets=%d",
             len(self._unit_data),
@@ -138,7 +146,7 @@ class StatCalc:
             (no `stats` or `gp` added) and a warning is logged.
         """
         self._require_game_data()
-        assert self._unit_data is not None
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         self._LOGGER.debug("Calculating roster stats")
 
         if isinstance(units, list):
@@ -380,9 +388,9 @@ class StatCalc:
         return normalized_ship, normalized_crew
 
     def _get_char_raw_stats(self, char: dict[str, Any]) -> dict[str, Any]:
-        assert self._unit_data is not None
-        assert self._gear_data is not None
-        assert self._relic_data is not None
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
+        assert self._gear_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
+        assert self._relic_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         def_id = char["defId"]
         meta = self._unit_data.get(def_id)
         if meta is None:
@@ -427,8 +435,8 @@ class StatCalc:
         return stats
 
     def _get_ship_raw_stats(self, ship: dict[str, Any], crew: list[dict[str, Any]]) -> dict[str, Any]:
-        assert self._unit_data is not None
-        assert self._cr_tables is not None
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
+        assert self._cr_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         def_id = ship["defId"]
         meta = self._unit_data.get(def_id)
         if meta is None:
@@ -461,7 +469,7 @@ class StatCalc:
         return stats
 
     def _get_crew_rating(self, crew: list[dict[str, Any]]) -> float:
-        assert self._cr_tables is not None
+        assert self._cr_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         total_cr: float = 0
         for char in crew:
             total_cr += self._table_get(self._cr_tables["unitLevelCR"], char["level"])
@@ -499,12 +507,12 @@ class StatCalc:
         return total_cr
 
     def _get_skill_crew_rating(self, skill: dict[str, Any]) -> float:
-        assert self._cr_tables is not None
+        assert self._cr_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         value: float = self._table_get(self._cr_tables["abilityLevelCR"], skill["tier"])
         return value
 
     def _get_crewless_crew_rating(self, ship: dict[str, Any]) -> float:
-        assert self._cr_tables is not None
+        assert self._cr_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         return self._floor(
             self._table_get(self._cr_tables["crewRarityCR"], ship["rarity"])
             + 3.5 * self._table_get(self._cr_tables["unitLevelCR"], ship["level"])
@@ -512,7 +520,7 @@ class StatCalc:
         )
 
     def _get_crewless_skills_crew_rating(self, skills: list[dict[str, Any]]) -> float:
-        assert self._cr_tables is not None
+        assert self._cr_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         cr = 0.0
         for skill in skills:
             mult = 0.696 if str(skill["id"]).startswith("hardware") else 2.46
@@ -520,8 +528,8 @@ class StatCalc:
         return cr
 
     def _calculate_base_stats(self, stats: dict[str, Any], level: int, base_id: str) -> dict[str, Any]:
-        assert self._unit_data is not None
-        assert self._cr_tables is not None
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
+        assert self._cr_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         base = stats["base"]
         gms = stats["growthModifiers"]
 
@@ -918,7 +926,7 @@ class StatCalc:
                 stats["mods"][sid] = convert_func(flat) - last
 
     def _calc_char_gp(self, char: dict[str, Any]) -> int:
-        assert self._gp_tables is not None
+        assert self._gp_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         gp = self._table_get(self._gp_tables["unitLevelGP"], char["level"])
         gp += self._table_get(self._gp_tables["unitRarityGP"], char["rarity"])
         gp += self._table_get(self._gp_tables["gearLevelGP"], char["gear"])
@@ -973,7 +981,7 @@ class StatCalc:
         for its current tier, taking the first unclaimed matching slot so duplicate pieces
         map to distinct slots. Unmatched pieces resolve to None and add no GP.
         """
-        assert self._unit_data is not None
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         pieces = char.get("equipped", [])
         slots = [piece.get("slot") if isinstance(piece, dict) else None for piece in pieces]
         if None not in slots:
@@ -998,8 +1006,8 @@ class StatCalc:
         return slots
 
     def _get_skill_gp(self, unit_id: str, skill: dict[str, Any]) -> float:
-        assert self._unit_data is not None
-        assert self._gp_tables is not None
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
+        assert self._gp_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         skill_def = next(
             (s for s in self._unit_data[unit_id]["skills"] if s["id"] == skill["id"]),
             None,
@@ -1014,8 +1022,8 @@ class StatCalc:
         return gp_value
 
     def _calc_ship_gp(self, ship: dict[str, Any], crew: list[dict[str, Any]] | None = None) -> int:
-        assert self._unit_data is not None
-        assert self._gp_tables is not None
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
+        assert self._gp_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         if crew is None:
             crew = []
 
@@ -1046,8 +1054,8 @@ class StatCalc:
         return int(self._floor(gp * 1.5))
 
     def _get_crewless_skills_gp(self, unit_id: str, skills: list[dict[str, Any]]) -> dict[str, float]:
-        assert self._unit_data is not None
-        assert self._gp_tables is not None
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
+        assert self._gp_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         ability = 0.0
         reinforcement = 0.0
 

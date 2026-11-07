@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from swgoh_comlink import StatCalc
+from swgoh_comlink.exceptions import SwgohComlinkValueError
 
 _PLAYER_FILE = Path(__file__).resolve().parent.parent / "resources" / "example-player.json"
 
@@ -233,6 +234,26 @@ def test_require_game_data_raises_without_data():
     sc._unit_data = None
     with pytest.raises(RuntimeError, match="set_game_data"):
         sc._require_game_data()
+
+
+def test_set_game_data_names_missing_key():
+    with pytest.raises(SwgohComlinkValueError, match="unitData"):
+        StatCalc(game_data={})
+
+
+@pytest.mark.parametrize("key", ["unitData", "gearData", "modSetData", "crTables", "gpTables", "relicData"])
+def test_set_game_data_rejects_missing_or_none_table(calc, game_data, key):
+    sc = copy.copy(calc)
+    before = (sc._unit_data, sc._gear_data, sc._mod_set_data, sc._cr_tables, sc._gp_tables, sc._relic_data)
+    missing = {k: v for k, v in game_data.items() if k != key}
+
+    with pytest.raises(SwgohComlinkValueError, match=key):
+        sc.set_game_data(missing)
+    with pytest.raises(SwgohComlinkValueError, match=key):
+        sc.set_game_data({**game_data, key: None})
+
+    # A rejected payload leaves the previously loaded tables in place.
+    assert (sc._unit_data, sc._gear_data, sc._mod_set_data, sc._cr_tables, sc._gp_tables, sc._relic_data) == before
 
 
 def test_game_data_is_fetched_from_github_when_not_given(monkeypatch, game_data):

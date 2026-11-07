@@ -18,6 +18,7 @@ from ._base import (
     GAME_DATA_TIMEOUT,
     SwgohComlinkBase,
     _CachedVersions,
+    _lookup_name,
     param_alias,
 )
 from .exceptions import (
@@ -370,7 +371,6 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             localization_id = (await self._get_versions()).require_language()
 
         if locale:
-            assert localization_id is not None
             localization_id = localization_id + ":" + locale.upper()
 
         payload = {"unzip": unzip, "enums": enums, "payload": {"id": localization_id}}
@@ -566,11 +566,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         leagues = Constants.LEAGUES
         divisions = Constants.DIVISIONS
         if isinstance(league, str):
-            league = leagues[league.lower()]
+            league = _lookup_name("league", leagues, league)
         if isinstance(division, int) and len(str(division)) == 1:
-            division = divisions[str(division).lower()]
+            division = _lookup_name("division", divisions, str(division))
         if isinstance(division, str):
-            division = divisions[division.lower()]
+            division = _lookup_name("division", divisions, division)
         inner_payload: dict[str, Any] = {"leaderboardType": leaderboard_type}
         payload: dict[str, Any] = {"payload": inner_payload, "enums": enums}
         if leaderboard_type == 4:
