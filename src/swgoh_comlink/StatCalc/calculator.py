@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import copy
 import hashlib
 import json
 import logging
 import math
 import re
+from collections.abc import Callable, Iterable
 from typing import Any
 
 import httpx
@@ -18,6 +18,30 @@ from ..helpers._stat_data import STATS as _CANONICAL_STATS
 _MAX_GAMEDATA_BYTES = 64 * 1024 * 1024
 _GAMEDATA_TIMEOUT = 30.0
 _SHA256_HEX = re.compile(r"[0-9a-f]{64}")
+
+
+# Mod stats that add their value to each of several stats (e.g. 41, Offense, adds to 6 and 7).
+_MOD_STAT_SPLITS: dict[int, tuple[str, ...]] = {
+    41: ("6", "7"),
+    42: ("8", "9"),
+    53: ("21", "22"),
+    54: ("35", "36"),
+}
+# Percent mod stats that add a share of the unit's base stat to each target stat, floored to 8 digits.
+_MOD_STAT_PERCENT_OF_BASE: dict[int, tuple[str, ...]] = {
+    48: ("6", "7"),
+    49: ("8", "9"),
+    55: ("1",),
+    56: ("28",),
+    57: ("5",),
+}
+
+# Character stat ids whose final value is added to another stat (Physical and Special Critical
+# Chance to Critical Rating, Physical and Special Critical Avoidance to Critical Avoidance Rating).
+_FLAT_STAT_IDS: dict[str, str] = {"21": "14", "22": "15", "35": "39", "36": "40"}
+
+# Stand-in for a stat id missing from StatCalc.STATS_NAME_MAP; only ever read.
+_NO_STAT_INFO: dict[str, Any] = {}
 
 
 def _check_fetch_options(
@@ -37,6 +61,54 @@ def _check_fetch_options(
     if not _SHA256_HEX.fullmatch(normalized):
         raise SwgohComlinkValueError("expected_sha256 must be a SHA-256 digest of 64 hexadecimal digits")
     return normalized
+
+
+def _str_keyed(value: Any) -> Any:
+    """Return *value* with every nested dict keyed by ``str``, never modifying *value*.
+
+    Containers that already qualify are returned as is, so JSON-parsed game data is used
+    without copying; only a dict or list holding a non-``str`` key somewhere below it is
+    rebuilt.
+    """
+    if isinstance(value, dict):
+        if all(type(k) is str and _str_keyed(v) is v for k, v in value.items()):
+            return value
+        return {str(k): _str_keyed(v) for k, v in value.items()}
+    if isinstance(value, list):
+        if all(_str_keyed(v) is v for v in value):
+            return value
+        return [_str_keyed(v) for v in value]
+    return value
+
+
+def _int_keyed_mod_gp(table: Any) -> dict[tuple[int, int, int], Any]:
+    """Flatten ``modRarityLevelTierGP`` to ``{(pips, level, tier): GP}`` with int keys.
+
+    Only entries whose three keys are canonical int strings (``str(int(key)) == key``) are
+    included, so looking up int keys gives exactly what the nested ``_table_get`` lookups
+    give. Other keys, and tables of any other shape, are left to those lookups.
+    """
+    if not isinstance(table, dict):
+        return {}
+    flat: dict[tuple[int, int, int], Any] = {}
+    for pips, levels in table.items():
+        if not (_is_int_key(pips) and isinstance(levels, dict)):
+            continue
+        for level, tiers in levels.items():
+            if not (_is_int_key(level) and isinstance(tiers, dict)):
+                continue
+            for tier, gp in tiers.items():
+                if _is_int_key(tier):
+                    flat[int(pips), int(level), int(tier)] = gp
+    return flat
+
+
+def _is_int_key(key: str) -> bool:
+    """Return True if *key* is the str form of an int, as JSON object keys of int ids are."""
+    try:
+        return str(int(key)) == key
+    except ValueError:
+        return False
 
 
 class _GameDataDownload:
@@ -128,6 +200,8 @@ class StatCalc:
         self._cr_tables: dict[str, Any] | None = None
         self._gp_tables: dict[str, Any] | None = None
         self._relic_data: dict[str, Any] | None = None
+        self._skill_index: dict[str, dict[Any, dict[str, Any]]] = {}
+        self._mod_gp_index: dict[tuple[int, int, int], Any] = {}
 
         if game_data is None:
             self._LOGGER.info("No game data provided, loading from GitHub")
@@ -150,12 +224,20 @@ class StatCalc:
         missing = [key for key in self._REQUIRED_TABLES if game_data.get(key) is None]
         if missing:
             raise SwgohComlinkValueError(f"Game data is missing required table(s): {', '.join(missing)}")
-        self._unit_data = game_data["unitData"]
-        self._gear_data = game_data["gearData"]
-        self._mod_set_data = game_data["modSetData"]
-        self._cr_tables = game_data["crTables"]
-        self._gp_tables = game_data["gpTables"]
-        self._relic_data = game_data["relicData"]
+        # Lookups use str keys only, so tables with int keys are rebuilt (not modified).
+        self._unit_data = _str_keyed(game_data["unitData"])
+        self._gear_data = _str_keyed(game_data["gearData"])
+        self._mod_set_data = _str_keyed(game_data["modSetData"])
+        self._cr_tables = _str_keyed(game_data["crTables"])
+        self._gp_tables = _str_keyed(game_data["gpTables"])
+        self._relic_data = _str_keyed(game_data["relicData"])
+        # Per-unit {skill id: skill definition}; reversed so the first definition of an id wins.
+        self._skill_index = {
+            unit_id: {skill["id"]: skill for skill in reversed(meta["skills"]) if "id" in skill}
+            for unit_id, meta in self._unit_data.items()
+            if isinstance(meta, dict) and isinstance(meta.get("skills"), list)
+        }
+        self._mod_gp_index = _int_keyed_mod_gp(self._gp_tables.get("modRarityLevelTierGP"))
         self._LOGGER.info(
             "Game data loaded: units=%d gear=%d mod_sets=%d",
             len(self._unit_data),
@@ -404,16 +486,8 @@ class StatCalc:
             if 0 <= idx < len(table):
                 return table[idx]
             return default
-        if key in table:
-            return table[key]
-        skey = str(key)
-        if skey in table:
-            return table[skey]
-        try:
-            ikey = int(key)
-        except (TypeError, ValueError):
-            return default
-        return table.get(ikey, default)
+        # Game data tables are str-keyed by set_game_data; internal stat dicts use str keys too.
+        return table.get(str(key), default)
 
     @staticmethod
     def _add_stat(stats: dict[str, Any], stat_id: Any, value: float) -> None:
@@ -434,7 +508,9 @@ class StatCalc:
                 "purchasedAbilityId": char.get("purchasedAbilityId", []),
             }
         else:
-            normalized = copy.deepcopy(char)
+            # Only top-level keys are set below and nested values are only read, so a shallow
+            # copy keeps the caller's unit unmodified.
+            normalized = dict(char)
 
         normalized.setdefault("equipped", [])
         normalized.setdefault("skills", [])
@@ -471,9 +547,10 @@ class StatCalc:
                 )
             return normalized_ship, normalized_crew
 
-        normalized_ship = copy.deepcopy(ship)
+        # Shallow copies suffice: only top-level keys (defaults, crew "gp") are ever set.
+        normalized_ship = dict(ship)
         normalized_ship.setdefault("skills", [])
-        normalized_crew = [copy.deepcopy(c) for c in crew]
+        normalized_crew = [dict(c) for c in crew]
         for c in normalized_crew:
             c.setdefault("skills", [])
             c.setdefault("equipped", [])
@@ -627,50 +704,50 @@ class StatCalc:
         base = stats["base"]
         gms = stats["growthModifiers"]
 
-        self._add_stat(base, 2, self._floor(self._table_get(gms, 2) * level, 8))
-        self._add_stat(base, 3, self._floor(self._table_get(gms, 3) * level, 8))
-        self._add_stat(base, 4, self._floor(self._table_get(gms, 4) * level, 8))
+        self._add_stat(base, 2, self._floor(gms.get("2", 0) * level, 8))
+        self._add_stat(base, 3, self._floor(gms.get("3", 0) * level, 8))
+        self._add_stat(base, 4, self._floor(gms.get("4", 0) * level, 8))
 
         ud = self._unit_data[base_id]
 
-        if self._table_get(base, 61):
+        if base.get("61", 0):
             mms = self._cr_tables.get(ud["masteryModifierID"], {})
             for stat_id, value in mms.items():
-                self._add_stat(base, stat_id, self._table_get(base, 61) * value)
+                self._add_stat(base, stat_id, base.get("61", 0) * value)
 
-        self._add_stat(base, 1, self._table_get(base, 2) * 18)
+        self._add_stat(base, 1, base.get("2", 0) * 18)
         self._add_stat(
             base,
             6,
             self._floor(
-                self._table_get(base, 6) + (self._table_get(base, ud["primaryStat"]) * 1.4),
+                base.get("6", 0) + (base.get(str(ud["primaryStat"]), 0) * 1.4),
                 8,
             )
-            - self._table_get(base, 6),
+            - base.get("6", 0),
         )
         self._add_stat(
             base,
             7,
-            self._floor(self._table_get(base, 7) + (self._table_get(base, 4) * 2.4), 8) - self._table_get(base, 7),
+            self._floor(base.get("7", 0) + (base.get("4", 0) * 2.4), 8) - base.get("7", 0),
         )
         self._add_stat(
             base,
             8,
             self._floor(
-                self._table_get(base, 8) + (self._table_get(base, 2) * 0.14) + (self._table_get(base, 3) * 0.07),
+                base.get("8", 0) + (base.get("2", 0) * 0.14) + (base.get("3", 0) * 0.07),
                 8,
             )
-            - self._table_get(base, 8),
+            - base.get("8", 0),
         )
         self._add_stat(
             base,
             9,
-            self._floor(self._table_get(base, 9) + (self._table_get(base, 4) * 0.1), 8) - self._table_get(base, 9),
+            self._floor(base.get("9", 0) + (base.get("4", 0) * 0.1), 8) - base.get("9", 0),
         )
         self._add_stat(
             base,
             14,
-            self._floor(self._table_get(base, 14) + (self._table_get(base, 3) * 0.4), 8) - self._table_get(base, 14),
+            self._floor(base.get("14", 0) + (base.get("3", 0) * 0.4), 8) - base.get("14", 0),
         )
 
         self._add_stat(base, 12, 24 * 1e8)
@@ -689,7 +766,8 @@ class StatCalc:
             return {}
 
         set_bonuses: dict[int, dict[str, int]] = {}
-        raw_mod_stats: dict[str, float] = {}
+        # Keyed by int stat id; converted to the str-keyed mod stats below.
+        raw_mod_stats: dict[int, float] = {}
 
         if char.get("mods"):
             for mod in char["mods"]:
@@ -709,16 +787,15 @@ class StatCalc:
                 if mod.get("stat"):
                     for stat in mod["stat"]:
                         sid, sval = stat
-                        key = str(sid)
-                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(sid, sval)
+                        key = int(sid)
+                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(key, sval)
                 else:
                     stat = mod.get("primaryStat")
                     secondary = mod.get("secondaryStat", [])
                     i = 0
                     while stat:
-                        sid = stat["unitStat"]
-                        key = str(sid)
-                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(sid, stat["value"])
+                        key = int(stat["unitStat"])
+                        raw_mod_stats[key] = raw_mod_stats.get(key, 0) + self._scale_mod_stat_value(key, stat["value"])
                         if i >= len(secondary):
                             break
                         stat = secondary[i]
@@ -741,8 +818,7 @@ class StatCalc:
                 secondary = mod.get("secondaryStat", [])
                 i = 0
                 while stat:
-                    sid = stat["unitStatId"]
-                    key = str(sid)
+                    key = int(stat["unitStatId"])
                     raw_mod_stats[key] = raw_mod_stats.get(key, 0) + float(stat["unscaledDecimalValue"])
                     if i >= len(secondary):
                         break
@@ -754,94 +830,22 @@ class StatCalc:
             if not set_def:
                 continue
             multiplier = (bonus["count"] // set_def["count"]) + (bonus["maxLevel"] // set_def["count"])
-            key = str(set_def["id"])
+            key = int(set_def["id"])
             raw_mod_stats[key] = raw_mod_stats.get(key, 0) + (set_def["value"] * multiplier)
 
         mod_stats: dict[str, float] = {}
-        for stat_id_str, value in raw_mod_stats.items():
-            stat_id = int(stat_id_str)
-            if stat_id == 41:
-                self._add_stat(mod_stats, 6, value)
-                self._add_stat(mod_stats, 7, value)
-            elif stat_id == 42:
-                self._add_stat(mod_stats, 8, value)
-                self._add_stat(mod_stats, 9, value)
-            elif stat_id == 48:
-                self._add_stat(
-                    mod_stats,
-                    6,
-                    self._floor(
-                        self._table_get(mod_stats, 6) + (self._table_get(base_stats, 6) * 1e-8 * value),
-                        8,
-                    )
-                    - self._table_get(mod_stats, 6),
-                )
-                self._add_stat(
-                    mod_stats,
-                    7,
-                    self._floor(
-                        self._table_get(mod_stats, 7) + (self._table_get(base_stats, 7) * 1e-8 * value),
-                        8,
-                    )
-                    - self._table_get(mod_stats, 7),
-                )
-            elif stat_id == 49:
-                self._add_stat(
-                    mod_stats,
-                    8,
-                    self._floor(
-                        self._table_get(mod_stats, 8) + (self._table_get(base_stats, 8) * 1e-8 * value),
-                        8,
-                    )
-                    - self._table_get(mod_stats, 8),
-                )
-                self._add_stat(
-                    mod_stats,
-                    9,
-                    self._floor(
-                        self._table_get(mod_stats, 9) + (self._table_get(base_stats, 9) * 1e-8 * value),
-                        8,
-                    )
-                    - self._table_get(mod_stats, 9),
-                )
-            elif stat_id == 53:
-                self._add_stat(mod_stats, 21, value)
-                self._add_stat(mod_stats, 22, value)
-            elif stat_id == 54:
-                self._add_stat(mod_stats, 35, value)
-                self._add_stat(mod_stats, 36, value)
-            elif stat_id == 55:
-                self._add_stat(
-                    mod_stats,
-                    1,
-                    self._floor(
-                        self._table_get(mod_stats, 1) + (self._table_get(base_stats, 1) * 1e-8 * value),
-                        8,
-                    )
-                    - self._table_get(mod_stats, 1),
-                )
-            elif stat_id == 56:
-                self._add_stat(
-                    mod_stats,
-                    28,
-                    self._floor(
-                        self._table_get(mod_stats, 28) + (self._table_get(base_stats, 28) * 1e-8 * value),
-                        8,
-                    )
-                    - self._table_get(mod_stats, 28),
-                )
-            elif stat_id == 57:
-                self._add_stat(
-                    mod_stats,
-                    5,
-                    self._floor(
-                        self._table_get(mod_stats, 5) + (self._table_get(base_stats, 5) * 1e-8 * value),
-                        8,
-                    )
-                    - self._table_get(mod_stats, 5),
-                )
+        for stat_id, value in raw_mod_stats.items():
+            if (targets := _MOD_STAT_SPLITS.get(stat_id)) is not None:
+                for target in targets:
+                    mod_stats[target] = mod_stats.get(target, 0) + value
+            elif (targets := _MOD_STAT_PERCENT_OF_BASE.get(stat_id)) is not None:
+                for target in targets:
+                    current = mod_stats.get(target, 0)
+                    increase = self._floor(current + (base_stats.get(target, 0) * 1e-8 * value), 8) - current
+                    mod_stats[target] = current + increase
             else:
-                self._add_stat(mod_stats, stat_id_str, value)
+                key = str(stat_id)
+                mod_stats[key] = mod_stats.get(key, 0) + value
 
         return mod_stats
 
@@ -854,170 +858,133 @@ class StatCalc:
     def _format_stats(self, stats: dict[str, Any], level: int) -> dict[str, Any]:
         scale = 1e-8
 
-        if stats.get("mods"):
-            for stat_id in list(stats["mods"].keys()):
-                stats["mods"][stat_id] = round(stats["mods"][stat_id])
+        # Each loop only replaces values of existing keys, so it can iterate the dict itself.
+        mods = stats.get("mods")
+        if mods:
+            for stat_id, value in mods.items():
+                mods[stat_id] = round(value)
 
         if scale != 1:
-            for stat_id in list(stats["base"].keys()):
-                stats["base"][stat_id] *= scale
-            for stat_id in list(stats.get("gear", {}).keys()):
-                stats["gear"][stat_id] *= scale
-            for stat_id in list(stats.get("crew", {}).keys()):
-                stats["crew"][stat_id] *= scale
-            for stat_id in list(stats["growthModifiers"].keys()):
-                stats["growthModifiers"][stat_id] *= scale
-            if stats.get("mods"):
-                for stat_id in list(stats["mods"].keys()):
-                    stats["mods"][stat_id] *= scale
+            for table in (stats["base"], stats.get("gear", {}), stats.get("crew", {}), stats["growthModifiers"]):
+                for stat_id, value in table.items():
+                    table[stat_id] = value * scale
+            if mods:
+                for stat_id, value in mods.items():
+                    mods[stat_id] = value * scale
 
         if self._FIXED_PERCENT_VALS or self._FIXED_GAME_STYLE:
+            percent_scale = scale * 1e8
+            is_ship = "crew" in stats
+
+            def crit(val: float) -> float:
+                return self._convert_flat_crit_to_percent(val, percent_scale)
+
+            def defense(val: float) -> float:
+                return self._convert_flat_def_to_percent(val, level, percent_scale, is_ship)
+
+            def accuracy(val: float) -> float:
+                return self._convert_flat_acc_to_percent(val, percent_scale)
+
+            def crit_avoidance(val: float) -> float:
+                return self._convert_flat_crit_avoid_to_percent(val, percent_scale)
+
             self._convert_percent(
                 stats,
-                14,
-                lambda val: self._convert_flat_crit_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                15,
-                lambda val: self._convert_flat_crit_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                8,
-                lambda val: self._convert_flat_def_to_percent(val, level, scale * 1e8, "crew" in stats),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                9,
-                lambda val: self._convert_flat_def_to_percent(val, level, scale * 1e8, "crew" in stats),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                37,
-                lambda val: self._convert_flat_acc_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                38,
-                lambda val: self._convert_flat_acc_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                12,
-                lambda val: self._convert_flat_acc_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                13,
-                lambda val: self._convert_flat_acc_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                39,
-                lambda val: self._convert_flat_crit_avoid_to_percent(val, scale * 1e8),
-                level,
-            )
-            self._convert_percent(
-                stats,
-                40,
-                lambda val: self._convert_flat_crit_avoid_to_percent(val, scale * 1e8),
-                level,
+                (
+                    ("14", crit),
+                    ("15", crit),
+                    ("8", defense),
+                    ("9", defense),
+                    ("37", accuracy),
+                    ("38", accuracy),
+                    ("12", accuracy),
+                    ("13", accuracy),
+                    ("39", crit_avoidance),
+                    ("40", crit_avoidance),
+                ),
             )
 
         if self._FIXED_GAME_STYLE:
-            gs_stats: dict[str, Any] = {"final": {}}
+            final: dict[str, Any] = {}
+            gs_stats: dict[str, Any] = {"final": final}
+            base = stats["base"]
 
-            stat_list = list(stats["base"].keys())
-
-            def add_stat_id(sid: str) -> None:
-                if sid not in stat_list:
-                    stat_list.append(sid)
+            # Stat ids in first-seen order: a dict is an insertion-ordered set with O(1) lookups.
+            stat_ids = dict.fromkeys(base)
 
             if "gear" in stats:
-                for sid in stats["gear"].keys():
-                    add_stat_id(sid)
+                gear = stats["gear"]
+                stat_ids |= dict.fromkeys(gear)
+                mod_values: dict[str, Any] = {}
                 if "mods" in stats:
-                    for sid in stats["mods"].keys():
-                        add_stat_id(sid)
+                    mod_values = stats["mods"] or {}
+                    stat_ids |= dict.fromkeys(stats["mods"])
                     gs_stats["mods"] = stats["mods"]
 
-                for stat_id in stat_list:
-                    stat_int = int(stat_id)
-                    flat_stat_id = stat_int
-                    if stat_int in {21, 22}:
-                        flat_stat_id = stat_int - 7
-                    elif stat_int in {35, 36}:
-                        flat_stat_id = stat_int + 4
-
-                    key = str(flat_stat_id)
-                    gs_stats["final"][key] = gs_stats["final"].get(key, 0) + (
-                        self._table_get(stats["base"], stat_id)
-                        + self._table_get(stats["gear"], stat_id)
-                        + (self._table_get(stats["mods"], stat_id) if "mods" in stats else 0)
+                for stat_id in stat_ids:
+                    key = _FLAT_STAT_IDS.get(stat_id, stat_id)
+                    final[key] = final.get(key, 0) + (
+                        base.get(stat_id, 0) + gear.get(stat_id, 0) + mod_values.get(stat_id, 0)
                     )
             else:
-                for sid in stats.get("crew", {}).keys():
-                    add_stat_id(sid)
-                gs_stats["crew"] = stats.get("crew", {})
+                crew = stats.get("crew", {})
+                stat_ids |= dict.fromkeys(crew)
+                gs_stats["crew"] = crew
 
-                for stat_id in stat_list:
-                    gs_stats["final"][str(stat_id)] = self._table_get(stats["base"], stat_id) + self._table_get(
-                        stats["crew"], stat_id
-                    )
+                for stat_id in stat_ids:
+                    final[stat_id] = base.get(stat_id, 0) + crew.get(stat_id, 0)
 
             stats = gs_stats
 
         return stats
 
     def _rename_stats(self, stats: dict[str, Any], lang: str = "eng_us") -> dict[str, Any]:
+        name_map = self.STATS_NAME_MAP
         rn_stats = {}
         for stat_type, stat_values in stats.items():
             if not isinstance(stat_values, dict):
                 rn_stats[stat_type] = stat_values
                 continue
-            rn_stats[stat_type] = {}
-            for stat_id, value in stat_values.items():
-                stat_name = self.STATS_NAME_MAP.get(stat_id, {}).get("name", stat_id)
-                rn_stats[stat_type][stat_name] = value
+            rn_stats[stat_type] = {
+                name_map.get(stat_id, _NO_STAT_INFO).get("name", stat_id): value
+                for stat_id, value in stat_values.items()
+            }
         self._LOGGER.debug("Done renaming stats")
         return rn_stats
 
-    def _convert_percent(
-        self,
-        stats: dict[str, Any],
-        stat_id: int,
-        convert_func: Any,
-        level: int,
-    ) -> None:
-        del level
-        sid = str(stat_id)
-        flat = self._table_get(stats["base"], sid)
-        percent = convert_func(flat)
-        stats["base"][sid] = percent
-        last = percent
+    @staticmethod
+    def _convert_percent(stats: dict[str, Any], conversions: Iterable[tuple[str, Callable[[float], float]]]) -> None:
+        """Convert each flat stat to a percent with its converter, in order.
 
-        if "crew" in stats:
-            if self._table_get(stats["crew"], sid):
-                flat = flat + self._table_get(stats["crew"], sid)
-                stats["crew"][sid] = convert_func(flat) - last
-        else:
-            if "gear" in stats and self._table_get(stats["gear"], sid):
-                flat = flat + self._table_get(stats["gear"], sid)
+        The base value becomes the percent of the base flat value. A ship's crew value, or a
+        character's gear and then mods value, becomes the percent it adds on top of the
+        values before it.
+        """
+        # The stat dicts are only updated in place, so they are looked up once for all conversions.
+        base = stats["base"]
+        is_ship = "crew" in stats
+        crew = stats.get("crew")
+        gear = stats.get("gear")
+        mods = stats.get("mods")
+        for sid, convert_func in conversions:
+            flat = base.get(sid, 0)
+            percent = convert_func(flat)
+            base[sid] = percent
+            last = percent
+
+            if is_ship:
+                if crew and (crew_value := crew.get(sid, 0)):
+                    flat = flat + crew_value
+                    crew[sid] = convert_func(flat) - last
+                continue
+            if gear and (gear_value := gear.get(sid, 0)):
+                flat = flat + gear_value
                 percent = convert_func(flat)
-                stats["gear"][sid] = percent - last
+                gear[sid] = percent - last
                 last = percent
-            if "mods" in stats and self._table_get(stats["mods"], sid):
-                flat = flat + self._table_get(stats["mods"], sid)
-                stats["mods"][sid] = convert_func(flat) - last
+            if mods and (mod_value := mods.get(sid, 0)):
+                flat = flat + mod_value
+                mods[sid] = convert_func(flat) - last
 
     def _calc_char_gp(self, char: dict[str, Any]) -> int:
         assert self._gp_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
@@ -1034,30 +1001,19 @@ class StatCalc:
         if char.get("purchasedAbilityId"):
             gp += len(char["purchasedAbilityId"]) * self._table_get(self._gp_tables["abilitySpecialGP"], "ultimate")
 
+        mod_keys: list[tuple[Any, Any, Any]] = []
         if char.get("mods"):
-            for mod in char["mods"]:
-                gp += self._table_get(
-                    self._table_get(
-                        self._table_get(
-                            self._gp_tables["modRarityLevelTierGP"],
-                            mod["pips"],
-                        ),
-                        mod["level"],
-                    ),
-                    mod["tier"],
-                )
+            mod_keys = [(mod["pips"], mod["level"], mod["tier"]) for mod in char["mods"]]
         elif char.get("equippedStatMod"):
-            for mod in char["equippedStatMod"]:
-                gp += self._table_get(
-                    self._table_get(
-                        self._table_get(
-                            self._gp_tables["modRarityLevelTierGP"],
-                            int(mod["definitionId"][1]),
-                        ),
-                        mod["level"],
-                    ),
-                    mod["tier"],
+            mod_keys = [(int(mod["definitionId"][1]), mod["level"], mod["tier"]) for mod in char["equippedStatMod"]]
+        for key in mod_keys:
+            mod_gp = self._mod_gp_index.get(key)
+            if mod_gp is None:
+                pips, level, tier = key
+                mod_gp = self._table_get(
+                    self._table_get(self._table_get(self._gp_tables["modRarityLevelTierGP"], pips), level), tier
                 )
+            gp += mod_gp
 
         relic = char.get("relic")
         if relic and relic.get("currentTier", 0) > 2:
@@ -1102,10 +1058,7 @@ class StatCalc:
     def _get_skill_gp(self, unit_id: str, skill: dict[str, Any]) -> float:
         assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
         assert self._gp_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
-        skill_def = next(
-            (s for s in self._unit_data[unit_id]["skills"] if s["id"] == skill["id"]),
-            None,
-        )
+        skill_def = self._find_skill_def(unit_id, skill["id"])
         if not skill_def:
             return 0
         power_override = self._table_get(skill_def.get("powerOverrideTags", {}), skill["tier"], None)
@@ -1114,6 +1067,18 @@ class StatCalc:
             return gp_value
         gp_value = self._table_get(self._gp_tables["abilityLevelGP"], skill["tier"], 0)
         return gp_value
+
+    def _find_skill_def(self, unit_id: str, skill_id: Any) -> dict[str, Any] | None:
+        """Return the unit's first skill definition with *skill_id*, or None.
+
+        Raises:
+            KeyError: *unit_id* is not in the game data, or its entry has no skill list.
+        """
+        index = self._skill_index.get(unit_id)
+        if index is not None:
+            return index.get(skill_id)
+        assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
+        return next((s for s in self._unit_data[unit_id]["skills"] if s["id"] == skill_id), None)
 
     def _calc_ship_gp(self, ship: dict[str, Any], crew: list[dict[str, Any]] | None = None) -> int:
         assert self._unit_data is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
@@ -1154,10 +1119,7 @@ class StatCalc:
         reinforcement = 0.0
 
         for skill in skills:
-            skill_def = next(
-                (s for s in self._unit_data[unit_id]["skills"] if s["id"] == skill["id"]),
-                None,
-            )
+            skill_def = self._find_skill_def(unit_id, skill["id"])
             if not skill_def:
                 continue
             o_tag = self._table_get(skill_def.get("powerOverrideTags", {}), skill["tier"], None)
