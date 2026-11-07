@@ -178,7 +178,7 @@ calc = StatCalc(game_data=my_game_data_dict)
 
 ### Async usage (`StatCalcAsync`)
 
-`StatCalcAsync` provides an async factory method for fetching game data without blocking the event loop. All calculation methods are inherited from `StatCalc` and remain synchronous (they are pure computation).
+`StatCalcAsync` provides an async factory method for fetching game data without blocking the event loop. Its `acalc_char_stats`, `acalc_ship_stats`, `acalc_roster_stats` and `acalc_player_stats` methods run the matching `calc_*` method in a worker thread, so a large roster does not stall the event loop. The inherited synchronous `calc_*` methods still work but block the loop while they run.
 
 ```python
 from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync
@@ -187,7 +187,7 @@ async with SwgohComlinkAsync() as comlink:
     calc = await StatCalcAsync.create()  # fetches game data from GitHub async
 
     player = await comlink.get_player(allycode=245866537)
-    calc.calc_roster_stats(player['rosterUnit'])
+    await calc.acalc_roster_stats(player['rosterUnit'])
 ```
 
 With pre-loaded game data (no async fetch needed):

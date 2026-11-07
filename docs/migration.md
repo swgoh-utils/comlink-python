@@ -330,6 +330,11 @@ Upgrading from v2.8 to v2.9.
   `game_data_url` and `expected_sha256` on `StatCalc()` and `StatCalcAsync.create()` pick
   the source and verify its SHA-256; the default stays the latest `main` of
   swgoh-utils/gamedata.
+- **`StatCalcAsync` can calculate off the event loop.** New `acalc_char_stats`,
+  `acalc_ship_stats`, `acalc_roster_stats` and `acalc_player_stats` run the matching
+  `calc_*` method in a worker thread. The sync `calc_*` methods are unchanged but block the
+  loop; in async code, replace `calc.calc_player_stats(p)` with
+  `await calc.acalc_player_stats(p)`.
 
 ## Summary of changes
 

@@ -102,9 +102,17 @@ ship_gp = calc.calc_ship_gp(ship_unit, crew_list)
 
 ## Async Usage (`StatCalcAsync`)
 
-`StatCalcAsync` inherits all calculation methods from `StatCalc`. The only
-difference is initialization: use the async `create()` factory to fetch game
-data without blocking the event loop.
+Use the async `create()` factory to fetch game data without blocking the event
+loop, and the `acalc_*` methods to calculate stats. Each one runs the matching
+`calc_*` method in a worker thread (`asyncio.to_thread`), so a large roster or
+guild does not stall the loop (for example a Discord bot's gateway heartbeat).
+
+| Async method | Runs |
+|--------------|------|
+| `await calc.acalc_char_stats(unit)` | `calc_char_stats` |
+| `await calc.acalc_ship_stats(ship, crew)` | `calc_ship_stats` |
+| `await calc.acalc_roster_stats(units)` | `calc_roster_stats` |
+| `await calc.acalc_player_stats(players)` | `calc_player_stats` |
 
 ```python
 from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync
@@ -113,8 +121,17 @@ async with SwgohComlinkAsync() as comlink:
     calc = await StatCalcAsync.create()  # async fetch from GitHub
 
     player = await comlink.get_player(allycode=245866537)
-    calc.calc_roster_stats(player["rosterUnit"])
+    await calc.acalc_player_stats(player)
 ```
+
+The inherited synchronous `calc_*` methods still work, but they block the event
+loop while they run.
+
+The game data tables are only read during calculation, so concurrent `acalc_*`
+calls on one instance are safe. Do not call `set_game_data()` while a
+calculation is running, and do not touch a unit or player while its `acalc_*`
+call is in progress: the worker thread updates it in place. Cancelling the
+awaiting task does not stop the worker thread.
 
 With pre-loaded data (no async fetch):
 
@@ -180,6 +197,10 @@ transforms them into the dict format expected by `StatCalc.set_game_data()`.
       members:
         - __init__
         - create
+        - acalc_char_stats
+        - acalc_ship_stats
+        - acalc_roster_stats
+        - acalc_player_stats
 
 ### GameDataBuilder
 
