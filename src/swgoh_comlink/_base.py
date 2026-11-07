@@ -20,6 +20,8 @@ from json import dumps
 from typing import Any, Self
 from urllib.parse import urlencode, urlparse, urlunparse
 
+import httpx
+
 from .exceptions import SwgohComlinkException, SwgohComlinkTypeError, SwgohComlinkValueError
 from .helpers import Constants, DataItems
 from .helpers._data_items import _items_wire_value
@@ -122,6 +124,41 @@ def _is_plain_http_remote(url: str) -> bool:
         return True
 
 
+def _check_size_limit(name: str, value: int | None) -> int | None:
+    """Validate a response size limit argument: ``None`` or a positive ``int``."""
+    if value is None:
+        return None
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise SwgohComlinkTypeError(f"{name} must be an int or None, got {type(value).__name__}.")
+    if value <= 0:
+        raise SwgohComlinkValueError(f"{name} must be a positive number of bytes or None.")
+    return value
+
+
+def _declared_length(headers: httpx.Headers) -> int | None:
+    """The ``Content-Length`` header as an ``int``, or ``None`` when absent or unreadable."""
+    try:
+        return int(headers["content-length"])
+    except (KeyError, ValueError):
+        return None
+
+
+def _bounded_error_response(response: httpx.Response, body: bytes) -> httpx.Response:
+    """A copy of a streamed error *response* carrying *body*, its decoded and possibly cut-short content.
+
+    The transfer headers are dropped because they described the encoded body, not *body*.
+    """
+    headers = [
+        (name, value)
+        for name, value in response.headers.multi_items()
+        if name.lower() not in ("content-encoding", "content-length", "transfer-encoding")
+    ]
+    extensions = {key: value for key, value in response.extensions.items() if key in ("http_version", "reason_phrase")}
+    return httpx.Response(
+        response.status_code, headers=headers, content=body, request=response.request, extensions=extensions
+    )
+
+
 def _replace_port(url: str, port: int) -> str:
     """Return *url* with its port set to *port*, keeping its scheme and host."""
     parsed = urlparse(url)
@@ -182,6 +219,8 @@ class SwgohComlinkBase:
         version_cache_ttl: float = DEFAULT_VERSION_CACHE_TTL,
         *,
         retry: RetryPolicy | None = None,
+        max_response_bytes: int | None = None,
+        max_game_data_bytes: int | None = None,
     ):
         from swgoh_comlink import version
 
@@ -202,6 +241,8 @@ class SwgohComlinkBase:
             raise SwgohComlinkTypeError(f"retry must be a RetryPolicy or None, got {type(retry).__name__}.")
         self.retry_policy = retry
         self._pacer = _Pacer(retry.min_interval, retry.unpaced_endpoints) if retry is not None else None
+        self.max_response_bytes = _check_size_limit("max_response_bytes", max_response_bytes)
+        self.max_game_data_bytes = _check_size_limit("max_game_data_bytes", max_game_data_bytes)
 
         # host replaces url and stats_url outright; port and stats_port alone replace only their ports
         if host:
@@ -256,6 +297,21 @@ class SwgohComlinkBase:
             )
         access, secret = (arg or value for arg, value in zip(args, env_values, strict=True))
         return access, secret
+
+    def _size_limit(self, endpoint: str, stats: bool) -> tuple[str, int | None]:
+        """The name and value of the response size limit for *endpoint*: ``/data`` has its own."""
+        if endpoint == "data" and not stats:
+            return "max_game_data_bytes", self.max_game_data_bytes
+        return "max_response_bytes", self.max_response_bytes
+
+    @staticmethod
+    def _too_large(endpoint: str, limit_name: str, limit: int, declared: int | None = None) -> SwgohComlinkValueError:
+        """The error for a response from *endpoint* larger than *limit* bytes."""
+        size = f"declares {declared} bytes, over" if declared is not None else "is over"
+        return SwgohComlinkValueError(
+            f"Response from /{endpoint} {size} {limit_name} ({limit} bytes). "
+            f"Raise {limit_name}, or set it to None to remove the limit."
+        )
 
     def _pace_delay(self, endpoint: str, stats: bool) -> float:
         """Reserve the next call slot for *endpoint* and return the seconds to wait for it.

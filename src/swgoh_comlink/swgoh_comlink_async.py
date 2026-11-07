@@ -17,7 +17,9 @@ from ._base import (
     DEFAULT_TIMEOUT,
     GAME_DATA_TIMEOUT,
     SwgohComlinkBase,
+    _bounded_error_response,
     _CachedVersions,
+    _declared_length,
     param_alias,
 )
 from .exceptions import (
@@ -57,6 +59,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         retry (RetryPolicy | None): Keyword-only. Retry rate refusals and HTTP 503 responses, and optionally
             space calls to the same endpoint, as described by a
             :class:`~swgoh_comlink.retry.RetryPolicy`. [Default: None, one attempt per call and no waiting]
+        max_response_bytes (int | None): Keyword-only. Largest response body, in decoded bytes, accepted from any
+            endpoint except /data. A larger response raises ``SwgohComlinkValueError``; an HTTP error body is cut
+            to this size. [Default: None, no limit]
+        max_game_data_bytes (int | None): Keyword-only. The same limit for /data (``get_game_data``), whose
+            responses are far larger than any other endpoint's. [Default: None, no limit]
 
     Notes:
         If the 'host' parameter is provided, the 'url' and 'stats_url' parameters are ignored.
@@ -189,10 +196,15 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         if method.upper() != "GET":
             request_kwargs["content"] = body
 
+        limit_name, limit = self._size_limit(endpoint, stats)
         try:
-            r = await client.request(method.upper(), f"/{endpoint}", **request_kwargs)
-            r.raise_for_status()
-            decoded = loads(r.content.decode("utf-8"))
+            if limit is None:
+                r = await client.request(method.upper(), f"/{endpoint}", **request_kwargs)
+                r.raise_for_status()
+                content = r.content
+            else:
+                content = await self._receive_limited(client, method, endpoint, request_kwargs, limit_name, limit)
+            decoded = loads(content.decode("utf-8"))
             if not isinstance(decoded, (dict, list)):
                 raise SwgohComlinkDecodeError("Expected a JSON object or array in the service response.")
             return decoded
@@ -202,6 +214,38 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             raise SwgohComlinkHTTPError.from_response(e.response) from e
         except httpx.RequestError as e:
             raise SwgohComlinkException(e) from e
+
+    async def _receive_limited(
+        self,
+        client: httpx.AsyncClient,
+        method: str,
+        endpoint: str,
+        request_kwargs: dict[str, Any],
+        limit_name: str,
+        limit: int,
+    ) -> bytes:
+        """Stream one response, reading at most *limit* decoded bytes of its body.
+
+        A success larger than *limit* raises ``SwgohComlinkValueError``, before any of the body is read when
+        ``Content-Length`` already exceeds it. An error body is cut to *limit* bytes and raised through
+        ``raise_for_status``.
+        """
+        async with client.stream(method.upper(), f"/{endpoint}", **request_kwargs) as r:
+            if r.is_success and (declared := _declared_length(r.headers)) is not None and declared > limit:
+                raise self._too_large(endpoint, limit_name, limit, declared)
+            chunks: list[bytes] = []
+            size = 0
+            async for chunk in r.aiter_bytes():
+                chunks.append(chunk)
+                size += len(chunk)
+                if size > limit:
+                    if r.is_success:
+                        raise self._too_large(endpoint, limit_name, limit)
+                    break
+            body = b"".join(chunks)
+            if not r.is_success:
+                _bounded_error_response(r, body[:limit]).raise_for_status()
+            return body
 
     async def _post(
         self,

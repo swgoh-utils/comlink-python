@@ -41,6 +41,11 @@ async with SwgohComlinkAsync(host="192.168.1.10", port=3000) as comlink:
 Failed calls raise the same [typed HTTP errors](exceptions.md#http-errors) as
 the synchronous client.
 
+## Limiting Response Size
+
+`max_response_bytes` and `max_game_data_bytes` work as in the synchronous
+client; see [Limiting Response Size](comlink.md#limiting-response-size).
+
 ## Retries and Pacing
 
 The `retry` argument takes the same [`RetryPolicy`](comlink.md#retries-and-pacing)

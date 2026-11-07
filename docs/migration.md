@@ -323,6 +323,11 @@ Upgrading from v2.8 to v2.9.
 - **Plain-HTTP HMAC warning.** A client with HMAC keys whose `url` or `stats_url` is
   `http://` to a non-loopback host logs one warning. Requests are still sent; switch to
   `https` or a private network, or filter the `swgoh_comlink._base` logger.
+- **Optional response size limits.** New keyword-only `max_response_bytes` and
+  `max_game_data_bytes` (for `/data`) arguments make the clients raise
+  `SwgohComlinkValueError` for a larger response, instead of reading it all into
+  memory. Both default to `None`, so nothing changes unless you set them. See
+  [Limiting Response Size](api/comlink.md#limiting-response-size).
 
 ## Summary of changes
 
