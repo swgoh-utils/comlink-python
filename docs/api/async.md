@@ -61,8 +61,9 @@ async with SwgohComlinkAsync(retry=RetryPolicy(min_interval=0.4)) as comlink:
 
 ## Stat Calculation
 
-For local stat calculation in async code, use `StatCalcAsync` which fetches
-game data without blocking the event loop:
+For local stat calculation in async code, use `StatCalcAsync`. It fetches game
+data without blocking the event loop, and its `acalc_*` methods run the
+calculation in a worker thread:
 
 ```python
 from swgoh_comlink import StatCalcAsync, SwgohComlinkAsync
@@ -70,7 +71,7 @@ from swgoh_comlink import StatCalcAsync, SwgohComlinkAsync
 async with SwgohComlinkAsync() as comlink:
     calc = await StatCalcAsync.create()
     player = await comlink.get_player(allycode=245866537)
-    calc.calc_roster_stats(player["rosterUnit"])
+    await calc.acalc_roster_stats(player["rosterUnit"])
 ```
 
 See the [StatCalc API](statcalc.md) for full details.
