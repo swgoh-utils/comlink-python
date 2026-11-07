@@ -142,14 +142,15 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     async def _admit(self, endpoint: str, stats: bool, extra: float) -> None:
         """Sleep until *endpoint* admits the next attempt.
 
-        Cancelling the task while it sleeps gives the reserved slot back before ``asyncio.CancelledError``
-        propagates, so a cancelled caller never leaves a gap that later callers wait out.
+        Any exception raised while sleeping (a ``KeyboardInterrupt`` or, in the async client, a cancelled task)
+        gives the reserved slot back before it propagates, so an interrupted caller never leaves a gap that
+        later callers wait out.
         """
         admission = self._admission(endpoint, stats, extra)
         while (wait := admission.next_wait()) is not None:
             try:
                 await _retry._async_sleep(wait)
-            except asyncio.CancelledError:
+            except BaseException:
                 admission.abandon()
                 raise
 
