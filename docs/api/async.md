@@ -28,7 +28,7 @@ finally:
 
 `SwgohComlinkAsync` takes the same constructor arguments as the synchronous
 client: `url` or `host`/`port` to choose the service, and `access_key`/
-`secret_key` (or the `ACCESS_KEY`/`SECRET_KEY` environment variables) for HMAC
+`secret_key` (or the `COMLINK_ACCESS_KEY`/`COMLINK_SECRET_KEY` environment variables) for HMAC
 signing. See [Connecting to Comlink](comlink.md#connecting-to-comlink).
 
 ```python

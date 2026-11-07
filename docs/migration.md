@@ -316,6 +316,10 @@ Upgrading from v2.8 to v2.9.
   `xx_yy` / `xxx_yy` (letters only, e.g. `eng_us`) now raises `SwgohComlinkValueError`
   instead of being passed through into the query string. A well-formed code that isn't in
   `Constants.LANGUAGES` logs a warning and is still sent. Case is unchanged.
+- **HMAC keys move to `COMLINK_ACCESS_KEY` / `COMLINK_SECRET_KEY`.** Rename the
+  `ACCESS_KEY` / `SECRET_KEY` environment variables. The old names still work until v3
+  with a `DeprecationWarning`, and are read only when neither new name is set.
+  Constructor arguments still win. Setting only one key now logs a warning.
 
 ## Summary of changes
 

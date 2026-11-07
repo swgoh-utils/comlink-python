@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import time
+import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
 from json import dumps
@@ -39,6 +40,11 @@ __all__ = [
 
 # Keys whose values must be masked in logs, repr, and debug output.
 _SENSITIVE_KEYS = frozenset({"secret_key", "access_key"})
+
+# Environment variables holding the HMAC (access, secret) key pair. The generic names are deprecated and are
+# read only when neither namespaced name is set, so a pair is never assembled from both namespaces.
+_CREDENTIAL_ENV_VARS = ("COMLINK_ACCESS_KEY", "COMLINK_SECRET_KEY")
+_DEPRECATED_CREDENTIAL_ENV_VARS = ("ACCESS_KEY", "SECRET_KEY")
 
 DEFAULT_TIMEOUT: float = 120.0
 GAME_DATA_TIMEOUT: float = 300.0
@@ -192,11 +198,42 @@ class SwgohComlinkBase:
             if stats_port is not None:
                 self.stats_url_base = _replace_port(self.stats_url_base, stats_port)
 
-        # Use values passed from client first, otherwise check for environment variables
-        self.access_key = access_key or os.environ.get("ACCESS_KEY")
-        self.secret_key = secret_key or os.environ.get("SECRET_KEY")
+        self.access_key, self.secret_key = self._resolve_credentials(access_key, secret_key)
         if self.access_key and self.secret_key:
             self.hmac = True
+        elif self.access_key or self.secret_key:
+            present, missing = ("access_key", "secret_key") if self.access_key else ("secret_key", "access_key")
+            logger.warning(
+                "HMAC signing is off: %s is set but %s is not. Pass both keys, or set both %s and %s.",
+                present,
+                missing,
+                *_CREDENTIAL_ENV_VARS,
+            )
+
+    @staticmethod
+    def _resolve_credentials(access_key: str | None, secret_key: str | None) -> tuple[str | None, str | None]:
+        """Return the HMAC (access, secret) keys: constructor arguments first, then the environment.
+
+        Emits one ``DeprecationWarning`` when a key is taken from ``ACCESS_KEY`` or ``SECRET_KEY``.
+        """
+        env_names = _CREDENTIAL_ENV_VARS
+        env_values = [os.environ.get(name) or None for name in env_names]
+        if not any(env_values):
+            env_names = _DEPRECATED_CREDENTIAL_ENV_VARS
+            env_values = [os.environ.get(name) or None for name in env_names]
+        args = (access_key or None, secret_key or None)
+        if env_names is _DEPRECATED_CREDENTIAL_ENV_VARS and (
+            used := [name for name, arg, value in zip(env_names, args, env_values, strict=True) if value and not arg]
+        ):
+            # stacklevel 4: this method, SwgohComlinkBase.__init__, the client's __init__, then the caller.
+            warnings.warn(
+                f"Reading HMAC keys from {' and '.join(used)} is deprecated and will be removed in v3. "
+                f"Set {' and '.join(_CREDENTIAL_ENV_VARS)} instead.",
+                DeprecationWarning,
+                stacklevel=4,
+            )
+        access, secret = (arg or value for arg, value in zip(args, env_values, strict=True))
+        return access, secret
 
     def _pace_delay(self, endpoint: str, stats: bool) -> float:
         """Reserve the next call slot for *endpoint* and return the seconds to wait for it.

@@ -39,8 +39,10 @@ When `host` is given, `url` and `stats_url` are ignored.
 
 If your comlink service requires HMAC signing, pass `access_key` and
 `secret_key`. When they are not passed, the client reads them from the
-`ACCESS_KEY` and `SECRET_KEY` environment variables. Signing is turned on only
-when both keys are set.
+`COMLINK_ACCESS_KEY` and `COMLINK_SECRET_KEY` environment variables. Signing is
+turned on only when both keys are set; if only one is set, the client logs a
+warning. The old `ACCESS_KEY` and `SECRET_KEY` names still work but are
+deprecated, and are read only when neither `COMLINK_*` name is set.
 
 See the [API Reference](#swgoh_comlink.swgoh_comlink.SwgohComlink) below for
 every constructor argument.
