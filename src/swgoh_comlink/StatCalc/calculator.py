@@ -78,6 +78,36 @@ def _str_keyed(value: Any) -> Any:
     return value
 
 
+def _int_keyed_mod_gp(table: Any) -> dict[tuple[int, int, int], Any]:
+    """Flatten ``modRarityLevelTierGP`` to ``{(pips, level, tier): GP}`` with int keys.
+
+    Only entries whose three keys are canonical int strings (``str(int(key)) == key``) are
+    included, so looking up int keys gives exactly what the nested ``_table_get`` lookups
+    give. Other keys, and tables of any other shape, are left to those lookups.
+    """
+    if not isinstance(table, dict):
+        return {}
+    flat: dict[tuple[int, int, int], Any] = {}
+    for pips, levels in table.items():
+        if not (_is_int_key(pips) and isinstance(levels, dict)):
+            continue
+        for level, tiers in levels.items():
+            if not (_is_int_key(level) and isinstance(tiers, dict)):
+                continue
+            for tier, gp in tiers.items():
+                if _is_int_key(tier):
+                    flat[int(pips), int(level), int(tier)] = gp
+    return flat
+
+
+def _is_int_key(key: str) -> bool:
+    """Return True if *key* is the str form of an int, as JSON object keys of int ids are."""
+    try:
+        return str(int(key)) == key
+    except ValueError:
+        return False
+
+
 class _GameDataDownload:
     """Collect a streamed game data body, enforcing the size cap and optional SHA-256 check.
 
@@ -168,6 +198,7 @@ class StatCalc:
         self._gp_tables: dict[str, Any] | None = None
         self._relic_data: dict[str, Any] | None = None
         self._skill_index: dict[str, dict[Any, dict[str, Any]]] = {}
+        self._mod_gp_index: dict[tuple[int, int, int], Any] = {}
 
         if game_data is None:
             self._LOGGER.info("No game data provided, loading from GitHub")
@@ -203,6 +234,7 @@ class StatCalc:
             for unit_id, meta in self._unit_data.items()
             if isinstance(meta, dict) and isinstance(meta.get("skills"), list)
         }
+        self._mod_gp_index = _int_keyed_mod_gp(self._gp_tables.get("modRarityLevelTierGP"))
         self._LOGGER.info(
             "Game data loaded: units=%d gear=%d mod_sets=%d",
             len(self._unit_data),
@@ -965,30 +997,19 @@ class StatCalc:
         if char.get("purchasedAbilityId"):
             gp += len(char["purchasedAbilityId"]) * self._table_get(self._gp_tables["abilitySpecialGP"], "ultimate")
 
+        mod_keys: list[tuple[Any, Any, Any]] = []
         if char.get("mods"):
-            for mod in char["mods"]:
-                gp += self._table_get(
-                    self._table_get(
-                        self._table_get(
-                            self._gp_tables["modRarityLevelTierGP"],
-                            mod["pips"],
-                        ),
-                        mod["level"],
-                    ),
-                    mod["tier"],
-                )
+            mod_keys = [(mod["pips"], mod["level"], mod["tier"]) for mod in char["mods"]]
         elif char.get("equippedStatMod"):
-            for mod in char["equippedStatMod"]:
-                gp += self._table_get(
-                    self._table_get(
-                        self._table_get(
-                            self._gp_tables["modRarityLevelTierGP"],
-                            int(mod["definitionId"][1]),
-                        ),
-                        mod["level"],
-                    ),
-                    mod["tier"],
+            mod_keys = [(int(mod["definitionId"][1]), mod["level"], mod["tier"]) for mod in char["equippedStatMod"]]
+        for key in mod_keys:
+            mod_gp = self._mod_gp_index.get(key)
+            if mod_gp is None:
+                pips, level, tier = key
+                mod_gp = self._table_get(
+                    self._table_get(self._table_get(self._gp_tables["modRarityLevelTierGP"], pips), level), tier
                 )
+            gp += mod_gp
 
         relic = char.get("relic")
         if relic and relic.get("currentTier", 0) > 2:

@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from swgoh_comlink import StatCalc
+from swgoh_comlink.StatCalc.calculator import _int_keyed_mod_gp
 
 _PLAYER_FILE = Path(__file__).resolve().parent.parent / "resources" / "example-player.json"
 _RESULT_KEYS = ("stats", "gp")
@@ -165,6 +166,42 @@ class TestSkillLookup:
             calc._get_skill_gp("NONEXISTENT_UNIT_XYZ", {"id": "x", "tier": 1})
         with pytest.raises(KeyError):
             calc._get_crewless_skills_gp("NONEXISTENT_UNIT_XYZ", [{"id": "x", "tier": 1}])
+
+
+class TestModGpIndex:
+    @staticmethod
+    def _modded_unit(player: dict[str, Any]) -> dict[str, Any]:
+        return _normalized(next(u for u in player["rosterUnit"] if u.get("equippedStatMod")))
+
+    def test_index_gives_the_nested_lookup_result(self, calc, game_data, player):
+        unit = self._modded_unit(player)
+        unindexed = StatCalc(game_data=game_data)
+        unindexed._mod_gp_index = {}
+        assert calc._mod_gp_index
+        assert calc.calc_char_gp(unit) == unindexed.calc_char_gp(unit)
+
+    def test_str_mod_keys_take_the_nested_lookup(self, calc, player):
+        unit = self._modded_unit(player)
+        mods = [
+            {"pips": int(m["definitionId"][1]), "level": m["level"], "tier": m["tier"]} for m in unit["equippedStatMod"]
+        ]
+        str_mods = [{key: str(value) for key, value in mod.items()} for mod in mods]
+        gp_int = calc.calc_char_gp({**unit, "equippedStatMod": None, "mods": mods})
+        assert calc.calc_char_gp({**unit, "equippedStatMod": None, "mods": str_mods}) == gp_int
+        assert gp_int == calc.calc_char_gp(unit)
+
+    def test_only_canonical_int_keys_are_indexed(self):
+        table = {"5": {"15": {"5": 10, "05": 11, "x": 12}, "+1": {"1": 13}}, "y": {"1": {"1": 14}}, "6": [1, 2]}
+        assert _int_keyed_mod_gp(table) == {(5, 15, 5): 10}
+        assert _int_keyed_mod_gp(None) == {}
+
+    def test_set_game_data_replaces_the_index(self, game_data):
+        data = copy.deepcopy(game_data)
+        data["gpTables"]["modRarityLevelTierGP"]["5"]["15"]["5"] = 123456
+        calc = StatCalc(game_data=game_data)
+        assert calc._mod_gp_index[5, 15, 5] == game_data["gpTables"]["modRarityLevelTierGP"]["5"]["15"]["5"]
+        calc.set_game_data(data)
+        assert calc._mod_gp_index[5, 15, 5] == 123456
 
 
 class TestFormatStats:
