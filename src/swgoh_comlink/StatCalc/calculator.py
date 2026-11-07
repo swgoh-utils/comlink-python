@@ -40,6 +40,9 @@ _MOD_STAT_PERCENT_OF_BASE: dict[int, tuple[str, ...]] = {
 # Chance to Critical Rating, Physical and Special Critical Avoidance to Critical Avoidance Rating).
 _FLAT_STAT_IDS: dict[str, str] = {"21": "14", "22": "15", "35": "39", "36": "40"}
 
+# Stand-in for a stat id missing from StatCalc.STATS_NAME_MAP; only ever read.
+_NO_STAT_INFO: dict[str, Any] = {}
+
 
 def _check_fetch_options(
     game_data: dict[str, Any] | None, game_data_url: str | None, expected_sha256: str | None
@@ -936,15 +939,16 @@ class StatCalc:
         return stats
 
     def _rename_stats(self, stats: dict[str, Any], lang: str = "eng_us") -> dict[str, Any]:
+        name_map = self.STATS_NAME_MAP
         rn_stats = {}
         for stat_type, stat_values in stats.items():
             if not isinstance(stat_values, dict):
                 rn_stats[stat_type] = stat_values
                 continue
-            rn_stats[stat_type] = {}
-            for stat_id, value in stat_values.items():
-                stat_name = self.STATS_NAME_MAP.get(stat_id, {}).get("name", stat_id)
-                rn_stats[stat_type][stat_name] = value
+            rn_stats[stat_type] = {
+                name_map.get(stat_id, _NO_STAT_INFO).get("name", stat_id): value
+                for stat_id, value in stat_values.items()
+            }
         self._LOGGER.debug("Done renaming stats")
         return rn_stats
 
