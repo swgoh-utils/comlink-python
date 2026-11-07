@@ -308,6 +308,15 @@ added together.
 `ERA_DEFINITION`, `UBS_UPDATE`. New legacy-name aliases: `AbilityDecisionTrees`,
 `EraDefinitions`, `UBSUpdate`, `EpisodeDefinitions` (plural), `AccountLinking`.
 
+## 10. v2.9 changes
+
+Upgrading from v2.8 to v2.9.
+
+- **`get_unit_stats(language=)` must be a language code.** A value that doesn't match
+  `xx_yy` / `xxx_yy` (letters only, e.g. `eng_us`) now raises `SwgohComlinkValueError`
+  instead of being passed through into the query string. A well-formed code that isn't in
+  `Constants.LANGUAGES` logs a warning and is still sent. Case is unchanged.
+
 ## Summary of changes
 
 | Area | Before (v1.x) | After |

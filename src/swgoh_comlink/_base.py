@@ -8,18 +8,26 @@ from __future__ import annotations
 import functools
 import hashlib
 import hmac
+import logging
 import os
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from json import dumps
 from typing import Any, Self
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlencode, urlparse, urlunparse
 
 from .exceptions import SwgohComlinkException, SwgohComlinkTypeError, SwgohComlinkValueError
 from .helpers import Constants, DataItems
 from .helpers._data_items import _items_wire_value
 from .retry import RetryPolicy, _no_release, _Pacer
+
+logger = logging.getLogger(__name__)
+
+# A swgoh-stats language code such as ``eng_us``. Nothing that matches can carry ``&``, ``#``, ``=`` or ``/``
+# into the stats query string.
+_LANGUAGE_CODE = re.compile(r"[A-Za-z]{2,3}_[A-Za-z]{2}")
 
 __all__ = [
     "SwgohComlinkBase",
@@ -374,11 +382,15 @@ class SwgohComlinkBase:
     def _build_unit_stats_endpoint(flags: list[str] | None = None, language: str | None = None) -> str:
         """Build the stats endpoint string with query parameters.
 
+        A well-formed ``language`` that is not in ``Constants.LANGUAGES`` logs a warning and is still sent,
+        so a language the game adds before the list is updated keeps working.
+
         Returns:
             Endpoint string like ``"api?flags=calcGP&language=eng_us"``.
 
         Raises:
-            SwgohComlinkValueError: If flags contains invalid values.
+            SwgohComlinkValueError: If flags contains invalid values, or language is not a language code
+                such as ``eng_us``.
         """
         _allowed_flags = {
             "gameStyle",
@@ -394,23 +406,30 @@ class SwgohComlinkBase:
             "noSpace",
         }
 
-        flag_str = None
+        query: dict[str, str] = {}
         if flags:
             if isinstance(flags, list) and set(flags).issubset(_allowed_flags):
-                flag_str = "flags=" + ",".join(flags)
+                query["flags"] = ",".join(flags)
             else:
                 raise SwgohComlinkValueError(
                     f'Invalid argument. <flags> should be a list of strings with one or more of "'
                     f"{_allowed_flags} flag values."
                 )
 
-        lang_str = f"language={language}" if language else None
+        if language:
+            if not isinstance(language, str) or not _LANGUAGE_CODE.fullmatch(language):
+                raise SwgohComlinkValueError(
+                    f"Invalid argument. <language> should be a language code such as 'eng_us', got {language!r}."
+                )
+            if language.lower() not in Constants.LANGUAGES:
+                logger.warning(
+                    "Unknown language %r; sending it anyway. Known languages: %s",
+                    language,
+                    ", ".join(Constants.LANGUAGES),
+                )
+            query["language"] = language
 
-        query_string = None
-        if flag_str or lang_str:
-            query_string = "?" + "&".join(filter(None, iter([flag_str, lang_str])))
-
-        return "api" + query_string if query_string else "api"
+        return f"api?{urlencode(query, safe=',')}" if query else "api"
 
     @property
     def version(self) -> str:
