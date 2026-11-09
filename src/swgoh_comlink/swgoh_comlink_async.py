@@ -73,6 +73,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     Examples:
         Basic usage::
 
+            comlink = SwgohComlinkAsync()
+            player = await comlink.get_player(allycode=123456789)
+
+        As a context manager::
+
             async with SwgohComlinkAsync() as comlink:
                 player = await comlink.get_player(allycode=123456789)
     """
@@ -106,7 +111,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         await self.aclose()
 
     async def aclose(self) -> None:
-        """Close the underlying async HTTP client connections."""
+        """Close the underlying HTTP client connections."""
         await self.client.aclose()
         await self.stats_client.aclose()
 
@@ -118,7 +123,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         stats: bool = False,
         timeout: float | None = None,
     ) -> dict[str, Any] | list[Any]:
-        """Send an async HTTP request to the comlink service: the single gateway for all HTTP communication.
+        """Send an HTTP request to the comlink service: the single gateway for all HTTP communication.
 
         Each attempt waits for admission (pacing and rate holds), is sent, and on an HTTP error asks the
         shared retry core in ``_base`` whether to try again, so both clients retry identically.
@@ -142,14 +147,15 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     async def _admit(self, endpoint: str, stats: bool, extra: float) -> None:
         """Sleep until *endpoint* admits the next attempt.
 
-        Cancelling the task while it sleeps gives the reserved slot back before ``asyncio.CancelledError``
-        propagates, so a cancelled caller never leaves a gap that later callers wait out.
+        Any exception raised while sleeping (a ``KeyboardInterrupt`` or, in the async client, a cancelled task)
+        gives the reserved slot back before it propagates, so an interrupted caller never leaves a gap that
+        later callers wait out.
         """
         admission = self._admission(endpoint, stats, extra)
         while (wait := admission.next_wait()) is not None:
             try:
                 await _retry._async_sleep(wait)
-            except asyncio.CancelledError:
+            except BaseException:
                 admission.abandon()
                 raise
 
@@ -208,7 +214,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         stats: bool = False,
         timeout: float | None = None,
     ) -> dict[str, Any] | list[Any]:
-        """Send an async POST request to the comlink service.
+        """Send a POST request to the comlink service.
 
         Convenience wrapper around :meth:`_request`.
         """

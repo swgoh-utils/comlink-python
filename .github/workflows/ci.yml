@@ -39,6 +39,9 @@ jobs:
       - name: Run Ruff formatter check
         run: uv run --no-sync ruff format --check src/ tests/ examples/ parity/
 
+      - name: Check the generated sync client is current
+        run: uv run --no-sync python .github/scripts/unasync.py --check
+
   # ── Type check ─────────────────────────────────────────────────────────
   type-check:
     name: Type Check

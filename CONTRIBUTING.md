@@ -92,7 +92,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 
    Run tools with `uv run <command>` — there is no need to activate the virtual environment.
 
-4. **Install the pre-commit hooks** (runs Ruff, ty, and commitlint before each commit)
+4. **Install the pre-commit hooks** (runs Ruff, ty, the sync-client generator, and commitlint before each commit)
 
    ```bash
    uvx pre-commit install --hook-type pre-commit --hook-type commit-msg
@@ -168,7 +168,7 @@ comlink-python/
 │       ├── globals.py              # Logging configuration
 │       ├── py.typed                # PEP 561 marker: the package ships inline type hints
 │       ├── retry.py                # Retry/backoff configuration
-│       ├── swgoh_comlink.py        # SwgohComlink (sync client)
+│       ├── swgoh_comlink.py        # SwgohComlink (sync client, generated from the async one)
 │       ├── swgoh_comlink_async.py  # SwgohComlinkAsync (async client)
 │       └── version.py              # Exposes __version__ (derived from the Git tag via hatch-vcs)
 ├── tests/
@@ -197,14 +197,32 @@ comlink-python/
 | Module | Purpose |
 |--------|---------|
 | `_base.py` | `SwgohComlinkBase` — shared payload construction, HMAC signing, config, and the sans-I/O request core (request preparation, response interpretation, retry waits) for both clients |
-| `swgoh_comlink.py` | `SwgohComlink` — synchronous HTTP client (all endpoint methods) |
-| `swgoh_comlink_async.py` | `SwgohComlinkAsync` — asynchronous HTTP client (mirrors sync API) |
+| `swgoh_comlink_async.py` | `SwgohComlinkAsync` — asynchronous HTTP client and the **source** of both clients: edit this one |
+| `swgoh_comlink.py` | `SwgohComlink` — synchronous HTTP client, **generated** from `swgoh_comlink_async.py`; never edit it by hand |
 | `retry.py` | Retry and backoff behavior for transient HTTP failures; the pacer, the per-attempt admission state and the retry step, all without I/O |
 | `StatCalc/calculator.py` | `StatCalc` — local stat and GP calculation for game units |
 | `helpers/` | `DataItems` IntFlag enum, `Constants` class, and utility functions split across focused submodules |
 | `exceptions.py` | `SwgohComlinkException`, `SwgohComlinkValueError`, and `SwgohComlinkTypeError` |
 | `globals.py` | Shared logging setup (`get_logger()`) |
 | `version.py` | Exposes `__version__`, derived from the Git tag at build time via hatch-vcs |
+
+### Changing a client
+
+The sync client is generated. Make every client change in `swgoh_comlink_async.py`, then regenerate:
+
+```bash
+uv run python .github/scripts/unasync.py
+```
+
+Commit both files. With the pre-commit hooks installed you can skip the manual run: the `unasync` hook
+regenerates `swgoh_comlink.py` whenever either client or the generator is staged, and stops the commit if the
+file changed, so stage it and commit again. CI runs the same script with `--check` and fails when
+`swgoh_comlink.py` is not what the async client generates to, so a hand edit to it fails the build.
+
+The generator drops `async`/`await` and renames async names (`SwgohComlinkAsync`, `AsyncClient`, `aclose`,
+`asyncio.Lock`, …) to their sync twins. In docstrings and comments it renames the same names and turns
+example code sync, and copies the rest verbatim, so write prose that holds for both clients. The rename
+tables are at the top of `.github/scripts/unasync.py`; extend them rather than special-casing a file.
 
 ---
 

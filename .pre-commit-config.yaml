@@ -34,6 +34,20 @@ repos:
         types: [python]
         require_serial: true
 
+  # ── Generated sync client (mirrors CI's `unasync.py --check`) ─────────
+  # Regenerates swgoh_comlink.py whenever the async client, the sync client or the
+  # generator is staged. A changed file fails the hook, so stage it and commit again;
+  # a hand edit to swgoh_comlink.py is overwritten the same way.
+  - repo: local
+    hooks:
+      - id: unasync
+        name: generate sync client
+        entry: uv run python .github/scripts/unasync.py
+        language: system
+        files: ^(src/swgoh_comlink/swgoh_comlink(_async)?\.py|\.github/scripts/unasync\.py)$
+        pass_filenames: false
+        require_serial: true
+
   # ── ty type checking (Astral, run via local uv) ───────────────────────
   - repo: local
     hooks:

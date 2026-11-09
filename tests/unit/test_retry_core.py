@@ -9,7 +9,7 @@ from collections.abc import Callable
 import httpx
 import pytest
 
-from swgoh_comlink import RetryPolicy, SwgohComlink
+from swgoh_comlink import RetryPolicy, SwgohComlink, SwgohComlinkAsync
 from swgoh_comlink import retry as retry_module
 from swgoh_comlink.exceptions import (
     SwgohComlinkClientError,
@@ -228,4 +228,18 @@ def test_sync_interrupt_while_pacing_gives_the_slot_back(now: list[float], monke
         monkeypatch.setattr(retry_module, "_sleep", interrupted)
         with pytest.raises(KeyboardInterrupt):
             client.get_game_metadata()
+        assert client._pace_delay("metadata", False) == 1
+
+
+async def test_async_interrupt_while_pacing_gives_the_slot_back(now: list[float], monkeypatch) -> None:
+    """The async client releases its slot on any exception while sleeping too, not only on cancellation."""
+
+    async def interrupted(seconds: float) -> None:
+        raise KeyboardInterrupt
+
+    async with SwgohComlinkAsync(retry=RetryPolicy(min_interval=1)) as client:
+        client._pace_delay("metadata", False)
+        monkeypatch.setattr(retry_module, "_async_sleep", interrupted)
+        with pytest.raises(KeyboardInterrupt):
+            await client.get_game_metadata()
         assert client._pace_delay("metadata", False) == 1

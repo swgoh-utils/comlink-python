@@ -1,4 +1,5 @@
 # coding=utf-8
+# GENERATED from swgoh_comlink_async.py by .github/scripts/unasync.py. Do not edit: change the source and rerun.
 """
 Synchronous Python 3 interface for swgoh-comlink.
 """
@@ -147,8 +148,9 @@ class SwgohComlink(SwgohComlinkBase):
     def _admit(self, endpoint: str, stats: bool, extra: float) -> None:
         """Sleep until *endpoint* admits the next attempt.
 
-        Any exception while sleeping, ``KeyboardInterrupt`` included, gives the reserved slot back before it
-        propagates, so an interrupted caller never leaves a gap that later callers wait out.
+        Any exception raised while sleeping (a ``KeyboardInterrupt`` or, in the async client, a cancelled task)
+        gives the reserved slot back before it propagates, so an interrupted caller never leaves a gap that
+        later callers wait out.
         """
         admission = self._admission(endpoint, stats, extra)
         while (wait := admission.next_wait()) is not None:
