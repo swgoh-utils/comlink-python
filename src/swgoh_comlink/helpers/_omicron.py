@@ -116,13 +116,14 @@ def is_omicron_skill(
     if roster_unit_skill is not None:
         skill_id = roster_unit_skill.get("id")
         skill_tier = roster_unit_skill.get("tier")
-        if not skill_id or not skill_tier:
+        # Tier 0 is a legitimate value for a freshly unlocked skill, so only a missing tier is an error.
+        if not skill_id or skill_tier is None:
             raise SwgohComlinkValueError("Invalid 'roster_unit_skill' argument.")
     else:
         # Validate that skill_id and skill_tier were provided directly
         if not isinstance(skill_id, str):
             raise SwgohComlinkValueError(f"'skill_id' must be a string, not {type(skill_id)}")
-        if not skill_id or not skill_tier:
+        if not skill_id or skill_tier is None:
             raise SwgohComlinkValueError(
                 "'skill_id' and 'skill_tier' are required when 'roster_unit_skill' is not provided."
             )

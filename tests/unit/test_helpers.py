@@ -333,6 +333,9 @@ def test_get_omicron_skill_tier(skill, expected):
         pytest.param(_SKILL_LIST, {"roster_unit_skill": {"id": "skill_A", "tier": 1}}, True, id="roster-unit-skill"),
         pytest.param(_SKILL_LIST, {"skill_id": "nonexistent", "skill_tier": 1}, False, id="not-in-list"),
         pytest.param([_SKILL_LIST[1]], {"skill_id": "skill_B", "skill_tier": 1}, False, id="skill-without-omicron"),
+        # Tier 0 is a freshly unlocked skill, not a missing tier; skill_C has its omicron at tier index 0.
+        pytest.param(_SKILL_LIST, {"skill_id": "skill_A", "skill_tier": 0}, False, id="direct-tier-zero"),
+        pytest.param(_SKILL_LIST, {"roster_unit_skill": {"id": "skill_C", "tier": 0}}, True, id="roster-tier-zero"),
     ],
 )
 def test_is_omicron_skill(skills, kwargs, expected):
