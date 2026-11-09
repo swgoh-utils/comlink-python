@@ -92,7 +92,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 
    Run tools with `uv run <command>` — there is no need to activate the virtual environment.
 
-4. **Install the pre-commit hooks** (runs Ruff, ty, and commitlint before each commit)
+4. **Install the pre-commit hooks** (runs Ruff, ty, the sync-client generator, and commitlint before each commit)
 
    ```bash
    uvx pre-commit install --hook-type pre-commit --hook-type commit-msg
@@ -214,8 +214,10 @@ The sync client is generated. Make every client change in `swgoh_comlink_async.p
 uv run python .github/scripts/unasync.py
 ```
 
-Commit both files. CI runs the same script with `--check` and fails when `swgoh_comlink.py` is not what the
-async client generates to, so a hand edit to it fails the build.
+Commit both files. With the pre-commit hooks installed you can skip the manual run: the `unasync` hook
+regenerates `swgoh_comlink.py` whenever either client or the generator is staged, and stops the commit if the
+file changed, so stage it and commit again. CI runs the same script with `--check` and fails when
+`swgoh_comlink.py` is not what the async client generates to, so a hand edit to it fails the build.
 
 The generator drops `async`/`await` and renames async names (`SwgohComlinkAsync`, `AsyncClient`, `aclose`,
 `asyncio.Lock`, …) to their sync twins. In docstrings and comments it renames the same names and turns
