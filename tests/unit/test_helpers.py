@@ -1150,6 +1150,10 @@ class TestGetGuildActivity:
             ("GUILD_MEMBER", (2, "Member")),
             ("GUILD_OFFICER", (3, "Officer")),
             ("GUILD_LEADER", (4, "Leader")),
+            # The type-prefixed spelling some servers send; another enum's prefix is not read.
+            ("GUILDMEMBERLEVEL_GUILDMEMBER", (2, "Member")),
+            ("GUILDMEMBERLEVEL_GUILDLEADER", (4, "Leader")),
+            ("RARITY_GUILDMEMBER", (None, None)),
             (0, (None, None)),
             (None, (None, None)),
             ([4], (None, None)),
@@ -1806,6 +1810,9 @@ _ITEM_GAME_DATA: dict[str, Any] = {
         # Game data fetched with enums=True carries enum names in place of the numbers.
         {"id": "enum", "slot": ["STATMOD_SLOT_02"], "setId": "4", "minRarity": "SIX_STAR", "maxRarity": "SIX_STAR",
          "minTier": "STATMOD_TIER_05", "maxTier": "STATMOD_TIER_05"},
+        # Some servers spell them prefixed with their type and without inner underscores.
+        {"id": "enum_prefixed", "slot": ["STATMODSLOT_STATMODSLOT02"], "setId": "4", "minRarity": "RARITY_SIXSTAR",
+         "maxRarity": "RARITY_SIXSTAR", "minTier": "STATMODTIER_STATMODTIER05", "maxTier": "STATMODTIER_STATMODTIER05"},
         # Unreadable rarities are shown as "?".
         {"id": "unreadable", "slot": [2], "setId": "4", "minRarity": True, "maxRarity": None, "minTier": 1,
          "maxTier": 1},
@@ -1863,6 +1870,8 @@ class TestGetModCatalog:
     _STAT_MODS: list[dict[str, Any]] = [
         {"id": "451", "setId": "4", "slot": 2, "rarity": 5},
         {"id": "137", "setId": "3", "slot": "STATMOD_SLOT_06", "rarity": "SEVEN_STAR"},
+        {"id": "138", "setId": "3", "slot": "STATMODSLOT_STATMODSLOT06", "rarity": "RARITY_SEVENSTAR"},
+        {"id": "139", "setId": "3", "slot": "RARITY_STATMODSLOT06", "rarity": "STATMODSLOT_SEVENSTAR"},
         {"id": "999", "setId": "9", "slot": 4, "rarity": 1},
     ]
 
@@ -1882,6 +1891,9 @@ class TestGetModCatalog:
         # Enum names (enums=True) are read as their numbers.
         assert catalog["definitions"]["137"]["slot"] == 7
         assert catalog["definitions"]["137"]["rarity"] == 7
+        # So are the type-prefixed spellings, but only under their own type's prefix.
+        assert (catalog["definitions"]["138"]["slot"], catalog["definitions"]["138"]["rarity"]) == (7, 7)
+        assert (catalog["definitions"]["139"]["slot"], catalog["definitions"]["139"]["rarity"]) == (0, 0)
         # A set statModSet does not list keeps its id as its name.
         assert catalog["definitions"]["999"]["set_name"] == "9"
 
@@ -1924,6 +1936,8 @@ class TestItemNames:
             ("MYSTERY_STAT_MOD", "11112", "1-2-dot Speed any-slot mod (E-D)"),
             (16, "two", "5-dot Speed Square or Arrow mod (E)"),
             (16, "enum", "6-dot Speed Arrow mod (A)"),
+            (16, "enum_prefixed", "6-dot Speed Arrow mod (A)"),
+            ("ITEMTYPE_MYSTERYSTATMOD", "enum_prefixed", "6-dot Speed Arrow mod (A)"),
             (16, "unreadable", "?-dot Speed Square mod (E)"),
         ],
     )
@@ -2178,8 +2192,8 @@ _TB_DEFS = [
     },
     {
         "id": "t05D",
-        # Comlink's spelling; the on-disk dump of the game data spells it territoryBattleVersion_3.
-        "territoryBattleVersion3": True,
+        # The current spelling; some older servers sent territoryBattleVersion3.
+        "territoryBattleVersion_3": True,
         "conflictZoneDefinition": [
             {
                 "zoneDefinition": _tb_zone("tb3_phase01_conflict01", name_key="PLANET_CORUSCANT"),
@@ -2448,12 +2462,12 @@ class TestGetTbMissionRequirements:
         # Not a version 3 map, so a special mission in the strike array is a normal mission.
         assert missions["geo_phase01_conflict01_strike01"]["hidden_reason"] is None
 
-    def test_dump_spelling_of_the_version_3_flag(self):
+    def test_legacy_spelling_of_the_version_3_flag(self):
 
-        definition = {k: v for k, v in _TB_DEFS[1].items() if k != "territoryBattleVersion3"}
+        definition = {k: v for k, v in _TB_DEFS[1].items() if k != "territoryBattleVersion_3"}
         missions = get_tb_mission_requirements([definition], _TB_CAMPAIGNS, _TB_CATEGORIES)
         assert sum(m["hidden_reason"] == "special" for m in missions) == 0
-        definition["territoryBattleVersion_3"] = True
+        definition["territoryBattleVersion3"] = True
         missions = get_tb_mission_requirements([definition], _TB_CAMPAIGNS, _TB_CATEGORIES)
         assert sum(m["hidden_reason"] == "special" for m in missions) == 1
 

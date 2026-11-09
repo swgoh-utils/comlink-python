@@ -24,7 +24,8 @@ _SHIP = 2
 # Over a third of the game's categories key their name as the literal 'PLACEHOLDER'; none is a real name.
 _PLACEHOLDER = "PLACEHOLDER"
 _SCORE_ROW = "GALACTIC_SCORE"
-# The dump of the game data spells the flag with an underscore; Comlink sends it without.
+# The game data dump and current servers spell the flag with an underscore; some older servers sent it
+# without.
 _VERSION_3_KEYS = ("territoryBattleVersion3", "territoryBattleVersion_3")
 # int32 max: the game's "no limit" for maxUnitCountPerPlayer and maxAttemptsAllowed.
 _UNLIMITED = 2**31 - 1
