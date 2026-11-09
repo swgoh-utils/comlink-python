@@ -61,6 +61,11 @@ from ._localization import (
     parse_swgoh_string,
 )
 from ._omicron import (
+    OmicronBreakdown,
+    OmicronMember,
+    OmicronModeBreakdown,
+    OmicronSkillStats,
+    get_omicron_breakdown,
     get_omicron_skill_tier,
     get_omicron_skills,
     get_tw_omicrons,
@@ -217,6 +222,11 @@ __all__ = [
     "get_named_rewards",
     "get_player_title_names",
     # Omicron
+    "OmicronBreakdown",
+    "OmicronMember",
+    "OmicronModeBreakdown",
+    "OmicronSkillStats",
+    "get_omicron_breakdown",
     "get_omicron_skill_tier",
     "get_omicron_skills",
     "get_tw_omicrons",

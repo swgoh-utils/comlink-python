@@ -1207,6 +1207,69 @@ Functions for querying omicron skill data from game data collections.
       show_root_heading: true
       show_root_full_path: false
 
+### get_omicron_breakdown
+
+Summarizes omicron adoption across a set of player profiles, grouped by game mode. For every
+omicron in game data it lists the players who have applied it, the players who own the unit
+but have not, and how many do not own the unit.
+
+It takes **player profiles**, not guild member entries: a guild's `member` list carries no
+roster, so fetch each member's profile first. Pass `ability_list` whenever a person will read
+the result. A unit often has several omicrons in one mode, so the unit name alone does not
+tell the rows apart, and the omicron's own name comes from the `ability` collection.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import DataItems, get_guild_members, get_localization_dictionary, get_omicron_breakdown
+
+comlink = SwgohComlink()
+members = get_guild_members(comlink, allycode=314927874)
+profiles = [comlink.get_player(player_id=member["playerId"]) for member in members]
+game_data = comlink.get_game_data(
+    items=DataItems.SKILL | DataItems.UNITS | DataItems.ABILITY, include_pve_units=False
+)
+
+breakdown = get_omicron_breakdown(
+    profiles,
+    game_data["skill"],
+    game_data["units"],
+    ability_list=game_data["ability"],
+    localization=get_localization_dictionary(comlink),
+)
+for mode in breakdown["modes"]:
+    for row in mode["skills"]:
+        print(mode["mode_name"], row["unit_name"], row["skill_name"], len(row["applied"]))
+```
+
+See `examples/Sync/guild_omicron_breakdown.py` for a full report, and
+`examples/Async/guild_omicron_breakdown.py` for the same report with the profiles fetched
+concurrently.
+
+::: swgoh_comlink.helpers._omicron.get_omicron_breakdown
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._omicron.OmicronBreakdown
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._omicron.OmicronModeBreakdown
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._omicron.OmicronSkillStats
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._omicron.OmicronMember
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
 ---
 
 ## Localization Helpers
