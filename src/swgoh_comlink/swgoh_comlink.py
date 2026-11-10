@@ -322,6 +322,8 @@ class SwgohComlink(SwgohComlinkBase):
         enums: bool = False,
         items: str | DataItems | int | None = None,
         device_platform: str = "Android",
+        *,
+        strip_empty: bool = False,
     ) -> dict[str, Any]:
         """
         Get game data.
@@ -334,6 +336,8 @@ class SwgohComlink(SwgohComlinkBase):
             items: string [Defaults to None] bitwise value indicating the collections to retrieve from game.
                 NOTE: this parameter is mutually exclusive with request_segment.
             device_platform: string [Defaults to "Android"]
+            strip_empty: Keyword-only. Drop collections that came back empty (``[]``) or null, e.g. the ones
+                not selected by ``items``. [Defaults to False, which returns every collection key]
 
         Returns:
             A dictionary containing the game data.
@@ -351,7 +355,8 @@ class SwgohComlink(SwgohComlinkBase):
             items=items,
             device_platform=device_platform,
         )
-        return cast(dict[str, Any], self._post(endpoint="data", payload=payload, timeout=GAME_DATA_TIMEOUT))
+        game_data = cast(dict[str, Any], self._post(endpoint="data", payload=payload, timeout=GAME_DATA_TIMEOUT))
+        return self._strip_empty_collections(game_data) if strip_empty else game_data
 
     # alias for non PEP usage of direct endpoint calls
     getGameData = get_game_data

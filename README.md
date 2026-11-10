@@ -263,7 +263,7 @@ Methods available on both `SwgohComlink` and `SwgohComlinkAsync` (async methods 
 | `get_guild(guild_id, include_recent_guild_activity_info, enums)` | Get guild data by guild ID |
 | `get_guilds_by_name(name, start_index, count, enums)` | Search guilds by name |
 | `get_guilds_by_criteria(search_criteria, start_index, count, enums)` | Search guilds by criteria |
-| `get_game_data(version, include_pve_units, request_segment, enums, items, device_platform)` | Get game data collections (select them with `items=DataItems...`) |
+| `get_game_data(version, include_pve_units, request_segment, enums, items, device_platform, *, strip_empty)` | Get game data collections (select them with `items=DataItems...`; `strip_empty=True` drops the empty ones) |
 | `get_game_metadata(client_specs, enums)` | Get current game and localization versions |
 | `get_localization(localization_id, locale, unzip, enums)` | Get localization bundles |
 | `get_enums(refresh)` | Get game data enums (cached per game data version) |
