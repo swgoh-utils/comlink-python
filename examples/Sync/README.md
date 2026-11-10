@@ -6,6 +6,7 @@ These examples use the `SwgohComlink` synchronous client. They run in a standard
 
 | File | Description |
 |------|-------------|
+| `calc_datacron_stats.py` | Apply a datacron to a roster and combine it with `final` stats |
 | `calc_stats_local.py` | Calculate character stats locally using the `StatCalc` module |
 | `get_events.py` | Retrieve current game events with timestamps and status |
 | `get_gac_brackets.py` | Scan GAC brackets for a league and search for a player |

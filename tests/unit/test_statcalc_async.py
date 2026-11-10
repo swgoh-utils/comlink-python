@@ -120,6 +120,48 @@ async def test_acalc_ship_stats_matches_sync(
     assert await calc.acalc_ship_stats(copy.deepcopy(ship), copy.deepcopy(crew)) == expected
 
 
+_DATACRON: dict[str, Any] = {
+    "id": "test-datacron",
+    "affix": [
+        # Critical Damage +50%, open to every unit.
+        {"abilityId": "", "statType": 16, "statValue": "50000000", "requiredUnitTier": 0, "requiredRelicTier": 1},
+    ],
+}
+
+
+def _with_datacron(player: dict[str, Any]) -> dict[str, Any]:
+    payload = copy.deepcopy(player)
+    payload["datacron"] = [copy.deepcopy(_DATACRON)]
+    return payload
+
+
+async def test_acalc_player_stats_passes_the_datacron_id(calc: StatCalcAsync, player: dict[str, Any]) -> None:
+    expected = calc.calc_player_stats(_with_datacron(player), datacron_id="test-datacron")
+
+    result = await calc.acalc_player_stats(_with_datacron(player), datacron_id="test-datacron")
+
+    assert result == expected
+    assert isinstance(result, dict)
+    assert any(u.get("stats", {}).get("datacron") == {"Critical Damage": 0.5} for u in result["rosterUnit"])
+
+
+async def test_acalc_roster_stats_passes_the_datacron(calc: StatCalcAsync, player: dict[str, Any]) -> None:
+    expected = calc.calc_roster_stats(copy.deepcopy(player["rosterUnit"]), _DATACRON)
+
+    assert await calc.acalc_roster_stats(copy.deepcopy(player["rosterUnit"]), _DATACRON) == expected
+
+
+async def test_acalc_char_stats_passes_the_datacron(
+    calc: StatCalcAsync, player: dict[str, Any], game_data: dict[str, Any]
+) -> None:
+    unit = next(u for u in player["rosterUnit"] if game_data["unitData"][_def_id(u)]["combatType"] == 1)
+
+    result = await calc.acalc_char_stats(copy.deepcopy(unit), _DATACRON)
+
+    assert result["stats"]["datacron"] == {"Critical Damage": 0.5}
+    assert result == calc.calc_char_stats(copy.deepcopy(unit), _DATACRON)
+
+
 async def test_acalc_errors_propagate(calc: StatCalcAsync) -> None:
     not_a_player: Any = "not a player"
 

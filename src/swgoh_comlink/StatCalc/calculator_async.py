@@ -99,17 +99,18 @@ class StatCalcAsync(StatCalc):
             cls._LOGGER.debug("Using caller-provided game data")
         return cls(game_data=game_data)
 
-    async def acalc_char_stats(self, unit: dict[str, Any]) -> dict[str, Any]:
+    async def acalc_char_stats(self, unit: dict[str, Any], datacron: dict[str, Any] | None = None) -> dict[str, Any]:
         """Run :meth:`calc_char_stats` in a worker thread.
 
         Args:
             unit: Character object in either normalized (`defId`) or raw game
                 format (`definitionId`).
+            datacron: Optional datacron object to apply, as in :meth:`calc_char_stats`.
 
         Returns:
             The input unit with `stats` and `gp` keys added.
         """
-        return await asyncio.to_thread(self.calc_char_stats, unit)
+        return await asyncio.to_thread(self.calc_char_stats, unit, datacron)
 
     async def acalc_ship_stats(self, unit: dict[str, Any], crew_member: list[dict[str, Any]]) -> dict[str, Any]:
         """Run :meth:`calc_ship_stats` in a worker thread.
@@ -123,24 +124,28 @@ class StatCalcAsync(StatCalc):
         """
         return await asyncio.to_thread(self.calc_ship_stats, unit, crew_member)
 
-    async def acalc_roster_stats(self, units: Any) -> Any:
+    async def acalc_roster_stats(self, units: Any, datacron: dict[str, Any] | None = None) -> Any:
         """Run :meth:`calc_roster_stats` in a worker thread.
 
         Args:
             units: Either a list of units or a legacy dict keyed by unit id.
+            datacron: Optional datacron object to apply to every character, as
+                in :meth:`calc_roster_stats`.
 
         Returns:
             Input object with `stats` and `gp` fields added for each unit.
         """
-        return await asyncio.to_thread(self.calc_roster_stats, units)
+        return await asyncio.to_thread(self.calc_roster_stats, units, datacron)
 
     async def acalc_player_stats(
-        self, players: dict[str, Any] | list[dict[str, Any]]
+        self, players: dict[str, Any] | list[dict[str, Any]], datacron_id: str | None = None
     ) -> dict[str, Any] | list[dict[str, Any]]:
         """Run :meth:`calc_player_stats` in a worker thread.
 
         Args:
             players: One player object, or a list of player objects, each with a `rosterUnit` element.
+            datacron_id: Optional id of a datacron in each player's own
+                `datacron` collection, as in :meth:`calc_player_stats`.
 
         Returns:
             The input object with `stats` and `gp` fields added for each player's roster.
@@ -148,8 +153,10 @@ class StatCalcAsync(StatCalc):
         Raises:
             RuntimeError: If a dict player is missing a 'rosterUnit' key.
             TypeError: If the input object is not a list or dict.
+            KeyError: If `datacron_id` is given and a player has no `datacron`
+                collection or does not own that datacron.
         """
-        return await asyncio.to_thread(self.calc_player_stats, players)
+        return await asyncio.to_thread(self.calc_player_stats, players, datacron_id)
 
     @classmethod
     async def _async_fetch_game_data_from_github(

@@ -12,6 +12,9 @@ import httpx
 
 from ..exceptions import SwgohComlinkValueError
 from ..helpers._stat_data import STATS as _CANONICAL_STATS
+from ._datacron import STAT_PERCENT_OF_BASE as _MOD_STAT_PERCENT_OF_BASE
+from ._datacron import STAT_SPLITS as _MOD_STAT_SPLITS
+from ._datacron import resolve_datacron_stats
 
 # Largest game data body accepted, counted after any Content-Encoding is decoded
 # (gameData.json is about 1.6 MB).
@@ -19,22 +22,6 @@ _MAX_GAMEDATA_BYTES = 64 * 1024 * 1024
 _GAMEDATA_TIMEOUT = 30.0
 _SHA256_HEX = re.compile(r"[0-9a-f]{64}")
 
-
-# Mod stats that add their value to each of several stats (e.g. 41, Offense, adds to 6 and 7).
-_MOD_STAT_SPLITS: dict[int, tuple[str, ...]] = {
-    41: ("6", "7"),
-    42: ("8", "9"),
-    53: ("21", "22"),
-    54: ("35", "36"),
-}
-# Percent mod stats that add a share of the unit's base stat to each target stat, floored to 8 digits.
-_MOD_STAT_PERCENT_OF_BASE: dict[int, tuple[str, ...]] = {
-    48: ("6", "7"),
-    49: ("8", "9"),
-    55: ("1",),
-    56: ("28",),
-    57: ("5",),
-}
 
 # Character stat ids whose final value is added to another stat (Physical and Special Critical
 # Chance to Critical Rating, Physical and Special Critical Avoidance to Critical Avoidance Rating).
@@ -245,12 +232,17 @@ class StatCalc:
             len(self._mod_set_data),
         )
 
-    def calc_char_stats(self, unit: dict[str, Any]) -> dict[str, Any]:
+    def calc_char_stats(self, unit: dict[str, Any], datacron: dict[str, Any] | None = None) -> dict[str, Any]:
         """Calculate stats and GP for a character unit.
 
         Args:
             unit: Character object in either normalized (`defId`) or raw game
                 format (`definitionId`).
+            datacron: Optional datacron object, as found in a player's
+                `datacron` collection. When given, `stats` gains a `datacron`
+                bucket holding what that datacron adds to this unit. The bucket
+                is not summed into `final`; `final + datacron` is the unit's
+                value with the datacron applied, for every stat.
 
         Returns:
             The input unit with `stats` and `gp` keys added, containing the calculated stats and GP.
@@ -262,6 +254,8 @@ class StatCalc:
         stats: dict[str, Any] = self._get_char_raw_stats(char)
         stats = self._calculate_base_stats(stats, char["level"], char["defId"])
         stats["mods"] = self._calculate_mod_stats(stats["base"], char)
+        if datacron is not None:
+            stats["datacron"] = resolve_datacron_stats(datacron, char, self._unmodded_total(stats))
         stats = self._format_stats(stats, char["level"])
 
         stats = self._rename_stats(stats)
@@ -300,11 +294,15 @@ class StatCalc:
 
         return unit
 
-    def calc_roster_stats(self, units: Any) -> Any:
+    def calc_roster_stats(self, units: Any, datacron: dict[str, Any] | None = None) -> Any:
         """Calculate stats for all units in a roster-like payload.
 
         Args:
             units: Either a list of units or a legacy dict keyed by unit id.
+            datacron: Optional datacron object to apply to every character, as
+                in :meth:`calc_char_stats`. Ships get no `datacron` bucket and
+                their stats are unchanged: no game mode applies a datacron to
+                a fleet.
 
         Returns:
             Input object with `stats` and `gp` fields added for each unit. Ships
@@ -330,7 +328,7 @@ class StatCalc:
                     ships.append((unit, def_id, meta))
                 else:
                     crew[def_id] = unit
-                    unit = self.calc_char_stats(unit)
+                    unit = self.calc_char_stats(unit, datacron)
 
             for ship, def_id, meta in ships:
                 crw = [crew[cid] for cid in meta["crew"] if cid in crew]
@@ -360,7 +358,7 @@ class StatCalc:
                         "mods": unit.get("equippedStatMod"),
                         "skills": unit.get("skill", []),
                     }
-                    temp_unit = self.calc_char_stats(temp_unit)
+                    temp_unit = self.calc_char_stats(temp_unit, datacron)
                     if "stats" in temp_unit:
                         unit["stats"] = temp_unit["stats"]
                     if "gp" in temp_unit:
@@ -369,12 +367,18 @@ class StatCalc:
         return units
 
     def calc_player_stats(
-        self, players: dict[str, Any] | list[dict[str, Any]]
+        self, players: dict[str, Any] | list[dict[str, Any]], datacron_id: str | None = None
     ) -> dict[str, Any] | list[dict[str, Any]]:
         """Calculate stats for one or more player payloads.
 
         Args:
             players: One player object, or a list of player objects, each with a `rosterUnit` element.
+            datacron_id: Optional id of a datacron in each player's own
+                `datacron` collection. When given, every character gains a
+                `datacron` stat bucket, as in :meth:`calc_char_stats`. This
+                method takes an id because the collection to look it up in is
+                part of the player payload; :meth:`calc_roster_stats` and
+                :meth:`calc_char_stats` take the datacron object itself.
 
         Returns:
             The input object with `stats` and `gp` fields added for each player's roster.
@@ -382,6 +386,8 @@ class StatCalc:
         Raises:
             RuntimeError: If a dict player is missing a 'rosterUnit' key.
             TypeError: If the input object is not a list or dict.
+            KeyError: If `datacron_id` is given and a player has no `datacron`
+                collection or does not own that datacron.
         """
         if not isinstance(players, (list, dict)):
             raise TypeError("Expected a list or dict of players")
@@ -391,12 +397,38 @@ class StatCalc:
 
         if isinstance(players, list):
             for player in players:
-                self.calc_roster_stats(player.get("rosterUnit"))
+                self.calc_roster_stats(player.get("rosterUnit"), self._select_datacron(player, datacron_id))
             return players
         if "rosterUnit" not in players:
             raise RuntimeError("Expected a dict with a 'rosterUnit' key")
-        self.calc_roster_stats(players["rosterUnit"])
+        self.calc_roster_stats(players["rosterUnit"], self._select_datacron(players, datacron_id))
         return players
+
+    @staticmethod
+    def _select_datacron(player: dict[str, Any], datacron_id: str | None) -> dict[str, Any] | None:
+        """Return the datacron *datacron_id* from *player*'s collection, or None if no id is given."""
+        if datacron_id is None:
+            return None
+        collection = player.get("datacron")
+        if collection is None:
+            # A player who owns no datacrons reports an empty list, not a missing key.
+            raise KeyError("Player payload has no 'datacron' collection to look the datacron id up in")
+        for datacron in collection:
+            if datacron.get("id") == datacron_id:
+                return datacron
+        raise KeyError(f"Datacron {datacron_id!r} is not among the player's {len(collection)} datacrons")
+
+    @staticmethod
+    def _unmodded_total(stats: dict[str, Any]) -> dict[str, float]:
+        """Return the per-stat sum of base and gear, excluding mods, in unscaled space.
+
+        Datacron percentages resolve against this total; in-game readings show
+        that mods do not count toward it.
+        """
+        total = dict(stats["base"])
+        for stat_id, value in stats.get("gear", {}).items():
+            total[stat_id] = total.get(stat_id, 0) + value
+        return total
 
     def calc_char_gp(self, char: dict[str, Any]) -> int:
         """Calculate GP for a character.
@@ -871,6 +903,9 @@ class StatCalc:
             if mods:
                 for stat_id, value in mods.items():
                     mods[stat_id] = value * scale
+            if datacron := stats.get("datacron"):
+                for stat_id, value in datacron.items():
+                    datacron[stat_id] = value * scale
 
         if self._FIXED_PERCENT_VALS or self._FIXED_GAME_STYLE:
             percent_scale = scale * 1e8
@@ -920,6 +955,14 @@ class StatCalc:
                     mod_values = stats["mods"] or {}
                     stat_ids |= dict.fromkeys(stats["mods"])
                     gs_stats["mods"] = stats["mods"]
+                if "datacron" in stats:
+                    # Kept beside final, never summed into it, and keyed the way final is so the
+                    # two can be added stat by stat.
+                    datacron_values: dict[str, Any] = {}
+                    for stat_id, value in stats["datacron"].items():
+                        key = _FLAT_STAT_IDS.get(stat_id, stat_id)
+                        datacron_values[key] = datacron_values.get(key, 0) + value
+                    gs_stats["datacron"] = datacron_values
 
                 for stat_id in stat_ids:
                     key = _FLAT_STAT_IDS.get(stat_id, stat_id)
@@ -957,8 +1000,9 @@ class StatCalc:
         """Convert each flat stat to a percent with its converter, in order.
 
         The base value becomes the percent of the base flat value. A ship's crew value, or a
-        character's gear and then mods value, becomes the percent it adds on top of the
-        values before it.
+        character's gear, mods and then datacron value, becomes the percent it adds on top
+        of the values before it. The datacron comes last, so ``final + datacron`` is the
+        converted value of the whole flat total.
         """
         # The stat dicts are only updated in place, so they are looked up once for all conversions.
         base = stats["base"]
@@ -966,6 +1010,7 @@ class StatCalc:
         crew = stats.get("crew")
         gear = stats.get("gear")
         mods = stats.get("mods")
+        datacron = stats.get("datacron")
         for sid, convert_func in conversions:
             flat = base.get(sid, 0)
             percent = convert_func(flat)
@@ -984,7 +1029,12 @@ class StatCalc:
                 last = percent
             if mods and (mod_value := mods.get(sid, 0)):
                 flat = flat + mod_value
-                mods[sid] = convert_func(flat) - last
+                percent = convert_func(flat)
+                mods[sid] = percent - last
+                last = percent
+            if datacron and (datacron_value := datacron.get(sid, 0)):
+                flat = flat + datacron_value
+                datacron[sid] = convert_func(flat) - last
 
     def _calc_char_gp(self, char: dict[str, Any]) -> int:
         assert self._gp_tables is not None  # type narrowing: set_game_data() set it; _require_game_data() ran
