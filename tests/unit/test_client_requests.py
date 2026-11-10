@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import inspect
 import json
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -257,6 +258,43 @@ async def test_get_guild_unwraps_guild_key(
     httpx_mock.add_response(json=response)
 
     assert await call(comlink, "get_guild", guild_id="guild-1") == expected
+
+
+GAME_DATA_RESPONSE = {
+    "units": [{"id": "U1"}],
+    "skill": [],
+    "category": {},
+    "guildBanner": None,
+    "requestSegment": 0,
+    "version": "",
+}
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "expected"),
+    [
+        pytest.param({}, GAME_DATA_RESPONSE, id="default-keeps-everything"),
+        pytest.param({"strip_empty": False}, GAME_DATA_RESPONSE, id="false-keeps-everything"),
+        pytest.param(
+            {"strip_empty": True},
+            {"units": [{"id": "U1"}], "requestSegment": 0, "version": ""},
+            id="true-drops-empty-and-null-collections-only",
+        ),
+    ],
+)
+async def test_get_game_data_strip_empty(
+    comlink: Client, call: Call, httpx_mock: HTTPXMock, kwargs: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    httpx_mock.add_response(json=GAME_DATA_RESPONSE)
+
+    assert await call(comlink, "get_game_data", version="v1", items="UNITS", **kwargs) == expected
+
+
+async def test_get_game_data_strip_empty_is_keyword_only(comlink: Client) -> None:
+    parameter = inspect.signature(comlink.get_game_data).parameters["strip_empty"]
+
+    assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+    assert parameter.default is False
 
 
 @pytest.mark.parametrize(

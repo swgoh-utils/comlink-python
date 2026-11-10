@@ -650,6 +650,20 @@ class SwgohComlinkBase:
         return payload
 
     @staticmethod
+    def _strip_empty_collections(game_data: dict[str, Any]) -> dict[str, Any]:
+        """Return ``game_data`` without the keys whose value is ``None`` or an empty list or dict.
+
+        ``/data`` returns every collection key, populating only the requested ones: unrequested list
+        collections come back as ``[]`` and unrequested single-object collections as ``None``. Falsy
+        scalars (``0``, ``False``, ``""``) are kept.
+        """
+        return {
+            key: value
+            for key, value in game_data.items()
+            if value is not None and (value or not isinstance(value, (list, dict)))
+        }
+
+    @staticmethod
     def _build_unit_stats_endpoint(flags: list[str] | None = None, language: str | None = None) -> str:
         """Build the stats endpoint string with query parameters.
 
