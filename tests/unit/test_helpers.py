@@ -92,6 +92,7 @@ from swgoh_comlink.helpers._localization import (
     parse_swgoh_string,
 )
 from swgoh_comlink.helpers._omicron import (
+    get_omicron_breakdown,
     get_omicron_skill_tier,
     get_omicron_skills,
     get_tw_omicrons,
@@ -333,6 +334,9 @@ def test_get_omicron_skill_tier(skill, expected):
         pytest.param(_SKILL_LIST, {"roster_unit_skill": {"id": "skill_A", "tier": 1}}, True, id="roster-unit-skill"),
         pytest.param(_SKILL_LIST, {"skill_id": "nonexistent", "skill_tier": 1}, False, id="not-in-list"),
         pytest.param([_SKILL_LIST[1]], {"skill_id": "skill_B", "skill_tier": 1}, False, id="skill-without-omicron"),
+        # Tier 0 is a freshly unlocked skill, not a missing tier; skill_C has its omicron at tier index 0.
+        pytest.param(_SKILL_LIST, {"skill_id": "skill_A", "skill_tier": 0}, False, id="direct-tier-zero"),
+        pytest.param(_SKILL_LIST, {"roster_unit_skill": {"id": "skill_C", "tier": 0}}, True, id="roster-tier-zero"),
     ],
 )
 def test_is_omicron_skill(skills, kwargs, expected):
@@ -393,6 +397,271 @@ class TestGetUnitFromSkill:
 
         with pytest.raises(SwgohComlinkValueError, match="string"):
             get_unit_from_skill([], cast(Any, 123))
+
+
+# ── _omicron.get_omicron_breakdown ─────────────────────────────────────
+
+
+def _omi_skill(skill_id: str, mode: Any, *, omicron: int | None, tiers: int = 7, ability: str | None = None):
+    """A game data 'skill' with *tiers* upgrade tiers; *omicron* is the omicron's tier index."""
+    skill: dict[str, Any] = {
+        "id": skill_id,
+        "omicronMode": mode,
+        "tier": [{"isZetaTier": False, "isOmicronTier": i == omicron} for i in range(tiers)],
+    }
+    if ability is not None:
+        skill["abilityReference"] = ability
+    return skill
+
+
+# Modelled on live JEDIKNIGHTCAL game data. uniqueskill_JEDIKNIGHTCAL01 is a zeta that carries mode 1, the
+# value every skill without an omicron has, so it is not an omicron.
+_BREAKDOWN_SKILLS = [
+    _omi_skill("specialskill_JEDIKNIGHTCAL03", 7, omicron=6, ability="specialability_jediknightcal03"),
+    _omi_skill("uniqueskill_JEDIKNIGHTCAL01", 1, omicron=None),
+    # Star-gated: missing from a roster until the unit reaches the rarity that unlocks it.
+    _omi_skill("uniqueskill_JEDIKNIGHTCAL02", 8, omicron=3, tiers=4),
+    # A mode OMICRON_MODE has no label for (13 is PVE_EVENT_OMICRON).
+    _omi_skill("specialskill_OTHERUNIT01", 13, omicron=1, tiers=2),
+]
+_JKCAL = {"baseId": "JEDIKNIGHTCAL", "nameKey": "UNIT_JEDIKNIGHTCAL_NAME", "obtainable": True, "obtainableTime": "0"}
+_JKCAL_SKILLS = [{"skillId": s} for s in ("specialskill_JEDIKNIGHTCAL03", "uniqueskill_JEDIKNIGHTCAL01")]
+# The 'units' collection has a row per unit per rarity, so a baseId recurs.
+_BREAKDOWN_UNITS: list[dict[str, Any]] = [
+    {**_JKCAL, "rarity": 7, "skillReference": [*_JKCAL_SKILLS, {"skillId": "uniqueskill_JEDIKNIGHTCAL02"}]},
+    {**_JKCAL, "rarity": 1, "skillReference": _JKCAL_SKILLS},
+    {
+        "baseId": "OTHERUNIT",
+        "nameKey": "UNIT_OTHERUNIT_NAME",
+        "skillReference": [{"skillId": "specialskill_OTHERUNIT01"}],
+    },
+]
+_BREAKDOWN_ABILITIES = [
+    {"id": "specialability_jediknightcal03", "nameKey": "SPECIALABILITY_JEDIKNIGHTCAL03_NAME"},
+    {"id": "unrelated_ability", "nameKey": "UNRELATED_NAME"},
+]
+
+
+def _cal_owner(player_id: str, name: str, *skills: dict[str, Any]) -> dict[str, Any]:
+    """A player profile owning JEDIKNIGHTCAL with the given roster skills."""
+    return {
+        "playerId": player_id,
+        "name": name,
+        "rosterUnit": [{"definitionId": "JEDIKNIGHTCAL:SEVEN_STAR", "skill": list(skills)}],
+    }
+
+
+_APPLIED = _cal_owner("p1", "Applied", {"id": "specialskill_JEDIKNIGHTCAL03", "tier": 6})
+_ONE_SHORT = _cal_owner("p2", "OneShort", {"id": "specialskill_JEDIKNIGHTCAL03", "tier": 5})
+# Owns JEDIKNIGHTCAL, but uniqueskill_JEDIKNIGHTCAL02 is not in the roster at all.
+_GATED = _cal_owner("p3", "Gated", {"id": "specialskill_JEDIKNIGHTCAL03", "tier": 6})
+_NO_UNIT = {"playerId": "p4", "name": "NoUnit", "rosterUnit": []}
+
+
+def _omi_row(breakdown: Any, skill_id: str) -> Any:
+    return next(row for mode in breakdown["modes"] for row in mode["skills"] if row["skill_id"] == skill_id)
+
+
+def _with_modes(**modes: Any) -> list[dict[str, Any]]:
+    """_BREAKDOWN_SKILLS with the omicronMode of the named skills replaced; None removes the field."""
+    skills = [dict(skill) for skill in _BREAKDOWN_SKILLS]
+    for skill in skills:
+        if skill["id"] in modes:
+            if (mode := modes[skill["id"]]) is None:
+                del skill["omicronMode"]
+            else:
+                skill["omicronMode"] = mode
+    return skills
+
+
+def test_omicron_breakdown_lists_every_omicron_and_only_omicrons():
+    breakdown = get_omicron_breakdown([], _BREAKDOWN_SKILLS, _BREAKDOWN_UNITS)
+    assert breakdown["total_members"] == 0
+    assert {row["skill_id"] for mode in breakdown["modes"] for row in mode["skills"]} == {
+        "specialskill_JEDIKNIGHTCAL03",
+        "uniqueskill_JEDIKNIGHTCAL02",
+        "specialskill_OTHERUNIT01",
+    }
+
+
+@pytest.mark.parametrize(
+    ("profiles", "units", "skill_id", "applied", "owned_not_applied", "not_owned"),
+    [
+        pytest.param([_APPLIED], _BREAKDOWN_UNITS, "specialskill_JEDIKNIGHTCAL03", ["p1"], [], 0, id="at-omicron-tier"),
+        pytest.param(
+            [_ONE_SHORT], _BREAKDOWN_UNITS, "specialskill_JEDIKNIGHTCAL03", [], [("p2", 5)], 0, id="one-tier-short"
+        ),
+        # Owning the unit decides ownership, not whether the skill is listed.
+        pytest.param([_GATED], _BREAKDOWN_UNITS, "uniqueskill_JEDIKNIGHTCAL02", [], [("p3", None)], 0, id="star-gated"),
+        pytest.param([_NO_UNIT], _BREAKDOWN_UNITS, "specialskill_JEDIKNIGHTCAL03", [], [], 1, id="unit-not-owned"),
+        pytest.param(
+            [{"playerId": "p9", "name": "Fresh"}], _BREAKDOWN_UNITS, "specialskill_JEDIKNIGHTCAL03", [], [], 1,
+            id="no-roster",
+        ),
+        # A listed skill is unlocked, and proto3 leaves out a tier of 0.
+        pytest.param(
+            [_cal_owner("p5", "Fresh", {"id": "specialskill_JEDIKNIGHTCAL03"})], _BREAKDOWN_UNITS,
+            "specialskill_JEDIKNIGHTCAL03", [], [("p5", 0)], 0, id="tier-left-out",
+        ),
+        # No unit references the skill, so a listed skill stands in for owning the unit.
+        pytest.param([_APPLIED, _NO_UNIT], [], "specialskill_JEDIKNIGHTCAL03", ["p1"], [], 1, id="unknown-unit"),
+    ],
+)  # fmt: skip
+def test_omicron_breakdown_cohorts(profiles, units, skill_id, applied, owned_not_applied, not_owned):
+    row = _omi_row(get_omicron_breakdown(profiles, _BREAKDOWN_SKILLS, units), skill_id)
+    assert [m["player_id"] for m in row["applied"]] == applied
+    assert [(m["player_id"], m["tier"]) for m in row["owned_not_applied"]] == owned_not_applied
+    assert row["not_owned_count"] == not_owned
+
+
+def test_omicron_breakdown_cohorts_sum_to_total_members():
+    breakdown = get_omicron_breakdown([_APPLIED, _ONE_SHORT, _GATED, _NO_UNIT], _BREAKDOWN_SKILLS, _BREAKDOWN_UNITS)
+    assert breakdown["total_members"] == 4
+    for mode in breakdown["modes"]:
+        for row in mode["skills"]:
+            assert len(row["applied"]) + len(row["owned_not_applied"]) + row["not_owned_count"] == 4, row["skill_id"]
+
+
+_JKCAL03, _JKCAL02, _OTHER01 = "specialskill_JEDIKNIGHTCAL03", "uniqueskill_JEDIKNIGHTCAL02", "specialskill_OTHERUNIT01"
+
+
+@pytest.mark.parametrize(
+    ("skills", "kwargs", "expected"),
+    [
+        pytest.param(_BREAKDOWN_SKILLS, {}, [(7, "TB"), (8, "TW"), (13, "Mode 13")], id="numbers"),
+        # enums=True sends the member name.
+        pytest.param(
+            _with_modes(
+                **{
+                    _JKCAL03: "TERRITORY_BATTLE_BOTH_OMICRON",
+                    _JKCAL02: "TERRITORY_WAR_OMICRON",
+                    _OTHER01: "PVE_EVENT_OMICRON",
+                }
+            ),
+            {},
+            [(7, "TB"), (8, "TW"), (13, "Mode 13")],
+            id="enum-names",
+        ),
+        pytest.param(
+            _with_modes(**{_JKCAL02: "OMICRONMODE_TERRITORYWAROMICRON", _OTHER01: "13"}),
+            {},
+            [(7, "TB"), (8, "TW"), (13, "Mode 13")],
+            id="type-prefixed-and-numeric-string",
+        ),
+        # A mode added by a newer game version keeps its name and sorts after the numbered modes.
+        pytest.param(
+            _with_modes(**{_JKCAL03: "NEW_EVENT_OMICRON"}),
+            {},
+            [(8, "TW"), (13, "Mode 13"), ("NEW_EVENT_OMICRON", "Mode NEW_EVENT_OMICRON")],
+            id="unknown-name",
+        ),
+        # proto3 leaves out the zero enum value.
+        pytest.param(_with_modes(**{_OTHER01: None}), {}, [(0, "Default"), (7, "TB"), (8, "TW")], id="mode-left-out"),
+        pytest.param(
+            _BREAKDOWN_SKILLS,
+            {"mode_names": {13: "PVE Event"}},
+            [(7, "Mode 7"), (8, "Mode 8"), (13, "PVE Event")],
+            id="custom-labels",
+        ),
+    ],
+)
+def test_omicron_breakdown_modes(skills, kwargs, expected):
+    breakdown = get_omicron_breakdown([_APPLIED], skills, _BREAKDOWN_UNITS, **kwargs)
+    assert [(mode["mode"], mode["mode_name"]) for mode in breakdown["modes"]] == expected
+
+
+def test_omicron_breakdown_orders_skills_by_applied_count_then_members_by_name():
+    # Both omicrons in one mode: the one more players applied comes first, ahead of skill id order.
+    skills = _with_modes(**{_JKCAL03: 8})
+    alice = _cal_owner("pz", "Alice", {"id": _JKCAL02, "tier": 3})
+    bob = _cal_owner("pa", "Bob", {"id": _JKCAL02, "tier": 3})
+    breakdown = get_omicron_breakdown([bob, _APPLIED, alice], skills, _BREAKDOWN_UNITS)
+    rows = next(mode for mode in breakdown["modes"] if mode["mode"] == 8)["skills"]
+    assert [row["skill_id"] for row in rows] == [_JKCAL02, _JKCAL03]
+    assert [m["player_name"] for m in rows[0]["applied"]] == ["Alice", "Bob"]
+
+
+# A skill referenced by several base ids, as in live game data: a non-obtainable PVE_ mirror listed first, an
+# event variant whose obtainableTime is in the future, and the playable unit.
+_PVE_MIRROR = {"baseId": "PVE_JEDIKNIGHTCAL", "nameKey": "PVE_NAME", "rarity": 8, "obtainable": False}
+_EVENT_VARIANT = {"baseId": "JEDIKNIGHTCAL_EVENT", "rarity": 7, "obtainable": True, "obtainableTime": "2396822400000"}
+
+
+@pytest.mark.parametrize(
+    ("units", "base_id", "not_owned"),
+    [
+        pytest.param([_PVE_MIRROR, _EVENT_VARIANT, {**_JKCAL, "rarity": 7}], "JEDIKNIGHTCAL", 0, id="playable-wins"),
+        pytest.param(
+            [_PVE_MIRROR, {**_JKCAL, "rarity": "SEVEN_STAR"}], "JEDIKNIGHTCAL", 0, id="playable-wins-enum-rarity"
+        ),
+        # With no playable unit, the first unit read wins and the owner of JEDIKNIGHTCAL is not counted.
+        pytest.param([_PVE_MIRROR, _EVENT_VARIANT], "PVE_JEDIKNIGHTCAL", 1, id="none-playable"),
+    ],
+)
+def test_omicron_breakdown_resolves_the_playable_unit(units, base_id, not_owned):
+    units = [{**unit, "skillReference": [{"skillId": _JKCAL03}]} for unit in units]
+    row = _omi_row(get_omicron_breakdown([_APPLIED], _BREAKDOWN_SKILLS, units), _JKCAL03)
+    assert row["unit_base_id"] == base_id
+    assert row["not_owned_count"] == not_owned
+
+
+_CAL_NAMES = {
+    "UNIT_JEDIKNIGHTCAL_NAME": "[c][ffff33]Cal Kestis[-][/c]",
+    "SPECIALABILITY_JEDIKNIGHTCAL03_NAME": "Impetuous Assault",
+}
+
+
+@pytest.mark.parametrize(
+    ("skill_id", "kwargs", "expected"),
+    [
+        pytest.param(_JKCAL03, {}, (None, None, "UNIT_JEDIKNIGHTCAL_NAME", None), id="keys-only"),
+        # The omicron's name comes from the ability, never from the skill's placeholder nameKey.
+        pytest.param(
+            _JKCAL03,
+            {"ability_list": _BREAKDOWN_ABILITIES},
+            ("SPECIALABILITY_JEDIKNIGHTCAL03_NAME", None, "UNIT_JEDIKNIGHTCAL_NAME", None),
+            id="ability-key",
+        ),
+        pytest.param(
+            _JKCAL03,
+            {"ability_list": _BREAKDOWN_ABILITIES, "localization": _CAL_NAMES},
+            ("SPECIALABILITY_JEDIKNIGHTCAL03_NAME", "Impetuous Assault", "UNIT_JEDIKNIGHTCAL_NAME", "Cal Kestis"),
+            id="localized",
+        ),
+        pytest.param(
+            _JKCAL02,
+            {"ability_list": _BREAKDOWN_ABILITIES, "localization": _CAL_NAMES},
+            (None, None, "UNIT_JEDIKNIGHTCAL_NAME", "Cal Kestis"),
+            id="no-ability-reference",
+        ),
+    ],
+)
+def test_omicron_breakdown_names(skill_id, kwargs, expected):
+    row = _omi_row(get_omicron_breakdown([_APPLIED], _BREAKDOWN_SKILLS, _BREAKDOWN_UNITS, **kwargs), skill_id)
+    assert (row["skill_name_key"], row["skill_name"], row["unit_name_key"], row["unit_name"]) == expected
+
+
+@pytest.mark.parametrize(
+    ("call", "match"),
+    [
+        pytest.param(lambda: get_omicron_breakdown(cast(Any, "bad"), [], []), "player_profiles", id="profiles"),
+        pytest.param(lambda: get_omicron_breakdown([], cast(Any, "bad"), []), "skill_list", id="skills"),
+        pytest.param(lambda: get_omicron_breakdown([], [], cast(Any, "bad")), "unit_list", id="units"),
+        pytest.param(
+            lambda: get_omicron_breakdown([], [], [], ability_list=cast(Any, "bad")), "ability_list", id="abilities"
+        ),
+        pytest.param(
+            lambda: get_omicron_breakdown([], [], [], localization=cast(Any, "bad")), "localization", id="localization"
+        ),
+        pytest.param(lambda: get_omicron_breakdown([], [], [], mode_names=cast(Any, 8)), "mode_names", id="mode-names"),
+        pytest.param(lambda: get_omicron_breakdown(cast(Any, ["nope"]), [], []), "dictionary", id="profile-not-dict"),
+        pytest.param(lambda: get_omicron_breakdown([{"name": "Anon"}], [], []), "playerId", id="no-player-id"),
+        pytest.param(lambda: get_omicron_breakdown([_APPLIED, _APPLIED], [], []), "duplicate", id="duplicate-player"),
+    ],
+)
+def test_omicron_breakdown_rejects_invalid_input(call, match):
+    with pytest.raises(SwgohComlinkValueError, match=match):
+        call()
 
 
 # ── _game_data ──────────────────────────────────────────────────────────

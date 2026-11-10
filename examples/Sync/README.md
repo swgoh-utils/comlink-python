@@ -13,6 +13,7 @@ These examples use the `SwgohComlink` synchronous client. They run in a standard
 | `get_game_data.py` | Retrieve game data collections (all, by segment, or by name) |
 | `get_guild.py` | Look up guild info from a player's ally code |
 | `get_guild_leaderboard.py` | Get guild-level leaderboards (TW, raids, GP, TB) |
+| `guild_omicron_breakdown.py` | Report omicron adoption across a guild by game mode |
 | `get_language_bundle.py` | Retrieve and parse a specific language bundle |
 | `get_latest_game_data_version.py` | Get current game data and language version strings |
 | `get_location_bundle.py` | Retrieve the full localization bundle (zipped or unzipped) |

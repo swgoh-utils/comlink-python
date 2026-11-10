@@ -292,6 +292,7 @@ The [`examples/`](https://github.com/swgoh-utils/comlink-python/tree/main/exampl
 | [`get_gac_brackets.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_gac_brackets.py) | Scan GAC brackets and search for a player |
 | [`calc_stats_local.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/calc_stats_local.py) | Calculate character stats locally with `StatCalc` |
 | [`search_for_guilds.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/search_for_guilds.py) | Search for guilds by name or criteria |
+| [`guild_omicron_breakdown.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/guild_omicron_breakdown.py) | Report omicron adoption across a guild by game mode |
 
 ### Asynchronous ([`examples/Async/`](https://github.com/swgoh-utils/comlink-python/tree/main/examples/Async))
 
@@ -301,6 +302,7 @@ The [`examples/`](https://github.com/swgoh-utils/comlink-python/tree/main/exampl
 | [`concurrent_requests.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/concurrent_requests.py) | Fetch multiple players in parallel with `asyncio.gather()` |
 | [`streaming_guild_roster.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/streaming_guild_roster.py) | Fetch all guild members concurrently with `asyncio.TaskGroup` |
 | [`streaming_guild_roster_advanced.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/streaming_guild_roster_advanced.py) | Production-quality guild roster fetch with CLI args and retry logic |
+| [`guild_omicron_breakdown.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/guild_omicron_breakdown.py) | Report omicron adoption across a guild, fetching member profiles concurrently |
 | [`calc_stats_local.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/calc_stats_local.py) | Calculate character stats locally with `StatCalcAsync` |
 
 See the [full examples listing](https://github.com/swgoh-utils/comlink-python/blob/main/examples/README.md) for all available scripts and usage details.

@@ -16,6 +16,7 @@ These examples use `SwgohComlink` — the synchronous client. Simple blocking ca
 | [`get_gac_leaderboard.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_gac_leaderboard.py) | Get GAC bracket or league/division leaderboards |
 | [`get_gac_brackets.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_gac_brackets.py) | Scan GAC brackets for a league and search for a player |
 | [`get_guild_leaderboard.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_guild_leaderboard.py) | Get guild-level leaderboards (TW, raids, GP, TB) |
+| [`guild_omicron_breakdown.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/guild_omicron_breakdown.py) | Report omicron adoption across a guild by game mode |
 | [`get_language_bundle.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_language_bundle.py) | Retrieve and parse a specific language bundle |
 | [`get_location_bundle.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_location_bundle.py) | Retrieve the full localization bundle (zipped or unzipped) |
 | [`get_location_bundle_adv.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_location_bundle_adv.py) | Advanced localization bundle retrieval |
@@ -46,6 +47,7 @@ These examples use `SwgohComlinkAsync` — the asynchronous client. Supports con
 | [`get_gac_leaderboard.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/get_gac_leaderboard.py) | Get GAC bracket or league/division leaderboards |
 | [`get_gac_brackets.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/get_gac_brackets.py) | Scan GAC brackets for a league and search for a player (parallel batches) |
 | [`get_guild_leaderboard.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/get_guild_leaderboard.py) | Get guild-level leaderboards (TW, raids, GP, TB) |
+| [`guild_omicron_breakdown.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/guild_omicron_breakdown.py) | Report omicron adoption across a guild by game mode, fetching member profiles concurrently |
 | [`get_language_bundle.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/get_language_bundle.py) | Retrieve and parse a specific language bundle |
 | [`get_location_bundle.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/get_location_bundle.py) | Retrieve the full localization bundle (zipped or unzipped) |
 | [`get_latest_game_data_version.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/get_latest_game_data_version.py) | Get current game data and language version strings |
