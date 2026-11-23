@@ -23,6 +23,10 @@ async def main():
         # The same call without the PVE units
         units_no_pve = await cl.get_game_data(items=DataItems.UNITS, include_pve_units=False)
 
+        # The response always holds every collection key, empty or null when not requested.
+        # strip_empty=True drops those, leaving only the collections that came back with data.
+        units_only = await cl.get_game_data(items=DataItems.UNITS, strip_empty=True)
+
         # Combine collections with `|` (not `+`, which breaks for aliased members)
         skill_equipment = await cl.get_game_data(items=DataItems.SKILL | DataItems.EQUIPMENT)
 

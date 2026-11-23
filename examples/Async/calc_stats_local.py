@@ -2,6 +2,9 @@
 calc_stats_local.py
 Example usage of async StatCalcAsync support.
 
+The acalc_* methods run the calculation in a worker thread so it does not
+block the event loop.
+
 Demonstrates:
   1. Basic character stats (minimal unit definition)
   2. Character with skills and mods (normalized format)
@@ -26,7 +29,7 @@ async def main():
     }
 
     calc = await StatCalcAsync.create()
-    stats = calc.calc_char_stats(basic_unit)
+    stats = await calc.acalc_char_stats(basic_unit)
     print("=== Basic unit (no skills/mods) ===")
     print(stats)
 
@@ -65,17 +68,17 @@ async def main():
         ],
     }
 
-    stats = calc.calc_char_stats(unit_with_skills_and_mods)
+    stats = await calc.acalc_char_stats(unit_with_skills_and_mods)
     print("\n=== Unit with skills and mods ===")
     print(stats)
 
     # --- Example 3: Player roster stats from Comlink API ---
     # Requires a running Comlink service.
-    # calc_player_stats accepts the raw player payload from get_player().
+    # acalc_player_stats accepts the raw player payload from get_player().
 
     # async with SwgohComlinkAsync() as comlink:
     #     player = await comlink.get_player(allycode=123456789)
-    #     calc.calc_player_stats(player)
+    #     await calc.acalc_player_stats(player)
     #     for unit in player["rosterUnit"][:3]:
     #         name = unit["definitionId"].split(":")[0]
     #         gp = unit.get("gp", "N/A")
@@ -85,7 +88,7 @@ async def main():
     # async with SwgohComlinkAsync() as comlink:
     #     game_data = await GameDataBuilderAsync(comlink).build()
     #     calc = StatCalcAsync(game_data=game_data)
-    #     stats = calc.calc_char_stats(basic_unit)
+    #     stats = await calc.acalc_char_stats(basic_unit)
     #     print("From Comlink:", stats)
 
 

@@ -178,7 +178,7 @@ calc = StatCalc(game_data=my_game_data_dict)
 
 ### Async usage (`StatCalcAsync`)
 
-`StatCalcAsync` provides an async factory method for fetching game data without blocking the event loop. All calculation methods are inherited from `StatCalc` and remain synchronous (they are pure computation).
+`StatCalcAsync` provides an async factory method for fetching game data without blocking the event loop. Its `acalc_char_stats`, `acalc_ship_stats`, `acalc_roster_stats` and `acalc_player_stats` methods run the matching `calc_*` method in a worker thread, so a large roster does not stall the event loop. The inherited synchronous `calc_*` methods still work but block the loop while they run.
 
 ```python
 from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync
@@ -187,7 +187,7 @@ async with SwgohComlinkAsync() as comlink:
     calc = await StatCalcAsync.create()  # fetches game data from GitHub async
 
     player = await comlink.get_player(allycode=245866537)
-    calc.calc_roster_stats(player['rosterUnit'])
+    await calc.acalc_roster_stats(player['rosterUnit'])
 ```
 
 With pre-loaded game data (no async fetch needed):
@@ -216,8 +216,8 @@ Constructor parameters for `SwgohComlink` and `SwgohComlinkAsync`:
 |-----------|------|---------|-------------|
 | `url` | `str` | `http://localhost:3000` | URL where swgoh-comlink is running |
 | `stats_url` | `str` | `http://localhost:3223` | URL where swgoh-stats service is running |
-| `access_key` | `str` | `None` | HMAC public key. Also reads from `ACCESS_KEY` env var |
-| `secret_key` | `str` | `None` | HMAC private key. Also reads from `SECRET_KEY` env var |
+| `access_key` | `str` | `None` | HMAC public key. Also reads from `COMLINK_ACCESS_KEY` env var (`ACCESS_KEY` is deprecated) |
+| `secret_key` | `str` | `None` | HMAC private key. Also reads from `COMLINK_SECRET_KEY` env var (`SECRET_KEY` is deprecated) |
 | `host` | `str` | `None` | Server hostname (overrides `url` and `stats_url`) |
 | `port` | `int` | `None` | Comlink TCP port. With `host` it defaults to `3000`; without `host` it replaces the port in `url` |
 | `stats_port` | `int` | `None` | Stats service TCP port. With `host` it defaults to `3223`; without `host` it replaces the port in `stats_url` |
@@ -263,7 +263,7 @@ Methods available on both `SwgohComlink` and `SwgohComlinkAsync` (async methods 
 | `get_guild(guild_id, include_recent_guild_activity_info, enums)` | Get guild data by guild ID |
 | `get_guilds_by_name(name, start_index, count, enums)` | Search guilds by name |
 | `get_guilds_by_criteria(search_criteria, start_index, count, enums)` | Search guilds by criteria |
-| `get_game_data(version, include_pve_units, request_segment, enums, items, device_platform)` | Get game data collections (select them with `items=DataItems...`) |
+| `get_game_data(version, include_pve_units, request_segment, enums, items, device_platform, *, strip_empty)` | Get game data collections (select them with `items=DataItems...`; `strip_empty=True` drops the empty ones) |
 | `get_game_metadata(client_specs, enums)` | Get current game and localization versions |
 | `get_localization(localization_id, locale, unzip, enums)` | Get localization bundles |
 | `get_enums(refresh)` | Get game data enums (cached per game data version) |
@@ -292,6 +292,7 @@ The [`examples/`](https://github.com/swgoh-utils/comlink-python/tree/main/exampl
 | [`get_gac_brackets.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/get_gac_brackets.py) | Scan GAC brackets and search for a player |
 | [`calc_stats_local.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/calc_stats_local.py) | Calculate character stats locally with `StatCalc` |
 | [`search_for_guilds.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/search_for_guilds.py) | Search for guilds by name or criteria |
+| [`guild_omicron_breakdown.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Sync/guild_omicron_breakdown.py) | Report omicron adoption across a guild by game mode |
 
 ### Asynchronous ([`examples/Async/`](https://github.com/swgoh-utils/comlink-python/tree/main/examples/Async))
 
@@ -301,6 +302,7 @@ The [`examples/`](https://github.com/swgoh-utils/comlink-python/tree/main/exampl
 | [`concurrent_requests.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/concurrent_requests.py) | Fetch multiple players in parallel with `asyncio.gather()` |
 | [`streaming_guild_roster.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/streaming_guild_roster.py) | Fetch all guild members concurrently with `asyncio.TaskGroup` |
 | [`streaming_guild_roster_advanced.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/streaming_guild_roster_advanced.py) | Production-quality guild roster fetch with CLI args and retry logic |
+| [`guild_omicron_breakdown.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/guild_omicron_breakdown.py) | Report omicron adoption across a guild, fetching member profiles concurrently |
 | [`calc_stats_local.py`](https://github.com/swgoh-utils/comlink-python/blob/main/examples/Async/calc_stats_local.py) | Calculate character stats locally with `StatCalcAsync` |
 
 See the [full examples listing](https://github.com/swgoh-utils/comlink-python/blob/main/examples/README.md) for all available scripts and usage details.

@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from json import JSONDecodeError, loads
 from typing import Any, cast
 
 import httpx
@@ -17,14 +16,16 @@ from ._base import (
     DEFAULT_TIMEOUT,
     GAME_DATA_TIMEOUT,
     SwgohComlinkBase,
+    _bounded_error_response,
     _CachedVersions,
+    _declared_length,
+    _lookup_name,
+    _PreparedRequest,
     param_alias,
 )
 from .exceptions import (
-    SwgohComlinkDecodeError,
     SwgohComlinkException,
     SwgohComlinkHTTPError,
-    SwgohComlinkRateLimitError,
     SwgohComlinkValueError,
 )
 from .helpers import Constants, DataItems
@@ -57,6 +58,14 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         retry (RetryPolicy | None): Keyword-only. Retry rate refusals and HTTP 503 responses, and optionally
             space calls to the same endpoint, as described by a
             :class:`~swgoh_comlink.retry.RetryPolicy`. [Default: None, one attempt per call and no waiting]
+        max_response_bytes (int | None): Keyword-only. Largest response body, in decoded bytes, accepted from any
+            endpoint except /data. A larger response raises ``SwgohComlinkValueError``; an HTTP error body is cut
+            to this size. [Default: None, no limit]
+        max_game_data_bytes (int | None): Keyword-only. The same limit for /data (``get_game_data``), whose
+            responses are far larger than any other endpoint's. [Default: None, no limit]
+        limits (httpx.Limits | None): Keyword-only. Connection pool limits for both underlying httpx clients,
+            such as ``httpx.Limits(keepalive_expiry=30)``. Timeouts are not affected.
+            [Default: None, the httpx defaults: 100 connections, 20 kept alive, idle ones closed after 5 s]
 
     Notes:
         If the 'host' parameter is provided, the 'url' and 'stats_url' parameters are ignored.
@@ -64,30 +73,35 @@ class SwgohComlinkAsync(SwgohComlinkBase):
     Examples:
         Basic usage::
 
+            comlink = SwgohComlinkAsync()
+            player = await comlink.get_player(allycode=123456789)
+
+        As a context manager::
+
             async with SwgohComlinkAsync() as comlink:
                 player = await comlink.get_player(allycode=123456789)
     """
 
     __comlink_type__ = "SwgohComlinkAsync"
+    _log = logger
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._version_lock = asyncio.Lock()
         self._enums_lock = asyncio.Lock()
-        connection_limits = httpx.Limits(keepalive_expiry=None)
         self.client = httpx.AsyncClient(
             base_url=self.url_base,
             headers={"Content-Type": "application/json"},
             verify=self.verify_ssl,
             timeout=DEFAULT_TIMEOUT,
-            limits=connection_limits,
+            **self._pool_limits,
         )
         self.stats_client = httpx.AsyncClient(
             base_url=self.stats_url_base,
             headers={"Content-Type": "application/json"},
             verify=self.verify_ssl,
             timeout=DEFAULT_TIMEOUT,
-            limits=connection_limits,
+            **self._pool_limits,
         )
 
     async def __aenter__(self) -> SwgohComlinkAsync:
@@ -97,7 +111,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         await self.aclose()
 
     async def aclose(self) -> None:
-        """Close the underlying async HTTP client connections."""
+        """Close the underlying HTTP client connections."""
         await self.client.aclose()
         await self.stats_client.aclose()
 
@@ -109,66 +123,41 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         stats: bool = False,
         timeout: float | None = None,
     ) -> dict[str, Any] | list[Any]:
-        """Send an async HTTP request to the comlink service.
+        """Send an HTTP request to the comlink service: the single gateway for all HTTP communication.
 
-        This is the single gateway for all HTTP communication.
-
-        Args:
-            method: HTTP method (``"GET"`` or ``"POST"``).
-            endpoint: API endpoint path.
-            payload: JSON body for the request (ignored for GET requests).
-            stats: If True, use the stats service client.
-            timeout: Per-request timeout override.
-
-        Returns:
-            Decoded JSON response (dict or list).
+        Each attempt waits for admission (pacing and rate holds), is sent, and on an HTTP error asks the
+        shared retry core in ``_base`` whether to try again, so both clients retry identically.
 
         Raises:
             SwgohComlinkHTTPError: When the service answers with an HTTP error status, after any retries
                 allowed by the client's retry policy. Subclasses identify rate refusals, HTTP 503 and 4xx.
             SwgohComlinkException: On any network or decoding error.
         """
-        policy = self.retry_policy
-        attempt = 1
-        extra = 0.0  # retry wait carried into the next pass, on top of its pacing slot
+        attempt, extra = 1, 0.0
         while True:
-            wait, release = self._pace_slot(endpoint, stats)
-            wait += extra
-            extra = 0.0
-            while True:
-                deadline = _retry._clock() + wait
-                if wait > 0:
-                    logger.debug("Pacing %s for %.2fs", endpoint, wait)
-                    try:
-                        await _retry._async_sleep(wait)
-                    except asyncio.CancelledError:
-                        release()
-                        raise
-                if not self._hold_changed(endpoint, stats, deadline):
-                    break
-                # A refusal arrived while this caller slept. Requeue behind the
-                # current hold, preserving spacing with other delayed callers.
-                release()
-                wait, release = self._pace_slot(endpoint, stats)
+            await self._admit(endpoint, stats, extra)
             try:
                 return await self._send(method, endpoint, payload, stats, timeout)
             except SwgohComlinkHTTPError as exc:
-                delay = None if policy is None else policy.retry_delay(exc, attempt)
-                if policy is None or delay is None:
-                    if policy is not None and attempt > 1:
-                        logger.info("%s on %s; giving up after %d attempts", type(exc).__name__, endpoint, attempt)
+                extra = self._retry_wait(exc, attempt, endpoint, stats)
+                if extra is None:
                     raise
-                logger.info(
-                    "%s on %s (attempt %d of %d); retrying in %.1fs",
-                    type(exc).__name__,
-                    endpoint,
-                    attempt,
-                    policy.attempts,
-                    delay,
-                )
-                held = isinstance(exc, SwgohComlinkRateLimitError) and self._hold_endpoint(endpoint, stats, delay)
-                extra = policy.jitter_extra(delay) + (0.0 if held else delay)
                 attempt += 1
+
+    async def _admit(self, endpoint: str, stats: bool, extra: float) -> None:
+        """Sleep until *endpoint* admits the next attempt.
+
+        Any exception raised while sleeping (a ``KeyboardInterrupt`` or, in the async client, a cancelled task)
+        gives the reserved slot back before it propagates, so an interrupted caller never leaves a gap that
+        later callers wait out.
+        """
+        admission = self._admission(endpoint, stats, extra)
+        while (wait := admission.next_wait()) is not None:
+            try:
+                await _retry._async_sleep(wait)
+            except BaseException:
+                admission.abandon()
+                raise
 
     async def _send(
         self,
@@ -179,29 +168,44 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         timeout: float | None,
     ) -> dict[str, Any] | list[Any]:
         """Make one attempt at a request. Headers, including the HMAC signature, are rebuilt per attempt."""
-        body = self._serialize_payload(payload) if method.upper() != "GET" and payload is not None else None
-        req_headers = self._construct_request_headers(method, endpoint, payload, body=body)
-        client = self.stats_client if stats else self.client
-
-        request_kwargs: dict[str, Any] = {"headers": req_headers}
-        if timeout is not None:
-            request_kwargs["timeout"] = timeout
-        if method.upper() != "GET":
-            request_kwargs["content"] = body
-
+        request = self._prepare_request(method, endpoint, payload, stats, timeout)
+        client = self.stats_client if request.stats else self.client
         try:
-            r = await client.request(method.upper(), f"/{endpoint}", **request_kwargs)
-            r.raise_for_status()
-            decoded = loads(r.content.decode("utf-8"))
-            if not isinstance(decoded, (dict, list)):
-                raise SwgohComlinkDecodeError("Expected a JSON object or array in the service response.")
-            return decoded
-        except (JSONDecodeError, UnicodeDecodeError) as e:
-            raise SwgohComlinkDecodeError("Unable to decode the service response as UTF-8 JSON.") from e
-        except httpx.HTTPStatusError as e:
-            raise SwgohComlinkHTTPError.from_response(e.response) from e
+            if request.limit is None:
+                response = await client.request(request.method, request.url, **request.kwargs)
+                content = response.content
+            else:
+                response, content = await self._receive_limited(client, request, endpoint, request.limit)
         except httpx.RequestError as e:
             raise SwgohComlinkException(e) from e
+        return self._interpret_response(response, content)
+
+    async def _receive_limited(
+        self, client: httpx.AsyncClient, request: _PreparedRequest, endpoint: str, limit: int
+    ) -> tuple[httpx.Response, bytes]:
+        """Stream one response, reading at most *limit* decoded bytes of its body; return it and the body.
+
+        A success larger than *limit* raises ``SwgohComlinkValueError``, before any of the body is read when
+        ``Content-Length`` already exceeds it. An error response comes back as a copy whose body is cut to
+        *limit* bytes.
+        """
+        async with client.stream(request.method, request.url, **request.kwargs) as r:
+            if r.is_success and (declared := _declared_length(r.headers)) is not None and declared > limit:
+                raise self._too_large(endpoint, request.limit_name, limit, declared)
+            chunks: list[bytes] = []
+            size = 0
+            async for chunk in r.aiter_bytes():
+                chunks.append(chunk)
+                size += len(chunk)
+                if size > limit:
+                    if r.is_success:
+                        raise self._too_large(endpoint, request.limit_name, limit)
+                    break
+            body = b"".join(chunks)
+            if not r.is_success:
+                error = _bounded_error_response(r, body[:limit])
+                return error, error.content
+            return r, body
 
     async def _post(
         self,
@@ -210,7 +214,7 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         stats: bool = False,
         timeout: float | None = None,
     ) -> dict[str, Any] | list[Any]:
-        """Send an async POST request to the comlink service.
+        """Send a POST request to the comlink service.
 
         Convenience wrapper around :meth:`_request`.
         """
@@ -317,6 +321,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         enums: bool = False,
         items: str | DataItems | int | None = None,
         device_platform: str = "Android",
+        *,
+        strip_empty: bool = False,
     ) -> dict[str, Any]:
         """
         Get game data.
@@ -329,6 +335,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             items: string [Defaults to None] bitwise value indicating the collections to retrieve from game.
                 NOTE: this parameter is mutually exclusive with request_segment.
             device_platform: string [Defaults to "Android"]
+            strip_empty: Keyword-only. Drop collections that came back empty (``[]``) or null, e.g. the ones
+                not selected by ``items``. [Defaults to False, which returns every collection key]
 
         Returns:
             A dictionary containing the game data.
@@ -346,7 +354,8 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             items=items,
             device_platform=device_platform,
         )
-        return cast(dict[str, Any], await self._post(endpoint="data", payload=payload, timeout=GAME_DATA_TIMEOUT))
+        game_data = cast(dict[str, Any], await self._post(endpoint="data", payload=payload, timeout=GAME_DATA_TIMEOUT))
+        return self._strip_empty_collections(game_data) if strip_empty else game_data
 
     # alias for non PEP usage of direct endpoint calls
     getGameData = get_game_data
@@ -370,7 +379,6 @@ class SwgohComlinkAsync(SwgohComlinkBase):
             localization_id = (await self._get_versions()).require_language()
 
         if locale:
-            assert localization_id is not None
             localization_id = localization_id + ":" + locale.upper()
 
         payload = {"unzip": unzip, "enums": enums, "payload": {"id": localization_id}}
@@ -566,11 +574,11 @@ class SwgohComlinkAsync(SwgohComlinkBase):
         leagues = Constants.LEAGUES
         divisions = Constants.DIVISIONS
         if isinstance(league, str):
-            league = leagues[league.lower()]
+            league = _lookup_name("league", leagues, league)
         if isinstance(division, int) and len(str(division)) == 1:
-            division = divisions[str(division).lower()]
+            division = _lookup_name("division", divisions, str(division))
         if isinstance(division, str):
-            division = divisions[division.lower()]
+            division = _lookup_name("division", divisions, division)
         inner_payload: dict[str, Any] = {"leaderboardType": leaderboard_type}
         payload: dict[str, Any] = {"payload": inner_payload, "enums": enums}
         if leaderboard_type == 4:

@@ -28,7 +28,7 @@ finally:
 
 `SwgohComlinkAsync` takes the same constructor arguments as the synchronous
 client: `url` or `host`/`port` to choose the service, and `access_key`/
-`secret_key` (or the `ACCESS_KEY`/`SECRET_KEY` environment variables) for HMAC
+`secret_key` (or the `COMLINK_ACCESS_KEY`/`COMLINK_SECRET_KEY` environment variables) for HMAC
 signing. See [Connecting to Comlink](comlink.md#connecting-to-comlink).
 
 ```python
@@ -40,6 +40,11 @@ async with SwgohComlinkAsync(host="192.168.1.10", port=3000) as comlink:
 
 Failed calls raise the same [typed HTTP errors](exceptions.md#http-errors) as
 the synchronous client.
+
+## Limiting Response Size
+
+`max_response_bytes` and `max_game_data_bytes` work as in the synchronous
+client; see [Limiting Response Size](comlink.md#limiting-response-size).
 
 ## Retries and Pacing
 
@@ -61,8 +66,9 @@ async with SwgohComlinkAsync(retry=RetryPolicy(min_interval=0.4)) as comlink:
 
 ## Stat Calculation
 
-For local stat calculation in async code, use `StatCalcAsync` which fetches
-game data without blocking the event loop:
+For local stat calculation in async code, use `StatCalcAsync`. It fetches game
+data without blocking the event loop, and its `acalc_*` methods run the
+calculation in a worker thread:
 
 ```python
 from swgoh_comlink import StatCalcAsync, SwgohComlinkAsync
@@ -70,7 +76,7 @@ from swgoh_comlink import StatCalcAsync, SwgohComlinkAsync
 async with SwgohComlinkAsync() as comlink:
     calc = await StatCalcAsync.create()
     player = await comlink.get_player(allycode=245866537)
-    calc.calc_roster_stats(player["rosterUnit"])
+    await calc.acalc_roster_stats(player["rosterUnit"])
 ```
 
 See the [StatCalc API](statcalc.md) for full details.

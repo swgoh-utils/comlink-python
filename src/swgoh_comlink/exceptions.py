@@ -34,6 +34,10 @@ _RATE_LIMIT_CODES = frozenset({"RATE_LIMITED"})
 # body such as ``{"code": "GAME_6", "message": "Rate exceeded!"}``.
 _RATE_LIMIT_TEXT = "rate exceeded"
 
+# Longest body excerpt, in characters, that ``from_response`` puts in the
+# exception message. The full body stays on ``exc.response``.
+_MESSAGE_BODY_LIMIT = 512
+
 
 class SwgohComlinkException(Exception):
     """Base class for exceptions in this module."""
@@ -58,10 +62,13 @@ class SwgohComlinkTypeError(SwgohComlinkException, TypeError):
 class SwgohComlinkHTTPError(SwgohComlinkException):
     """Raised when the comlink service answers with an HTTP error status.
 
-    ``str(exc)`` is always ``"HTTP {status}: {body}"``, and the exception is
-    raised from the originating ``httpx.HTTPStatusError``, so code that matched
-    on the message or on ``SwgohComlinkException`` keeps working. Use
-    :meth:`from_response` to build the most specific subclass for a response.
+    ``str(exc)`` is ``"HTTP {status}: {body}"``, and the exception is raised
+    from the originating ``httpx.HTTPStatusError``, so code that matched on the
+    message or on ``SwgohComlinkException`` keeps working. A body longer than
+    512 characters is cut to its first 512 characters in the message and
+    followed by ``"… (N bytes total)"``; the full body stays available through
+    :attr:`response`. Use :meth:`from_response` to build the most specific
+    subclass for a response.
 
     Attributes:
         status: The HTTP status code.
@@ -116,6 +123,9 @@ class SwgohComlinkHTTPError(SwgohComlinkException):
         3. :class:`SwgohComlinkClientError`: any other 4xx status.
         4. :class:`SwgohComlinkHTTPError`: everything else (5xx).
 
+        Classification and the ``code`` and ``detail`` attributes use the full
+        body; only the message is truncated (see the class docstring).
+
         Args:
             response: The error response returned by ``httpx``.
 
@@ -135,7 +145,7 @@ class SwgohComlinkHTTPError(SwgohComlinkException):
         code, detail = _parse_error_body(body)
         error_cls = _classify(status, code, detail)
         return error_cls(
-            f"HTTP {status}: {body}",
+            f"HTTP {status}: {_truncate_body(body, len(response.content))}",
             status=status,
             code=code,
             detail=detail,
@@ -165,6 +175,17 @@ class SwgohComlinkClientError(SwgohComlinkHTTPError):
 
     Retrying the same request will not succeed.
     """
+
+
+def _truncate_body(body: str, size: int) -> str:
+    """Return ``body`` cut to ``_MESSAGE_BODY_LIMIT`` characters for a message.
+
+    A cut body is followed by ``"… (size bytes total)"``, where ``size`` is the
+    length of the raw response content.
+    """
+    if len(body) <= _MESSAGE_BODY_LIMIT:
+        return body
+    return f"{body[:_MESSAGE_BODY_LIMIT]}… ({size} bytes total)"
 
 
 def _parse_error_body(body: str) -> tuple[str | None, str | None]:

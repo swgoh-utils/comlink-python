@@ -39,8 +39,10 @@ When `host` is given, `url` and `stats_url` are ignored.
 
 If your comlink service requires HMAC signing, pass `access_key` and
 `secret_key`. When they are not passed, the client reads them from the
-`ACCESS_KEY` and `SECRET_KEY` environment variables. Signing is turned on only
-when both keys are set.
+`COMLINK_ACCESS_KEY` and `COMLINK_SECRET_KEY` environment variables. Signing is
+turned on only when both keys are set; if only one is set, the client logs a
+warning. The old `ACCESS_KEY` and `SECRET_KEY` names still work but are
+deprecated, and are read only when neither `COMLINK_*` name is set.
 
 See the [API Reference](#swgoh_comlink.swgoh_comlink.SwgohComlink) below for
 every constructor argument.
@@ -51,6 +53,59 @@ When comlink answers with an HTTP error status, the client raises a
 [typed HTTP error](exceptions.md#http-errors), such as
 `SwgohComlinkRateLimitError` for a rate refusal or `SwgohComlinkClientError`
 for a rejected request. All of them subclass `SwgohComlinkException`.
+
+## Limiting Response Size
+
+By default the client reads each response in full, however large it is. On a
+host with little memory, such as a Raspberry Pi, two keyword-only arguments
+cap how much of a response body the client will read:
+
+- `max_response_bytes`: every endpoint except `/data`, including the stats
+  service used by `get_unit_stats`.
+- `max_game_data_bytes`: `/data` only (`get_game_data`). It is separate
+  because game data is far larger than any other response, for the same reason
+  `/data` has its own, longer timeout.
+
+Both default to `None`, which means no limit. Limits count decoded bytes,
+after any gzip decompression. When a limit is set:
+
+- A success response whose `Content-Length` is over the limit raises
+  `SwgohComlinkValueError` before any of the body is read. `Content-Length` is
+  the compressed size, so this check catches only bodies that are too large
+  even before decompression.
+- Otherwise the client counts bytes as they arrive and raises
+  `SwgohComlinkValueError` as soon as the count passes the limit. This also
+  stops a small compressed body that would expand to a very large one. The
+  count is checked after each decoded chunk, so memory use can pass the limit
+  by up to one chunk.
+- An HTTP error response is read up to the limit, and the body is cut there.
+  The [typed HTTP error](exceptions.md#http-errors) is raised as usual, so
+  `retry` still applies.
+
+`SwgohComlinkValueError` from a limit is never retried. Raise the limit, or set
+it to `None`, for calls that need more.
+
+Measured decoded sizes in November 2026 (they grow with game updates, so leave
+headroom):
+
+| Call | Size |
+|------|------|
+| `get_game_metadata()` | 43 KB |
+| `get_player()` | 1.5 MB |
+| `get_localization()` | 46 MB |
+| `get_localization(unzip=True)` | 228 MB |
+| `get_game_data(request_segment=1)` | 111 MB |
+| `get_game_data()`, all collections | 405 MB |
+
+```python
+from swgoh_comlink import SwgohComlink
+
+MiB = 1024 * 1024
+comlink = SwgohComlink(max_response_bytes=64 * MiB, max_game_data_bytes=512 * MiB)
+```
+
+With these values `get_localization(unzip=True)` fails; use `unzip=False` or a
+larger `max_response_bytes` for it.
 
 ## Retries and Pacing
 

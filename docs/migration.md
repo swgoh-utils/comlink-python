@@ -284,7 +284,7 @@ in your own code (rather than referencing the constants by name), update them:
 | Constant | Old value | New value |
 |----------|-----------|-----------|
 | `DataItems.SEGMENT2` / `Constants.Segment2` | `68717379584` | `1125968624222208` |
-| `DataItems.SEGMENT4` / `Constants.Segment4` | `281200098803712` | `3377424842620928` |
+| `DataItems.SEGMENT4` / `Constants.Segment4` | `281200098803712` | `7881024469991424` |
 
 `SEGMENT1` (`2097151`) and `SEGMENT3` (`206158430208`) are unchanged.
 
@@ -292,8 +292,8 @@ Code that references the constant by name (`DataItems.SEGMENT2`, `Constants.Segm
 `Constants.get("Segment2")`) picks up the new values automatically.
 
 **`get_game_data(items=...)` accepts any in-range bitmask.** Comlink accepts any
-`items` value from 1 to 2<sup>52</sup> − 1, or `-1` (`DataItems.ALL`; the client sends
-`-1` for it even on Python 3.15+, where `int(DataItems.ALL)` is 2<sup>52</sup> − 1) for everything,
+`items` value from 1 to 2<sup>53</sup> − 1, or `-1` (`DataItems.ALL`; the client sends
+`-1` for it even on Python 3.15+, where `int(DataItems.ALL)` is 2<sup>53</sup> − 1) for everything,
 so single collections (e.g. `DataItems.UNITS`), custom combinations and the
 `SEGMENT1`–`SEGMENT4` aggregates all work. Out-of-range values are rejected with an
 HTTP 400. Earlier versions of this guide advised against single-collection values;
@@ -307,6 +307,69 @@ added together.
 **New members added** (from the live `GameDataItemsEnum`): `ABILITY_DECISION_TREE`,
 `ERA_DEFINITION`, `UBS_UPDATE`. New legacy-name aliases: `AbilityDecisionTrees`,
 `EraDefinitions`, `UBSUpdate`, `EpisodeDefinitions` (plural), `AccountLinking`.
+
+## 10. v2.9 changes
+
+Upgrading from v2.8 to v2.9.
+
+- **`get_unit_stats(language=)` must be a language code.** A value that doesn't match
+  `xx_yy` / `xxx_yy` (letters only, e.g. `eng_us`) now raises `SwgohComlinkValueError`
+  instead of being passed through into the query string. A well-formed code that isn't in
+  `Constants.LANGUAGES` logs a warning and is still sent. Case is unchanged.
+- **HMAC keys move to `COMLINK_ACCESS_KEY` / `COMLINK_SECRET_KEY`.** Rename the
+  `ACCESS_KEY` / `SECRET_KEY` environment variables. The old names still work until v3
+  with a `DeprecationWarning`, and are read only when neither new name is set.
+  Constructor arguments still win. Setting only one key now logs a warning.
+- **Plain-HTTP HMAC warning.** A client with HMAC keys whose `url` or `stats_url` is
+  `http://` to a non-loopback host logs one warning. Requests are still sent; switch to
+  `https` or a private network, or filter the `swgoh_comlink._base` logger.
+- **Optional response size limits.** New keyword-only `max_response_bytes` and
+  `max_game_data_bytes` (for `/data`) arguments make the clients raise
+  `SwgohComlinkValueError` for a larger response, instead of reading it all into
+  memory. Both default to `None`, so nothing changes unless you set them. See
+  [Limiting Response Size](api/comlink.md#limiting-response-size).
+- **`SwgohComlinkAsync` closes idle connections after 5 s.** It no longer keeps idle
+  pooled connections open forever; both clients now use the httpx default pool limits.
+  A new keyword-only `limits=httpx.Limits(...)` argument on both clients sets other
+  limits, e.g. `limits=httpx.Limits(keepalive_expiry=None)` restores the old async
+  behaviour. Request timeouts are unchanged.
+- **HTTP error messages are truncated.** `str(exc)` for `SwgohComlinkHTTPError` cuts a
+  body longer than 512 characters and appends `… (N bytes total)`. Read the full body
+  from `exc.response.text`; `exc.code`, `exc.detail` and the exception class still come
+  from the full body.
+- **Bad league or division names raise `SwgohComlinkValueError`.** `get_leaderboard`
+  raised a bare `KeyError` for an unknown `league` or `division` name; it now raises
+  `SwgohComlinkValueError` (a `ValueError`, not a `KeyError`) listing the valid names.
+  Catch `SwgohComlinkValueError` instead of `KeyError`.
+- **`StatCalc.set_game_data` validates its tables.** A missing `unitData`, `gearData`,
+  `modSetData`, `crTables`, `gpTables` or `relicData` table, or one set to `None`, raises
+  `SwgohComlinkValueError` naming it, instead of `KeyError` or `AssertionError`. The
+  previously loaded data is kept.
+- **StatCalc game data download is capped and uses httpx.** `StatCalc()` fetches through
+  `httpx` (certifi CA bundle, not the system store) and follows redirects in both the sync
+  and async paths. A body over 64 MiB raises `SwgohComlinkValueError`. New keyword-only
+  `game_data_url` and `expected_sha256` on `StatCalc()` and `StatCalcAsync.create()` pick
+  the source and verify its SHA-256; the default stays the latest `main` of
+  swgoh-utils/gamedata.
+- **`StatCalcAsync` can calculate off the event loop.** New `acalc_char_stats`,
+  `acalc_ship_stats`, `acalc_roster_stats` and `acalc_player_stats` run the matching
+  `calc_*` method in a worker thread. The sync `calc_*` methods are unchanged but block the
+  loop; in async code, replace `calc.calc_player_stats(p)` with
+  `await calc.acalc_player_stats(p)`.
+- **StatCalc reads game data tables by `str` key.** `set_game_data` rebuilds any table
+  holding non-`str` keys (such as `int` keys from a hand-built dict) with `str` keys, so
+  it now gives the same results as JSON game data; your dict is not modified. Such a
+  rebuilt table is a copy: call `set_game_data` again after changing it. The same applies
+  to a unit's `skills` list, which `set_game_data` indexes by skill id, and to
+  `gpTables["modRarityLevelTierGP"]`, which it indexes by pips, level and tier.
+- **`DataItems.OVERCHARGE` and a wider `SEGMENT4` need Comlink 4.6.0 or later.** Game
+  client 0.41 added the `Overcharge` bit (2<sup>52</sup>). `DataItems.OVERCHARGE` requests
+  `overchargeDefinition`, `overchargeStatGroup` and `overchargePointMissionLookup` (each also
+  available under its own alias, e.g. `DataItems.OVERCHARGE_STAT_GROUP`), and
+  `Constants.get("Overcharge")` resolves it. The game folded the bit into segment 4, so
+  `DataItems.SEGMENT4` / `Constants.Segment4` changes from `3377424842620928` to
+  `7881024469991424`, and `items` accepts 1 to 2<sup>53</sup> − 1. A Comlink release
+  older than 4.6.0 rejects both values with an HTTP 400.
 
 ## Summary of changes
 
@@ -327,5 +390,5 @@ added together.
 | GAC bracket scanning | Linear O(n) | Exponential probe + binary search O(log n) |
 | Migration checker | Not available | `swgoh-migrate` CLI / `python -m swgoh_comlink.migrate` |
 | `DataItems.SEGMENT2` value | `68717379584` | `1125968624222208` (server-aligned) |
-| `DataItems.SEGMENT4` value | `281200098803712` | `3377424842620928` (server-aligned) |
-| `get_game_data(items=)` values | Any bitmask | Any bitmask from 1 to 2<sup>52</sup> − 1, or `-1`; out of range → HTTP 400 |
+| `DataItems.SEGMENT4` value | `281200098803712` | `7881024469991424` (server-aligned) |
+| `get_game_data(items=)` values | Any bitmask | Any bitmask from 1 to 2<sup>53</sup> − 1, or `-1` |

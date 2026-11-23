@@ -9,6 +9,7 @@ from typing import Any, TypedDict
 from ..exceptions import SwgohComlinkValueError
 from ._localization import _localize
 from ._stat_data import CURRENCY_NAMES, CURRENCY_TYPES, ITEM_TYPES, MOD_SET_IDS, MOD_SLOTS, UNIT_RARITY_NAMES
+from ._wire import parse_enum
 
 _ITEM_TYPE_NUMBERS = {name: number for number, name in ITEM_TYPES.items()}
 _UNIT = _ITEM_TYPE_NUMBERS["UNIT"]
@@ -39,8 +40,9 @@ _ITEM_COLLECTIONS = (*(c for c, _ in _NAMED_COLLECTIONS.values()), "units", "mys
 # A unit shard is a material whose id is the unit's baseId behind this prefix.
 _SHARD_PREFIX = "unitshard_"
 
-# Enum member names that game data fetched with enums=True carries in place of the numbers. StatModSlot
-# numbers start at 2: STATMOD_SLOT_01 is the Square (see MOD_SLOTS).
+# Enum member names that game data fetched with enums=True carries in place of the numbers, bare
+# (STATMOD_SLOT_01) or type-prefixed (STATMODSLOT_STATMODSLOT01). StatModSlot numbers start at 2:
+# STATMOD_SLOT_01 is the Square (see MOD_SLOTS).
 _MOD_SLOT_ENUMS = {f"STATMOD_SLOT_{n:02d}": n + 1 for n in range(1, 7)}
 _MOD_TIER_ENUMS = {f"STATMOD_TIER_{n:02d}": n for n in range(1, 6)}
 # Rarity also has NO_STAR (8), which UNIT_RARITY_NAMES leaves out.
@@ -102,8 +104,13 @@ class NamedReward(TypedDict):
     paid; otherwise ``None``."""
 
 
-def _as_int(value: Any, enum_names: Mapping[str, int] | None = None) -> int | None:
-    """Read an int field that may hold a number, a numeric string or (with ``enums=True``) an enum name."""
+def _as_int(value: Any, enum_names: Mapping[str, int] | None = None, enum_name: str | None = None) -> int | None:
+    """Read an int field that may hold a number, a numeric string or (with ``enums=True``) an enum name.
+
+    A name is matched by :func:`parse_enum`, so the type-prefixed spelling some servers send
+    (``RARITY_SEVENSTAR``) reads like the bare one (``SEVEN_STAR``). *enum_name* is the enum's type name,
+    which that prefix must match.
+    """
     if isinstance(value, bool):
         return None
     if isinstance(value, int):
@@ -111,8 +118,8 @@ def _as_int(value: Any, enum_names: Mapping[str, int] | None = None) -> int | No
     if isinstance(value, str):
         if value.lstrip("-").isdigit():
             return int(value)
-        if enum_names is not None:
-            return enum_names.get(value)
+        if enum_names is not None and (name := parse_enum(value, enum_names, enum_name=enum_name)) is not None:
+            return enum_names[name]
     return None
 
 
@@ -295,14 +302,14 @@ def get_mod_catalog(
         if not isinstance(mod, dict) or not mod.get("id"):
             continue
         set_id = str(mod.get("setId", ""))
-        slot = _as_int(mod.get("slot"), _MOD_SLOT_ENUMS) or 0
+        slot = _as_int(mod.get("slot"), _MOD_SLOT_ENUMS, "StatModSlot") or 0
         definitions[mod["id"]] = {
             "definition_id": mod["id"],
             "set_id": set_id,
             "set_name": set_names.get(set_id) or MOD_SET_IDS.get(set_id, set_id),
             "slot": slot,
             "slot_name": MOD_SLOTS.get(str(slot), ""),
-            "rarity": _as_int(mod.get("rarity"), _RARITY_ENUMS) or 0,
+            "rarity": _as_int(mod.get("rarity"), _RARITY_ENUMS, "Rarity") or 0,
         }
     return {"sets": sets, "definitions": definitions}
 
@@ -434,13 +441,18 @@ class ItemNames:
         mod = self._mystery_mods.get(item_id)
         if mod is None:
             return None
-        pips = _range(_as_int(mod.get("minRarity"), _RARITY_ENUMS), _as_int(mod.get("maxRarity"), _RARITY_ENUMS))
+        pips = _range(
+            _as_int(mod.get("minRarity"), _RARITY_ENUMS, "Rarity"),
+            _as_int(mod.get("maxRarity"), _RARITY_ENUMS, "Rarity"),
+        )
         tier = _range(
-            _as_int(mod.get("minTier"), _MOD_TIER_ENUMS),
-            _as_int(mod.get("maxTier"), _MOD_TIER_ENUMS),
+            _as_int(mod.get("minTier"), _MOD_TIER_ENUMS, "StatModTier"),
+            _as_int(mod.get("maxTier"), _MOD_TIER_ENUMS, "StatModTier"),
             _MOD_TIER_LETTERS,
         )
-        slots = [MOD_SLOTS.get(str(_as_int(slot, _MOD_SLOT_ENUMS)), "?") for slot in mod.get("slot") or []]
+        slots = [
+            MOD_SLOTS.get(str(_as_int(slot, _MOD_SLOT_ENUMS, "StatModSlot")), "?") for slot in mod.get("slot") or []
+        ]
         slot = "any-slot" if len(set(slots)) >= len(MOD_SLOTS) else " or ".join(slots)
         set_id = str(mod.get("setId", ""))
         set_name = self._mod_sets.get(set_id) or MOD_SET_IDS.get(set_id, "")
@@ -469,7 +481,7 @@ class ItemNames:
 
         Returns ``None`` for a member name this instance's table does not list.
         """
-        return _as_int(item_type, self._item_type_numbers)
+        return _as_int(item_type, self._item_type_numbers, "ItemType")
 
     def item_type_name(self, number: int) -> str | None:
         """Return the ``ItemType`` member name for a number, or ``None`` when the table does not list it."""

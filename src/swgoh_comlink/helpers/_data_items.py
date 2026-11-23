@@ -27,10 +27,10 @@ class DataItems(IntFlag):
         `DataItems.CONQUEST_DEFINITION + DataItems.ARTIFACT_DEFINITION` requests `ABILITY_DECISION_TREE`, while
         `DataItems.CONQUEST_DEFINITION | DataItems.ARTIFACT_DEFINITION` correctly requests `CONQUEST`.
 
-        Comlink accepts any bitmask from 1 to 2**52 - 1, or -1 (`DataItems.ALL`) for everything. Values outside
-        that range are rejected with an HTTP 400.
+        Every collection bit lies below 2**53, so any combination of members is a bitmask from 1 to 2**53 - 1.
+        Use -1 (`DataItems.ALL`) for everything.
 
-        On Python 3.15 and later, `int(DataItems.ALL)` is 2**52 - 1 rather than -1, because `enum` now turns a
+        On Python 3.15 and later, `int(DataItems.ALL)` is 2**53 - 1 rather than -1, because `enum` now turns a
         negative flag value into the union of every defined bit. The client still sends -1 for `DataItems.ALL`.
 
     Some of the DataItems members are actually aliases for other members. For example, the `TABLE` member is an
@@ -133,11 +133,15 @@ class DataItems(IntFlag):
     LINKING_REWARD = 562949953421312
     LIGHTSPEED_TOKEN = 1125899906842624
     ERA_DEFINITION = 2251799813685248
+    OVERCHARGE = 4503599627370496
+    OVERCHARGE_DEFINITION = OVERCHARGE
+    OVERCHARGE_STAT_GROUP = OVERCHARGE
+    OVERCHARGE_POINT_MISSION_LOOKUP = OVERCHARGE
 
     SEGMENT1 = 2097151
     SEGMENT2 = 1125968624222208
     SEGMENT3 = RELIC_TIER_DEFINITION + UNITS
-    SEGMENT4 = 3377424842620928
+    SEGMENT4 = 7881024469991424
 
     @classmethod
     def members(cls) -> KeysView[str]:

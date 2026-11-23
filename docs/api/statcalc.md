@@ -27,10 +27,27 @@ calc = StatCalc()
 
 # Offline — supply pre-loaded game data
 calc = StatCalc(game_data=my_game_data_dict)
+
+# Fetch from a mirror or fork, and check the bytes against a known digest
+calc = StatCalc(game_data_url="https://mirror.example/gameData.json", expected_sha256="<64 hex digits>")
+
+# Async — same options on the factory
+calc = await StatCalcAsync.create(expected_sha256="<64 hex digits>")
 ```
 
 The `game_data` parameter accepts the JSON payload from the
 [swgoh-utils/gamedata](https://github.com/swgoh-utils/gamedata) repository.
+
+When `game_data` is omitted, the calculator downloads the latest `gameData.json`
+from the `main` branch of that repository over `httpx` (sync and async alike).
+The download is capped at 64 MiB, counted after any gzip decoding; a larger body
+raises `SwgohComlinkValueError`. The keyword-only options apply only to that download:
+
+- `game_data_url` fetches from another URL instead of the default.
+- `expected_sha256` hashes the downloaded bytes before parsing and raises
+  `SwgohComlinkValueError` if they do not match.
+
+Passing either option together with `game_data` raises `SwgohComlinkValueError`.
 
 ## Usage Examples
 
@@ -83,11 +100,75 @@ gp = calc.calc_char_gp(unit)
 ship_gp = calc.calc_ship_gp(ship_unit, crew_list)
 ```
 
+### Apply a datacron
+
+A player owns many datacrons and picks one per squad when they deploy, so there
+is no such thing as "this unit's stats with datacrons", only "this unit's stats
+with *this* datacron". Name the one you mean:
+
+```python
+player = comlink.get_player(allycode=245866537)
+datacron_id = player["datacron"][0]["id"]
+calc.calc_player_stats(player, datacron_id=datacron_id)
+
+unit = player["rosterUnit"][0]
+print(unit["stats"]["final"])     # unchanged by the datacron
+print(unit["stats"]["datacron"])  # what the datacron adds to this unit
+```
+
+`calc_player_stats` takes a datacron **id** and looks it up in the player's own
+`datacron` collection, raising `KeyError` if the player does not own it.
+`calc_roster_stats` and `calc_char_stats` take the datacron **object**, having
+no player to look it up in:
+
+```python
+datacron = next(d for d in player["datacron"] if d["id"] == datacron_id)
+calc.calc_char_stats(unit, datacron)
+```
+
+Leave the argument out and nothing changes: no `datacron` key appears and the
+output is the same as before.
+
+#### Combining the buckets
+
+The `datacron` bucket is deliberately **not** summed into `final`. Add the two
+to get a unit's stats as it would fight with that datacron:
+
+```python
+stats = unit["stats"]
+combined = {name: value + stats["datacron"].get(name, 0) for name, value in stats["final"].items()}
+```
+
+That addition is correct for **every** stat, including ones reported as
+percentages such as Armor and Resistance. Those are converted non-linearly, so
+a raw percentage could not simply be added to them; the bucket instead holds
+the amount the datacron actually adds on top of everything else.
+
+Worth knowing:
+
+- **Ships never get a bucket.** Datacrons are a squad mechanic and no game mode
+  applies one to a fleet battle, so ship stats are unaffected.
+- **Affixes are gated per unit.** Each affix requires a gear tier and a relic
+  tier, so the same datacron adds different amounts to different units. Relic
+  tiers in the game data count the locked and unlocked states as their first
+  two values, so a `requiredRelicTier` of 5 means relic 3 as a player counts it.
+- **Percentages apply as the datacron card shows them.** A stat's affix
+  percentages are summed, rounded to two decimals, and then applied to the
+  unit's base plus gear stats. Mods do not count toward that total.
+
 ## Async Usage (`StatCalcAsync`)
 
-`StatCalcAsync` inherits all calculation methods from `StatCalc`. The only
-difference is initialization: use the async `create()` factory to fetch game
-data without blocking the event loop.
+Use the async `create()` factory to fetch game data without blocking the event
+loop, and the `acalc_*` methods to calculate stats. Each one runs the matching
+`calc_*` method in a worker thread (`asyncio.to_thread`), so a large roster or
+guild does not stall the loop (for example a Discord bot's gateway heartbeat).
+
+| Async method | Runs |
+|--------------|------|
+| `await calc.acalc_char_stats(unit, datacron=None)` | `calc_char_stats` |
+| `await calc.acalc_ship_stats(ship, crew)` | `calc_ship_stats` |
+| `await calc.acalc_roster_stats(units, datacron=None)` | `calc_roster_stats` |
+| `await calc.acalc_player_stats(players, datacron_id=None)` | `calc_player_stats` |
 
 ```python
 from swgoh_comlink import SwgohComlinkAsync, StatCalcAsync
@@ -96,8 +177,17 @@ async with SwgohComlinkAsync() as comlink:
     calc = await StatCalcAsync.create()  # async fetch from GitHub
 
     player = await comlink.get_player(allycode=245866537)
-    calc.calc_roster_stats(player["rosterUnit"])
+    await calc.acalc_player_stats(player)
 ```
+
+The inherited synchronous `calc_*` methods still work, but they block the event
+loop while they run.
+
+The game data tables are only read during calculation, so concurrent `acalc_*`
+calls on one instance are safe. Do not call `set_game_data()` while a
+calculation is running, and do not touch a unit or player while its `acalc_*`
+call is in progress: the worker thread updates it in place. Cancelling the
+awaiting task does not stop the worker thread.
 
 With pre-loaded data (no async fetch):
 
@@ -163,6 +253,10 @@ transforms them into the dict format expected by `StatCalc.set_game_data()`.
       members:
         - __init__
         - create
+        - acalc_char_stats
+        - acalc_ship_stats
+        - acalc_roster_stats
+        - acalc_player_stats
 
 ### GameDataBuilder
 

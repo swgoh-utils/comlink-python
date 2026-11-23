@@ -7,14 +7,15 @@ to exercise the full stat and GP calculation pipeline offline.
 from __future__ import annotations
 
 import copy
-import io
 import json
 from pathlib import Path
 from typing import Any
 
 import pytest
+from pytest_httpx import HTTPXMock
 
 from swgoh_comlink import StatCalc
+from swgoh_comlink.exceptions import SwgohComlinkValueError
 
 _PLAYER_FILE = Path(__file__).resolve().parent.parent / "resources" / "example-player.json"
 
@@ -235,20 +236,34 @@ def test_require_game_data_raises_without_data():
         sc._require_game_data()
 
 
-def test_game_data_is_fetched_from_github_when_not_given(monkeypatch, game_data):
-    seen_urls: list[str] = []
+def test_set_game_data_names_missing_key():
+    with pytest.raises(SwgohComlinkValueError, match="unitData"):
+        StatCalc(game_data={})
 
-    def urlopen(url: str, timeout: float) -> io.BytesIO:
-        seen_urls.append(url)
-        return io.BytesIO(json.dumps({"data": {"unitData": game_data["unitData"]}}).encode())
 
-    monkeypatch.setattr("urllib.request.urlopen", urlopen)
+@pytest.mark.parametrize("key", ["unitData", "gearData", "modSetData", "crTables", "gpTables", "relicData"])
+def test_set_game_data_rejects_missing_or_none_table(calc, game_data, key):
+    sc = copy.copy(calc)
+    before = (sc._unit_data, sc._gear_data, sc._mod_set_data, sc._cr_tables, sc._gp_tables, sc._relic_data)
+    missing = {k: v for k, v in game_data.items() if k != key}
+
+    with pytest.raises(SwgohComlinkValueError, match=key):
+        sc.set_game_data(missing)
+    with pytest.raises(SwgohComlinkValueError, match=key):
+        sc.set_game_data({**game_data, key: None})
+
+    # A rejected payload leaves the previously loaded tables in place.
+    assert (sc._unit_data, sc._gear_data, sc._mod_set_data, sc._cr_tables, sc._gp_tables, sc._relic_data) == before
+
+
+def test_game_data_is_fetched_from_github_when_not_given(monkeypatch, game_data, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(url=StatCalc._DEFAULT_GAMEDATA_URL, json={"data": {"unitData": game_data["unitData"]}})
     loaded: list[dict[str, Any]] = []
     monkeypatch.setattr(StatCalc, "set_game_data", lambda self, data: loaded.append(data))
 
     StatCalc()
 
-    assert seen_urls == [StatCalc._DEFAULT_GAMEDATA_URL]
+    assert [str(r.url) for r in httpx_mock.get_requests()] == [StatCalc._DEFAULT_GAMEDATA_URL]
     assert loaded == [{"unitData": game_data["unitData"]}]  # the {"data": ...} wrapper is unwrapped
 
 

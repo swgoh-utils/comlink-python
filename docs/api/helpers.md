@@ -64,12 +64,14 @@ in about 2.4 seconds, versus about 147 MB in about 12.5 seconds for
     `ABILITY_DECISION_TREE`. Bitwise OR (`|`) is always safe.
 
 !!! note
-    Comlink accepts any `items` bitmask from 1 to 2<sup>52</sup> − 1, or `-1`
+    Comlink accepts any `items` bitmask from 1 to 2<sup>53</sup> − 1, or `-1`
     (`DataItems.ALL`) for everything, and rejects values outside that range with an
-    HTTP 400. Older Comlink releases had a bug in how CDN URLs were built that could
+    HTTP 400. `DataItems.OVERCHARGE` (2<sup>52</sup>) and `DataItems.SEGMENT4`, which
+    includes it, need Comlink 4.6.0 or later; earlier releases accept only up to
+    2<sup>52</sup> − 1. Older Comlink releases had a bug in how CDN URLs were built that could
     make some single-collection requests fail; upgrade Comlink if you see that.
 
-    On Python 3.15 and later, `int(DataItems.ALL)` is 2<sup>52</sup> − 1 rather than
+    On Python 3.15 and later, `int(DataItems.ALL)` is 2<sup>53</sup> − 1 rather than
     `-1`, because `enum` now turns a negative flag value into the union of every
     defined bit. The client still sends `-1` for `DataItems.ALL` and `items="ALL"`.
 
@@ -1203,6 +1205,69 @@ Functions for querying omicron skill data from game data collections.
 ### get_unit_from_skill
 
 ::: swgoh_comlink.helpers._omicron.get_unit_from_skill
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+### get_omicron_breakdown
+
+Summarizes omicron adoption across a set of player profiles, grouped by game mode. For every
+omicron in game data it lists the players who have applied it, the players who own the unit
+but have not, and how many do not own the unit.
+
+It takes **player profiles**, not guild member entries: a guild's `member` list carries no
+roster, so fetch each member's profile first. Pass `ability_list` whenever a person will read
+the result. A unit often has several omicrons in one mode, so the unit name alone does not
+tell the rows apart, and the omicron's own name comes from the `ability` collection.
+
+```python
+from swgoh_comlink import SwgohComlink
+from swgoh_comlink.helpers import DataItems, get_guild_members, get_localization_dictionary, get_omicron_breakdown
+
+comlink = SwgohComlink()
+members = get_guild_members(comlink, allycode=314927874)
+profiles = [comlink.get_player(player_id=member["playerId"]) for member in members]
+game_data = comlink.get_game_data(
+    items=DataItems.SKILL | DataItems.UNITS | DataItems.ABILITY, include_pve_units=False
+)
+
+breakdown = get_omicron_breakdown(
+    profiles,
+    game_data["skill"],
+    game_data["units"],
+    ability_list=game_data["ability"],
+    localization=get_localization_dictionary(comlink),
+)
+for mode in breakdown["modes"]:
+    for row in mode["skills"]:
+        print(mode["mode_name"], row["unit_name"], row["skill_name"], len(row["applied"]))
+```
+
+See `examples/Sync/guild_omicron_breakdown.py` for a full report, and
+`examples/Async/guild_omicron_breakdown.py` for the same report with the profiles fetched
+concurrently.
+
+::: swgoh_comlink.helpers._omicron.get_omicron_breakdown
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._omicron.OmicronBreakdown
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._omicron.OmicronModeBreakdown
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._omicron.OmicronSkillStats
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+
+::: swgoh_comlink.helpers._omicron.OmicronMember
     options:
       show_root_heading: true
       show_root_full_path: false

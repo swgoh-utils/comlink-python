@@ -6,6 +6,7 @@ Opt-in retry and pacing policy for the SwgohComlink clients.
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
 import random
 import threading
@@ -266,3 +267,77 @@ class _Pacer:
 
 def _no_release() -> None:
     """Release callable for a call that reserved no slot."""
+
+
+@dataclass(frozen=True, slots=True)
+class _RetryStep:
+    """What to do after a retryable failure: wait *delay* seconds, holding back the endpoint when *hold* is set."""
+
+    delay: float
+    hold: bool
+
+
+def _retry_step(policy: RetryPolicy, error: SwgohComlinkHTTPError, attempt: int) -> _RetryStep | None:
+    """Decide whether attempt number *attempt*, which failed with *error*, is retried.
+
+    Returns ``None`` to give up. A rate refusal asks for a hold on its endpoint, so concurrent callers back
+    off together; any other retryable error is waited out by the failed caller alone.
+    """
+    delay = policy.retry_delay(error, attempt)
+    if delay is None:
+        return None
+    return _RetryStep(delay, isinstance(error, SwgohComlinkRateLimitError))
+
+
+class _Admission:
+    """Sans-I/O admission of one attempt to an endpoint: the waits the caller sleeps before it sends.
+
+    The caller sleeps each wait :meth:`next_wait` returns and sends once it returns ``None``. If the sleep
+    is abandoned (an exception, or cancellation of an async task), the caller calls :meth:`abandon` to
+    give the reserved slot back. After each wait, a rate hold that was extended past the caller's slot
+    while it slept sends it back into the queue for a new slot.
+
+    Args:
+        endpoint: The endpoint, for the debug log.
+        extra: A retry wait carried from the previous attempt, added to the first slot only.
+        reserve: Reserves the next slot; returns its wait and a callable that gives it back.
+        held_after: Whether a hold on the endpoint now ends after the given deadline.
+        log: Logger for the ``Pacing ...`` debug message.
+    """
+
+    __slots__ = ("_deadline", "_endpoint", "_held_after", "_log", "_release", "_reserve", "_wait")
+
+    def __init__(
+        self,
+        endpoint: str,
+        extra: float,
+        reserve: Callable[[], tuple[float, Callable[[], None]]],
+        held_after: Callable[[float], bool],
+        log: logging.Logger,
+    ) -> None:
+        self._endpoint = endpoint
+        self._reserve = reserve
+        self._held_after = held_after
+        self._log = log
+        wait, self._release = reserve()
+        self._wait = wait + extra
+        self._deadline: float | None = None
+
+    def next_wait(self) -> float | None:
+        """Return the next number of seconds to sleep, or ``None`` when the attempt may be sent now."""
+        while True:
+            if self._deadline is not None:
+                if not self._held_after(self._deadline):
+                    return None
+                # A refusal arrived while this caller slept. Requeue behind the
+                # current hold, preserving spacing with other delayed callers.
+                self._release()
+                self._wait, self._release = self._reserve()
+            self._deadline = _clock() + self._wait
+            if self._wait > 0:
+                self._log.debug("Pacing %s for %.2fs", self._endpoint, self._wait)
+                return self._wait
+
+    def abandon(self) -> None:
+        """Give back the slot this admission holds, when the caller stops waiting for it."""
+        self._release()

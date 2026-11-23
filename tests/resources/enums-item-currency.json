@@ -1,5 +1,5 @@
 {
-  "_comment": "Excerpt of get_enums() at game data 0.40.6: the groups ITEM_TYPES and CURRENCY_TYPES snapshot.",
+  "_comment": "Excerpt of get_enums() at client schema 0.41.2115745: the groups ITEM_TYPES and CURRENCY_TYPES snapshot.",
   "ItemType": {
     "ItemType_DEFAULT": 0,
     "EMPTY": 1,
@@ -33,7 +33,8 @@
     "EPISODE_PASS": 32,
     "EPISODE_PASS_PLUS": 33,
     "LIGHTSPEED_TOKEN": 34,
-    "LOANED_UNIT_ERA_LEVEL_INCREASE": 35
+    "LOANED_UNIT_ERA_LEVEL_INCREASE": 35,
+    "OVERCHARGE_POINT": 36
   },
   "CurrencyType": {
     "CurrencyType_DEFAULT": 0,
@@ -83,6 +84,7 @@
     "GL_EVENT_CURRENCY": 47,
     "EPISODE_CURRENCY": 48,
     "ERA_CURRENCY": 49,
-    "ERA_UPGRADE_CURRENCY": 50
+    "ERA_UPGRADE_CURRENCY": 50,
+    "ARENA_CURRENCY": 51
   }
 }

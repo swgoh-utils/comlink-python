@@ -36,6 +36,12 @@ async with SwgohComlinkAsync(host="127.0.0.1", port=3000) as comlink:
     player = await comlink.get_player(allycode=245866537)
 ```
 
+If Comlink runs on another machine, reach it over `https` or a private network you trust,
+such as a VPN or an SSH tunnel. HMAC signing (`access_key`/`secret_key`) proves who sent a
+request, but over plain `http` it does not stop anyone on the network path from altering
+responses or replaying signed requests. The client logs a warning when it signs requests sent
+over plain `http` to a host other than `localhost`, `127.0.0.0/8` or `::1`; it still connects.
+
 ## Choosing a Stats Method
 
 `SwgohComlink.get_unit_stats()` and `StatCalc.calc_player_stats()` are similar in outcome but different in execution model:
