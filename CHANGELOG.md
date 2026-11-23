@@ -1,6 +1,58 @@
 # CHANGELOG
 
 <!-- insertion marker -->
+<a name="v2.9.0"></a>
+
+## [v2.9.0](https://github.com/swgoh-utils/comlink-python/compare/v2.8.0...v2.9.0) (2026-11-23)
+
+### Features
+
+- **client:** add strip_empty option to get_game_data ([3b63a7a](https://github.com/swgoh-utils/comlink-python/commit/3b63a7a73aed527f052c59e1e9f2bd7f14785c58))
+- **helpers:** add get_omicron_breakdown for guild-wide omicron adoption ([ff158cd](https://github.com/swgoh-utils/comlink-python/commit/ff158cd4891acda6823387e4bee925d1c6503c85))
+- **statcalc:** apply a named datacron's stat affixes to characters ([d79193a](https://github.com/swgoh-utils/comlink-python/commit/d79193a90341acfffc9a687b715003726d9d21dd))
+- **client:** add opt-in max_response_bytes and max_game_data_bytes limits ([81623d0](https://github.com/swgoh-utils/comlink-python/commit/81623d0d573e1a0e6f2c0c1463d129e9a2c632b2))
+- **helpers:** sync game data constants with client schema 0.41.2115745 ([3100f3c](https://github.com/swgoh-utils/comlink-python/commit/3100f3cbf5e003f946f2255a90735c52f2b944db))
+- **helpers:** accept type-prefixed enum names in guild roles and item names ([4f7e96e](https://github.com/swgoh-utils/comlink-python/commit/4f7e96e23227d092ab8bdb1118ce227e1bb667f8))
+
+### Bug Fixes
+
+- **helpers:** accept tier 0 in is_omicron_skill ([07bffd6](https://github.com/swgoh-utils/comlink-python/commit/07bffd6a960cf0a1afc6623bbbbf33997a2d553a))
+- **client:** attribute the credential deprecation warning past in-package subclasses ([374541a](https://github.com/swgoh-utils/comlink-python/commit/374541ad5d564a931e3e589973346b107426618c))
+- **async:** give back the pacing slot on any exception while sleeping ([a23b611](https://github.com/swgoh-utils/comlink-python/commit/a23b611f717189780968babc0971b077c5d5cfbe))
+- **examples:** skip comment lines when decoding language bundles ([18bd2ee](https://github.com/swgoh-utils/comlink-python/commit/18bd2ee95d80c9f57e10ae67b1a147b243adaa25))
+- **async:** use httpx default keep-alive and add a limits argument ([8b51989](https://github.com/swgoh-utils/comlink-python/commit/8b51989b02639d8005788be4c71d884eba2ca433))
+- **statcalc:** cap and optionally verify the game data download ([06b0227](https://github.com/swgoh-utils/comlink-python/commit/06b02274e91de2ff09851fad83e7e43e63385324))
+- **hmac:** warn when HMAC is used over plain HTTP to a non-loopback host ([7288a1f](https://github.com/swgoh-utils/comlink-python/commit/7288a1f7ed71500c6040f34e212c89c7a4ae1d75))
+- **client:** read HMAC keys from COMLINK_ACCESS_KEY and COMLINK_SECRET_KEY ([63ed346](https://github.com/swgoh-utils/comlink-python/commit/63ed3460ab1fa88ef861f8088bcad99350e75653))
+- **core:** replace runtime asserts and raw KeyErrors with library errors ([0467afe](https://github.com/swgoh-utils/comlink-python/commit/0467afe9c11329ced8b34483bb7c86314dbb6abc))
+- **core:** validate and URL-encode the get_unit_stats language parameter ([1672812](https://github.com/swgoh-utils/comlink-python/commit/16728120e8a440a2d5b08f33e1c90d345c9b6275))
+- **exceptions:** truncate response bodies in HTTP error messages ([4ec7597](https://github.com/swgoh-utils/comlink-python/commit/4ec7597e5aa32b7e67014349f6c255f3dd721417))
+
+### Code Refactoring
+
+- **core:** generate the sync client from the async client ([921148b](https://github.com/swgoh-utils/comlink-python/commit/921148b6c64ebb836059753df00a9830e2715b25))
+- **core:** move request preparation and retry decisions into a sans-I/O core ([07b3db2](https://github.com/swgoh-utils/comlink-python/commit/07b3db2226b7d0f72d89161369fa25afe3797677))
+
+### Performance Improvements
+
+- **statcalc:** build renamed stat dicts with a comprehension ([ccc3198](https://github.com/swgoh-utils/comlink-python/commit/ccc3198142f361c656274622a25d52e26adfc5dc))
+- **statcalc:** index mod GP by int (pips, level, tier) in set_game_data ([17d35de](https://github.com/swgoh-utils/comlink-python/commit/17d35deb528bafde93e1311ff1acc0f90a5330ae))
+- **statcalc:** key the summed raw mod stats by int stat id ([e02f7fb](https://github.com/swgoh-utils/comlink-python/commit/e02f7fbb9c4006e43f7d7e401d2dd7c3a9b95770))
+- **statcalc:** run all percent conversions in one _convert_percent call ([1f81a80](https://github.com/swgoh-utils/comlink-python/commit/1f81a805f2a8e19ee99152db3a5e7cf03bc674cc))
+- **statcalc:** fold final stat ids by lookup and loop the percent conversions ([d8b5b07](https://github.com/swgoh-utils/comlink-python/commit/d8b5b07b7d902654d7e716cdf12f1efc631f61fa))
+- **statcalc:** map mod stat ids to their target stats with lookup tables ([1a71544](https://github.com/swgoh-utils/comlink-python/commit/1a715447ecfc18ba4774e3dcf7b0d98240447c0c))
+- **statcalc:** drop key-list copies and probing lookups in _format_stats ([ae35c6d](https://github.com/swgoh-utils/comlink-python/commit/ae35c6db0f05c98c61ffdfa672fcdbaa0f33e87e))
+- **statcalc:** index each unit's skills by id in set_game_data ([d228fa1](https://github.com/swgoh-utils/comlink-python/commit/d228fa110e7854cb138f4adba0e752f606ddf16b))
+- **statcalc:** copy normalized units shallowly instead of deep-copying ([0190952](https://github.com/swgoh-utils/comlink-python/commit/0190952e5a5f10ad559109063b8af556367b2359))
+- **statcalc:** normalise game data tables to str keys once ([3648460](https://github.com/swgoh-utils/comlink-python/commit/36484609918590e828f5354e0045df4594f59d63))
+- **statcalc:** run StatCalcAsync calculations off the event loop ([3201dbe](https://github.com/swgoh-utils/comlink-python/commit/3201dbee7322ad981dd334a145d5a105dbd10242))
+
+### Docs
+
+- **examples:** add guild omicron breakdown examples ([0c3bf6a](https://github.com/swgoh-utils/comlink-python/commit/0c3bf6ad5dae0b1f58914d136fade3f74627b966))
+- **examples:** add sync and async datacron calculation examples ([c213f68](https://github.com/swgoh-utils/comlink-python/commit/c213f68a248b9b540b3eaffa545914f4d2dd8f5d))
+- **migration:** note that set_game_data indexes the mod GP table ([24684ea](https://github.com/swgoh-utils/comlink-python/commit/24684ea7a1d90fba62367aadefbae0aace4d3225))
+
 <a name="v2.8.0"></a>
 
 ## [v2.8.0](https://github.com/swgoh-utils/comlink-python/compare/v2.7.0...v2.8.0) (2026-11-05)
