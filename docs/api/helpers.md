@@ -64,12 +64,14 @@ in about 2.4 seconds, versus about 147 MB in about 12.5 seconds for
     `ABILITY_DECISION_TREE`. Bitwise OR (`|`) is always safe.
 
 !!! note
-    Comlink accepts any `items` bitmask from 1 to 2<sup>52</sup> − 1, or `-1`
+    Comlink accepts any `items` bitmask from 1 to 2<sup>53</sup> − 1, or `-1`
     (`DataItems.ALL`) for everything, and rejects values outside that range with an
-    HTTP 400. Older Comlink releases had a bug in how CDN URLs were built that could
+    HTTP 400. `DataItems.OVERCHARGE` (2<sup>52</sup>) and `DataItems.SEGMENT4`, which
+    includes it, need Comlink 4.6.0 or later; earlier releases accept only up to
+    2<sup>52</sup> − 1. Older Comlink releases had a bug in how CDN URLs were built that could
     make some single-collection requests fail; upgrade Comlink if you see that.
 
-    On Python 3.15 and later, `int(DataItems.ALL)` is 2<sup>52</sup> − 1 rather than
+    On Python 3.15 and later, `int(DataItems.ALL)` is 2<sup>53</sup> − 1 rather than
     `-1`, because `enum` now turns a negative flag value into the union of every
     defined bit. The client still sends `-1` for `DataItems.ALL` and `items="ALL"`.
 

@@ -84,6 +84,7 @@ _LEGACY_NAME_MAP: dict[str, str] = {
     "EpisodeDefinition": "EPISODE_DEFINITION",
     "EpisodeDefinitions": "EPISODE_DEFINITION",
     "EraDefinitions": "ERA_DEFINITION",
+    "Overcharge": "OVERCHARGE",
     "LinkingReward": "LINKING_REWARD",
     "AccountLinking": "LINKING_REWARD",
 }
@@ -141,7 +142,7 @@ class Constants:
     Segment1 = 2097151
     Segment2 = 1125968624222208
     Segment3 = 206158430208
-    Segment4 = 3377424842620928
+    Segment4 = 7881024469991424
 
     # Proxied stat data from _stat_data (backward compat)
     STAT_ENUMS = STAT_ENUMS

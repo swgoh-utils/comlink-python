@@ -637,6 +637,16 @@ STATS: dict[str, dict[str, Any]] = {
         "enum": "UNITSTATMASTERY",
         "tableKey": "MASTERY",
     },
+    "62": {
+        "statId": 62,
+        "nameKey": "UNIT_STAT_CRITICAL_DAMAGE_NEGATE",
+        "descKey": "UNIT_STAT_DESCRIPTION_CRITICAL_DAMAGE_NEGATE",
+        "isDecimal": True,
+        "name": "Critical Defense",
+        "detailedName": "Critical Damage Negate",
+        "enum": "UNITSTATCRITICALDAMAGENEGATE",
+        "tableKey": "CRITICAL_DAMAGE_NEGATE",
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -756,10 +766,11 @@ ITEM_TYPES: dict[int, str] = {
     33: "EPISODE_PASS_PLUS",
     34: "LIGHTSPEED_TOKEN",
     35: "LOANED_UNIT_ERA_LEVEL_INCREASE",
+    36: "OVERCHARGE_POINT",
 }
 """``ItemType`` number to enum member name: the ``type`` of a reward, preview or inventory item.
 
-A snapshot of ``get_enums()["ItemType"]`` at game data 0.40.6, without ``ItemType_DEFAULT``. The game adds
+A snapshot of ``get_enums()["ItemType"]`` at client schema 0.41.2115745, without ``ItemType_DEFAULT``. The game adds
 members over time: pass the live ``get_enums()`` response to :class:`ItemNames` to read the current table.
 """
 
@@ -811,13 +822,14 @@ CURRENCY_TYPES: dict[int, str] = {
     48: "EPISODE_CURRENCY",
     49: "ERA_CURRENCY",
     50: "ERA_UPGRADE_CURRENCY",
+    51: "ARENA_CURRENCY",
 }
 """``CurrencyType`` number to enum member name.
 
 An inventory's ``currencyItem[].currency`` carries the number; a reward of ``ItemType`` ``CURRENCY``
 carries the member name as its ``id``.
 
-A snapshot of ``get_enums()["CurrencyType"]`` at game data 0.40.6, without ``CurrencyType_DEFAULT``. The
+A snapshot of ``get_enums()["CurrencyType"]`` at client schema 0.41.2115745, without ``CurrencyType_DEFAULT``. The
 game adds currencies over time: pass the live ``get_enums()`` response to :class:`ItemNames` to read the
 current table.
 """
@@ -875,6 +887,7 @@ CURRENCY_NAMES: dict[str, str] = {
     "EPISODE_CURRENCY": "Episode Currency",
     "ERA_CURRENCY": "Era Currency",
     "ERA_UPGRADE_CURRENCY": "Era Level Currency",
+    "ARENA_CURRENCY": "Arena Tokens",
 }
 """``CurrencyType`` member name to its English display name (see ``CURRENCY_TYPES``).
 

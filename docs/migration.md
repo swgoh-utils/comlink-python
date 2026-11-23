@@ -284,7 +284,7 @@ in your own code (rather than referencing the constants by name), update them:
 | Constant | Old value | New value |
 |----------|-----------|-----------|
 | `DataItems.SEGMENT2` / `Constants.Segment2` | `68717379584` | `1125968624222208` |
-| `DataItems.SEGMENT4` / `Constants.Segment4` | `281200098803712` | `3377424842620928` |
+| `DataItems.SEGMENT4` / `Constants.Segment4` | `281200098803712` | `7881024469991424` |
 
 `SEGMENT1` (`2097151`) and `SEGMENT3` (`206158430208`) are unchanged.
 
@@ -292,8 +292,8 @@ Code that references the constant by name (`DataItems.SEGMENT2`, `Constants.Segm
 `Constants.get("Segment2")`) picks up the new values automatically.
 
 **`get_game_data(items=...)` accepts any in-range bitmask.** Comlink accepts any
-`items` value from 1 to 2<sup>52</sup> − 1, or `-1` (`DataItems.ALL`; the client sends
-`-1` for it even on Python 3.15+, where `int(DataItems.ALL)` is 2<sup>52</sup> − 1) for everything,
+`items` value from 1 to 2<sup>53</sup> − 1, or `-1` (`DataItems.ALL`; the client sends
+`-1` for it even on Python 3.15+, where `int(DataItems.ALL)` is 2<sup>53</sup> − 1) for everything,
 so single collections (e.g. `DataItems.UNITS`), custom combinations and the
 `SEGMENT1`–`SEGMENT4` aggregates all work. Out-of-range values are rejected with an
 HTTP 400. Earlier versions of this guide advised against single-collection values;
@@ -362,6 +362,14 @@ Upgrading from v2.8 to v2.9.
   rebuilt table is a copy: call `set_game_data` again after changing it. The same applies
   to a unit's `skills` list, which `set_game_data` indexes by skill id, and to
   `gpTables["modRarityLevelTierGP"]`, which it indexes by pips, level and tier.
+- **`DataItems.OVERCHARGE` and a wider `SEGMENT4` need Comlink 4.6.0 or later.** Game
+  client 0.41 added the `Overcharge` bit (2<sup>52</sup>). `DataItems.OVERCHARGE` requests
+  `overchargeDefinition`, `overchargeStatGroup` and `overchargePointMissionLookup` (each also
+  available under its own alias, e.g. `DataItems.OVERCHARGE_STAT_GROUP`), and
+  `Constants.get("Overcharge")` resolves it. The game folded the bit into segment 4, so
+  `DataItems.SEGMENT4` / `Constants.Segment4` changes from `3377424842620928` to
+  `7881024469991424`, and `items` accepts 1 to 2<sup>53</sup> − 1. A Comlink release
+  older than 4.6.0 rejects both values with an HTTP 400.
 
 ## Summary of changes
 
@@ -382,5 +390,5 @@ Upgrading from v2.8 to v2.9.
 | GAC bracket scanning | Linear O(n) | Exponential probe + binary search O(log n) |
 | Migration checker | Not available | `swgoh-migrate` CLI / `python -m swgoh_comlink.migrate` |
 | `DataItems.SEGMENT2` value | `68717379584` | `1125968624222208` (server-aligned) |
-| `DataItems.SEGMENT4` value | `281200098803712` | `3377424842620928` (server-aligned) |
-| `get_game_data(items=)` values | Any bitmask | Any bitmask from 1 to 2<sup>52</sup> − 1, or `-1`; out of range → HTTP 400 |
+| `DataItems.SEGMENT4` value | `281200098803712` | `7881024469991424` (server-aligned) |
+| `get_game_data(items=)` values | Any bitmask | Any bitmask from 1 to 2<sup>53</sup> − 1, or `-1` |
