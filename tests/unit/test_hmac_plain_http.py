@@ -41,7 +41,7 @@ def _plain_http_warnings(
         {"url": "http://[2001:db8::1]:3000"},
         {"url": "http://128.0.0.1:3000"},
         {"url": "http://localhost.example.com:3000"},
-        {"host": "comlink.lab"},
+        {"host": "comlink.internal"},
         {"url": "https://comlink.example.com", "stats_url": "http://stats.example.com:3223"},
     ],
     ids=lambda kwargs: next(iter(kwargs.values())),
@@ -65,8 +65,7 @@ def test_one_warning_when_both_urls_are_remote(
         make_comlink, caplog, url="http://comlink.example.com:3000", stats_url="http://stats.example.com:3223", **KEYS
     )
     assert len(records) == 1
-    assert "comlink.example.com" in records[0].getMessage()
-    assert "stats.example.com" in records[0].getMessage()
+    assert records[0].args == ("http://comlink.example.com:3000 and http://stats.example.com:3223",)
 
 
 def test_each_client_warns_once(make_comlink: Callable[..., Client], caplog: pytest.LogCaptureFixture) -> None:
